@@ -9,33 +9,36 @@ include_directories(src)
 include_directories(lib)
 
 # Executable
-add_executable(cg_sandbox
+#================================================================================
+add_executable(main
     src/main.cpp
     lib/glad/glad.c
 )
-set_property(TARGET cg_sandbox PROPERTY CXX_STANDARD 11)
-target_compile_options(cg_sandbox PRIVATE -Wall)
+set_property(TARGET main PROPERTY CXX_STANDARD 11)
+target_compile_options(main PRIVATE -Wall)
 
 # Internal libraries
+#================================================================================
 add_library(gl STATIC
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp
 )
-target_link_libraries(cg_sandbox PRIVATE gl)
+target_link_libraries(main PRIVATE gl)
+
+add_library(entity_model STATIC
+    src/entity_model/entity_model.cpp
+    src/entity_model/aspect.cpp
+)
+target_link_libraries(entity_model PRIVATE gl)
+
+add_library(cg_sandbox STATIC
+    src/cg_sandbox.cpp
+)
+target_link_libraries(main PRIVATE cg_sandbox)
 
 # External libraries
+#================================================================================
 # GLFW
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(cg_sandbox PRIVATE glfw)
-
-# If glad subdirectory has a CMakeLists.txt file, use this.
-# add_subdirectory(lib/glad EXCLUDE_FROM_ALL)
-# target_link_libraries(cg_sandbox PRIVATE glad)
-
-# Adding a separate library.
-# add_library(glad STATIC
-#     lib/glad/glad.c
-#     lib/glad/glad.h
-# )
-# target_link_libraries(cg_sandbox PRIVATE glad)
+target_link_libraries(main PRIVATE glfw)

@@ -130,7 +130,7 @@ void OpenGLContext::glfw_cursor_position_callback(GLFWwindow *window, double win
     last_x = x;
     last_y = y;
 
-    for (InputListener * il : g_opengl_context->m_input_listeners) {
+    for (InputListener *il : g_opengl_context->m_input_listeners) {
         if (il->listening) {
             il->cursor_position_callback(x, y);
             il->cursor_move_callback(dx, dy);

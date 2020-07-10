@@ -31,6 +31,8 @@ public:
 struct Looper {
     Looper () {}
     virtual void loop() = 0;
+    virtual void init() {};
+    virtual void close() {};
 };
 
 class OpenGLContext {
@@ -110,6 +112,7 @@ public:
 
     Looper *add_looper(Looper *looper) {
         m_loopers.push_back(looper);
+        looper->init();
         return looper;
     }
     inline int window_width() const { return m_window_width; }

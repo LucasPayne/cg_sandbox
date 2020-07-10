@@ -46,6 +46,9 @@ void OpenGLContext::close()
         std::cerr <<  "ERROR: Tried to close OpenGLContext, none is open!\n";
         exit(EXIT_FAILURE);
     }
+    for (Looper *looper : m_loopers) {
+        looper->close();
+    }
     glfwTerminate();
     glfwDestroyWindow(m_glfw_window);
     g_context_active = false;

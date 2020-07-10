@@ -2,4 +2,3 @@
 # Helper script for testing on Linux.
 
 ( cd build ; cmake .. ; make )
-build/main

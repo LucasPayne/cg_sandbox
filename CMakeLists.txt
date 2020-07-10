@@ -13,6 +13,7 @@ include_directories(lib)
 add_executable(main
     src/main.cpp
     lib/glad/glad.c
+    src/cg_sandbox.cpp
 )
 set_property(TARGET main PROPERTY CXX_STANDARD 11)
 target_compile_options(main PRIVATE -Wall)
@@ -30,12 +31,7 @@ add_library(entity_model STATIC
     src/entity_model/entity_model.cpp
     src/entity_model/aspect.cpp
 )
-target_link_libraries(entity_model PRIVATE gl)
-
-add_library(cg_sandbox STATIC
-    src/cg_sandbox.cpp
-)
-target_link_libraries(main PRIVATE cg_sandbox)
+target_link_libraries(main PRIVATE entity_model)
 
 # External libraries
 #================================================================================

@@ -11,21 +11,45 @@ DefineAspect(SomeValues) {
     float x;
     int nums[16];
     bool flag;
+    static void create() {
+
+    }
+    static void teardown() {
+
+    }
 };
 
 DefineAspect(SomeMoreStuff) {
     float x;
     int nums[23];
+    static void create() {
+
+    }
+    static void teardown() {
+
+    }
 };
 
 void CGSandbox::init()
 {
-    Entity e = new_entity(
-        new_aspect<SomeValues>(1.3, 32, true),
-        new_aspect<SomeMoreStuff>(1.66, 12)
-    );
-    e.remove_aspect<SomeValues>();
-    e.add_aspect<SomeValues>(2.87, 10, false);
+    AspectType type1 = SomeValues::type;
+    AspectType type = SomeMoreStuff::type;
+    printf("type: %d\n", type);
+    AspectInfo info = AspectInfo::type_info(type);
+    std::cout << "size: " << info.size << "\n";
+
+#if 0
+    Entity e = new_entity();
+
+    add_aspect<
+
+    e.add<SomeValues>(1.3, 32, true);
+    e.add<SomeMoreStuff>(1.66, 12);
+    e.remove<SomeValues>();
+    Aspect a = e.add<SomeValues>(2.87, 10, false);
+    a.x = 87.13;
+    a.print();
+#endif
 }
 void CGSandbox::close()
 {

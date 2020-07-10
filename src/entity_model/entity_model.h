@@ -10,6 +10,9 @@
 //     float the_float;
 // }
 
+// ID -1 == 255 is reserved for the null aspect type.
+#define MAX_NUM_ASPECT_TYPES 255
+
 // A null Entity has id 0.
 struct Entity {
     uint32_t index;
@@ -24,22 +27,42 @@ struct Aspect {
     AspectType type;
 };
 
+typedef void (*AspectCreateFunction)(void);
+typedef void (*AspectTeardownFunction)(void);
+
+struct AspectInfo {
+    AspectCreateFunction create;
+    AspectTeardownFunction teardown;
+    size_t size;
+
+    static AspectType new_aspect_type(AspectCreateFunction create,
+                                      AspectTeardownFunction teardown,
+                                      size_t size);
+    static AspectInfo type_info(AspectType type);
+    //-----
+    // Having problems with static initialization of std::vector.
+    // Using an array instead.
+    static AspectInfo aspect_infos[MAX_NUM_ASPECT_TYPES];
+};
 struct AspectEntryBase {
     Entity entity;
     Aspect next_aspect;
-    static AspectType next_type();
 };
 template<typename T>
 struct AspectEntry : public AspectEntryBase
 {
-    //--Creation and teardown functions.
     static const AspectType type;
     static const size_t size;
+    static const AspectCreateFunction create;
+    static const AspectTeardownFunction teardown;
 };
+// Static initialization.
 template<typename T>
-const AspectType AspectEntry<T>::type(AspectEntryBase::next_type());
-template<typename T>
-const size_t AspectEntry<T>::size(sizeof(T));
+const AspectType AspectEntry<T>::type(AspectInfo::new_aspect_type(
+    T::create,
+    T::teardown,
+    sizeof(T)
+));
 
 class EntityModel {
 private:

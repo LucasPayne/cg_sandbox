@@ -1,4 +1,4 @@
-#include "gl.hpp"
+#include "gl.h"
 
 // Load a shader.
 GLShader::GLShader(GLenum shader_type, std::string const &shader_path)

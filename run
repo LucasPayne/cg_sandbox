@@ -1,0 +1,4 @@
+#!/bin/sh
+# Helper script for testing on Linux.
+
+( cd build ; cmake .. ; make ; ./cg_sandbox )

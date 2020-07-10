@@ -1,4 +1,4 @@
-#include "gl.hpp"
+#include "gl.h"
 
 float total_time;
 float dt;

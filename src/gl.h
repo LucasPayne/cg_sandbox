@@ -7,7 +7,7 @@
 
 // The active OpenGLContext updates these global values.
 // This is for convenience, so that having things with time-dependence doesn't require
-// passing the context around everywhree.
+// passing the context around everywhere.
 extern float total_time;
 extern float dt;
 

@@ -1,4 +1,4 @@
-#include "gl.hpp"
+#include "gl.h"
 
 // Must be in the same order as the SpecialKeys enum is declared.
 static GLint GLFW_SPECIAL_KEY_MAP[NUM_SPECIAL_KEYS] = {

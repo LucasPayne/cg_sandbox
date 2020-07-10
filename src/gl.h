@@ -58,6 +58,8 @@ private:
     int m_initial_resolution_y;
     int m_window_width;
     int m_window_height;
+    float bg_color[4]; // Overall window clear color.
+    float fg_color[4]; // Subrectangle clear color.
 
     // GLFW state.
     GLFWwindow *m_glfw_window;
@@ -70,6 +72,8 @@ public:
     OpenGLContext(std::string const &window_name, int res_x = 512, int res_y = 512) :
         m_glfw_window_name(window_name)
     {
+        set_bg_color(0,0,0,1);
+        set_fg_color(1,1,1,1);
         m_initial_resolution_x = res_x;
         m_initial_resolution_y = res_y;
         m_window_width = res_x;
@@ -110,6 +114,18 @@ public:
     }
     inline int window_width() const { return m_window_width; }
     inline int window_height() const { return m_window_height; }
+    void set_bg_color(float r, float g, float b, float a) {
+        bg_color[0] = r;
+        bg_color[1] = g;
+        bg_color[2] = b;
+        bg_color[3] = a;
+    }
+    void set_fg_color(float r, float g, float b, float a) {
+        fg_color[0] = r;
+        fg_color[1] = g;
+        fg_color[2] = b;
+        fg_color[3] = a;
+    }
 };
 
 // There can only be one.

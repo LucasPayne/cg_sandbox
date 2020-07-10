@@ -17,7 +17,7 @@ void OpenGLContext::open()
         exit(EXIT_FAILURE);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     m_glfw_window = glfwCreateWindow(m_initial_resolution_x, m_initial_resolution_y, m_glfw_window_name.c_str(), NULL, NULL);
@@ -65,7 +65,7 @@ void OpenGLContext::enter_loop()
         total_time = m_time;
 
         // Clearing: window clear to background color, viewport clear to the foreground color.
-        glClearColor(0,0,0,1);
+        glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -73,7 +73,7 @@ void OpenGLContext::enter_loop()
         glGetIntegerv(GL_VIEWPORT, viewport);
         glEnable(GL_SCISSOR_TEST);
         glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-        glClearColor(1,1,1,1);
+        glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_SCISSOR_TEST);
 
@@ -84,11 +84,6 @@ void OpenGLContext::enter_loop()
 
         glFlush();
         glfwSwapBuffers(m_glfw_window);
-        
-//---
-        // renderer->render();
-        //renderer->write_to_ppm("test.ppm");
-        //exit(EXIT_SUCCESS);
     }
 }
 
@@ -106,7 +101,7 @@ void OpenGLContext::glfw_key_callback(GLFWwindow *window, int key,
                        int mods)
 {
     key_callback_arrows_down(window, key, scancode, action, mods);
-    for (InputListener * il : g_opengl_context->m_input_listeners) {
+    for (InputListener *il : g_opengl_context->m_input_listeners) {
         if (il->listening) il->key_callback(key, action);
     }
     for (const KeyCallback &cb : g_opengl_context->m_key_callbacks) {
@@ -147,7 +142,7 @@ void OpenGLContext::glfw_cursor_position_callback(GLFWwindow *window, double win
 }
 void OpenGLContext::glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    for (InputListener * il : g_opengl_context->m_input_listeners) {
+    for (InputListener *il : g_opengl_context->m_input_listeners) {
         if (il->listening) il->mouse_button_callback(button, action);
     }
     for (const MouseButtonCallback &cb : g_opengl_context->m_mouse_button_callbacks) {

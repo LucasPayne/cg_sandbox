@@ -18,12 +18,13 @@ static inline void dprint(const char *format, ...)
 
 // std::vector<AspectInfo> AspectInfo::aspect_infos;
 AspectInfo AspectInfo::aspect_infos[MAX_NUM_ASPECT_TYPES];
-
+// Aspect types (should) only be registered at static initialization, fixed at compile time.
+// So, this can be used to e.g. create arrays of aspects for each aspect type, indexed by the type.
+int AspectInfo::num_aspect_types = 0;
 AspectType AspectInfo::new_aspect_type(AspectCreateFunction create,
                                        AspectTeardownFunction teardown,
                                        size_t size)
 {
-    static int num_aspect_types = 0;
     if (num_aspect_types + 1 >  MAX_NUM_ASPECT_TYPES) {
         std::cerr << "ERROR: Too many aspect types.\n";
         exit(EXIT_FAILURE);
@@ -55,6 +56,17 @@ EntityModel::EntityModel()
     entity_list_first_free_index = 0;
     // This is never zero in any other case, so zero here signifies that there are no more free entries.
     entity_list[ENTITY_LIST_START_LENGTH - 1].next_free_index = 0;
+
+    // Initialize the aspect lists. The aspect types should by now be constant, none being added at (non static-initialization)
+    // runtime.
+    aspect_lists = std::vector<std::vector<uint8_t>>(AspectInfo::num_aspect_types);
+    for (int i = 0; i < AspectInfo::num_aspect_types; i++) {
+        const AspectInfo &info = AspectInfo::type_info(i);
+        aspect_lists[i] = std::vector<uint8_t>(info.size * ASPECT_LIST_START_LENGTH, 0);
+        std::vector<uint8_t> &list = aspect_lists[i];
+        // Initialize this aspect list, connecting a free list in the same way done for the entity list.
+        
+    }
 }
 EntityModel::~EntityModel()
 {

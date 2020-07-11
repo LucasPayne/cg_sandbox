@@ -38,7 +38,7 @@ void CGSandbox::init()
     AspectInfo info = AspectInfo::type_info(type);
     std::cout << "size: " << info.size << "\n";
 
-    for (int i = 0; i < 260; i++) {
+    for (int i = 0; i < 514; i++) {
         Entity e = entity_model.new_entity();
         SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
     }

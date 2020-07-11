@@ -41,6 +41,7 @@ struct AspectInfo {
     // The macro solution could do this easily, but initialization of RTTI had to be called manually.
     // char name[MAX_ASPECT_TYPE_NAME_LENGTH + 1];
 
+    static int num_aspect_types;
     static AspectType new_aspect_type(AspectCreateFunction create,
                                       AspectTeardownFunction teardown,
                                       size_t size);
@@ -51,7 +52,15 @@ struct AspectInfo {
     static AspectInfo aspect_infos[MAX_NUM_ASPECT_TYPES];
 };
 struct AspectEntryBase {
-    Entity entity;
+    uint32_t id;
+    union {
+        Entity entity;
+        // If id == 0, this stores the index of the free entry after this.
+        uint32_t next_free_index;
+    };
+    // The entity has a linked list of its aspects,
+    // which can be traversed from an aspect by using its entity handle to look up
+    // its first aspect, and then following the next aspects.
     Aspect next_aspect;
 };
 template<typename T>
@@ -83,6 +92,7 @@ struct EntityEntry {
 };
 
 #define ENTITY_LIST_START_LENGTH 256
+#define ASPECT_LIST_START_LENGTH 32
 class EntityModel {
 private:
     // entity list data structure
@@ -90,20 +100,29 @@ private:
     uint32_t entity_list_first_free_index;
     std::vector<EntityEntry> entity_list;
     // --------------------------
-    std::vector<uint8_t *> aspect_lists;
+    std::vector<std::vector<uint8_t>> aspect_lists;
+    
+    // Retrieve the next available entry in the aspect list for the given aspect type.
+    // It then has metadata filled and a pointer is returned, for the caller to do further initialization.
+    template <typename A>
+    A *new_aspect_entry() {
+        const AspectInfo &info = AspectInfo::type_info(A::type);
+        std::vector<uint8_t> &list = aspect_lists[A::type];
+    }
+
 public:
     EntityModel();
     ~EntityModel();
 
     Entity new_entity();
 
+    //- Templated methods must be defined in the header.
     template <typename A>
     A *add_aspect(Entity e) {
         const AspectInfo &info = AspectInfo::type_info(A::type);
-        //---initialize a new aspect in the relevant aspect list.
-        // Call the create function on it.
-        // Return the aspect handle.
-        return NULL;
+        A *entry = new_aspect_entry<A>();
+
+        return entry;
     }
 };
 

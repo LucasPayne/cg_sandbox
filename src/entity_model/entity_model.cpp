@@ -1,5 +1,9 @@
 #include "core.h"
 #include "entity_model/entity_model.h"
+/*--------------------------------------------------------------------------------
+BUGS:
+    --- Past length 8192, list resize gives a segfault.
+--------------------------------------------------------------------------------*/
 
 #include <stdarg.h>
 #define DEBUG 1
@@ -135,7 +139,7 @@ Entity EntityModel::new_entity()
 }
 
 
-AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type)
+AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
     dprint("Creating new aspect-%u entry\n", aspect_type);
 
@@ -167,7 +171,6 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
                 new_entry->next_free_index = new_index + 1;
             }
         }
-        dprint("nice\n");
         // The list has been resized, the next free entry is at the start of the expanded part of the list.
         rt_info.first_free_index = old_length;
     } else {
@@ -179,12 +182,43 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     // Fill in metadata.
     entry->id = rt_info.next_aspect_id ++;
     entry->entity = entity;
-    //---todo: Connect to the entity's aspect list.
+    //-The caller (add_aspect) will integrate this into the entity's aspect list.
     entry->next_aspect.id = 0;
 
     dprint("    id: %u\n", entry->id);
     dprint("    entity id: %u\n", entry->entity.id);
     dprint("    entity index: %u\n", entry->entity.index);
+    
+    // Give the caller the index of this new entry.
+    *index_out = index;
+    return entry;
+}
 
+AspectEntryBase *EntityModel::get_aspect_base(Aspect aspect)
+{
+    const AspectInfo &info = AspectInfo::type_info(aspect.type);
+    const std::vector<uint8_t> &list = aspect_lists[aspect.type];
+
+    //- Could do a bounds check here, in case the handle is corrupt.
+    AspectEntryBase *entry = (AspectEntryBase *) &list[aspect.index * info.size];
+    if (aspect.id != entry->id) {
+        // This aspect doesn't exist, at least not anymore.
+        //---should give better error information.
+        std::cerr << "ERROR: Attempted to lookup aspect that doesn't exist.\n";
+        exit(EXIT_FAILURE);
+    }
+    return entry;
+}
+
+
+EntityEntry *EntityModel::get_entity_entry(Entity entity)
+{
+    EntityEntry *entry = &entity_list[entity.index];
+
+    if (entity.id != entry->id) {
+        // This entity doesn't exist, at least not anymore.
+        std::cerr << "ERROR: Attempted to lookup entity that doesn't exist.\n";
+        exit(EXIT_FAILURE);
+    }
     return entry;
 }

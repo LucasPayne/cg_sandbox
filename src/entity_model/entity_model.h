@@ -23,8 +23,12 @@ struct Entity {
 typedef uint8_t AspectType;
 struct Aspect {
     uint32_t id;
-    uint16_t index;
+    uint32_t index;
     AspectType type;
+    Aspect() {}
+    Aspect(uint32_t _id, uint32_t _index, AspectType _type) :
+        id{_id}, index{_index}, type{_type}
+    {}
 };
 
 typedef void (*AspectCreateFunction)(void);
@@ -114,7 +118,17 @@ private:
     
     // Retrieve the next available entry in the aspect list for the given aspect type.
     // It then has metadata filled and a pointer is returned, for the caller to do further initialization.
-    AspectEntryBase *new_aspect_entry(Entity entity, AspectType aspect_type);
+    // The index is also filled out, since this will be needed by add_aspect.
+    // - This is purely a separated function to be used only by add_aspect.
+    AspectEntryBase *new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out);
+
+    // Use the aspect handle to lookup the pointer to the base aspect class in the relevant aspect list/table.
+    // This is private, as applications will use the templated get_aspect.
+    AspectEntryBase *get_aspect_base(Aspect aspect);
+
+    // Use the entity handle to lookup the pointer to the entity entry in the entity list/table.
+    // This is private, as applications probably shouldn't need to use it.
+    EntityEntry *get_entity_entry(Entity entity);
 
 public:
     EntityModel();
@@ -122,13 +136,41 @@ public:
 
     Entity new_entity();
 
-    //- Templated methods must be defined in the header.
+    //todo
+    // template <typename A>
+    // A *get_aspect(Aspect aspect) {
+
+    // }
+
+    //- Templated methods must (?) be defined in the header.
     //- Templating is only here for the syntax, this could easily be done with a macro that expands to the type id.
     template <typename A>
     A *add_aspect(Entity entity) {
         const AspectInfo &info = AspectInfo::type_info(A::type);
-        AspectEntryBase *entry = new_aspect_entry(entity, A::type);
+        uint32_t index;
+        AspectEntryBase *entry = new_aspect_entry(entity, A::type, &index);
         A *aspect = (A *) entry;
+
+        // Create an aspect handle and use it to link this aspect into the entity's aspect list.
+        // !-IMPORTANT-! Remember the order of parameters in the constructor, or else bugs will occur.
+        //    id, index, type
+        Aspect aspect_handle(entry->id, index, A::type);
+
+        EntityEntry *entity_entry = get_entity_entry(entity);
+        if (entity_entry->num_aspects == 0) {
+            // This is the first aspect, at the head of the list.
+            entity_entry->first_aspect = aspect_handle;
+        } else {
+            // Get the last aspect in the entity's aspect list.
+            AspectEntryBase *last = get_aspect_base(entity_entry->first_aspect);
+            while (last->next_aspect.id != 0) {
+                last = get_aspect_base(last->next_aspect);
+            }
+            // Add this to the end.
+            last->next_aspect = aspect_handle;
+
+            entity_entry->num_aspects ++;
+        }
 
         //---initialization stuff?
 

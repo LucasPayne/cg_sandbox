@@ -11,6 +11,7 @@ DefineAspect(SomeValues) {
     float x;
     int nums[16];
     bool flag;
+
     static void create() {
 
     }
@@ -22,6 +23,7 @@ DefineAspect(SomeValues) {
 DefineAspect(SomeMoreStuff) {
     float x;
     int nums[23];
+
     static void create() {
 
     }
@@ -38,7 +40,7 @@ void CGSandbox::init()
     AspectInfo info = AspectInfo::type_info(type);
     std::cout << "size: " << info.size << "\n";
 
-    for (int i = 0; i < 514; i++) {
+    for (int i = 0; i < 512; i++) {
         Entity e = entity_model.new_entity();
         SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
         SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);

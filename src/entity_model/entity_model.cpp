@@ -154,6 +154,7 @@ void EntityModel::print_aspect_ids(AspectType aspect_type)
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
     dprint("Creating new aspect-%u entry\n", aspect_type);
+    print_aspect_ids(aspect_type);
 
     // Use the aspect type information and the list of aspects.
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
@@ -163,8 +164,10 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     //-The first free index always has to be valid. Resizes are triggered when this would not
     // have any options.
     uint32_t index = rt_info.first_free_index;
+    dprint("    index: %u\n", index);
     AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
     if (entry->next_free_index == 0) {
+        // !-IMPORTANT-! After resizing, the AspectEntryBase entry pointer _must_ be recalculated.
         dprint("------------------------------------------------------------\n");
         dprint("Resizing aspect-%u list\n", aspect_type);
         //--- Code duplication here, this is the same logic as the resizing of the entity list.
@@ -187,6 +190,8 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
         }
         // The list has been resized, the next free entry is at the start of the expanded part of the list.
         rt_info.first_free_index = old_length;
+        // !-IMPORTANT-! Recalculating entry pointer here.
+        entry = (AspectEntryBase *) &list[index * info.size];
     } else {
         // Update the first free index to the next available entry.
         // (!-IMPORTANT-! Do this first, since unions are used in the entry struct.)
@@ -205,6 +210,9 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     
     // Give the caller the index of this new entry.
     *index_out = index;
+
+    print_aspect_ids(aspect_type);
+
     return entry;
 }
 

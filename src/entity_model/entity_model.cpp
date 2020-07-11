@@ -1,6 +1,21 @@
 #include "core.h"
 #include "entity_model/entity_model.h"
 
+#include <stdarg.h>
+#define DEBUG 1
+// http://www.cplusplus.com/reference/cstdio/vsprintf/
+// http://www.cplusplus.com/reference/cstdio/vprintf/
+//--Empty inlines will still definitely have side-effect parameters evaluated.
+static inline void dprint(const char *format, ...)
+{
+#if DEBUG
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+#endif
+}
+
 // std::vector<AspectInfo> AspectInfo::aspect_infos;
 AspectInfo AspectInfo::aspect_infos[MAX_NUM_ASPECT_TYPES];
 
@@ -32,7 +47,7 @@ EntityModel::EntityModel()
     //   be a separate implementation.
 
     // Place the entity list on the heap somewhere.
-    entity_list = new std::vector<EntityEntry>(ENTITY_LIST_START_LENGTH);
+    entity_list = std::vector<EntityEntry>(ENTITY_LIST_START_LENGTH);
     for (int i = 0; i < ENTITY_LIST_START_LENGTH; i++) {
         entity_list[i].id = 0; // Mark each entry as null.
         entity_list[i].next_free_index = i + 1;
@@ -48,21 +63,40 @@ EntityModel::~EntityModel()
 
 Entity EntityModel::new_entity()
 {
-    static int next_entity_id = 1; // 0 is reserved for the null entity ID.
-    Entity e;
-    e.id = next_entity_id ++;
+    dprint("Creating new entity\n");
+
     // Get an index in the entity list.
     int index = entity_list_first_free_index;
     if (entity_list[index].next_free_index == 0) {
+        dprint("Resizing entity list\n");
         // The entity list is full, resize it.
         size_t old_size = entity_list.size();
         entity_list.resize(old_size * 2);
         for (int i = old_size; i < old_size * 2; i++) {
-            // Make sure the new entries are null.
+            // Make sure the new entries are null and connect to the free list.
             entity_list[i].id = 0;
+            entity_list[i].next_free_index = i + 1;
         }
+        // The last new entry is the last in the free list.
+        entity_list[entity_list.size() - 1].next_free_index = 0;
+        // The list has been resized, the next free entry is at the start of the expanded part of the list.
+        entity_list_first_free_index = old_size;
+        dprint("    %zu -> %zu\n", old_size, entity_list.size());
+    } else {
+        // The next free entry is now the first.
+        entity_list_first_free_index = entity_list[index].next_free_index;
     }
 
+    static int next_entity_id = 1; // 0 is reserved for the null entity ID.
+
+    // Create the Entity handle that will be returned.
+    Entity e;
+    e.id = next_entity_id ++;
+    e.index = index;
+    dprint("    id: %u\n", e.id);
+    dprint("    index: %u\n", e.index);
+
+    // Fill the entry in the entity list.
     EntityEntry entry;
     entry.id = e.id;
     entry.num_aspects = 0;

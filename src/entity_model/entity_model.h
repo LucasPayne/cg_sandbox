@@ -76,7 +76,7 @@ struct EntityEntry {
         uint32_t num_aspects;
         // If id == 0, this stores the index of the free entry after this.
         uint32_t next_free_index;
-    }
+    };
     Aspect first_aspect;
     //-- Will probably put very common things here, such as transform, instead of in an aspect.
     // I tried that, and a large portion of functions had to get the sibling transform aspect.

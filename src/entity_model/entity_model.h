@@ -92,8 +92,10 @@ struct EntityEntry {
 };
 
 // Per-EntityModel aspect type metadata (doesn't need to be constant throughout runtime).
+// ---is the naming here fine?
 struct RuntimeAspectInfo {
     uint32_t next_aspect_id; // init to 1. The null aspect id is 0.
+    uint32_t first_free_index; // First index free in the relevant aspect list.
 };
 
 #define ENTITY_LIST_START_LENGTH 256
@@ -112,11 +114,7 @@ private:
     
     // Retrieve the next available entry in the aspect list for the given aspect type.
     // It then has metadata filled and a pointer is returned, for the caller to do further initialization.
-    template <typename A>
-    A *new_aspect_entry() {
-        const AspectInfo &info = AspectInfo::type_info(A::type);
-        std::vector<uint8_t> &list = aspect_lists[A::type];
-    }
+    AspectEntryBase *new_aspect_entry(Entity entity, AspectType aspect_type);
 
 public:
     EntityModel();
@@ -125,12 +123,16 @@ public:
     Entity new_entity();
 
     //- Templated methods must be defined in the header.
+    //- Templating is only here for the syntax, this could easily be done with a macro that expands to the type id.
     template <typename A>
-    A *add_aspect(Entity e) {
+    A *add_aspect(Entity entity) {
         const AspectInfo &info = AspectInfo::type_info(A::type);
-        A *entry = new_aspect_entry<A>();
+        AspectEntryBase *entry = new_aspect_entry(entity, A::type);
+        A *aspect = (A *) entry;
 
-        return entry;
+        //---initialization stuff?
+
+        return aspect;
     }
 };
 

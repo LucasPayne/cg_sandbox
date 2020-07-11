@@ -60,9 +60,8 @@ EntityModel::EntityModel()
     // Initialize the runtime aspect type metadata.
     runtime_aspect_infos = std::vector<RuntimeAspectInfo>(AspectInfo::num_aspect_types);
     for (RuntimeAspectInfo &rt_info : runtime_aspect_infos) {
-        //-Currently this just contains the next aspect id, but if there is any other runtime aspect type data,
-        // it should be contained here.
         rt_info.next_aspect_id = 1;
+        rt_info.first_free_index = 0;
     }
     
     // Initialize the aspect lists.
@@ -113,7 +112,7 @@ Entity EntityModel::new_entity()
         entity_list_first_free_index = old_size;
         dprint("    %zu -> %zu\n", old_size, entity_list.size());
     } else {
-        // The next free entry is now the first.
+        // Update the first free index to the next available entry.
         entity_list_first_free_index = entity_list[index].next_free_index;
     }
 
@@ -136,3 +135,56 @@ Entity EntityModel::new_entity()
 }
 
 
+AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type)
+{
+    dprint("Creating new aspect-%u entry\n", aspect_type);
+
+    // Use the aspect type information and the list of aspects.
+    const AspectInfo &info = AspectInfo::type_info(aspect_type);
+    RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
+    std::vector<uint8_t> &list = aspect_lists[aspect_type];
+    
+    //-The first free index always has to be valid. Resizes are triggered when this would not
+    // have any options.
+    uint32_t index = rt_info.first_free_index;
+    AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
+    if (entry->next_free_index == 0) {
+        dprint("Resizing aspect-%u list\n", aspect_type);
+        //--- Code duplication here, this is the same logic as the resizing of the entity list.
+        //    Some of it is different since this handles contiguous arrays of derived types.
+        // This aspect list is full, resize it.
+        size_t old_length = list.size() / info.size; // This not the array size in bytes, but the length when considered containing the derived type.
+        list.resize(old_length * 2 * info.size);
+        dprint("    %zu -> %zu\n", old_length, old_length * 2);
+        for (int new_index = old_length; new_index < old_length * 2; new_index ++) {
+            // Make sure the new entries are null and connect to the free list.
+            AspectEntryBase *new_entry = (AspectEntryBase *) &list[new_index * info.size];
+            new_entry->id = 0;
+            if (new_index == old_length * 2 - 1) {
+                // The last new entry is the last in the free list.
+                new_entry->next_free_index = 0;
+            } else {
+                new_entry->next_free_index = new_index + 1;
+            }
+        }
+        dprint("nice\n");
+        // The list has been resized, the next free entry is at the start of the expanded part of the list.
+        rt_info.first_free_index = old_length;
+    } else {
+        // Update the first free index to the next available entry.
+        // (!-IMPORTANT-! Do this first, since unions are used in the entry struct.)
+        rt_info.first_free_index = entry->next_free_index;
+    }
+
+    // Fill in metadata.
+    entry->id = rt_info.next_aspect_id ++;
+    entry->entity = entity;
+    //---todo: Connect to the entity's aspect list.
+    entry->next_aspect.id = 0;
+
+    dprint("    id: %u\n", entry->id);
+    dprint("    entity id: %u\n", entry->entity.id);
+    dprint("    entity index: %u\n", entry->entity.index);
+
+    return entry;
+}

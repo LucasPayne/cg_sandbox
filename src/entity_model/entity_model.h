@@ -91,6 +91,11 @@ struct EntityEntry {
     // I tried that, and a large portion of functions had to get the sibling transform aspect.
 };
 
+// Per-EntityModel aspect type metadata (doesn't need to be constant throughout runtime).
+struct RuntimeAspectInfo {
+    uint32_t next_aspect_id; // init to 1. The null aspect id is 0.
+};
+
 #define ENTITY_LIST_START_LENGTH 256
 #define ASPECT_LIST_START_LENGTH 32
 class EntityModel {
@@ -101,6 +106,9 @@ private:
     std::vector<EntityEntry> entity_list;
     // --------------------------
     std::vector<std::vector<uint8_t>> aspect_lists;
+    // This is tracked here instead of in AspectInfo RTTI, since that should be constant through runtime,
+    // and ids don't need to be unique across EntityModel instances.
+    std::vector<RuntimeAspectInfo> runtime_aspect_infos;
     
     // Retrieve the next available entry in the aspect list for the given aspect type.
     // It then has metadata filled and a pointer is returned, for the caller to do further initialization.

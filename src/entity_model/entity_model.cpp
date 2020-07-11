@@ -16,7 +16,6 @@ static inline void dprint(const char *format, ...)
 #endif
 }
 
-// std::vector<AspectInfo> AspectInfo::aspect_infos;
 AspectInfo AspectInfo::aspect_infos[MAX_NUM_ASPECT_TYPES];
 // Aspect types (should) only be registered at static initialization, fixed at compile time.
 // So, this can be used to e.g. create arrays of aspects for each aspect type, indexed by the type.
@@ -57,15 +56,34 @@ EntityModel::EntityModel()
     // This is never zero in any other case, so zero here signifies that there are no more free entries.
     entity_list[ENTITY_LIST_START_LENGTH - 1].next_free_index = 0;
 
-    // Initialize the aspect lists. The aspect types should by now be constant, none being added at (non static-initialization)
-    // runtime.
+    //-The aspect types should by now be constant, none being added at (non static-initialization) runtime.
+    // Initialize the runtime aspect type metadata.
+    runtime_aspect_infos = std::vector<RuntimeAspectInfo>(AspectInfo::num_aspect_types);
+    for (RuntimeAspectInfo &rt_info : runtime_aspect_infos) {
+        //-Currently this just contains the next aspect id, but if there is any other runtime aspect type data,
+        // it should be contained here.
+        rt_info.next_aspect_id = 1;
+    }
+    
+    // Initialize the aspect lists.
     aspect_lists = std::vector<std::vector<uint8_t>>(AspectInfo::num_aspect_types);
     for (int i = 0; i < AspectInfo::num_aspect_types; i++) {
         const AspectInfo &info = AspectInfo::type_info(i);
         aspect_lists[i] = std::vector<uint8_t>(info.size * ASPECT_LIST_START_LENGTH, 0);
         std::vector<uint8_t> &list = aspect_lists[i];
         // Initialize this aspect list, connecting a free list in the same way done for the entity list.
-        
+        for (int entry_index = 0; entry_index < ASPECT_LIST_START_LENGTH; entry_index ++) {
+            // This is a contiguous array of derived types, so iterate over the full entries and cast
+            // them to the AspectEntryBase class, so common metadata can be filled.
+            AspectEntryBase *entry = (AspectEntryBase *) &list[entry_index * info.size];
+            entry->id = 0;
+            if (entry_index == ASPECT_LIST_START_LENGTH - 1) {
+                // The last free entry has next_free_index zero, meaning there are no more free entries.
+                entry->next_free_index = 0;
+            } else {
+                entry->next_free_index = entry_index + 1;
+            }
+        }
     }
 }
 EntityModel::~EntityModel()

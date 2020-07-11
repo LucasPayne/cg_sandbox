@@ -38,18 +38,15 @@ void CGSandbox::init()
     AspectInfo info = AspectInfo::type_info(type);
     std::cout << "size: " << info.size << "\n";
 
-#if 0
-    Entity e = new_entity();
+    Entity e = entity_model.new_entity();
+    SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
 
-    add_aspect<
-
-    e.add<SomeValues>(1.3, 32, true);
-    e.add<SomeMoreStuff>(1.66, 12);
-    e.remove<SomeValues>();
-    Aspect a = e.add<SomeValues>(2.87, 10, false);
-    a.x = 87.13;
-    a.print();
-#endif
+    // e.add<SomeValues>(1.3, 32, true);
+    // e.add<SomeMoreStuff>(1.66, 12);
+    // e.remove<SomeValues>();
+    // Aspect a = e.add<SomeValues>(2.87, 10, false);
+    // a.x = 87.13;
+    // a.print();
 }
 void CGSandbox::close()
 {

@@ -6,7 +6,7 @@ BUGS:
 --------------------------------------------------------------------------------*/
 
 #include <stdarg.h>
-#define DEBUG 1
+#define DEBUG 0
 // http://www.cplusplus.com/reference/cstdio/vsprintf/
 // http://www.cplusplus.com/reference/cstdio/vprintf/
 //--Empty inlines will still definitely have side-effect parameters evaluated.
@@ -154,7 +154,6 @@ void EntityModel::print_aspect_ids(AspectType aspect_type)
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
     dprint("Creating new aspect-%u entry\n", aspect_type);
-    print_aspect_ids(aspect_type);
 
     // Use the aspect type information and the list of aspects.
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
@@ -211,8 +210,6 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     // Give the caller the index of this new entry.
     *index_out = index;
 
-    print_aspect_ids(aspect_type);
-
     return entry;
 }
 
@@ -265,8 +262,6 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
             fprintf(file, "        type: %u\n", cur_handle.type);
             fprintf(file, "        id: %u\n", cur_handle.id);
             fprintf(file, "        index: %u\n", cur_handle.index);
-
-            fprintf(file, "        next_aspect (id): %u\n", cur->next_aspect.id);
 
             cur_handle = cur->next_aspect;
             if (cur_handle.id == 0) break;

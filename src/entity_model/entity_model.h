@@ -140,14 +140,31 @@ public:
     inline void print_entity(Entity entity) {
         fprint_entity(stdout, entity);
     };
+
+    //-Templating here is just for the syntax. A macro could be used instead.
+    template <typename A>
+    A *get_aspect(Entity entity) {
+        EntityEntry *entity_entry = get_entity_entry(entity);
+
+        // Search through the aspect linked list for the first one with the relevant id.
+        if (entity_entry->num_aspects > 0) {
+            Aspect cur_handle = entity_entry->first_aspect;
+            AspectEntryBase *cur = get_aspect_base(cur_handle);
+            while (cur_handle.id != 0) {
+                if (cur_handle.type == A::type) {
+                    // Found one.
+                    return (A *) cur;
+                }
+                cur_handle = cur->next_aspect;
+                cur = get_aspect_base(cur_handle);
+            }
+        }
+        fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
+        exit(EXIT_FAILURE);
+    }
+
     // Debug helper functions.
     void print_aspect_ids(AspectType aspect_type);
-
-    //todo
-    // template <typename A>
-    // A *get_aspect(Aspect aspect) {
-
-    // }
 
     //- Templated methods must (?) be defined in the header.
     //- Templating is only here for the syntax, this could easily be done with a macro that expands to the type id.
@@ -165,27 +182,19 @@ public:
 
         EntityEntry *entity_entry = get_entity_entry(entity);
 
-        printf("okkkkk\n");
         if (entity_entry->num_aspects == 0) {
             // This is the first aspect, at the head of the list.
             entity_entry->first_aspect = aspect_handle;
         } else {
             // Get the last aspect in the entity's aspect list.
-            printf("%d\n", entity_entry->first_aspect.id);
-            std::vector<uint8_t> &_list = aspect_lists[entity_entry->first_aspect.type];
-            AspectInfo _info = AspectInfo::type_info(entity_entry->first_aspect.type);
-            printf("%zu\n", _list.size() / _info.size);
             AspectEntryBase *last = get_aspect_base(entity_entry->first_aspect);
-            printf("got first\n");
             while (last->next_aspect.id != 0) {
                 last = get_aspect_base(last->next_aspect);
-                printf("traversing\n");
             }
             // Add this to the end.
             last->next_aspect = aspect_handle;
         }
         entity_entry->num_aspects ++;
-        printf("doneded\n");
 
         //---initialization stuff?
 

@@ -15,4 +15,6 @@
 #include <iostream>
 #include <fstream>
 
+#define frand() (rand() / (RAND_MAX * 1.0))
+
 #endif // CORE_H

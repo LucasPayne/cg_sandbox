@@ -40,7 +40,10 @@ void CGSandbox::init()
     AspectInfo info = AspectInfo::type_info(type);
     std::cout << "size: " << info.size << "\n";
 
-    for (int i = 0; i < 512; i++) {
+    #define N 480
+    Entity entities[N];
+
+    for (int i = 0; i < N; i++) {
         Entity e = entity_model.new_entity();
         SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
         sv->x = 12.31;
@@ -49,8 +52,13 @@ void CGSandbox::init()
 
         SomeValues *_sv = entity_model.get_aspect<SomeValues>(e);
         printf("x: %.2f\n", _sv->x);
-
+        entities[i] = e;
     }
+    for (int i = 0; i < N; i++) {
+        if (frand() > 0.5) entity_model.destroy_entity(entities[i]);
+    }
+    entity_model.print_entity_ids();
+    
 
     // e.add<SomeValues>(1.3, 32, true);
     // e.add<SomeMoreStuff>(1.66, 12);

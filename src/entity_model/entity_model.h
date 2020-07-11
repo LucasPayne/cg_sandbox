@@ -135,6 +135,7 @@ public:
     ~EntityModel();
 
     Entity new_entity();
+    void destroy_entity(Entity entity);
 
     void fprint_entity(FILE *file, Entity entity);
     inline void print_entity(Entity entity) {
@@ -162,9 +163,6 @@ public:
         fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
         exit(EXIT_FAILURE);
     }
-
-    // Debug helper functions.
-    void print_aspect_ids(AspectType aspect_type);
 
     //- Templated methods must (?) be defined in the header.
     //- Templating is only here for the syntax, this could easily be done with a macro that expands to the type id.
@@ -200,6 +198,16 @@ public:
 
         return aspect;
     }
+    // Aspect data derives from AspectEntryBase, so this function can be used to destroy given the pointer.
+    void destroy_aspect(AspectEntryBase *aspect_entry);
+    //todo
+    // void destroy_aspect(Aspect aspect);
+    // template <typename A>
+    // void destroy_aspect(Entity entity);
+
+    // Debug helper functions.
+    void print_aspect_ids(AspectType aspect_type);
+    void print_entity_ids();
 };
 
 #endif // ENTITY_MODEL_H

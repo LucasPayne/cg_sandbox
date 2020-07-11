@@ -138,19 +138,6 @@ Entity EntityModel::new_entity()
     return e;
 }
 
-// Purely a debug helper function.
-void EntityModel::print_aspect_ids(AspectType aspect_type)
-{
-    const AspectInfo &info = AspectInfo::type_info(aspect_type);
-    RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
-    std::vector<uint8_t> &list = aspect_lists[aspect_type];
-    
-    for (int index = 0; index < list.size() / info.size; index++) {
-        AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
-        printf("%d: %u\n", index, entry->id);
-    }
-}
-
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
     dprint("Creating new aspect-%u entry\n", aspect_type);
@@ -246,6 +233,24 @@ EntityEntry *EntityModel::get_entity_entry(Entity entity)
     return entry;
 }
 
+void EntityModel::destroy_entity(Entity entity)
+{
+    EntityEntry *entry = get_entity_entry(entity);
+    //----destroy all its aspects.
+    //-Probably destroying all the aspects at once will be cheaper, since
+    // the linked list doesn't need to be maintained.
+
+    // Nullify this entry.
+    entry->id = 0;
+    // Link this space back into the free list.
+    uint32_t prev_free_index = entity_list_first_free_index;
+    entity_list_first_free_index = entity.index;
+    entry->next_free_index = prev_free_index;
+}
+
+void EntityModel::destroy_aspect(AspectEntryBase *aspect_entry)
+{
+}
 
 void EntityModel::fprint_entity(FILE *file, Entity entity)
 {
@@ -270,4 +275,24 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
         }
     }
 }
+
+// Debug helper functions.
+void EntityModel::print_aspect_ids(AspectType aspect_type)
+{
+    const AspectInfo &info = AspectInfo::type_info(aspect_type);
+    RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
+    std::vector<uint8_t> &list = aspect_lists[aspect_type];
+    
+    for (int index = 0; index < list.size() / info.size; index++) {
+        AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
+        printf("%d: %u\n", index, entry->id);
+    }
+}
+void EntityModel::print_entity_ids()
+{
+    for (int i = 0; i < entity_list.size(); i++) {
+        printf("%d: %u\n", i, entity_list[i].id);
+    }
+}
+
 

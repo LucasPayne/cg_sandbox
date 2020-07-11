@@ -138,6 +138,18 @@ Entity EntityModel::new_entity()
     return e;
 }
 
+// Purely a debug helper function.
+void EntityModel::print_aspect_ids(AspectType aspect_type)
+{
+    const AspectInfo &info = AspectInfo::type_info(aspect_type);
+    RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
+    std::vector<uint8_t> &list = aspect_lists[aspect_type];
+    
+    for (int index = 0; index < list.size() / info.size; index++) {
+        AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
+        printf("%d: %u\n", index, entry->id);
+    }
+}
 
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
@@ -153,6 +165,7 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     uint32_t index = rt_info.first_free_index;
     AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];
     if (entry->next_free_index == 0) {
+        dprint("------------------------------------------------------------\n");
         dprint("Resizing aspect-%u list\n", aspect_type);
         //--- Code duplication here, this is the same logic as the resizing of the entity list.
         //    Some of it is different since this handles contiguous arrays of derived types.
@@ -160,6 +173,7 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
         size_t old_length = list.size() / info.size; // This not the array size in bytes, but the length when considered containing the derived type.
         list.resize(old_length * 2 * info.size);
         dprint("    %zu -> %zu\n", old_length, old_length * 2);
+        dprint("------------------------------------------------------------\n");
         for (int new_index = old_length; new_index < old_length * 2; new_index ++) {
             // Make sure the new entries are null and connect to the free list.
             AspectEntryBase *new_entry = (AspectEntryBase *) &list[new_index * info.size];
@@ -203,8 +217,10 @@ AspectEntryBase *EntityModel::get_aspect_base(Aspect aspect)
     AspectEntryBase *entry = (AspectEntryBase *) &list[aspect.index * info.size];
     if (aspect.id != entry->id) {
         // This aspect doesn't exist, at least not anymore.
-        //---should give better error information.
-        std::cerr << "ERROR: Attempted to lookup aspect that doesn't exist.\n";
+        fprintf(stderr, "ERROR: Attempted to lookup aspect that doesn't exist.\n");
+        fprintf(stderr, "    aspect id: %u, aspect index: %u\n", aspect.id, aspect.index);
+        fprintf(stderr, "    entry id:  %u\n", entry->id);
+        print_aspect_ids(aspect.type);
         exit(EXIT_FAILURE);
     }
     return entry;
@@ -217,8 +233,38 @@ EntityEntry *EntityModel::get_entity_entry(Entity entity)
 
     if (entity.id != entry->id) {
         // This entity doesn't exist, at least not anymore.
-        std::cerr << "ERROR: Attempted to lookup entity that doesn't exist.\n";
+        fprintf(stderr, "ERROR: Attempted to lookup entity that doesn't exist.\n");
+        fprintf(stderr, "    entity id: %u, entity index: %u\n", entity.id, entity.index);
+        fprintf(stderr, "    entry id:  %u\n", entry->id);
         exit(EXIT_FAILURE);
     }
     return entry;
 }
+
+
+void EntityModel::fprint_entity(FILE *file, Entity entity)
+{
+    EntityEntry *entry = get_entity_entry(entity);
+    fprintf(file, "printing entity at index %u\n", entity.index);
+    fprintf(file, "    id: %u\n", entry->id);
+    fprintf(file, "    num_aspects: %u\n", entry->num_aspects);
+    if (entry->num_aspects > 0) {
+        Aspect cur_handle = entry->first_aspect;
+        AspectEntryBase *cur = get_aspect_base(cur_handle);
+        int i = 0;
+        while (true) {
+            fprintf(file, "    aspect %d:\n", i);
+            fprintf(file, "        type: %u\n", cur_handle.type);
+            fprintf(file, "        id: %u\n", cur_handle.id);
+            fprintf(file, "        index: %u\n", cur_handle.index);
+
+            fprintf(file, "        next_aspect (id): %u\n", cur->next_aspect.id);
+
+            cur_handle = cur->next_aspect;
+            if (cur_handle.id == 0) break;
+            cur = get_aspect_base(cur_handle);
+            i++;
+        }
+    }
+}
+

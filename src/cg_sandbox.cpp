@@ -43,7 +43,12 @@ void CGSandbox::init()
     for (int i = 0; i < 512; i++) {
         Entity e = entity_model.new_entity();
         SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
+        printf("added aspect\n");
+        sv->x = 12.31;
         SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);
+        printf("added another aspect\n");
+        entity_model.print_entity(e);
+        printf("printed\n");
     }
 
     // e.add<SomeValues>(1.3, 32, true);

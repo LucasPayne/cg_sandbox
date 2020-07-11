@@ -136,6 +136,13 @@ public:
 
     Entity new_entity();
 
+    void fprint_entity(FILE *file, Entity entity);
+    inline void print_entity(Entity entity) {
+        fprint_entity(stdout, entity);
+    };
+    // Debug helper functions.
+    void print_aspect_ids(AspectType aspect_type);
+
     //todo
     // template <typename A>
     // A *get_aspect(Aspect aspect) {
@@ -157,20 +164,28 @@ public:
         Aspect aspect_handle(entry->id, index, A::type);
 
         EntityEntry *entity_entry = get_entity_entry(entity);
+
+        printf("okkkkk\n");
         if (entity_entry->num_aspects == 0) {
             // This is the first aspect, at the head of the list.
             entity_entry->first_aspect = aspect_handle;
         } else {
             // Get the last aspect in the entity's aspect list.
+            printf("%d\n", entity_entry->first_aspect.id);
+            std::vector<uint8_t> &_list = aspect_lists[entity_entry->first_aspect.type];
+            AspectInfo _info = AspectInfo::type_info(entity_entry->first_aspect.type);
+            printf("%zu\n", _list.size() / _info.size);
             AspectEntryBase *last = get_aspect_base(entity_entry->first_aspect);
+            printf("got first\n");
             while (last->next_aspect.id != 0) {
                 last = get_aspect_base(last->next_aspect);
+                printf("traversing\n");
             }
             // Add this to the end.
             last->next_aspect = aspect_handle;
-
-            entity_entry->num_aspects ++;
         }
+        entity_entry->num_aspects ++;
+        printf("doneded\n");
 
         //---initialization stuff?
 

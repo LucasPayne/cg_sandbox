@@ -3,10 +3,16 @@
 /*--------------------------------------------------------------------------------
 BUGS:
     --- Past length 8192, list resize gives a segfault.
+PROBLEMS:
+    --- Iteration over the aspect linked lists is too verbose.
+TO DO:
+    --- Aspect creation and teardown.
+    --- EntityModel destructor.
+    --- More efficient entity destruction.
 --------------------------------------------------------------------------------*/
 
 #include <stdarg.h>
-#define DEBUG 0
+#define DEBUG 1
 // http://www.cplusplus.com/reference/cstdio/vsprintf/
 // http://www.cplusplus.com/reference/cstdio/vprintf/
 //--Empty inlines will still definitely have side-effect parameters evaluated.
@@ -210,7 +216,7 @@ AspectEntryBase *EntityModel::get_aspect_base(Aspect aspect)
     if (aspect.id != entry->id) {
         // This aspect doesn't exist, at least not anymore.
         fprintf(stderr, "ERROR: Attempted to lookup aspect that doesn't exist.\n");
-        fprintf(stderr, "    aspect id: %u, aspect index: %u\n", aspect.id, aspect.index);
+        fprintf(stderr, "    aspect id: %u, aspect index: %u, aspect type: %u\n", aspect.id, aspect.index, aspect.type);
         fprintf(stderr, "    entry id:  %u\n", entry->id);
         print_aspect_ids(aspect.type);
         exit(EXIT_FAILURE);
@@ -235,10 +241,21 @@ EntityEntry *EntityModel::get_entity_entry(Entity entity)
 
 void EntityModel::destroy_entity(Entity entity)
 {
+    dprint("Destroying entity %u\n", entity.id);
     EntityEntry *entry = get_entity_entry(entity);
-    //----destroy all its aspects.
-    //-Probably destroying all the aspects at once will be cheaper, since
-    // the linked list doesn't need to be maintained.
+    // Destroy all its aspects.
+    //---Probably destroying all the aspects at once should be cheaper, since
+    //   the linked list doesn't need to be maintained.
+    if (entry->num_aspects > 0) {
+        AspectEntryBase *destroy_this = get_aspect_base(entry->first_aspect);
+        while (true) {
+            Aspect destroy_this_next_handle = destroy_this->next_aspect;
+            AspectEntryBase *destroy_this_next = get_aspect_base(destroy_this_next_handle);
+            destroy_aspect(destroy_this);
+            if (destroy_this_next_handle.id == 0) break;
+            destroy_this = destroy_this_next;
+        }
+    }
 
     // Nullify this entry.
     entry->id = 0;
@@ -250,6 +267,41 @@ void EntityModel::destroy_entity(Entity entity)
 
 void EntityModel::destroy_aspect(AspectEntryBase *aspect_entry)
 {
+    dprint("Destroying aspect\n");
+    //-This does not take a handle, so does not validate anything.
+    // The aspect entry handed in must be a valid pointer to an active entry!
+
+    // Delink this from the entity's aspect linked list.
+    EntityEntry *entity_entry = get_entity_entry(aspect_entry->entity);
+    if (aspect_entry->id == entity_entry->first_aspect.id) {
+        // Remove from the head of the linked list.
+        entity_entry->first_aspect = aspect_entry->next_aspect;
+    } else {
+        // It is either in the middle or at the end.
+        // Find this aspect in the linked list.
+        Aspect prev_handle = entity_entry->first_aspect;
+        AspectEntryBase *prev = get_aspect_base(entity_entry->first_aspect);
+        while (true) {
+            if (prev->next_aspect.id == 0) {
+                // It wasn't found on the entity, give an error. This shouldn't happen.
+                fprintf(stderr, "ERROR: Attempted to remove aspect from entity which doesn't have that aspect. Is it being destroyed more than once?\n");
+                exit(EXIT_FAILURE);
+            }
+            if (prev->next_aspect.id == aspect_entry->id) {
+                // Found it.
+                //-Setting the next aspect to the removed one's next aspect will
+                // work whether or not this is in the middle or at the end.
+                prev->next_aspect = aspect_entry->next_aspect;
+                break;
+            }
+            prev_handle = prev->next_aspect;
+            prev = get_aspect_base(prev_handle);
+        }
+    }
+    // Nullify this entry.
+    aspect_entry->id = 0;
+
+    //------- teardown stuff.
 }
 
 void EntityModel::fprint_entity(FILE *file, Entity entity)
@@ -279,6 +331,7 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
 // Debug helper functions.
 void EntityModel::print_aspect_ids(AspectType aspect_type)
 {
+    printf("Aspect-%d IDs\n", aspect_type);
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
     RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
     std::vector<uint8_t> &list = aspect_lists[aspect_type];
@@ -290,6 +343,7 @@ void EntityModel::print_aspect_ids(AspectType aspect_type)
 }
 void EntityModel::print_entity_ids()
 {
+    printf("Entity IDs\n");
     for (int i = 0; i < entity_list.size(); i++) {
         printf("%d: %u\n", i, entity_list[i].id);
     }

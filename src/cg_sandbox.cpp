@@ -40,7 +40,7 @@ void CGSandbox::init()
     AspectInfo info = AspectInfo::type_info(type);
     std::cout << "size: " << info.size << "\n";
 
-    #define N 480
+    #define N 15
     Entity entities[N];
 
     for (int i = 0; i < N; i++) {
@@ -58,6 +58,8 @@ void CGSandbox::init()
         if (frand() > 0.5) entity_model.destroy_entity(entities[i]);
     }
     entity_model.print_entity_ids();
+    entity_model.print_aspect_ids(0);
+    entity_model.print_aspect_ids(1);
     
 
     // e.add<SomeValues>(1.3, 32, true);

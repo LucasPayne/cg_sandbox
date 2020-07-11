@@ -102,8 +102,8 @@ struct RuntimeAspectInfo {
     uint32_t first_free_index; // First index free in the relevant aspect list.
 };
 
-#define ENTITY_LIST_START_LENGTH 256
-#define ASPECT_LIST_START_LENGTH 32
+#define ENTITY_LIST_START_LENGTH 16
+#define ASPECT_LIST_START_LENGTH 16
 class EntityModel {
 private:
     // entity list data structure

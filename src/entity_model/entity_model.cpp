@@ -335,8 +335,8 @@ void EntityModel::print_aspect_ids(AspectType aspect_type)
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
     //----could be a problem if the name is buggy and invalid!
     printf("Aspect-%d %s IDs\n", aspect_type, info.name);
-    RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
-    std::vector<uint8_t> &list = aspect_lists[aspect_type];
+    const RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
+    const std::vector<uint8_t> &list = aspect_lists[aspect_type];
     
     for (int index = 0; index < list.size() / info.size; index++) {
         AspectEntryBase *entry = (AspectEntryBase *) &list[index * info.size];

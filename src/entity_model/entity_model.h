@@ -104,11 +104,8 @@ struct RuntimeAspectInfo {
 #define ASPECT_LIST_START_LENGTH 16
 #define ALL_PUBLIC 1
 class EntityModel {
-#if ALL_PUBLIC == 0
-private:
-#else
+//private:
 public:
-#endif
     // entity list data structure
     // --------------------------
     uint32_t entity_list_first_free_index;
@@ -132,9 +129,7 @@ public:
     // Use the entity handle to lookup the pointer to the entity entry in the entity list/table.
     // This is private, as applications probably shouldn't need to use it.
     EntityEntry *get_entity_entry(Entity entity);
-#if ALL_PUBLIC == 0
-public:
-#endif
+// public:
     EntityModel();
     ~EntityModel();
 

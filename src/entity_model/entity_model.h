@@ -166,17 +166,23 @@ public: // Usage interface
     class AspectIterator {
         A *list_start;
         A *list_end;
+        inline void seek_to_next() {
+            // Skip over null aspects.
+            while (list_start != list_end && list_start->id == 0) {
+                ++list_start;
+            }
+        }
     public:
         AspectIterator(A *_start, A *_end) : list_start{_start}, list_end{_end} {}
         void operator++() {
-            while (list_start != list_end && list_start->id != 0) {
-                list_start++;
-            }
-            if (list_start != list_end) list_start++;
+	    ++list_start;
+            seek_to_next();
         }
         bool operator!=(AspectIterator other) { return list_start != other.list_start; }
         A &operator*() { return *list_start; }
         AspectIterator begin() {
+            //-Remember to begin the iterator at a valid position!
+            seek_to_next();
             return AspectIterator(list_start, list_end);
         }
         AspectIterator end() {

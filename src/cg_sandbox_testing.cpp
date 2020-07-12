@@ -92,9 +92,15 @@ void CGSandbox::test_loop()
     // }
 
     for (auto &logic : entity_model.aspects<Logic>()) {
-        printf("updating\n");
+        // if (logic.id == 0) continue;
         logic.update(&logic);
     }
+    entity_model.print_aspect_ids(Logic::type);
+    for (auto &sv: entity_model.aspects<SomeValues>()) {
+        // if (sv.id == 0) continue;
+        printf("Value: %.4f\n", sv.x);
+    }
+    entity_model.print_aspect_ids(SomeValues::type);
 
     // for_aspect(Logic, logic)
     //     

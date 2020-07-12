@@ -333,7 +333,7 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
 void EntityModel::print_aspect_ids(AspectType aspect_type)
 {
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
-    //---could be a problem if the name is buggy and invalid!
+    //----could be a problem if the name is buggy and invalid!
     printf("Aspect-%d %s IDs\n", aspect_type, info.name);
     RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
     std::vector<uint8_t> &list = aspect_lists[aspect_type];

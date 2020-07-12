@@ -71,6 +71,7 @@ void CGSandbox::test_init()
     entity_model.print_entity_ids();
     entity_model.print_aspect_ids(0);
     entity_model.print_aspect_ids(1);
+    entity_model.print_aspect_ids(Logic::type);
     
 
     // e.add<SomeValues>(1.3, 32, true);
@@ -97,7 +98,6 @@ void CGSandbox::test_loop()
     // }
 
     for (auto &logic : entity_model.aspect_list<Logic>()) {
-        if (logic.id == 0) continue;
         printf("updating\n");
         logic.update(&logic);
     }

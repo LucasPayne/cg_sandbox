@@ -141,24 +141,46 @@ public:
         fprint_entity(stdout, entity);
     };
 
+        // struct PositionPointer {
+        //     A *pointer;
+        //     A *end;
+        //     PositionPointer(A *ptr, A *_end) : pointer{ptr}, end{_end} {}
+        //     void operator++() {
+        //         while (pointer != end && pointer->id == 0) {
+        //             std::cout << pointer->id << "\n";
+        //             pointer++;
+        //         }
+        //         if (pointer != end) pointer++;
+        //     }
+        //     bool operator!=(PositionPointer other) { return pointer != other.pointer; }
+        //     A &operator*() { return *pointer; }
+        // };
+    // https://en.cppreference.com/w/cpp/language/range-for
     template <typename A>
-    struct AspectListIterator {
-        A *aspect_list_start;
-        A *aspect_list_end;
-        AspectListIterator(A *start, A *end) {
-            aspect_list_start = start;
-            aspect_list_end = end;
+    struct AspectIterator {
+        A *list_start;
+        A *list_end;
+        AspectIterator(A *_start, A *_end) : list_start{_start}, list_end{_end} {}
+        void operator++() {
+            while (list_start != list_end && list_start->id != 0) {
+                list_start++;
+            }
+            if (list_start != list_end) list_start++;
+            // while (start
         }
-        A *begin() {
-            return aspect_list_start;
+        bool operator!=(AspectIterator other) { return list_start != other.list_start; }
+        A &operator*() { return *list_start; }
+
+        AspectIterator begin() {
+            return AspectIterator(list_start, list_end);
         }
-        A *end() {
-            return aspect_list_end;
+        AspectIterator end() {
+            return AspectIterator(list_end, list_end);
         }
     };
     template <typename A>
-    AspectListIterator<A> aspect_list() {
-        return AspectListIterator<A>(
+    AspectIterator<A> aspect_list() {
+        return AspectIterator<A>(
              (A *) &aspect_lists[A::type][0],
              ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
         );

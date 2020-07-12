@@ -91,7 +91,7 @@ void CGSandbox::test_loop()
     //     }
     // }
 
-    for (auto &logic : entity_model.aspect_list<Logic>()) {
+    for (auto &logic : entity_model.aspects<Logic>()) {
         printf("updating\n");
         logic.update(&logic);
     }

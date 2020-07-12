@@ -2,6 +2,7 @@
 #define ENTITY_MODEL_H
 #include "core.h"
 
+// !-TERRIBLE-! subject to change, hopefully.
 // Use this instead of writing out the struct definition directly.
 // This hides the fact that this weird C++ template thing is happening behind the scenes.
 //-A lot of this complication is due to static initialization wanting the name of the templated type as a string...
@@ -12,33 +13,35 @@
 #define end_define_aspect(ASPECT_NAME)\
     };\
     char * ASPECT_NAME ::name( #ASPECT_NAME );
-
 // example:
-// define_aspect(TheAspectWithOneFloat) {
+// define_aspect(TheAspectWithOneFloat)
 //     float the_float;
-// }
+// end_define_aspect(TheAspectWithOneFloat)
 
-// ID -1 == 255 is reserved for the null aspect type.
-#define MAX_NUM_ASPECT_TYPES 255
-
+/*--------------------------------------------------------------------------------
+    Handles.
+    These are what application objects will hold instead of, e.g., pointers.
+-
+    Entity and aspect indices are constant across those objects' lifetimes.
+    The index lookup is fast, and the id is unique across the program lifetime,
+    allowing lookup validation.
+--------------------------------------------------------------------------------*/
 // A null Entity has id 0.
 struct Entity {
     uint32_t index;
     uint32_t id;
 };
-
 // A null Aspect has type -1 (== 255).
 typedef uint8_t AspectType;
 struct Aspect {
     uint32_t id;
     uint32_t index;
     AspectType type;
-    Aspect() {}
-    Aspect(uint32_t _id, uint32_t _index, AspectType _type) :
-        id{_id}, index{_index}, type{_type}
-    {}
 };
 
+
+// ID -1 == 255 is reserved for the null aspect type.
+#define MAX_NUM_ASPECT_TYPES 255
 struct AspectInfo {
     size_t size;
     //----
@@ -104,8 +107,141 @@ struct RuntimeAspectInfo {
 #define ASPECT_LIST_START_LENGTH 16
 #define ALL_PUBLIC 1
 class EntityModel {
-//private:
-public:
+public: // Usage interface
+    EntityModel();
+    ~EntityModel();
+
+    // Creation and destruction of entities.
+    Entity new_entity();
+    void destroy_entity(Entity entity);
+
+    // Aspect data derives from AspectEntryBase, so this function can be used to destroy given the pointer.
+    //-maybe this function shouldn't be available, and rather ID-based functions only.
+    void destroy_aspect(AspectEntryBase *aspect_entry);
+    //todo
+    // void destroy_aspect(Aspect aspect);
+    // template <typename A>
+    // void destroy_aspect(Entity entity);
+
+    // Printing and debug helper functions.
+    void print_aspect_ids(AspectType aspect_type);
+    void print_entity_ids();
+    void fprint_entity(FILE *file, Entity entity);
+    inline void print_entity(Entity entity) {
+        fprint_entity(stdout, entity);
+    };
+
+    /*--------------------------------------------------------------------------------
+    Aspect-templated methods, in header for compilation reasons. Summarized here (!-keep this synchronized-!).
+    A is the aspect type name.
+    
+    // Iteration over aspects of a certain type.
+    AspectIterator<A> aspects();
+
+    // Retrieve the first aspect found of the given type in the entity's aspect list.
+    A *get_aspect(Entity entity);
+    
+    // Add a new aspect to the entity.
+    A *add_aspect(Entity entity);
+    --------------------------------------------------------------------------------*/
+
+//public implementation details
+    /*--------------------------------------------------------------------------------
+    AspectIterator is defined purely so range-based for works, assuming it expands as:
+        for (auto &a : entity_model.aspects<TheAspectWithOneFloat>()) {
+            ...
+        }
+        ->
+        for (auto __begin = begin_expr, __end = end_expr; __begin != __end; ++__begin) { 
+            range_declaration = *__begin; 
+            ...
+        }
+    as described in
+        https://en.cppreference.com/w/cpp/language/range-for
+-
+    This is probably the only way aspect lists will be accessed, so further iterator-compatible
+    things don't seem necessary.
+    --------------------------------------------------------------------------------*/
+    template <typename A>
+    class AspectIterator {
+        A *list_start;
+        A *list_end;
+    public:
+        AspectIterator(A *_start, A *_end) : list_start{_start}, list_end{_end} {}
+        void operator++() {
+            while (list_start != list_end && list_start->id != 0) {
+                list_start++;
+            }
+            if (list_start != list_end) list_start++;
+        }
+        bool operator!=(AspectIterator other) { return list_start != other.list_start; }
+        A &operator*() { return *list_start; }
+        AspectIterator begin() {
+            return AspectIterator(list_start, list_end);
+        }
+        AspectIterator end() {
+            return AspectIterator(list_end, list_end);
+        }
+    };
+    template <typename A>
+    AspectIterator<A> aspects() {
+        return AspectIterator<A>(
+             (A *) &aspect_lists[A::type][0],
+             ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
+        );
+    }
+    template <typename A>
+    A *get_aspect(Entity entity) {
+        EntityEntry *entity_entry = get_entity_entry(entity);
+
+        // Search through the aspect linked list for the first one with the relevant id.
+        if (entity_entry->num_aspects > 0) {
+            Aspect cur_handle = entity_entry->first_aspect;
+            AspectEntryBase *cur = get_aspect_base(cur_handle);
+            while (cur_handle.id != 0) {
+                if (cur_handle.type == A::type) {
+                    // Found one.
+                    return (A *) cur;
+                }
+                cur_handle = cur->next_aspect;
+                cur = get_aspect_base(cur_handle);
+            }
+        }
+        fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
+        exit(EXIT_FAILURE);
+    }
+    template <typename A>
+    A *add_aspect(Entity entity) {
+        const AspectInfo &info = AspectInfo::type_info(A::type);
+        uint32_t index;
+        AspectEntryBase *entry = new_aspect_entry(entity, A::type, &index);
+        A *aspect = (A *) entry;
+
+        // !-IMPORTANT-! Remember to initialize this properly here. A public constructor doesn't make sense, and handles are only created here anyway.
+        Aspect aspect_handle;
+        aspect_handle.id = entry->id;
+        aspect_handle.index = index;
+        aspect_handle.type = A::type;
+
+        EntityEntry *entity_entry = get_entity_entry(entity);
+
+        if (entity_entry->num_aspects == 0) {
+            // This is the first aspect, at the head of the list.
+            entity_entry->first_aspect = aspect_handle;
+        } else {
+            // Get the last aspect in the entity's aspect list.
+            AspectEntryBase *last = get_aspect_base(entity_entry->first_aspect);
+            while (last->next_aspect.id != 0) {
+                last = get_aspect_base(last->next_aspect);
+            }
+            // Add this to the end.
+            last->next_aspect = aspect_handle;
+        }
+        entity_entry->num_aspects ++;
+
+        return aspect;
+    }
+private: // implementation details
     // entity list data structure
     // --------------------------
     uint32_t entity_list_first_free_index;
@@ -129,129 +265,6 @@ public:
     // Use the entity handle to lookup the pointer to the entity entry in the entity list/table.
     // This is private, as applications probably shouldn't need to use it.
     EntityEntry *get_entity_entry(Entity entity);
-// public:
-    EntityModel();
-    ~EntityModel();
-
-    Entity new_entity();
-    void destroy_entity(Entity entity);
-
-    void fprint_entity(FILE *file, Entity entity);
-    inline void print_entity(Entity entity) {
-        fprint_entity(stdout, entity);
-    };
-
-        // struct PositionPointer {
-        //     A *pointer;
-        //     A *end;
-        //     PositionPointer(A *ptr, A *_end) : pointer{ptr}, end{_end} {}
-        //     void operator++() {
-        //         while (pointer != end && pointer->id == 0) {
-        //             std::cout << pointer->id << "\n";
-        //             pointer++;
-        //         }
-        //         if (pointer != end) pointer++;
-        //     }
-        //     bool operator!=(PositionPointer other) { return pointer != other.pointer; }
-        //     A &operator*() { return *pointer; }
-        // };
-    // https://en.cppreference.com/w/cpp/language/range-for
-    template <typename A>
-    struct AspectIterator {
-        A *list_start;
-        A *list_end;
-        AspectIterator(A *_start, A *_end) : list_start{_start}, list_end{_end} {}
-        void operator++() {
-            while (list_start != list_end && list_start->id != 0) {
-                list_start++;
-            }
-            if (list_start != list_end) list_start++;
-            // while (start
-        }
-        bool operator!=(AspectIterator other) { return list_start != other.list_start; }
-        A &operator*() { return *list_start; }
-
-        AspectIterator begin() {
-            return AspectIterator(list_start, list_end);
-        }
-        AspectIterator end() {
-            return AspectIterator(list_end, list_end);
-        }
-    };
-    template <typename A>
-    AspectIterator<A> aspect_list() {
-        return AspectIterator<A>(
-             (A *) &aspect_lists[A::type][0],
-             ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
-        );
-    }
-
-    //-Templating here is just for the syntax. A macro could be used instead.
-    template <typename A>
-    A *get_aspect(Entity entity) {
-        EntityEntry *entity_entry = get_entity_entry(entity);
-
-        // Search through the aspect linked list for the first one with the relevant id.
-        if (entity_entry->num_aspects > 0) {
-            Aspect cur_handle = entity_entry->first_aspect;
-            AspectEntryBase *cur = get_aspect_base(cur_handle);
-            while (cur_handle.id != 0) {
-                if (cur_handle.type == A::type) {
-                    // Found one.
-                    return (A *) cur;
-                }
-                cur_handle = cur->next_aspect;
-                cur = get_aspect_base(cur_handle);
-            }
-        }
-        fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //- Templated methods must (?) be defined in the header.
-    //- Templating is only here for the syntax, this could easily be done with a macro that expands to the type id.
-    template <typename A>
-    A *add_aspect(Entity entity) {
-        const AspectInfo &info = AspectInfo::type_info(A::type);
-        uint32_t index;
-        AspectEntryBase *entry = new_aspect_entry(entity, A::type, &index);
-        A *aspect = (A *) entry;
-
-        // Create an aspect handle and use it to link this aspect into the entity's aspect list.
-        // !-IMPORTANT-! Remember the order of parameters in the constructor, or else bugs will occur.
-        //    id, index, type
-        Aspect aspect_handle(entry->id, index, A::type);
-
-        EntityEntry *entity_entry = get_entity_entry(entity);
-
-        if (entity_entry->num_aspects == 0) {
-            // This is the first aspect, at the head of the list.
-            entity_entry->first_aspect = aspect_handle;
-        } else {
-            // Get the last aspect in the entity's aspect list.
-            AspectEntryBase *last = get_aspect_base(entity_entry->first_aspect);
-            while (last->next_aspect.id != 0) {
-                last = get_aspect_base(last->next_aspect);
-            }
-            // Add this to the end.
-            last->next_aspect = aspect_handle;
-        }
-        entity_entry->num_aspects ++;
-
-        //---initialization stuff?
-
-        return aspect;
-    }
-    // Aspect data derives from AspectEntryBase, so this function can be used to destroy given the pointer.
-    void destroy_aspect(AspectEntryBase *aspect_entry);
-    //todo
-    // void destroy_aspect(Aspect aspect);
-    // template <typename A>
-    // void destroy_aspect(Entity entity);
-
-    // Debug helper functions.
-    void print_aspect_ids(AspectType aspect_type);
-    void print_entity_ids();
 };
 
 #endif // ENTITY_MODEL_H

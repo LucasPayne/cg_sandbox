@@ -1,4 +1,3 @@
-
 Getting source files
 ================
 ```
@@ -19,5 +18,3 @@ cmake ..
 make
 ./cg_sandbox
 ```
-
-

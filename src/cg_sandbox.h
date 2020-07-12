@@ -7,15 +7,21 @@ class CGSandbox : public Looper, public InputListener {
 private:
     EntityModel entity_model;
 public:
-    // Looper stuff
+    CGSandbox() {}
+
+    // Looper stuff.
     void init();
     void close();
     void loop();
-    // InputListener stuff
+    // InputListener stuff.
     void key_callback(int key, int action);
     void cursor_position_callback(double x, double y);
     void cursor_move_callback(double x, double y);
     void mouse_button_callback(int button, int action);
+
+    // Testing and debugging.
+    void test_init();
+    void test_loop();
 };
 
 #endif // CG_SANDBOX_H

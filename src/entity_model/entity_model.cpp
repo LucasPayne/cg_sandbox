@@ -5,10 +5,14 @@ BUGS:
     --- Past length 8192, list resize gives a segfault.
 PROBLEMS:
     --- Iteration over the aspect linked lists is too verbose.
+    --- Multithreading.
+    --- Interaction with entity model is broken! Double buffering?
 TO DO:
     --- Aspect creation and teardown.
     --- EntityModel destructor.
     --- More efficient entity destruction.
+    --- try_get_aspect, try_get_entity kind of stuff.
+    --- Getting sibling aspects.
 --------------------------------------------------------------------------------*/
 
 #include <stdarg.h>

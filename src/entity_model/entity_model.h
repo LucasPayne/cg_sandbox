@@ -4,9 +4,9 @@
 
 // Use this instead of writing out the struct definition directly.
 // This hides the fact that this weird C++ template thing is happening behind the scenes.
-#define DefineAspect(ASPECT_NAME) struct ASPECT_NAME : public AspectEntry<ASPECT_NAME>
+#define define_aspect(ASPECT_NAME) struct ASPECT_NAME : public AspectEntry<ASPECT_NAME>
 // example:
-// DefineAspect(TheAspectWithOneFloat) {
+// define_aspect(TheAspectWithOneFloat) {
 //     float the_float;
 // }
 
@@ -104,8 +104,13 @@ struct RuntimeAspectInfo {
 
 #define ENTITY_LIST_START_LENGTH 16
 #define ASPECT_LIST_START_LENGTH 16
+#define ALL_PUBLIC 1
 class EntityModel {
+#if ALL_PUBLIC == 0
 private:
+#else
+public:
+#endif
     // entity list data structure
     // --------------------------
     uint32_t entity_list_first_free_index;
@@ -129,8 +134,9 @@ private:
     // Use the entity handle to lookup the pointer to the entity entry in the entity list/table.
     // This is private, as applications probably shouldn't need to use it.
     EntityEntry *get_entity_entry(Entity entity);
-
+#if ALL_PUBLIC == 0
 public:
+#endif
     EntityModel();
     ~EntityModel();
 

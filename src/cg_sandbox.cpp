@@ -7,73 +7,29 @@
 #include "cg_sandbox.h"
 #include "entity_model/entity_model.h"
 
-DefineAspect(SomeValues) {
-    float x;
-    int nums[16];
-    bool flag;
-
-    static void create() {
-
-    }
-    static void teardown() {
-
-    }
-};
-
-DefineAspect(SomeMoreStuff) {
-    float x;
-    int nums[23];
-
-    static void create() {
-
-    }
-    static void teardown() {
-
-    }
-};
+#define TESTING 1
+#if TESTING == 1
+#include "cg_sandbox_testing.cpp"
+#endif
 
 void CGSandbox::init()
 {
-    AspectType type1 = SomeValues::type;
-    AspectType type = SomeMoreStuff::type;
-    printf("type: %d\n", type);
-    AspectInfo info = AspectInfo::type_info(type);
-    std::cout << "size: " << info.size << "\n";
+    // Initialize the entity model, with no entities.
+    entity_model = EntityModel(); 
 
-    #define N 15
-    Entity entities[N];
-
-    for (int i = 0; i < N; i++) {
-        Entity e = entity_model.new_entity();
-        SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
-        sv->x = 12.31;
-        SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);
-        // entity_model.print_entity(e);
-
-        SomeValues *_sv = entity_model.get_aspect<SomeValues>(e);
-        printf("x: %.2f\n", _sv->x);
-        entities[i] = e;
-    }
-    for (int i = 0; i < N; i++) {
-        if (frand() > 0.5) entity_model.destroy_entity(entities[i]);
-    }
-    entity_model.print_entity_ids();
-    entity_model.print_aspect_ids(0);
-    entity_model.print_aspect_ids(1);
-    
-
-    // e.add<SomeValues>(1.3, 32, true);
-    // e.add<SomeMoreStuff>(1.66, 12);
-    // e.remove<SomeValues>();
-    // Aspect a = e.add<SomeValues>(2.87, 10, false);
-    // a.x = 87.13;
-    // a.print();
+    // Run initialization testing/debugging code, if there is any.
+    #if TESTING == 1
+    test_init();
+    #endif
 }
 void CGSandbox::close()
 {
 }
 void CGSandbox::loop()
 {
+    #if TESTING == 1
+    test_loop();
+    #endif
 }
 
 void CGSandbox::key_callback(int key, int action)

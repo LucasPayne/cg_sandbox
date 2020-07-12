@@ -29,9 +29,13 @@ target_link_libraries(main PRIVATE gl)
 
 add_library(entity_model STATIC
     src/entity_model/entity_model.cpp
-    src/entity_model/aspect.cpp
 )
 target_link_libraries(main PRIVATE entity_model)
+
+add_library(parallel STATIC
+    src/parallel/parallel.cpp
+)
+target_link_libraries(main PRIVATE parallel)
 
 # External libraries
 #================================================================================

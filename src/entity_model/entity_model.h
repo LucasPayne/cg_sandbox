@@ -141,6 +141,29 @@ public:
         fprint_entity(stdout, entity);
     };
 
+    template <typename A>
+    struct AspectListIterator {
+        A *aspect_list_start;
+        A *aspect_list_end;
+        AspectListIterator(A *start, A *end) {
+            aspect_list_start = start;
+            aspect_list_end = end;
+        }
+        A *begin() {
+            return aspect_list_start;
+        }
+        A *end() {
+            return aspect_list_end;
+        }
+    };
+    template <typename A>
+    AspectListIterator<A> aspect_list() {
+        return AspectListIterator<A>(
+             (A *) &aspect_lists[A::type][0],
+             ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
+        );
+    }
+
     //-Templating here is just for the syntax. A macro could be used instead.
     template <typename A>
     A *get_aspect(Entity entity) {

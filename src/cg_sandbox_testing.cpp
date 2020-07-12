@@ -65,9 +65,9 @@ void CGSandbox::test_init()
         logic->update = say_cool;
         if (frand() > 0.7) entity_model.destroy_aspect(logic);
     }
-    for (int i = 0; i < N; i++) {
-        if (frand() > 0.5) entity_model.destroy_entity(entities[i]);
-    }
+    // for (int i = 0; i < N; i++) {
+    //     if (frand() > 0.5) entity_model.destroy_entity(entities[i]);
+    // }
     entity_model.print_entity_ids();
     entity_model.print_aspect_ids(0);
     entity_model.print_aspect_ids(1);
@@ -85,13 +85,21 @@ void CGSandbox::test_loop()
 {
     //-It is entirely possible that the entity model is interacted with during iteration.
 
-    Logic *logic = (Logic *) &entity_model.aspect_lists[Logic::type][0];
-    //-There is a lot wrong with this iteration logic, but I think nothing bad will happen yet ...
-    for (int i = 0; i < entity_model.aspect_lists[Logic::type].size() / AspectInfo::type_info(Logic::type).size; i++) {
-        if (logic->id != 0) {
-            logic->update(logic);
-        }
-        logic ++;
+    // {
+    //     Logic *logic = (Logic *) &entity_model.aspect_lists[Logic::type][0];
+    //     //-There is a lot wrong with this iteration logic, but I think nothing bad will happen yet ...
+    //     for (int i = 0; i < entity_model.aspect_lists[Logic::type].size() / AspectInfo::type_info(Logic::type).size; i++) {
+    //         if (logic->id != 0) {
+    //             logic->update(logic);
+    //         }
+    //         logic ++;
+    //     }
+    // }
+
+    for (auto &logic : entity_model.aspect_list<Logic>()) {
+        if (logic.id == 0) continue;
+        printf("updating\n");
+        logic.update(&logic);
     }
 
     // for_aspect(Logic, logic)

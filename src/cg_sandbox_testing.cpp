@@ -46,12 +46,6 @@ void CGSandbox::test_init()
     for (int i = 0; i < N; i++) {
         Entity e = entity_model.new_entity();
 
-        // entity_model.add_aspect<SomeValues>(e)(
-        //     2.3,
-        //     32,
-        //     true
-        // );
-
         SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
         sv->x = 12.31;
         SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);

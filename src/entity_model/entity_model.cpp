@@ -34,9 +34,7 @@ AspectInfo AspectInfo::aspect_infos[MAX_NUM_ASPECT_TYPES];
 // Aspect types (should) only be registered at static initialization, fixed at compile time.
 // So, this can be used to e.g. create arrays of aspects for each aspect type, indexed by the type.
 int AspectInfo::num_aspect_types = 0;
-AspectType AspectInfo::new_aspect_type(AspectCreateFunction create,
-                                       AspectTeardownFunction teardown,
-                                       size_t size)
+AspectType AspectInfo::new_aspect_type(char *name, size_t size)
 {
     if (num_aspect_types + 1 >  MAX_NUM_ASPECT_TYPES) {
         std::cerr << "ERROR: Too many aspect types.\n";
@@ -44,9 +42,8 @@ AspectType AspectInfo::new_aspect_type(AspectCreateFunction create,
     }
 
     AspectInfo &info = aspect_infos[num_aspect_types];
+    info.name = name;
     info.size = size;
-    info.create = create;
-    info.teardown = teardown;
 
     return num_aspect_types ++;
 }
@@ -335,8 +332,9 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
 // Debug helper functions.
 void EntityModel::print_aspect_ids(AspectType aspect_type)
 {
-    printf("Aspect-%d IDs\n", aspect_type);
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
+    //---could be a problem if the name is buggy and invalid!
+    printf("Aspect-%d %s IDs\n", aspect_type, info.name);
     RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
     std::vector<uint8_t> &list = aspect_lists[aspect_type];
     

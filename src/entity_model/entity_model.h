@@ -4,7 +4,15 @@
 
 // Use this instead of writing out the struct definition directly.
 // This hides the fact that this weird C++ template thing is happening behind the scenes.
-#define define_aspect(ASPECT_NAME) struct ASPECT_NAME : public AspectEntry<ASPECT_NAME>
+//-A lot of this complication is due to static initialization wanting the name of the templated type as a string...
+// It can access T::name, and if that itself has static initialization, written out for each and every aspect type definition, then this works.
+#define define_aspect(ASPECT_NAME)\
+    struct ASPECT_NAME : public AspectEntry<ASPECT_NAME> {\
+        static char *name;
+#define end_define_aspect(ASPECT_NAME)\
+    };\
+    char * ASPECT_NAME ::name( #ASPECT_NAME );
+
 // example:
 // define_aspect(TheAspectWithOneFloat) {
 //     float the_float;
@@ -31,24 +39,17 @@ struct Aspect {
     {}
 };
 
-typedef void (*AspectCreateFunction)(void);
-typedef void (*AspectTeardownFunction)(void);
-
-#define MAX_ASPECT_TYPE_NAME_LENGTH 63
 struct AspectInfo {
-    AspectCreateFunction create;
-    AspectTeardownFunction teardown;
     size_t size;
     //----
     // I would like the name, but it appears that templating parameters cannot be stringified,
     // but there might be some trick to get the static initialization stuff to work and retrieve the name. But also maybe not.
     // The macro solution could do this easily, but initialization of RTTI had to be called manually.
     // char name[MAX_ASPECT_TYPE_NAME_LENGTH + 1];
+    char *name;
 
     static int num_aspect_types;
-    static AspectType new_aspect_type(AspectCreateFunction create,
-                                      AspectTeardownFunction teardown,
-                                      size_t size);
+    static AspectType new_aspect_type(char *name, size_t size);
     static AspectInfo type_info(AspectType type);
     //-----
     // Having problems with static initialization of std::vector.
@@ -72,14 +73,11 @@ struct AspectEntry : public AspectEntryBase
 {
     static const AspectType type;
     static const size_t size;
-    static const AspectCreateFunction create;
-    static const AspectTeardownFunction teardown;
 };
 // Static initialization of run-time type information.
 template<typename T>
 const AspectType AspectEntry<T>::type(AspectInfo::new_aspect_type(
-    T::create,
-    T::teardown,
+    T::name,
     sizeof(T)
 ));
 

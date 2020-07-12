@@ -1,18 +1,14 @@
-if (frand() > 0.7) /*--------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------
     This file is included in cg_sandbox if TESTING is enabled.
 --------------------------------------------------------------------------------*/
 
 //-Idea for syntax, somehow with overloading or function objects or something.
 // add_aspect<SomeValues>(e)(2.3, ... constructor stuff);
 
-define_aspect(Logic) {
+define_aspect(Logic)
     void (*update)(Logic *);
     void *data;
-    static void create() {
-    }
-    static void teardown() {
-    }
-};
+end_define_aspect(Logic)
 
 // struct ThingThatSaysHello : Logic {
 //     void update() {
@@ -20,27 +16,16 @@ define_aspect(Logic) {
 //     }
 // };
 
-
-define_aspect(SomeValues) {
+define_aspect(SomeValues)
     float x;
     int nums[16];
     bool flag;
+end_define_aspect(SomeValues)
 
-    static void create() {
-    }
-    static void teardown() {
-    }
-};
-
-define_aspect(SomeMoreStuff) {
+define_aspect(SomeMoreStuff)
     float x;
     int nums[23];
-
-    static void create() {
-    }
-    static void teardown() {
-    }
-};
+end_define_aspect(SomeMoreStuff)
 
 void say_cool(Logic *logic)
 {

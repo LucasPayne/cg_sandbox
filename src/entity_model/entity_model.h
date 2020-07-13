@@ -198,7 +198,13 @@ public: // Usage interface
         );
     }
 
-
+    // Iterate over aspect pairs, attached to the same entity. This is a lot of extra code but I think the syntax is convenient.
+    // example:
+    //    for (auto [t, v] : em.aspects<Transform, Velocity>()) {
+    //        ...
+    //    }
+    //-A lot of the implementation is just to get this to work with what C++ seemingly expands range-based for loops into.
+    // It really is in essence a macro trick.
     template <typename A, typename Required>
     struct DoubleAspectIterator {
         DoubleAspectIterator(EntityModel &em) : entity_model{em} {}
@@ -208,7 +214,6 @@ public: // Usage interface
                 current_required = nullptr;
                 seek_to_next();
             }
-
             inline void seek_to_next() {
                 if (position == end) return;
                 while (true) {
@@ -253,8 +258,7 @@ public: // Usage interface
         return DoubleAspectIterator<A, Required>(*this);
     }
 
-    // This variant returns a null pointer if an aspect of the given type isn't found.
-    // Presumably the caller will handle the null pointer case.
+    // Get aspects from entities.
     template <typename A>
     A *try_get_aspect(Entity entity) {
         EntityEntry *entity_entry = get_entity_entry(entity);

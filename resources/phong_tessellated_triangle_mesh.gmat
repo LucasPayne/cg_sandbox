@@ -1,0 +1,51 @@
+// Geometric material for Phong-tessellated triangle meshes.
+#type gmat
+#primitive patches 3
+
+section vertex {
+    // The vertex stage just passes everything through.
+    out vec3 f_normal(in vec3 v_normal) {
+        return v_normal;
+    }
+    out vec3 f_position(in vec3 v_position) {
+        return v_position;
+    }
+    out vec2 f_uv(in vec3 v_uv) {
+        return v_uv;
+    }
+}
+section tessellation_control {
+    const float tesselation_level = 8.0;
+    gl_TessLevelOuter[0] = tesselation_level;
+    gl_TessLevelOuter[1] = tesselation_level;
+    gl_TessLevelOuter[2] = tesselation_level;
+    gl_TessLevelInner[0] = tesselation_level;
+    gl_TessLevelInner[1] = tesselation_level;
+}
+section tessellation_evaluation {
+    // Keep layout qualifier as the same syntax?
+    // This is information that is really given to the tessellator.
+    layout (triangles, equal_spacing, ccw) in;
+
+    // "in" works differently here, as the inputs to the evaluation stage are the vertex+control-processed vertices of a whole patch.
+    // The indexing syntax seems most convenient, but will require extra syntactic intervention when code is generated.
+    out vec3 world_position(in vec3 f_position, in vec3 f_normal, uniform mat4x4 model_matrix) {
+        float t1 = gl_TessCoord[0];
+        float t2 = gl_TessCoord[1];
+        float t3 = gl_TessCoord[2];
+
+        vec3 a = f_position[0];
+        vec3 b = f_position[1];
+        vec3 c = f_position[2];
+        vec3 na = normalize(f_normal[0]);
+        vec3 nb = normalize(f_normal[1]);
+        vec3 nc = normalize(f_normal[2]);
+
+        vec3 p = (t1*a + t2*b + t3*c) / (t1 + t2 + t3);
+        vec3 ap = p - na * dot(p - a, na);
+        vec3 bp = p - nb * dot(p - b, nb);
+        vec3 cp = p - nc * dot(p - c, nc);
+
+        return model_matrix * vec4((t1*ap + t2*bp + t3*cp) / (t1 + t2 + t3), 1);
+    }
+}

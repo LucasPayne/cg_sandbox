@@ -1,0 +1,6 @@
+#type mat
+
+out vec3 normal(in vec3 f_normal, in vec2 f_uv, uniform sampler2D normal_map) {
+    return texture(normal_map, f_uv + f_normal);
+}
+

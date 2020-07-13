@@ -373,7 +373,12 @@ private: // implementation details
     //-Note: it is important for this to be efficient! At least as efficient as the verbose way that depends on understanding the underlying data structure.
     struct EntityAspectIterator {
         struct IteratorPosition {
-            IteratorPosition(Aspect aspect) : current_aspect{aspect} {}
+            IteratorPosition() {
+                // Empty constructor flags this position as the end.
+                current_aspect.id = 0;
+                //-entity_model state is not needed, so is not given here.
+            }
+            IteratorPosition(Aspect aspect, EntityModel *_entity_model) : current_aspect{aspect}, entity_model{_entity_model} {}
 
             bool operator!=(int throwaway) {
                 //-This doesn't need to make sense as a "!=" operator, it just needs to work for the "macro expansion" described in
@@ -395,14 +400,14 @@ private: // implementation details
         EntityAspectIterator(Entity _entity, EntityModel *_entity_model) : entity{_entity}, entity_model{_entity_model} {}
 
         IteratorPosition begin() {
-            EntityEntry *entity_entry = get_entity(entity);
+            EntityEntry *entity_entry = entity_model->get_entity_entry(entity);
             if (entity_entry->num_aspects == 0) {
                 // Flag this to exit immediately.
                 //-This is a result of the (bad) decision to use num_aspects == 0 to signify none, instead of id == 0.
-                current_aspect.id = 0;
+                return IteratorPosition();
             }
             else {
-                current_aspect = entity_entry->first_aspect;
+                return IteratorPosition(entity_entry->first_aspect, entity_model);
             }
         }
         int end() {
@@ -417,7 +422,7 @@ private: // implementation details
     //-Defined here since the struct definition is here. Maybe it shouldn't be defined here.
     EntityAspectIterator entity_aspects(Entity entity) {
         //-The user doesn't use the constructor directly.
-        return EntityAspectIterator(entity);
+        return EntityAspectIterator(entity, this);
     }
 };
 

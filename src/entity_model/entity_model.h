@@ -291,14 +291,15 @@ public: // Usage interface
         return (A *) base;
     }
 
-    // // Sibling aspects.
-    // //-Should overload to use aspect handle.
-    // template <typename A>
-    // A *try_get_sibling_aspect(AspectEntryBase *aspect_entry) {
-    //     for (auto Aspect sibling : entity_aspects(aspect_entry->entity)) {
-    //        if (sibling.type == A::type) return try_get_aspect(
-    //     }
-    // }
+    // Sibling aspects.
+    //-Should overload to use aspect handle.
+    template <typename A>
+    A *try_get_sibling_aspect(AspectEntryBase *aspect_entry) {
+        for (Aspect sibling : entity_aspects(aspect_entry->entity)) {
+            if (sibling.type == A::type) return (A *) try_get_aspect_base(sibling);
+        }
+        return nullptr;
+    }
 
     template <typename A>
     A *add_aspect(Entity entity) {

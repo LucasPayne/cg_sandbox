@@ -38,6 +38,16 @@ void say_cool(Logic *logic)
 
 void CGSandbox::test_init()
 {
+    for (int i = 0; i < 2; i++) {
+        Entity e = entity_model.new_entity();
+        Logic *logic = entity_model.add_aspect<Logic>(e);
+        logic->update = say_cool;
+        if (i == 1) continue;
+        SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
+        sv->x = 31.54;
+    }
+
+#if 0
     AspectType type1 = SomeValues::type;
     AspectType type = SomeMoreStuff::type;
     printf("type: %d\n", type);
@@ -70,7 +80,7 @@ void CGSandbox::test_init()
     entity_model.print_aspect_ids(0);
     entity_model.print_aspect_ids(1);
     entity_model.print_aspect_ids(Logic::type);
-    
+    #endif
 
     // e.add<SomeValues>(1.3, 32, true);
     // e.add<SomeMoreStuff>(1.66, 12);
@@ -97,12 +107,16 @@ void CGSandbox::test_loop()
 
     for (auto &logic : entity_model.aspects<Logic>()) {
         logic.update(&logic);
+        printf("trying to get sibling sv ...\n");
+        SomeValues *sv = entity_model.try_get_sibling_aspect<SomeValues>(&logic);
+        if (sv == nullptr) continue;
+        printf("Found sv, x = %.4f\n", sv->x);
     }
-    entity_model.print_aspect_ids(Logic::type);
-    for (auto &sv: entity_model.aspects<SomeValues>()) {
-        printf("Value: %.4f\n", sv.x);
-    }
-    entity_model.print_aspect_ids(SomeValues::type);
+    // entity_model.print_aspect_ids(Logic::type);
+    // for (auto &sv: entity_model.aspects<SomeValues>()) {
+    //     printf("Value: %.4f\n", sv.x);
+    // }
+    // entity_model.print_aspect_ids(SomeValues::type);
 
     // for_aspect(Logic, logic)
     //     

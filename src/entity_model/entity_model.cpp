@@ -274,29 +274,12 @@ void EntityModel::destroy_entity(Entity entity)
         prev = aspect_entry;
     }
     if (prev != nullptr) {
-            // Destroy the previous aspect in the iteration.
-            prev->id = 0;
-            //---teardown stuff.
+        // Destroy the previous aspect in the iteration.
+        prev->id = 0;
+        //---teardown stuff.
     }
     entry->id = 0;
 
-
-    // // Destroy all its aspects.
-    // //---Probably destroying all the aspects at once should be cheaper, since
-    // //   the linked list doesn't need to be maintained.
-    // if (entry->num_aspects > 0) {
-    //     AspectEntryBase *destroy_this = get_aspect_base(entry->first_aspect);
-    //     while (true) {
-    //         Aspect destroy_this_next_handle = destroy_this->next_aspect;
-    //         AspectEntryBase *destroy_this_next = get_aspect_base(destroy_this_next_handle);
-    //         destroy_aspect(destroy_this);
-    //         if (destroy_this_next_handle.id == 0) break;
-    //         destroy_this = destroy_this_next;
-    //     }
-    // }
-
-    // // Nullify this entry.
-    // entry->id = 0;
     // Link this space back into the free list.
     uint32_t prev_free_index = entity_list_first_free_index;
     entity_list_first_free_index = entity.index;

@@ -3,6 +3,7 @@
 --------------------------------------------------------------------------------*/
 #ifndef ENTITY_MODEL_H
 #define ENTITY_MODEL_H
+#include <tuple>
 #include "core.h"
 
 // !-TERRIBLE-! subject to change, hopefully.
@@ -196,58 +197,61 @@ public: // Usage interface
              ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
         );
     }
-#if 0
-    //-There is probably a way to avoid this code duplication.
+
+
     template <typename A, typename Required>
-    class DoubleAspectIterator {
-        A *list_start;
-        Required *list_start_required; // Stores the required aspect at this iterator position, so begin() doesn't need to refind it.
-        A *list_end;
+    struct DoubleAspectIterator {
+        DoubleAspectIterator(EntityModel &em) : entity_model{em} {}
 
-        inline void get_required() {
-            // Update the list_start_required pointer. To the relevant sibling of list_start. If there is none, this is set to nullptr.
-            //-Don't do this if list_start is at the end!
-            if (list_start->id == 0) {
-                list_start_required = nullptr;
-            } else {
-                list_start_required = try_get_sibling_aspect<Required>(list_start);
+        struct IteratorPosition {
+            IteratorPosition(A *_position, A *_end, EntityModel &em) : position{_position}, end{_end}, entity_model{em} {
+                current_required = nullptr;
+                seek_to_next();
             }
-        }
-        inline void seek_to_next() {
-            // Skip over null aspects and aspects that don't have the required sibling.
-            while (list_start != list_end && (list_start->id == 0 || list_start_required == nullptr)) {
-                ++list_start;
-                get_required();
-            }
-        }
-    public:
-        DoubleAspectIterator(A *_start, A *_end)
-        : list_start{_start}, list_end{_end}
-        {}
-        void operator++() {
-	    ++list_start;
-            seek_to_next();
-        }
-        bool operator!=(DoubleAspectIterator other) { return list_start != other.list_start; }
 
-        std::tuple<A&, Required&>operator*() {
-            return std::tuple<A&, Required&>(*list_start, *list_start_required);
-        }
-
-        DoubleAspectIterator begin() {
-            //-Remember to begin the iterator at a valid position!
-            seek_to_next();
-            if (list_start != list_end) {
-                //-Make sure not to do this if there is the position is at the end!
-                get_required();
+            inline void seek_to_next() {
+                if (position == end) return;
+                while (true) {
+                    ++position;
+                    if (position == end) return;
+                    if (position->id == 0) continue;
+                    current_required = entity_model.try_get_sibling_aspect<Required>(position);
+                    if (current_required != nullptr) return;
+                }
             }
-            return DoubleAspectIterator(list_start, list_end);
+            void operator++() {
+                ++position;
+                seek_to_next();
+            }
+            bool operator!=(int throwaway) {
+                return position != end;
+            }
+            std::tuple<A&, Required&> operator*() {
+                return std::tuple<A&, Required &>(*position, *current_required);
+            }
+        private:
+            A *position;
+            A *end;
+            Required *current_required;
+            EntityModel &entity_model;
+        };
+        IteratorPosition begin() {
+            return IteratorPosition(
+                (A *) &entity_model.aspect_lists[A::type][0],
+                ((A *) &entity_model.aspect_lists[A::type][0]) + (entity_model.aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size),
+                entity_model
+            );
         }
-        DoubleAspectIterator end() {
-            return DoubleAspectIterator(list_end, list_end);
+        int end() {
+            return 0;
         }
+    private:
+        EntityModel &entity_model;
     };
-    #endif
+    template <typename A, typename Required>
+    DoubleAspectIterator<A, Required> aspects() {
+        return DoubleAspectIterator<A, Required>(*this);
+    }
 
     // This variant returns a null pointer if an aspect of the given type isn't found.
     // Presumably the caller will handle the null pointer case.

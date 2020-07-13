@@ -17,6 +17,25 @@ define_aspect(Transform)
     uint32_t flags;
 end_define_aspect(Transform)
 
+define_aspect(TestAspect1)
+    float x;
+end_define_aspect(TestAspect1)
+
+void create_dude(EntityModel &em)
+{
+    Entity e = em.new_entity();
+    Transform *t = em.add_aspect<Transform>(e);
+    t->position[0] = 1;
+    t->position[1] = 2;
+    t->position[2] = 3;
+    if (frand() > 0.5) {
+        Velocity *v = em.add_aspect<Velocity>(e);
+        v->velocity[0] = 1;
+        v->velocity[1] = -1;
+        v->velocity[2] = 0.5;
+    }
+}
+
 void CGSandbox::init()
 {
     // Initialize the entity model, with no entities.
@@ -24,17 +43,7 @@ void CGSandbox::init()
     EntityModel &em = entity_model;
 
     for (int i = 0; i < 10; i++) {
-        Entity e = em.new_entity();
-        Transform *t = em.add_aspect<Transform>(e);
-        t->position[0] = 1;
-        t->position[1] = 2;
-        t->position[2] = 3;
-        if (frand() > 0.5) {
-            Velocity *v = em.add_aspect<Velocity>(e);
-            v->velocity[0] = 1;
-            v->velocity[1] = -1;
-            v->velocity[2] = 0.5;
-        }
+        create_dude(em);
     }
 }
 void CGSandbox::close()
@@ -51,13 +60,27 @@ void CGSandbox::loop()
         printf("position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
     }
     for (auto &v : em.aspects<Velocity>()) {
-        Transform *t = em.try_get_sibling_aspect<Transform>(&v);
-        if (t != nullptr) {
-            for (int i = 0; i < 3; i++) {
-                t->position[i] += v.velocity[i] * dt;
-            }
-        }
+        printf("velocity: %.2f, %.2f, %.2f\n", v.velocity[0], v.velocity[1], v.velocity[2]);
     }
+    for (auto [t, v] : em.aspects<Transform, Velocity>()) {
+        printf("Pair:\n");
+        printf("    position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
+        printf("    velocity: %.2f, %.2f, %.2f\n", v.velocity[0], v.velocity[1], v.velocity[2]);
+    }
+    for (auto [t, ta1] : em.aspects<Transform, TestAspect1>()) {
+        printf("Pair:\n");
+        printf("    position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
+        printf("    ta1: %.2f\n", ta1.x);
+    }
+
+    // for (auto &v : em.aspects<Velocity>()) {
+    //     Transform *t = em.try_get_sibling_aspect<Transform>(&v);
+    //     if (t != nullptr) {
+    //         for (int i = 0; i < 3; i++) {
+    //             t->position[i] += v.velocity[i] * dt;
+    //         }
+    //     }
+    // }
 }
 
 void CGSandbox::key_callback(int key, int action)
@@ -75,11 +98,30 @@ void CGSandbox::key_callback(int key, int action)
                 t.position[1] += 2.3;
             }
         }
-        if (key == GLFW_KEY_M) {
+        if (key == GLFW_KEY_T) {
             for (auto &t : em.aspects<Transform>()) {
-                if (frand() > 0.8) em.destroy_entity(t.entity);
+                if (frand() > 0.3) continue;
+                auto ta1 = em.add_aspect<TestAspect1>(t.entity);
+                ta1->x = frand();
             }
         }
+        if (key == GLFW_KEY_C) {
+            create_dude(em);
+        }
+        if (key == GLFW_KEY_M) {
+            for (auto &t : em.aspects<Transform>()) {
+                // if (frand() > 0.8) em.destroy_entity(t.entity);
+                em.destroy_entity(t.entity);
+                break;
+            }
+        }
+        // This is broken!
+        // if (key == GLFW_KEY_V) {
+        //     for (auto &v : em.aspects<Velocity>()) {
+        //         em.destroy_aspect(&v);
+        //         break;
+        //     }
+        // }
     }
 }
 void CGSandbox::cursor_position_callback(double x, double y)

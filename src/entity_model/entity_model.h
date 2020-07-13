@@ -300,6 +300,15 @@ public: // Usage interface
         }
         return nullptr;
     }
+    template <typename A>
+    inline A *get_sibling_aspect(AspectEntryBase *aspect_entry) {
+        A *sibling = try_get_sibling_aspect<A>(aspect_entry);
+        if (sibling == nullptr) {
+            fprintf(stderr, "ERROR: Could not find sibling %s aspect on entity.\n", AspectInfo::type_info(A::type).name);
+            exit(EXIT_FAILURE);
+        }
+        return sibling;
+    }
 
     template <typename A>
     A *add_aspect(Entity entity) {
@@ -372,6 +381,10 @@ private: // implementation details
     // Iterator for aspects of a given entity. This iterates the internal linked list.
     //-Private, since the application probably shouldn't need to treat aspects generically.
     //-Note: it is important for this to be efficient! At least as efficient as the verbose way that depends on understanding the underlying data structure.
+    // !-NOTE-!
+    //     Using an iterator for entity's aspect lists seems like a good idea, even if this iteration is only internally used by the entity model implementation.
+    //     However, the implementation here is a mess, and there is definite uneccessary overhead in getting the iterator interface to match.
+    //     (todo: Learn how to properly create custom iterators.)
     struct EntityAspectIterator {
         struct IteratorPosition {
             IteratorPosition() {

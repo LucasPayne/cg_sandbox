@@ -168,12 +168,13 @@ Entity EntityModel::new_entity()
 
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
 {
-    dprint("Creating new aspect-%u entry\n", aspect_type);
-
     // Use the aspect type information and the list of aspects.
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
     RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
     std::vector<uint8_t> &list = aspect_lists[aspect_type];
+
+    //-Problem here with %s if aspect name is broken!
+    dprint("Creating new aspect-%u %s entry\n", aspect_type, info.name);
     
     //-The first free index always has to be valid. Resizes are triggered when this would not
     // have any options.

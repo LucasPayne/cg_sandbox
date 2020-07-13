@@ -8,6 +8,10 @@
 define_aspect(Logic)
     void (*update)(Logic *);
     void *data;
+
+    Logic(void (*_update)(Logic *)) {
+        update = _update;
+    }
 end_define_aspect(Logic)
 
 // struct ThingThatSaysHello : Logic {
@@ -46,14 +50,14 @@ void CGSandbox::test_init()
     for (int i = 0; i < N; i++) {
         Entity e = entity_model.new_entity();
 
-        SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
-        sv->x = 12.31;
-        SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);
-        // entity_model.print_entity(e);
+        // SomeValues *sv = entity_model.add_aspect<SomeValues>(e);
+        // sv->x = 12.31;
+        // SomeMoreStuff *sms = entity_model.add_aspect<SomeMoreStuff>(e);
+        // // entity_model.print_entity(e);
 
-        SomeValues *_sv = entity_model.get_aspect<SomeValues>(e);
-        if (frand() > 0.35) entity_model.destroy_aspect(_sv);
-        printf("x: %.2f\n", _sv->x);
+        // SomeValues *_sv = entity_model.get_aspect<SomeValues>(e);
+        // if (frand() > 0.35) entity_model.destroy_aspect(_sv);
+        // printf("x: %.2f\n", _sv->x);
         entities[i] = e;
         Logic *logic = entity_model.add_aspect<Logic>(e);
         logic->update = say_cool;
@@ -92,12 +96,10 @@ void CGSandbox::test_loop()
     // }
 
     for (auto &logic : entity_model.aspects<Logic>()) {
-        // if (logic.id == 0) continue;
         logic.update(&logic);
     }
     entity_model.print_aspect_ids(Logic::type);
     for (auto &sv: entity_model.aspects<SomeValues>()) {
-        // if (sv.id == 0) continue;
         printf("Value: %.4f\n", sv.x);
     }
     entity_model.print_aspect_ids(SomeValues::type);

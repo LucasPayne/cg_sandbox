@@ -1,3 +1,6 @@
+/*--------------------------------------------------------------------------------
+    Declarations and interface for the entity model.
+--------------------------------------------------------------------------------*/
 #ifndef ENTITY_MODEL_H
 #define ENTITY_MODEL_H
 #include "core.h"
@@ -44,11 +47,6 @@ struct Aspect {
 #define MAX_NUM_ASPECT_TYPES 255
 struct AspectInfo {
     size_t size;
-    //----
-    // I would like the name, but it appears that templating parameters cannot be stringified,
-    // but there might be some trick to get the static initialization stuff to work and retrieve the name. But also maybe not.
-    // The macro solution could do this easily, but initialization of RTTI had to be called manually.
-    // char name[MAX_ASPECT_TYPE_NAME_LENGTH + 1];
     char *name;
 
     static int num_aspect_types;
@@ -173,7 +171,9 @@ public: // Usage interface
             }
         }
     public:
-        AspectIterator(A *_start, A *_end) : list_start{_start}, list_end{_end} {}
+        AspectIterator(A *_start, A *_end)
+        : list_start{_start}, list_end{_end}
+        {}
         void operator++() {
 	    ++list_start;
             seek_to_next();
@@ -196,8 +196,63 @@ public: // Usage interface
              ((A *) &aspect_lists[A::type][0]) + (aspect_lists[A::type].size() / AspectInfo::type_info(A::type).size)
         );
     }
+#if 0
+    //-There is probably a way to avoid this code duplication.
+    template <typename A, typename Required>
+    class DoubleAspectIterator {
+        A *list_start;
+        Required *list_start_required; // Stores the required aspect at this iterator position, so begin() doesn't need to refind it.
+        A *list_end;
+
+        inline void get_required() {
+            // Update the list_start_required pointer. To the relevant sibling of list_start. If there is none, this is set to nullptr.
+            //-Don't do this if list_start is at the end!
+            if (list_start->id == 0) {
+                list_start_required = nullptr;
+            } else {
+                list_start_required = try_get_sibling_aspect<Required>(list_start);
+            }
+        }
+        inline void seek_to_next() {
+            // Skip over null aspects and aspects that don't have the required sibling.
+            while (list_start != list_end && (list_start->id == 0 || list_start_required == nullptr)) {
+                ++list_start;
+                get_required();
+            }
+        }
+    public:
+        DoubleAspectIterator(A *_start, A *_end)
+        : list_start{_start}, list_end{_end}
+        {}
+        void operator++() {
+	    ++list_start;
+            seek_to_next();
+        }
+        bool operator!=(DoubleAspectIterator other) { return list_start != other.list_start; }
+
+        std::tuple<A&, Required&>operator*() {
+            return std::tuple<A&, Required&>(*list_start, *list_start_required);
+        }
+
+        DoubleAspectIterator begin() {
+            //-Remember to begin the iterator at a valid position!
+            seek_to_next();
+            if (list_start != list_end) {
+                //-Make sure not to do this if there is the position is at the end!
+                get_required();
+            }
+            return DoubleAspectIterator(list_start, list_end);
+        }
+        DoubleAspectIterator end() {
+            return DoubleAspectIterator(list_end, list_end);
+        }
+    };
+    #endif
+
+    // This variant returns a null pointer if an aspect of the given type isn't found.
+    // Presumably the caller will handle the null pointer case.
     template <typename A>
-    A *get_aspect(Entity entity) {
+    A *try_get_aspect(Entity entity) {
         EntityEntry *entity_entry = get_entity_entry(entity);
 
         // Search through the aspect linked list for the first one with the relevant id.
@@ -213,9 +268,38 @@ public: // Usage interface
                 cur = get_aspect_base(cur_handle);
             }
         }
-        fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
-        exit(EXIT_FAILURE);
+        return nullptr;
     }
+    template <typename A>
+    inline A *get_aspect(Entity entity) {
+        A *aspect_entry = try_get_aspect<A>(entity);
+        if (aspect_entry == nullptr) {
+            fprintf(stderr, "ERROR: Could not find aspect on entity.\n");
+            exit(EXIT_FAILURE);
+        }
+        return aspect_entry;
+    }
+    // Get aspects from their aspect handles.
+    template <typename A>
+    A *try_get_aspect(Aspect aspect) {
+        AspectEntryBase *base = try_get_aspect_base(aspect);
+        return (A *) base;
+    }
+    template <typename A>
+    A *get_aspect(Aspect aspect) {
+        AspectEntryBase *base = get_aspect_base(aspect);
+        return (A *) base;
+    }
+
+    // // Sibling aspects.
+    // //-Should overload to use aspect handle.
+    // template <typename A>
+    // A *try_get_sibling_aspect(AspectEntryBase *aspect_entry) {
+    //     for (auto Aspect sibling : entity_aspects(aspect_entry->entity)) {
+    //        if (sibling.type == A::type) return try_get_aspect(
+    //     }
+    // }
+
     template <typename A>
     A *add_aspect(Entity entity) {
         const AspectInfo &info = AspectInfo::type_info(A::type);
@@ -266,11 +350,71 @@ private: // implementation details
 
     // Use the aspect handle to lookup the pointer to the base aspect class in the relevant aspect list/table.
     // This is private, as applications will use the templated get_aspect.
-    AspectEntryBase *get_aspect_base(Aspect aspect);
+    AspectEntryBase *try_get_aspect_base(Aspect aspect);
+    inline AspectEntryBase *get_aspect_base(Aspect aspect) {
+        AspectEntryBase *entry = try_get_aspect_base(aspect);
+        if (entry == nullptr) {
+            // This aspect doesn't exist, at least not anymore.
+            fprintf(stderr, "ERROR: Attempted to lookup aspect that doesn't exist.\n");
+            fprintf(stderr, "    aspect id: %u, aspect index: %u, aspect type: %u\n", aspect.id, aspect.index, aspect.type);
+            fprintf(stderr, "    entry id:  %u\n", entry->id);
+            print_aspect_ids(aspect.type);
+            exit(EXIT_FAILURE);
+        }
+        return entry;
+    }
 
     // Use the entity handle to lookup the pointer to the entity entry in the entity list/table.
     // This is private, as applications probably shouldn't need to use it.
     EntityEntry *get_entity_entry(Entity entity);
+
+    // Iterator for aspects of a given entity. This iterates the internal linked list.
+    //-Private, since the application probably shouldn't need to treat aspects generically.
+    //-Note: it is important for this to be efficient! At least as efficient as the verbose way that depends on understanding the underlying data structure.
+    struct EntityAspectIterator {
+        struct IteratorPosition {
+            IteratorPosition(Aspect aspect) : current_aspect{aspect} {}
+
+            bool operator!=(int throwaway) {
+                //-This doesn't need to make sense as a "!=" operator, it just needs to work for the "macro expansion" described in
+                //    https://en.cppreference.com/w/cpp/language/range-for
+                return current_aspect.id != 0;
+            }
+            void operator++() {
+                // Lookup the current aspect entry to find the next one. This is how the internal linked list has to be traversed.
+                // If this is the last aspect, the next will had id 0, causing the iteration to stop.
+                AspectEntryBase *aspect_entry = get_aspect_base(current_aspect);
+                current_aspect = aspect_entry->next_aspect;
+            }
+            Aspect operator*() { return current_aspect; }
+        private:
+            Aspect current_aspect;
+        };
+        EntityAspectIterator(Entity _entity) : entity{_entity} {}
+
+        IteratorPosition begin() {
+            EntityEntry *entity_entry = get_entity(entity);
+            if (entity_entry->num_aspects == 0) {
+                // Flag this to exit immediately.
+                //-This is a result of the (bad) decision to use num_aspects == 0 to signify none, instead of id == 0.
+                current_aspect.id = 0;
+            }
+            else {
+                current_aspect = entity_entry->first_aspect;
+            }
+        }
+        int end() {
+            //-Hopefully the compiler optimizes this stuff away somehow.
+            return 0;
+        }
+    private:
+        Entity entity;
+    };
+    //-Defined here since the struct definition is here. Maybe it shouldn't be defined here.
+    EntityAspectIterator entity_aspects(Entity entity) {
+        //-The user doesn't use the constructor directly.
+        return EntityAspectIterator(entity);
+    }
 };
 
 #endif // ENTITY_MODEL_H

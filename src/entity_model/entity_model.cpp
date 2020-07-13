@@ -1,3 +1,6 @@
+/*--------------------------------------------------------------------------------
+    Entity model implementations.
+--------------------------------------------------------------------------------*/
 #include "core.h"
 #include "entity_model/entity_model.h"
 /*--------------------------------------------------------------------------------
@@ -13,6 +16,24 @@ TO DO:
     --- More efficient entity destruction.
     --- try_get_aspect, try_get_entity kind of stuff.
     --- Getting sibling aspects.
+
+IDEAS/THINGS:
+    Could something like this work?
+    template <typename A>
+    struct AspectConstructor {
+        A *operator()(A::A parameters ...) {
+            *A = A(A::A parameters ...);
+            return A;
+        }
+    };
+    purely for allowing syntax
+        entity_model.add_aspect<TheFloat>(e)(83.17);
+    Is there much point for this syntax?
+
+    What about overloading =?
+    Aspect a = ... versus
+    TheFloat *the_float = ...
+    Maybe these could both work, overloading copy from the same returned object.
 --------------------------------------------------------------------------------*/
 
 #include <stdarg.h>
@@ -207,7 +228,7 @@ AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_
     return entry;
 }
 
-AspectEntryBase *EntityModel::get_aspect_base(Aspect aspect)
+AspectEntryBase *EntityModel::try_get_aspect_base(Aspect aspect)
 {
     const AspectInfo &info = AspectInfo::type_info(aspect.type);
     const std::vector<uint8_t> &list = aspect_lists[aspect.type];
@@ -215,16 +236,10 @@ AspectEntryBase *EntityModel::get_aspect_base(Aspect aspect)
     //- Could do a bounds check here, in case the handle is corrupt.
     AspectEntryBase *entry = (AspectEntryBase *) &list[aspect.index * info.size];
     if (aspect.id != entry->id) {
-        // This aspect doesn't exist, at least not anymore.
-        fprintf(stderr, "ERROR: Attempted to lookup aspect that doesn't exist.\n");
-        fprintf(stderr, "    aspect id: %u, aspect index: %u, aspect type: %u\n", aspect.id, aspect.index, aspect.type);
-        fprintf(stderr, "    entry id:  %u\n", entry->id);
-        print_aspect_ids(aspect.type);
-        exit(EXIT_FAILURE);
+        return nullptr;
     }
     return entry;
 }
-
 
 EntityEntry *EntityModel::get_entity_entry(Entity entity)
 {
@@ -333,7 +348,7 @@ void EntityModel::fprint_entity(FILE *file, Entity entity)
 void EntityModel::print_aspect_ids(AspectType aspect_type)
 {
     const AspectInfo &info = AspectInfo::type_info(aspect_type);
-    //----could be a problem if the name is buggy and invalid!
+    //----%s could be a problem if the name is buggy and invalid!
     printf("Aspect-%d %s IDs\n", aspect_type, info.name);
     const RuntimeAspectInfo &rt_info = runtime_aspect_infos[aspect_type];
     const std::vector<uint8_t> &list = aspect_lists[aspect_type];

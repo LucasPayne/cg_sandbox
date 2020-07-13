@@ -1,3 +1,6 @@
+/*--------------------------------------------------------------------------------
+Declarations and interface for the CGSandbox class.
+--------------------------------------------------------------------------------*/
 #ifndef CG_SANDBOX_H
 #define CG_SANDBOX_H
 #include "core.h"

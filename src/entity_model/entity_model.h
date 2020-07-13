@@ -383,14 +383,16 @@ private: // implementation details
             void operator++() {
                 // Lookup the current aspect entry to find the next one. This is how the internal linked list has to be traversed.
                 // If this is the last aspect, the next will had id 0, causing the iteration to stop.
-                AspectEntryBase *aspect_entry = get_aspect_base(current_aspect);
+                AspectEntryBase *aspect_entry = entity_model->get_aspect_base(current_aspect);
                 current_aspect = aspect_entry->next_aspect;
             }
             Aspect operator*() { return current_aspect; }
         private:
             Aspect current_aspect;
+            // This state is needed ...
+            EntityModel *entity_model;
         };
-        EntityAspectIterator(Entity _entity) : entity{_entity} {}
+        EntityAspectIterator(Entity _entity, EntityModel *_entity_model) : entity{_entity}, entity_model{_entity_model} {}
 
         IteratorPosition begin() {
             EntityEntry *entity_entry = get_entity(entity);
@@ -408,7 +410,9 @@ private: // implementation details
             return 0;
         }
     private:
+        // The iterator needs this state.
         Entity entity;
+        EntityModel *entity_model;
     };
     //-Defined here since the struct definition is here. Maybe it shouldn't be defined here.
     EntityAspectIterator entity_aspects(Entity entity) {

@@ -8,6 +8,7 @@ IDEAS/THINGS/NOTES:
     will be fine. Also, especially when prototyping or trying out ideas for ways to structure data relationships / control flow.
 --------------------------------------------------------------------------------*/
 #include "rendering/rendering.h"
+#include <algorithm>
 namespace Rendering {
 
 ShadingProgram::ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm)
@@ -23,34 +24,93 @@ ShadingProgram new_shading_program(GeometricMaterial g, Material m, ShadingModel
 
     // Generating glsl code.
     // ---------------------
-    // First, propogate requirements to the minimal set the ShadingModel says it needs for inputs.
+    // First, propogate requirements to the minimal set that the ShadingModel says it needs for inputs.
     // Do this for both inputs and uniforms. First, minimize the outputs of each shading stage, all the way until the vertex attribute
     // set is minimized. Then, pass over again and minimize the uniforms.
     // While doing this, catch whether requirements are missing. If so, give an error.
 
-    //-Copy shading stages.
-    // Shading stage preprocess: minimize inputs, uniforms, and outputs.
-    for (const ShadingOutput &sm_output : sm.outputs) {
-        // For each ShadingModel output, find the inputs in the Material.
-        for (const ShadingParameter &sm_output_requires : sm_output.inputs) {
-            // Look for this input from the previous stage (which must be the Material stage).
-            bool found = false;
-            for (const ShadingOutput &m_output : m.outputs) {
-                if (m_output.output == sm_output_required) {
-                    found = true;
-                    sm_winnowed
-                    break;
-                }
+    // Disable the "used" flag on all dataflow structures.
+    ShadingDataflow *dataflows[] = {&g.dataflow, &m.dataflow, &sm.frag_post_dataflow, &sm.geom_post_dataflow};
+    for (ShadingDataflow *dataflow : dataflows) {
+        for (ShadingOutput &output : dataflow->outputs) {
+            output.used = false;
+            for (ShadingParameter &input : output.inputs) {
+                input.used = false;
             }
-            if (!found) {
+            for (ShadingParameter &uniform : output.uniforms) {
+                uniform.used = false;
+            }
+        }
+    }
+
+    /*--------------------------------------------------------------------------------
+    After this pass:
+        All ShadingModel frag-post outputs are marked as used.
+        The minimum set of required outputs at each stage are marked as used.
+        The minimum set of required vertex attributes, inputs to the GeometricMaterial stage, are marked as used.
+    --------------------------------------------------------------------------------*/
+    // Propogate requirements back from the ShadingModel frag-post outputs. This sets the "used" flag, to later signify to the
+    // code generator what it should include.
+    for (ShadingOutput &frag_post_output : sm.frag_post_dataflow.outputs) {
+        // All ShadingModel frag-post outputs are used.
+        frag_post_output.used = true;
+        // For each ShadingModel frag-post output, propogate requirements.
+        for (ShadingParameter &frag_post_requires : frag_post_output.inputs) {
+            // Find matching input from the Material stage.
+            auto found_for_frag_post = std::find(std::begin(m.dataflow.outputs), std::end(m.dataflow.outputs), frag_post_requires);
+            if (found_for_frag_post == std::end(m.dataflow.outputs)) {
+                // Not found. The Material doesn't provide the wanted output.
                 fprintf(stderr, "ERROR\n");
                 exit(EXIT_FAILURE);
             }
+            found_for_frag_post->used = true;
+            // Now propogate requirements to both:
+            //    - Geometry processing,
+            //    - ShadingModel geometry post-processing,
+            // either of which can provide the Material's requirements.
+            auto &material_requirements = found_for_frag_post->inputs;
+            for (ShadingParameter &material_requires : material_requirements) {
+                // Search GeometricMaterial outputs.
+                auto found_for_material = std::find(std::begin(g.dataflow.outputs), std::end(g.dataflow.outputs), material_requires);
+                if (found_for_material == std::end(g.dataflow.outputs)) {
+                    // Not found. The GeometricMaterial doesn't provide the wanted output.
+                    // However, possibly the ShadingModel geom-post dataflow does.
+                    found_for_material = std::find(std::begin(sm.geom_post_dataflow.outputs), std::end(sm.geom_post_dataflow.outputs), material_requires);
+                    if (found_for_material == std::end(sm.geom_post_dataflow.outputs)) {
+                        fprintf(stderr, "ERROR\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    found_for_material->used = true;
+                    // Propogate geom-post requirements to GeometricMaterial.
+                    auto &geom_post_requirements = found_for_material->inputs;
+                    for (ShadingParameter &geom_post_requires : geom_post_requirements) {
+                        // Search GeometricMaterial outputs (required by geom-post).
+                        auto found_for_geom_post = std::find(std::begin(g.dataflow.outputs), std::end(g.dataflow.outputs), geom_post_requires);
+                        if (found_for_geom_post == std::end(g.dataflow.outputs)) {
+                            fprintf(stderr, "ERROR\n");
+                            exit(EXIT_FAILURE);
+                        }
+                        found_for_geom_post->used = true;
+                        // Flag vertex attribute inputs of GeometricMaterial as used.
+                        for (auto &vertex_attribute : found_for_geom_post->inputs) vertex_attribute.used = true;
+                    }
+                } else {
+                    found_for_material->used = true;
+                    // Flag vertex attribute inputs of GeometricMaterial as used.
+                    for (auto &vertex_attribute : found_for_material->inputs) vertex_attribute.used = true;
+                }
+            }
+            //---clip_position
+            //---uniforms
         }
     }
 
     // Generate glsl code for each relevant shader stage.
     // (Maybe the term shading versus shader is useful to distinguish between G+M+SM model and actual glsl and the shader model.)
+
+    // Compile the program and retrieve a handle.
+
+    // Compute introspective information.
 }
 
 

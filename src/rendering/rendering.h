@@ -20,6 +20,8 @@ struct ShadingParameter {
     bool operator==(ShadingParameter other) {
         return (type == other.type) && (name == other.name);
     }
+    // scratch space for convenience of code generator.
+    bool used;
 };
 struct ShadingOutput {
     ShadingParameter output;
@@ -27,6 +29,14 @@ struct ShadingOutput {
     std::vector<ShadingParameter> uniforms;
     std::string snippet;
     ShadingOutput() {}
+
+    // This operator overload is here so that std::find can find a matching output to an input parameter.
+    bool operator==(ShadingParameter parameter) {
+        return output == parameter;
+    }
+
+    // scratch space
+    bool used;
 };
 struct ShadingDataflow {
     std::vector<ShadingOutput> outputs;

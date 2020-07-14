@@ -67,7 +67,8 @@ void CGSandbox::close()
 
 void CGSandbox::loop()
 {
-    Rendering::test_shading_dataflow();
+    // Rendering::test_shading_dataflow();
+    Rendering::test_new_shading_program();
     getchar();
 
     printf("================================================================================\n");

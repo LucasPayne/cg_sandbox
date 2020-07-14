@@ -40,27 +40,12 @@ struct ShadingOutput {
 };
 struct ShadingDataflow {
     std::vector<ShadingOutput> outputs;
-    void print() {
-        std::cout << "============================================================\n";
-        std::cout << "Shading dataflow\n";
-        std::cout << "------------------------------------------------------------\n";
-        for (const ShadingOutput &output : outputs) {
-            std::cout << output.output.type << " " << output.output.name << "\n";
-            for (const ShadingParameter &input : output.inputs) {
-                std::cout << "    in " << input.type << " " << input.name << "\n";
-            }
-            for (const ShadingParameter &uniform : output.uniforms) {
-                std::cout << "    uniform " << uniform.type << " " << uniform.name << "\n";
-            }
-            std::cout << "------------------------------------------------------------\n";
-            std::cout << "snippet:\n" << output.snippet;
-            std::cout << "============================================================\n";
-        }
-    }
+    void print();
     ShadingDataflow() {}
 };
 
 void test_shading_dataflow();
+void test_new_shading_program();
 
 
 // These structs (GeometricMaterial, Material, ShadingModel)
@@ -92,7 +77,7 @@ private:
     //... Vertex attribute bindings stuff.
     //... Render target bindings stuff.
 };
-ShadingProgram new_shading_program(GeometricMaterial g, Material m, ShadingModel sm);
+ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm);
 
 
 #if 0

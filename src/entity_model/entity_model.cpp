@@ -35,7 +35,7 @@ IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 
 #include <stdarg.h>
-#define DEBUG 1
+#define DEBUG 0
 // http://www.cplusplus.com/reference/cstdio/vsprintf/
 // http://www.cplusplus.com/reference/cstdio/vprintf/
 //--Empty inlines will still definitely have side-effect parameters evaluated.

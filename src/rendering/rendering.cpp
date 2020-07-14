@@ -11,13 +11,26 @@ IDEAS/THINGS/NOTES:
 #include <algorithm>
 namespace Rendering {
 
+
+static void print_dataflows(GeometricMaterial &g, Material &m, ShadingModel &sm)
+{
+    printf("ShadingModel frag-post dataflow\n");
+    sm.frag_post_dataflow.print();
+    printf("\nMaterial dataflow\n");
+    m.dataflow.print();
+    printf("\nShadingModel geom-post dataflow\n");
+    sm.geom_post_dataflow.print();
+    printf("\nGeometricMaterial dataflow\n");
+    g.dataflow.print();
+}
+
 ShadingProgram::ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm)
 {
     //todo: lookup in cache.
     *this = new_shading_program(g, m, sm);
 }
 
-ShadingProgram new_shading_program(GeometricMaterial g, Material m, ShadingModel sm)
+ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
     // Generate glsl code for the relevant stages, compile it, store the OpenGL handle to the program object,
     // and compute and store introspective information about the program.
@@ -42,6 +55,9 @@ ShadingProgram new_shading_program(GeometricMaterial g, Material m, ShadingModel
             }
         }
     }
+
+    print_dataflows(g, m, sm);
+    getchar();
 
     /*--------------------------------------------------------------------------------
     After this pass:
@@ -111,6 +127,9 @@ ShadingProgram new_shading_program(GeometricMaterial g, Material m, ShadingModel
     // Compile the program and retrieve a handle.
 
     // Compute introspective information.
+
+    print_dataflows(g, m, sm);
+    getchar();
 }
 
 
@@ -126,6 +145,85 @@ void test_shading_dataflow()
 
     dataflow.outputs.push_back(output1);
     dataflow.print();
+}
+
+void test_new_shading_program()
+{
+    GeometricMaterial g;
+    {
+        ShadingOutput output1;
+        ShadingOutput output2;
+        ShadingOutput output3;
+        ShadingDataflow dataflow;
+        output1.output = ShadingParameter("vec3", "world_position");
+        output1.inputs.push_back(ShadingParameter("vec3", "v_position"));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix"));
+        output1.snippet = "return (model_matrix * vec4(v_position, 1)).xyz;\n";
+        dataflow.outputs.push_back(output1);
+
+        output2.output = ShadingParameter("vec3", "f_normal");
+        output2.inputs.push_back(ShadingParameter("vec3", "v_normal"));
+        output2.snippet = "return f_normal;\n";
+        dataflow.outputs.push_back(output2);
+
+        output3.output = ShadingParameter("vec3", "f_position");
+        output3.inputs.push_back(ShadingParameter("vec3", "v_position"));
+        output3.snippet = "return v_position;\n";
+        dataflow.outputs.push_back(output3);
+
+        g.dataflow = dataflow;
+    }
+    Material m;
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("vec4", "color");
+        output1.inputs.push_back(ShadingParameter("vec3", "f_position"));
+        output1.uniforms.push_back(ShadingParameter("vec4", "uniform_color"));
+        output1.snippet = "return f_position.x * uniform_color;\n";
+        dataflow.outputs.push_back(output1);
+
+        m.dataflow = dataflow;
+    }
+    ShadingModel sm;
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("clip_position", "clip_position");
+        output1.inputs.push_back(ShadingParameter("vec3", "world_position"));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix"));
+        output1.snippet = "return (vp_matrix * vec4(world_position, 1)).xyz;\n";
+        dataflow.outputs.push_back(output1);
+
+        sm.geom_post_dataflow = dataflow;
+    }
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("vec4", "rt_color");
+        output1.inputs.push_back(ShadingParameter("vec4", "color"));
+        output1.snippet = "return color;\n";
+        dataflow.outputs.push_back(output1);
+
+        sm.frag_post_dataflow = dataflow;
+    }
+    new_shading_program(g, m, sm);
+    
+}
+
+void ShadingDataflow::print() {
+    for (const ShadingOutput &output : outputs) {
+        std::cout << (output.used ? "USED " : "") << "out " << output.output.type << " " << output.output.name << "\n";
+        for (const ShadingParameter &input : output.inputs) {
+            std::cout << "    " << (input.used ? "USED " : "") << "in " << input.type << " " << input.name << "\n";
+        }
+        for (const ShadingParameter &uniform : output.uniforms) {
+            std::cout << "    " << (uniform.used ? "USED " : "") << "uniform " << uniform.type << " " << uniform.name << "\n";
+        }
+        std::cout << "    snippet ------------------------------------------------\n";
+        std::cout << output.snippet;
+        std::cout << "------------------------------------------------------------\n";
+    }
 }
 
 } // namespace Rendering

@@ -1,0 +1,41 @@
+/*
+triangle_mesh.gmat
+color.mat
+color_shading.sm
+*/
+#vertex_shader
+#version 420
+layout(location = 0) in vec3 v_position;
+
+uniform mat4x4 model_matrix;
+uniform mat4x4 vp_matrix;
+
+vec4 clip_position(in vec3 world_position) {
+    return vp_matrix * vec4(world_position, 1);
+}
+vec3 world_position() {
+    return (model_matrix * vec4(v_position, 1)).xyz;
+}
+
+void main(void)
+{
+    vec3 __TEMP_0 = world_position();
+    gl_Position = clip_position(__TEMP_0);
+}
+
+#fragment_shader
+#version 420
+layout (location = 0) out vec4 rt_color;
+uniform vec4 uniform_color;
+
+out vec4 color() {
+    return uniform_color;
+}
+out vec4 __rt_color_0(vec4 color) {
+    return color;
+}
+void main(void)
+{
+    vec4 __TEMP_0 = color();
+    rt_color = __rt_color_0(__TEMP_0);
+}

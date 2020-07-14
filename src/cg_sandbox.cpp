@@ -1,6 +1,10 @@
 /*--------------------------------------------------------------------------------
     This is the main entry point for "engine" behaviour, through a single
     loop and event callbacks.
+
+BUGS:
+PROBLEMS:
+IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
@@ -16,6 +20,13 @@ define_aspect(Transform)
     float orientation[3];
     uint32_t flags;
 end_define_aspect(Transform)
+
+define_aspect(Camera)
+    // Viewport extents (in terms of the application subrectangle).
+    float bottom_left[2];
+    float top_right[2];
+    float projection_matrix[16];
+end_define_aspect(Camera)
 
 define_aspect(TestAspect1)
     float x;
@@ -42,9 +53,20 @@ void CGSandbox::init()
     entity_model = EntityModel(); 
     EntityModel &em = entity_model;
 
-    for (int i = 0; i < 10; i++) {
-        create_dude(em);
-    }
+    Entity cameraman = em.new_entity();
+    Camera *camera = em.add_aspect<Camera>(cameraman);
+    camera->bottom_left[0] = 0;
+    camera->bottom_left[1] = 0;
+    camera->top_right[0] = 1;
+    camera->top_right[1] = 1;
+    Transform *camera_transform = em.add_aspect<Transform>(cameraman);
+    camera_transform->position[0] = 0;
+    camera_transform->position[1] = 0;
+    camera_transform->position[2] = 0;
+
+    // for (int i = 0; i < 10; i++) {
+    //     create_dude(em);
+    // }
 }
 void CGSandbox::close()
 {
@@ -55,6 +77,18 @@ void CGSandbox::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
     EntityModel &em = entity_model;
+
+    printf("looking for cameras ...\n");
+    for (auto [camera, transform] : em.aspects<Camera, Transform>()) {
+        printf("bottom left: %.2f %.2f\n", camera.bottom_left[0], camera.bottom_left[1]);
+        printf("top right: %.2f %.2f\n", camera.top_right[0], camera.top_right[1]);
+    }
+    for (auto &camera : em.aspects<Camera>()) {
+        printf("Found camera\n");
+        Transform *t = em.try_get_sibling_aspect<Transform>(&camera);
+        if (t != nullptr) printf("    Found transform\n");
+    }
+    return;
 
     for (auto &t : em.aspects<Transform>()) {
         printf("position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);

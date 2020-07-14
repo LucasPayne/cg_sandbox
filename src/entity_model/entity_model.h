@@ -215,13 +215,20 @@ public: // Usage interface
                 seek_to_next();
             }
             inline void seek_to_next() {
-                if (position == end) return;
+                //-note: This does not shift first! This will stay in place unless the position is shifted before calling.
                 while (true) {
-                    ++position;
-                    if (position == end) return;
-                    if (position->id == 0) continue;
+                    if (position == end) {
+                        return;
+                    }
+                    if (position->id == 0) {
+                        ++position;
+                        continue;
+                    }
                     current_required = entity_model.try_get_sibling_aspect<Required>(position);
-                    if (current_required != nullptr) return;
+                    if (current_required != nullptr) {
+                        return;
+                    }
+                    ++position;
                 }
             }
             void operator++() {

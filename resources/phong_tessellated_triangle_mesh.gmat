@@ -46,6 +46,6 @@ section tessellation_evaluation {
         vec3 bp = p - nb * dot(p - b, nb);
         vec3 cp = p - nc * dot(p - c, nc);
 
-        return model_matrix * vec4((t1*ap + t2*bp + t3*cp) / (t1 + t2 + t3), 1);
+        return (model_matrix * vec4((t1*ap + t2*bp + t3*cp) / (t1 + t2 + t3), 1)).xyz;
     }
 }

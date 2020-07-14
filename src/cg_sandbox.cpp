@@ -11,9 +11,6 @@ IDEAS/THINGS:
 #include "cg_sandbox.h"
 #include "entity_model/entity_model.h"
 
-define_aspect(Velocity)
-    float velocity[3];
-end_define_aspect(Velocity)
 
 define_aspect(Transform)
     float position[3];
@@ -28,9 +25,10 @@ define_aspect(Camera)
     float projection_matrix[16];
 end_define_aspect(Camera)
 
-define_aspect(TestAspect1)
-    float x;
-end_define_aspect(TestAspect1)
+define_aspect(Drawable)
+    GeometryInstance geometry_instance;
+    MaterialInstance material_instance;
+end_define_aspect(Drawable)
 
 void create_dude(EntityModel &em)
 {
@@ -39,12 +37,7 @@ void create_dude(EntityModel &em)
     t->position[0] = 1;
     t->position[1] = 2;
     t->position[2] = 3;
-    if (frand() > 0.5) {
-        Velocity *v = em.add_aspect<Velocity>(e);
-        v->velocity[0] = 1;
-        v->velocity[1] = -1;
-        v->velocity[2] = 0.5;
-    }
+    Drawable *d = em.add_aspect<Drawable>(e);
 }
 
 void CGSandbox::init()
@@ -64,13 +57,66 @@ void CGSandbox::init()
     camera_transform->position[1] = 0;
     camera_transform->position[2] = 0;
 
-    // for (int i = 0; i < 10; i++) {
-    //     create_dude(em);
-    // }
+    for (int i = 0; i < 8; i++) create_dude(em);
 }
 void CGSandbox::close()
 {
 }
+
+
+#include <unordered_map>
+// https://en.cppreference.com/w/cpp/container/unordered_map
+struct GMSMHash {
+    uint32_t g;
+    uint32_t m;
+    uint32_t sm;
+    GMSMHash(uint32_t _g, uint32_t _m, uint32_t _sm) : g{_g}, m{_m}, sm{_sm} {}
+};
+class ShadingProgram {
+public:
+    ShadingProgram(Geometry g, Material m, ShadingModel sm) {
+        GMSMHash hash(g.id, m.id, sm.id);
+        for (auto &found : cache.find(hash)) {
+            *this = found;
+            return;
+        }
+        // Not cached.
+        cache[hash] = new_shading_program(g, m, sm);
+        *this = cache[hash];
+    }
+private:
+    ShadingProgram new_shading_program(Geometry g, Material m, ShadingModel sm) {
+        // Construct a new shading program. This is where all of the code generation starts.
+        //...
+    }
+    //-Global cache. Maybe should not be global.
+    static std::unordered_map<GMSMHash, ShadingProgram> cache;
+
+    // OpenGL-related data
+    GLuint program_id;
+    //... State interface information.
+    //... Vertex attribute bindings stuff.
+    //... Rendertarget bindings stuff.
+};
+std::vector<ShadingProgram> ShadingProgram::cache(0);
+
+class Draw {
+public:
+    Draw(GeometryInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {
+        g_instance = gi;
+        m_instance = mi;
+        sm_instance = smi;
+
+        shading_program = ShadingProgram(g_instance.geometry, m_instance.material, sm_instance.shading_model);
+    };
+private:
+    GeometryInstance g_instance;
+    MaterialInstance m_instance;
+    ShadingModelInstance sm_instance;
+
+    ShadingProgram shading_program;
+};
+
 void CGSandbox::loop()
 {
     printf("================================================================================\n");
@@ -78,43 +124,34 @@ void CGSandbox::loop()
     printf("================================================================================\n");
     EntityModel &em = entity_model;
 
-    printf("looking for cameras ...\n");
-    for (auto [camera, transform] : em.aspects<Camera, Transform>()) {
+    for (auto [camera, camera_transform] : em.aspects<Camera, Transform>()) {
+        printf("Camera\n");
         printf("bottom left: %.2f %.2f\n", camera.bottom_left[0], camera.bottom_left[1]);
         printf("top right: %.2f %.2f\n", camera.top_right[0], camera.top_right[1]);
-    }
-    for (auto &camera : em.aspects<Camera>()) {
-        printf("Found camera\n");
-        Transform *t = em.try_get_sibling_aspect<Transform>(&camera);
-        if (t != nullptr) printf("    Found transform\n");
-    }
-    return;
 
-    for (auto &t : em.aspects<Transform>()) {
-        printf("position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
-    }
-    for (auto &v : em.aspects<Velocity>()) {
-        printf("velocity: %.2f, %.2f, %.2f\n", v.velocity[0], v.velocity[1], v.velocity[2]);
-    }
-    for (auto [t, v] : em.aspects<Transform, Velocity>()) {
-        printf("Pair:\n");
-        printf("    position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
-        printf("    velocity: %.2f, %.2f, %.2f\n", v.velocity[0], v.velocity[1], v.velocity[2]);
-    }
-    for (auto [t, ta1] : em.aspects<Transform, TestAspect1>()) {
-        printf("Pair:\n");
-        printf("    position: %.2f, %.2f, %.2f\n", t.position[0], t.position[1], t.position[2]);
-        printf("    ta1: %.2f\n", ta1.x);
-    }
+        ShadingModelInstance sm_instance = new_sm_instance("color_shading");
+        sm_instance.set_property("vp_matrix", camera.vp_matrix);
 
-    // for (auto &v : em.aspects<Velocity>()) {
-    //     Transform *t = em.try_get_sibling_aspect<Transform>(&v);
-    //     if (t != nullptr) {
-    //         for (int i = 0; i < 3; i++) {
-    //             t->position[i] += v.velocity[i] * dt;
-    //         }
-    //     }
-    // }
+        // Render with this camera.
+        for (auto [drawable, transform] : em.aspects<Drawable, Transform>()) {
+            printf("Drawable\n");
+
+            // Constructor looks up precompiled shading program in cache, if its not there, it is created and cached.
+            //-renamed Draw, rather than ShadingProgram, since that will be the instance-independent thing.
+            Draw draw(drawable.geometry_instance,
+                      drawable.material_instance,
+                      sm_instance);
+            // Binding the draw prepares the GPU pipeline for rendering with the G+M+SM.
+            draw.bind();
+
+            // Synchronize pipeline state with the properties.
+            draw.upload_properties();
+
+            // Draw. The Draw encapsulates one drawable geometry vertex array (in whatever format), pipelined through
+            // the ShadingProgram associated to the Geometry, Material, and ShadingModel.
+            draw.draw();
+        }
+    }
 }
 
 void CGSandbox::key_callback(int key, int action)
@@ -130,13 +167,6 @@ void CGSandbox::key_callback(int key, int action)
         if (key == GLFW_KEY_K) {
             for (auto &t : em.aspects<Transform>()) {
                 t.position[1] += 2.3;
-            }
-        }
-        if (key == GLFW_KEY_T) {
-            for (auto &t : em.aspects<Transform>()) {
-                if (frand() > 0.3) continue;
-                auto ta1 = em.add_aspect<TestAspect1>(t.entity);
-                ta1->x = frand();
             }
         }
         if (key == GLFW_KEY_C) {

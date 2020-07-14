@@ -222,13 +222,13 @@ public: // Usage interface
                     }
                     if (position->id == 0) {
                         ++position;
-                        continue;
+                    } else {
+                        current_required = entity_model.try_get_sibling_aspect<Required>(position);
+                        if (current_required != nullptr) {
+                            return;
+                        }
+                        ++position;
                     }
-                    current_required = entity_model.try_get_sibling_aspect<Required>(position);
-                    if (current_required != nullptr) {
-                        return;
-                    }
-                    ++position;
                 }
             }
             void operator++() {

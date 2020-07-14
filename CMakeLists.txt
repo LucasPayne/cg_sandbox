@@ -38,6 +38,22 @@ add_library(parallel STATIC
 )
 target_link_libraries(main PRIVATE parallel)
 
+add_library(rendering STATIC
+    src/rendering/rendering.cpp
+)
+target_link_libraries(main PRIVATE rendering)
+
+# find_package(BISON)
+# find_package(FLEX)
+# FLEX_TARGET(shading_file_lexer src/rendering/shading_file/shading_file.l ${CMAKE_CURRENT_BINARY_DIR}/shading_file_lexer.cpp)
+# add_library(shading_file STATIC
+#     ${FLEX_shading_file_lexer_OUTPUTS}
+# )
+# target_link_libraries(main PRIVATE shading_file)
+
+# BISON_TARGET(
+# ADD_FLEX_BISON_DEPENDENCY
+
 # External libraries
 #================================================================================
 # GLFW

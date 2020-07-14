@@ -10,8 +10,7 @@ IDEAS/THINGS:
 #include "gl/gl.h"
 #include "cg_sandbox.h"
 #include "entity_model/entity_model.h"
-
-#define TESTING_SM 0
+#include "rendering/rendering.h"
 
 
 define_aspect(Transform)
@@ -65,119 +64,12 @@ void CGSandbox::close()
 {
 }
 
-#if TESTING_SM == 1
-struct Geometry {
-    GLenum primitive;
-};
-struct PropertySheet {
-    //...
-};
-struct VAO {
-    GLuint vao_id;
-    bool indexed;
-    uint32_t num_vertices;
-    uint32_t vertex_starting_index;
-    GLenum indices_type; // GL_UNSIGNED{BYTE,SHORT,INT}
-    uint32_t num_indices;
-    uint32_t indices_starting_index;
-};
-struct GeometryInstance {
-    Geometry &geometry; //instance of this
-    VAO vao;
-    PropertySheet properties;
-};
-struct Material {
-
-};
-struct MaterialInstance {
-
-};
-struct ShadingModel {
-
-};
-struct ShadingModelInstance {
-
-};
-
-#include <unordered_map>
-// https://en.cppreference.com/w/cpp/container/unordered_map
-struct GMSMHash {
-    uint32_t g;
-    uint32_t m;
-    uint32_t sm;
-    GMSMHash(uint32_t _g, uint32_t _m, uint32_t _sm) : g{_g}, m{_m}, sm{_sm} {}
-};
-class ShadingProgram {
-    // Other than construction and caching, this class just holds data. All usage interface goes through
-    // the Draw class, which could be thought of as a ShadingProgram "instance".
-public:
-    ShadingProgram(Geometry g, Material m, ShadingModel sm) {
-        GMSMHash hash(g.id, m.id, sm.id);
-        for (auto &found : cache.find(hash)) {
-            *this = found;
-            return;
-        }
-        // Not cached.
-        cache[hash] = new_shading_program(g, m, sm);
-        *this = cache[hash];
-    }
-private:
-    ShadingProgram new_shading_program(Geometry g, Material m, ShadingModel sm) {
-        // Construct a new shading program. This is where all of the code generation starts.
-        //...
-    }
-    //-Global cache. Maybe should not be global.
-    static std::unordered_map<GMSMHash, ShadingProgram> cache;
-
-    // OpenGL-related data
-    GLuint program_id;
-    //... State interface information.
-    //... Vertex attribute bindings stuff.
-    //... Rendertarget bindings stuff.
-};
-std::vector<ShadingProgram> ShadingProgram::cache(0);
-
-class Draw {
-public:
-    Draw(GeometryInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {
-        g_instance = gi;
-        m_instance = mi;
-        sm_instance = smi;
-
-        shading_program = ShadingProgram(g_instance.geometry, m_instance.material, sm_instance.shading_model);
-    };
-    void bind() {
-        glUseProgram(shading_program.program_id);
-        glBindVertexArray(g_instance.vao.id); //-Make sure this binds the element buffer as well.
-    }
-    void upload_properties() {
-        //...
-        // Instances could have dirty flags.
-        // UBOs, samplers with glUniform1i, 
-    }
-    void draw() {
-        if (g_instance.indexed) {
-            glDrawElements(g_instance.geometry.primitive, //mode
-                           g_instance.vao.num_indices, // count
-                           g_instance.vao.indices_type, // type (GL_UNSIGNED_{BYTE,SHORT,INT})
-                           (const void *) g_instance.vao.indices_starting_index);
-        } else {
-            glDrawArrays(g_instance.geometry.primitive, //mode
-                         g_instance.vao.vertex_starting_index //first
-                         g_instance.vao.num_vertices); // count
-        }
-    }
-private:
-    GeometryInstance g_instance;
-    MaterialInstance m_instance;
-    ShadingModelInstance sm_instance;
-
-    ShadingProgram shading_program;
-};
-#endif // TESTING_SM == 1
 
 void CGSandbox::loop()
 {
+    Rendering::test_shading_dataflow();
+    getchar();
+
     printf("================================================================================\n");
     printf("Frame start\n");
     printf("================================================================================\n");
@@ -188,9 +80,9 @@ void CGSandbox::loop()
         printf("bottom left: %.2f %.2f\n", camera.bottom_left[0], camera.bottom_left[1]);
         printf("top right: %.2f %.2f\n", camera.top_right[0], camera.top_right[1]);
 
-#if TESTING_SM == 1
+#if 0
         ShadingModelInstance sm_instance = new_sm_instance("color_shading");
-        sm_instance.set_property("vp_matrix", camera.vp_matrix);
+        sm_instance.properties.set("vp_matrix", camera.vp_matrix);
 
         // Render with this camera.
         for (auto [drawable, transform] : em.aspects<Drawable, Transform>()) {

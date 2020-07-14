@@ -69,6 +69,7 @@ class ShadingProgram {
     // Other than construction and caching, this class just holds data. All usage interface goes through
     // the Draw class, which could be thought of as a ShadingProgram "instance".
 public:
+    ShadingProgram() {}
     ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm);
 private:
     // OpenGL-related data

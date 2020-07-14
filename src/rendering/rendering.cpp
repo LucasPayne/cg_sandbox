@@ -8,6 +8,10 @@ IDEAS/THINGS/NOTES:
     will be fine. Also, especially when prototyping or trying out ideas for ways to structure data relationships / control flow.
 
     Maybe the term shading versus shader is useful to distinguish between G+M+SM model and actual glsl and the shader model.
+
+    So far this has been assuming vertex+fragment. Since a major reason for geometric materials is seamless
+    use of tessellated surfaces, the other stages will be needed. I think this will just be more case-by-case for
+    the code-generator, deciding where to put what (such as geometry post-processing being in either the vertex shader or evaluation shader).
 --------------------------------------------------------------------------------*/
 #include "rendering/rendering.h"
 #include <algorithm> //find
@@ -69,6 +73,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         The minimum set of required vertex attributes, inputs to the GeometricMaterial stage, are marked as used.
         The special case of the always-required clip_position is accounted for.
         Used uniforms will be stored in a list. This is all that is needed for the uniform-declaration code.
+        Used vertex attributes will be stored in a list.
     notes/todo:
         Possibly frag-post will also want to look for inputs from geom-post and GeometricMaterial.
     --------------------------------------------------------------------------------*/
@@ -175,17 +180,27 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         "// Generated vertex shader.\n"
         "#version 420\n"
     );
+    // Input vertex attributes.
     for (ShadingParameter *va : used_vertex_attributes) {
         vertex_shader += "in " + va->type + " " + va->name + ";\n";
     }
     vertex_shader += "\n";
+    // Uniforms (same for each shader stage).
     for (ShadingParameter *uniform : used_uniforms) {
         vertex_shader += "uniform " + uniform->type + " " + uniform->name + ";\n";
     }
     vertex_shader += "\n";
+    // Outputs to next shader stage.
     for (ShadingOutput &output : g.dataflow.outputs) {
         if (!output.used) continue;
-        vertex_shader += output.output.type + " " + output.output.name + "() {\n";
+        vertex_shader += "out " + output.output.type + " " + output.output.name + ";\n";
+    }
+    vertex_shader += "\n";
+    // GeometricMaterial functions. These need no function inputs, as they definitely only depend on vertex attributes
+    // and uniforms.
+    for (ShadingOutput &output : g.dataflow.outputs) {
+        if (!output.used) continue;
+        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "() {\n";
         std::istringstream lines(output.snippet);
         std::string line;
         while (std::getline(lines, line)) {
@@ -193,6 +208,31 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         }
         vertex_shader += "}\n";
     }
+    vertex_shader += "\n";
+    // ShadingModel geom-post functions. These may need function inputs if a geom-post output requires
+    // any GeometricMaterial outputs.
+    for (ShadingOutput &output : sm.geom_post_dataflow.outputs) {
+        if (!output.used) continue;
+        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "("
+        // Function inputs.
+        for (ShadingParameter
+
+        vertex_shader += ") {\n";
+        std::istringstream lines(output.snippet);
+        std::string line;
+        while (std::getline(lines, line)) {
+            vertex_shader += "    " + line + "\n";
+        }
+        vertex_shader += "}\n";
+    }
+    vertex_shader += "\n";
+    vertex_shader += "void main(void) {\n";
+    for (ShadingOutput &output : g.dataflow.outputs) {
+        if (!output.used) continue;
+        vertex_shader += "    " + output.output.name + " = __FUNCTION_" + output.output.name + "();\n";
+    }
+    vertex_shader += "    gl_Position = __FUNCTION_clip_position();\n";
+    vertex_shader += "}\n";
 
     // Create a ShadingProgram.
     ShadingProgram program;

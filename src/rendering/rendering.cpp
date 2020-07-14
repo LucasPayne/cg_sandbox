@@ -64,6 +64,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         All ShadingModel frag-post outputs are marked as used.
         The minimum set of required outputs at each stage are marked as used.
         The minimum set of required vertex attributes, inputs to the GeometricMaterial stage, are marked as used.
+        The special case of the always-required clip_position is accounted for.
     --------------------------------------------------------------------------------*/
     // Propogate requirements back from the ShadingModel frag-post outputs. This sets the "used" flag, to later signify to the
     // code generator what it should include.
@@ -93,7 +94,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                     // However, possibly the ShadingModel geom-post dataflow does.
                     found_for_material = std::find(std::begin(sm.geom_post_dataflow.outputs), std::end(sm.geom_post_dataflow.outputs), material_requires);
                     if (found_for_material == std::end(sm.geom_post_dataflow.outputs)) {
-                        fprintf(stderr, "ERROR\n");
+                        fprintf(stderr, "ERROR: Material inputs could not be provided.\n");
                         exit(EXIT_FAILURE);
                     }
                     found_for_material->used = true;
@@ -103,7 +104,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                         // Search GeometricMaterial outputs (required by geom-post).
                         auto found_for_geom_post = std::find(std::begin(g.dataflow.outputs), std::end(g.dataflow.outputs), geom_post_requires);
                         if (found_for_geom_post == std::end(g.dataflow.outputs)) {
-                            fprintf(stderr, "ERROR\n");
+                            fprintf(stderr, "ERROR: ShadingModel geometry postprocessing inputs could not be provided.\n");
                             exit(EXIT_FAILURE);
                         }
                         found_for_geom_post->used = true;
@@ -116,7 +117,31 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                     for (auto &vertex_attribute : found_for_material->inputs) vertex_attribute.used = true;
                 }
             }
-            //---clip_position
+            // clip_position
+            // ShadingModel geometry post-processing always requires clip_position.
+            auto clip_position_output_found = std::find(std::begin(sm.geom_post_dataflow.outputs),
+                                               std::end(sm.geom_post_dataflow.outputs),
+                                               ShadingParameter("vec4", "clip_position"));
+            if (clip_position_output_found == std::end(sm.geom_post_dataflow.outputs)) {
+                fprintf(stderr, "ERROR: No vec4 clip_position output defined in shading model.\n");
+                exit(EXIT_FAILURE);
+            }
+            clip_position_output_found->used = true;
+            // Propogate this requirement, which is only to the GeometricMaterial.
+            auto &clip_position_requirements = clip_position_output_found->inputs;
+            for (auto &clip_position_requires : clip_position_requirements) {
+                auto found_for_clip_position = std::find(std::begin(g.dataflow.outputs),
+                                                         std::end(g.dataflow.outputs),
+                                                         clip_position_requires);
+                if (found_for_clip_position == std::end(g.dataflow.outputs)) {
+                    fprintf(stderr, "ERROR: clip_position inputs could not be provided.\n");
+                    exit(EXIT_FAILURE);
+                }
+                found_for_clip_position->used = true;
+                // Flag vertex attribute inputs of GeometricMaterial as used.
+                for (auto &vertex_attribute : found_for_clip_position->inputs) vertex_attribute.used = true;
+            }
+
             //---uniforms
         }
     }
@@ -189,7 +214,7 @@ void test_new_shading_program()
     {
         ShadingDataflow dataflow;
         ShadingOutput output1;
-        output1.output = ShadingParameter("clip_position", "clip_position");
+        output1.output = ShadingParameter("vec4", "clip_position");
         output1.inputs.push_back(ShadingParameter("vec3", "world_position"));
         output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix"));
         output1.snippet = "return (vp_matrix * vec4(world_position, 1)).xyz;\n";

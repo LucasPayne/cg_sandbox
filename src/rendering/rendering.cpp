@@ -1,6 +1,8 @@
 /*--------------------------------------------------------------------------------
 BUGS:
 PROBLEMS:
+    Maybe parameter passing for GeometricMaterial and geom-post was uneccessary, if
+    glsl functions can just read from previously-written-to out variables.
 IDEAS/THINGS/NOTES:
     When things aren't in inner loops, or just aren't performance critical, and especially if they also
     involve non-fixed-size data (trees, strings, etc.), maybe using the standard
@@ -50,15 +52,18 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // While doing this, catch whether requirements are missing. If so, give an error.
 
     // Disable the "used" flag on all dataflow structures.
+    // Set the "source" flag to SHADING_SOURCE_NONE on all dataflow structures (this flag is only meaningful for inputs).
     ShadingDataflow *dataflows[] = {&g.dataflow, &m.dataflow, &sm.frag_post_dataflow, &sm.geom_post_dataflow};
     for (ShadingDataflow *dataflow : dataflows) {
         for (ShadingOutput &output : dataflow->outputs) {
             output.used = false;
             for (ShadingParameter &input : output.inputs) {
                 input.used = false;
+                input.source = SHADING_SOURCE_NONE;
             }
             for (ShadingParameter &uniform : output.uniforms) {
                 uniform.used = false;
+                uniform.source = SHADING_SOURCE_NONE;
             }
         }
     }
@@ -105,6 +110,8 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         set_used(frag_post_output);
         // For each ShadingModel frag-post output, propogate requirements.
         for (ShadingParameter &frag_post_requires : frag_post_output.inputs) {
+            // The inputs to frag-post always come from the Material.
+            frag_post_requires.source = SHADING_SOURCE_MATERIAL;
             // Find matching input from the Material stage.
             auto found_for_frag_post = std::find(std::begin(m.dataflow.outputs), std::end(m.dataflow.outputs), frag_post_requires);
             if (found_for_frag_post == std::end(m.dataflow.outputs)) {
@@ -129,6 +136,8 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                         fprintf(stderr, "ERROR: Material inputs could not be provided.\n");
                         exit(EXIT_FAILURE);
                     }
+                    // The Material input has geom-post source.
+                    material_requires.source = SHADING_SOURCE_GEOM_POST;
                     set_used(*found_for_material);
                     // Propogate geom-post requirements to GeometricMaterial.
                     auto &geom_post_requirements = found_for_material->inputs;
@@ -136,13 +145,24 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                         // Search GeometricMaterial outputs (required by geom-post).
                         auto found_for_geom_post = std::find(std::begin(g.dataflow.outputs), std::end(g.dataflow.outputs), geom_post_requires);
                         if (found_for_geom_post == std::end(g.dataflow.outputs)) {
-                            fprintf(stderr, "ERROR: ShadingModel geometry postprocessing inputs could not be provided.\n");
-                            exit(EXIT_FAILURE);
+                            // fprintf(stderr, "ERROR: ShadingModel geometry postprocessing inputs could not be provided.\n");
+                            // exit(EXIT_FAILURE);
+
+                            // Propogate geom-post requirements to vertex attributes.
+                            // This geom-post input is now a used vertex attribute.
+                            geom_post_requires.source = SHADING_SOURCE_VERTEX_ARRAY;
+                            geom_post_requires.used = true;
+                            used_vertex_attributes.push_back(&geom_post_requires);
+                        } else {
+                            // The geom-post input has GeometricMaterial source.
+                            geom_post_requires.source = SHADING_SOURCE_GEOMETRIC_MATERIAL;
+                            set_used(*found_for_geom_post);
+                            // collect_used_vertex_attributes(*found_for_geom_post);
                         }
-                        set_used(*found_for_geom_post);
-                        collect_used_vertex_attributes(*found_for_geom_post);
                     }
                 } else {
+                    // The Material input has GeometricMaterial source.
+                    material_requires.source = SHADING_SOURCE_GEOMETRIC_MATERIAL;
                     set_used(*found_for_material);
                     collect_used_vertex_attributes(*found_for_material);
                 }
@@ -152,10 +172,10 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // clip_position
     // ShadingModel geometry post-processing always requires clip_position.
     auto clip_position_output_found = std::find(std::begin(sm.geom_post_dataflow.outputs),
-                                       std::end(sm.geom_post_dataflow.outputs),
-                                       ShadingParameter("vec4", "clip_position"));
+                                      std::end(sm.geom_post_dataflow.outputs),
+                                      ShadingParameter("vec4", "gl_Position"));
     if (clip_position_output_found == std::end(sm.geom_post_dataflow.outputs)) {
-        fprintf(stderr, "ERROR: No vec4 clip_position output defined in shading model.\n");
+        fprintf(stderr, "ERROR: No vec4 gl_Position output defined in shading model.\n");
         exit(EXIT_FAILURE);
     }
     set_used(*clip_position_output_found);
@@ -166,11 +186,20 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
                                                  std::end(g.dataflow.outputs),
                                                  clip_position_requires);
         if (found_for_clip_position == std::end(g.dataflow.outputs)) {
-            fprintf(stderr, "ERROR: clip_position inputs could not be provided.\n");
-            exit(EXIT_FAILURE);
+            // fprintf(stderr, "ERROR: clip_position inputs could not be provided.\n");
+            // exit(EXIT_FAILURE);
+
+            // Propogate geom-post requirements to vertex attributes.
+            // This geom-post input is now a used vertex attribute.
+            clip_position_requires.source = SHADING_SOURCE_VERTEX_ARRAY;
+            clip_position_requires.used = true;
+            used_vertex_attributes.push_back(&clip_position_requires);
+        } else {
+            // clip_position required input has GeometricMaterial source.
+            clip_position_requires.source = SHADING_SOURCE_GEOMETRIC_MATERIAL;
+            set_used(*found_for_clip_position);
+	    collect_used_vertex_attributes(*found_for_clip_position);
         }
-        set_used(*found_for_clip_position);
-	collect_used_vertex_attributes(*found_for_clip_position);
     }
 
 
@@ -213,10 +242,16 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // any GeometricMaterial outputs.
     for (ShadingOutput &output : sm.geom_post_dataflow.outputs) {
         if (!output.used) continue;
-        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "("
+        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "(";
         // Function inputs.
-        for (ShadingParameter
-
+        bool any_params = false; // used to help comma insertion
+        for (ShadingParameter &input : output.inputs) {
+            if (input.source == SHADING_SOURCE_GEOMETRIC_MATERIAL) {
+                if (any_params) vertex_shader += ", ";
+                vertex_shader += "in " + input.type + " " + input.name;
+                any_params = true;
+            }
+        }
         vertex_shader += ") {\n";
         std::istringstream lines(output.snippet);
         std::string line;
@@ -226,12 +261,28 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         vertex_shader += "}\n";
     }
     vertex_shader += "\n";
+    // Main function.
     vertex_shader += "void main(void) {\n";
+    // GeometricMaterial outputs.
     for (ShadingOutput &output : g.dataflow.outputs) {
         if (!output.used) continue;
         vertex_shader += "    " + output.output.name + " = __FUNCTION_" + output.output.name + "();\n";
     }
-    vertex_shader += "    gl_Position = __FUNCTION_clip_position();\n";
+    // Geom-post outputs (which can have GeometricMaterial outputs as parameters).
+    for (ShadingOutput &output : sm.geom_post_dataflow.outputs) {
+        if (!output.used) continue;
+        vertex_shader += "    " + output.output.name + " = __FUNCTION_" + output.output.name + "(";
+        // Parameters.
+        bool any_params = false; // used to help comma insertion
+        for (ShadingParameter &input : output.inputs) {
+            if (input.source == SHADING_SOURCE_GEOMETRIC_MATERIAL) {
+                if (any_params) vertex_shader += ", ";
+                vertex_shader += input.name;
+                any_params = true;
+            }
+        }
+        vertex_shader += ");\n";
+    }
     vertex_shader += "}\n";
 
     // Create a ShadingProgram.
@@ -323,7 +374,7 @@ void test_new_shading_program()
     {
         ShadingDataflow dataflow;
         ShadingOutput output1;
-        output1.output = ShadingParameter("vec4", "clip_position");
+        output1.output = ShadingParameter("vec4", "gl_Position");
         output1.inputs.push_back(ShadingParameter("vec3", "world_position"));
         output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix"));
         output1.snippet = "return (vp_matrix * vec4(world_position, 1)).xyz;\n";
@@ -345,11 +396,21 @@ void test_new_shading_program()
     
 }
 
+static char *shading_source_to_string(uint8_t source)
+{
+    if (source == SHADING_SOURCE_NONE) return "NONE";
+    if (source == SHADING_SOURCE_VERTEX_ARRAY) return "VERTEX_ARRAY";
+    if (source == SHADING_SOURCE_GEOMETRIC_MATERIAL) return "GEOMETRIC_MATERIAL";
+    if (source == SHADING_SOURCE_GEOM_POST) return "GEOM_POST";
+    if (source == SHADING_SOURCE_MATERIAL) return "MATERIAL";
+    if (source == SHADING_SOURCE_FRAG_POST) return "FRAG_POST";
+    return "!-ERROR-!";
+}
 void ShadingDataflow::print() {
     for (const ShadingOutput &output : outputs) {
         std::cout << (output.used ? "USED " : "") << "out " << output.output.type << " " << output.output.name << "\n";
         for (const ShadingParameter &input : output.inputs) {
-            std::cout << "    " << (input.used ? "USED " : "") << "in " << input.type << " " << input.name << "\n";
+            std::cout << "    " << (input.used ? "USED " : "") << "SOURCE(" << shading_source_to_string(input.source) << ") in " << input.type << " " << input.name << "\n";
         }
         for (const ShadingParameter &uniform : output.uniforms) {
             std::cout << "    " << (uniform.used ? "USED " : "") << "uniform " << uniform.type << " " << uniform.name << "\n";

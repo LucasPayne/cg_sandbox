@@ -9,6 +9,15 @@ namespace Rendering {
 // describing what the stage provides in terms of glsl snippets and required inputs and properties.
 // - Efficiency of data representation is not very important here, as these will only be used when compiling a shading pipeline.
 //   The most important thing is for this to be easily used by the code generator.
+
+enum ShadingSources {
+    SHADING_SOURCE_NONE,
+    SHADING_SOURCE_VERTEX_ARRAY,
+    SHADING_SOURCE_GEOMETRIC_MATERIAL,
+    SHADING_SOURCE_GEOM_POST,
+    SHADING_SOURCE_MATERIAL,
+    SHADING_SOURCE_FRAG_POST,
+};
 struct ShadingParameter {
     std::string type;
     std::string name;
@@ -22,6 +31,8 @@ struct ShadingParameter {
     }
     // scratch space for convenience of code generator.
     bool used;
+    // "source" only makes sense for inputs, and denotes the shading stage the inputs came from, or whether it comes from the vertex array.
+    uint8_t source;
 };
 struct ShadingOutput {
     ShadingParameter output;

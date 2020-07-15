@@ -27,9 +27,17 @@ struct ShadingParameter {
         name = _name;
     }
     ShadingParameter() {}
+    // for std::find
     bool operator==(ShadingParameter other) {
         return (type == other.type) && (name == other.name);
     }
+    // for std::sort
+    bool operator<(ShadingParameter other) {
+        if (type < other.type) return true;
+        if (type == other.type) return name < other.name;
+        return false;
+    }
+
     // scratch space for convenience of code generator.
     bool used;
     // "source" only makes sense for inputs, and denotes the shading stage the inputs came from, or whether it comes from the vertex array.

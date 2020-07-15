@@ -1,5 +1,36 @@
 #include "gl.h"
 
+GLShader GLShader::from_string(GLenum shader_type, const char *source)
+{
+    GLShader shader_object;
+    shader_object.m_gl_shader_type = shader_type;
+    shader_object.m_gl_shader_id = glCreateShader(shader_type);
+    if (shader_object.m_gl_shader_id == 0) {
+        std::cerr << "ERROR: Failed to create a shader ID.\n";
+        exit(EXIT_FAILURE);
+    }
+    glShaderSource(shader_object.m_gl_shader_id, 1, (const GLchar **) &source, NULL);
+    delete[] source;
+
+    glCompileShader(shader_object.m_gl_shader_id);
+    GLint success;
+    glGetShaderiv(shader_object.m_gl_shader_id, GL_COMPILE_STATUS, &success);
+    if (success != GL_TRUE) {
+        std::cerr << "ERROR: Failed to compile shader.\n";
+        GLint info_length;
+        glGetShaderiv(shader_object.m_gl_shader_id, GL_INFO_LOG_LENGTH, &info_length);
+        char *info = new char[info_length + 1];
+        glGetShaderInfoLog(shader_object.m_gl_shader_id, info_length, NULL, info);
+        info[info_length] = '\0';
+        std::cerr << "--------------------------------------------------------------------------------\n";
+        std::cerr << " SHADER ERROR LOG";
+        std::cerr << "--------------------------------------------------------------------------------\n";
+        fputs(info, stderr);
+        std::cerr << "--------------------------------------------------------------------------------\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
 // Load a shader.
 GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
 {
@@ -16,33 +47,8 @@ GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
     fread(source, sizeof(char), source_size-1, file);
     source[source_size-1] = '\0';
 
-    m_gl_shader_type = shader_type;
-    m_gl_shader_id = glCreateShader(shader_type);
-    if (m_gl_shader_id == 0) {
-        std::cerr << "ERROR: Failed to create a shader ID.\n";
-        exit(EXIT_FAILURE);
-    }
-    glShaderSource(m_gl_shader_id, 1, (const GLchar **) &source, NULL);
-    delete[] source;
+    *this = from_string(shader_type, source);
     fclose(file);
-
-    glCompileShader(m_gl_shader_id);
-    GLint success;
-    glGetShaderiv(m_gl_shader_id, GL_COMPILE_STATUS, &success);
-    if (success != GL_TRUE) {
-        std::cerr << "ERROR: Failed to compile shader \"" << shader_path << "\".\n";
-        GLint info_length;
-        glGetShaderiv(m_gl_shader_id, GL_INFO_LOG_LENGTH, &info_length);
-        char *info = new char[info_length + 1];
-        glGetShaderInfoLog(m_gl_shader_id, info_length, NULL, info);
-        info[info_length] = '\0';
-        std::cerr << "--------------------------------------------------------------------------------\n";
-        std::cerr << " SHADER ERROR LOG: " << shader_path << "\n";
-        std::cerr << "--------------------------------------------------------------------------------\n";
-        fputs(info, stderr);
-        std::cerr << "--------------------------------------------------------------------------------\n";
-        exit(EXIT_FAILURE);
-    }
 }
 
 GLShaderProgram::GLShaderProgram(std::string const &vertex_shader_path, std::string const &fragment_shader_path)

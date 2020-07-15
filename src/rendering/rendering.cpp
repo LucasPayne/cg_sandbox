@@ -104,13 +104,21 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         for (auto &input : ( SHADING_OUTPUT ).inputs) input.used = true;\
         for (ShadingParameter &uniform : ( SHADING_OUTPUT ).uniforms) {\
             uniform.used = true;\
-            used_uniforms.push_back(&uniform);\
+            bool add_to_used_uniforms = true;\
+            for (ShadingParameter *used_uniform : used_uniforms) {\
+                if (*used_uniform == uniform) add_to_used_uniforms = false;\
+            }\
+            if (add_to_used_uniforms) used_uniforms.push_back(&uniform);\
         }\
     }
     // This macro is used to collect used vertex attributes, so that another pass isn't needed for this.
     #define collect_used_vertex_attributes(SHADING_OUTPUT){\
         for (auto &vertex_attribute : ( SHADING_OUTPUT ).inputs) {\
-            used_vertex_attributes.push_back(&vertex_attribute);\
+            bool add_to_used_vertex_attributes = true;\
+            for (ShadingParameter *used_vertex_attribute : used_vertex_attributes) {\
+                if (*used_vertex_attribute == vertex_attribute) add_to_used_vertex_attributes = false;\
+            }\
+            if (add_to_used_vertex_attributes) used_vertex_attributes.push_back(&vertex_attribute);\
         }\
     }
     // This macro updates the latest stage in the shading pipeline that uses this output.
@@ -224,6 +232,13 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         update_latest_using_stage(*found_for_clip_position, SHADING_SOURCE_GEOM_POST);
     }
 
+    // used_uniforms and used_vertex_attributes are now full. Sort them and make sure each entry is unique.
+    // Make sure not to sort the pointers by using a custom comparator to sort by order of their dereferenced objects.
+    //----
+    // std::sort(std::begin(used_uniforms), std::end(used_uniforms), [](ShadingParameter *a, ShadingParameter *b){ return *a < *b; });
+    // std::unique(std::begin(used_uniforms), std::end(used_uniforms), [](ShadingParameter *a, ShadingParameter *b){ return *a == *b; });
+    // std::sort(std::begin(used_vertex_attributes), std::end(used_vertex_attributes), [](ShadingParameter *a, ShadingParameter *b){ return *a < *b; });
+    // std::unique(std::begin(used_vertex_attributes), std::end(used_vertex_attributes), [](ShadingParameter *a, ShadingParameter *b){ return *a == *b; });
 
     // Generate glsl code for each relevant shader stage.
     // Vertex shader
@@ -243,21 +258,16 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     vertex_shader += "\n";
     // Outputs to next shader stage.
     // First, outputs from the GeometricMaterial.
-    for (ShadingOutput &output : g.dataflow.outputs) {
-        if (!output.used) continue;
-        // Don't use an "out" variable if this output is passed at most to geom-post.
-        // This will be defined in the "main" function otherwise.
-        if (output.latest_using_stage > SHADING_SOURCE_GEOM_POST) {
-            vertex_shader += "out " + output.output.type + " " + output.output.name + ";\n";
-        }
-    }
-    // Secondly, outputs from ShadingModel geom-post.
-    for (ShadingOutput &output : g.dataflow.outputs) {
-        if (!output.used) continue;
-        // Don't use an "out" variable if this output is passed at most to geom-post.
-        // This will be defined in the "main" function otherwise.
-        if (output.latest_using_stage > SHADING_SOURCE_GEOM_POST) {
-            vertex_shader += "out " + output.output.type + " " + output.output.name + ";\n";
+    // Secondly, outputs from the ShadingModel geom-post.
+    ShadingDataflow *out_dataflows[] = {&g.dataflow, &sm.geom_post_dataflow};
+    for (ShadingDataflow *dataflow : out_dataflows) {
+        for (ShadingOutput &output : dataflow->outputs) {
+            if (!output.used) continue;
+            // Don't use an "out" variable if this output is passed at most to geom-post.
+            // This will be defined in the "main" function otherwise.
+            if (output.latest_using_stage > SHADING_SOURCE_GEOM_POST) {
+                vertex_shader += "out " + output.output.type + " " + output.output.name + ";\n";
+            }
         }
     }
     vertex_shader += "\n";
@@ -265,7 +275,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // and uniforms.
     for (ShadingOutput &output : g.dataflow.outputs) {
         if (!output.used) continue;
-        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "() {\n";
+        vertex_shader += output.output.type + " _FUNCTION_" + output.output.name + "() {\n";
         std::istringstream lines(output.snippet);
         std::string line;
         while (std::getline(lines, line)) {
@@ -278,7 +288,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // any GeometricMaterial outputs.
     for (ShadingOutput &output : sm.geom_post_dataflow.outputs) {
         if (!output.used) continue;
-        vertex_shader += output.output.type + " __FUNCTION_" + output.output.name + "(";
+        vertex_shader += output.output.type + " _FUNCTION_" + output.output.name + "(";
         // Function inputs.
         bool any_params = false; // used to help comma insertion
         for (ShadingParameter &input : output.inputs) {
@@ -308,14 +318,14 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         // Only declare in the main function if this GeometricMaterial output is used only by at most geom-post.
         // Otherwise, it will have been declared as an "out" variable.
         if (output.latest_using_stage == SHADING_SOURCE_GEOM_POST) {
-            vertex_shader += "    " + output.output.type + " " + output.output.name + " = __FUNCTION_" + output.output.name + "();\n";
+            vertex_shader += "    " + output.output.type + " " + output.output.name + " = _FUNCTION_" + output.output.name + "();\n";
         }
-        vertex_shader += "    " + output.output.name + " = __FUNCTION_" + output.output.name + "();\n";
+        vertex_shader += "    " + output.output.name + " = _FUNCTION_" + output.output.name + "();\n";
     }
     // Geom-post outputs (which can have GeometricMaterial outputs as parameters).
     for (ShadingOutput &output : sm.geom_post_dataflow.outputs) {
         if (!output.used) continue;
-        vertex_shader += "    " + output.output.name + " = __FUNCTION_" + output.output.name + "(";
+        vertex_shader += "    " + output.output.name + " = _FUNCTION_" + output.output.name + "(";
         // Parameters.
         bool any_params = false; // used to help comma insertion
         for (ShadingParameter &input : output.inputs) {
@@ -329,8 +339,6 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     }
     vertex_shader += "}\n";
 
-    // Create a ShadingProgram.
-    ShadingProgram program;
 
     // Compile the program and retrieve a handle.
 
@@ -345,8 +353,19 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     for (auto *va : used_vertex_attributes) {
         std::cout << "    " << va->type << " " << va->name << "\n";
     }
+    {
+        std::istringstream lines(vertex_shader);
+        std::string line;
+        int i = 1;
+        while (std::getline(lines, line)) {
+            std::cout << std::to_string(i) << ": " << line << "\n";
+            i++;
+        }
+    }
+    // Create a ShadingProgram.
+    ShadingProgram program;
 
-    std::cout << vertex_shader;
+    GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
 
     getchar();
 
@@ -421,7 +440,7 @@ void test_new_shading_program()
         output1.output = ShadingParameter("vec4", "gl_Position");
         output1.inputs.push_back(ShadingParameter("vec3", "world_position"));
         output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix"));
-        output1.snippet = "return (vp_matrix * vec4(world_position, 1)).xyz;\n";
+        output1.snippet = "return (vp_matrix * vec4(world_position, 1));\n";
         dataflow.outputs.push_back(output1);
 
         sm.geom_post_dataflow = dataflow;

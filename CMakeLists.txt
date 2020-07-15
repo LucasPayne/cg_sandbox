@@ -15,6 +15,9 @@ add_executable(main
     src/main.cpp
     lib/glad/glad.c
     src/cg_sandbox.cpp
+    src/rendering/rendering.cpp
+    src/parallel/parallel.cpp
+    src/entity_model/entity_model.cpp
 )
 # set_property(TARGET main PROPERTY CXX_STANDARD 11)
 target_compile_options(main PRIVATE -Wall)
@@ -27,21 +30,6 @@ add_library(gl STATIC
     src/gl/gl_shader_program.cpp
 )
 target_link_libraries(main PRIVATE gl)
-
-add_library(entity_model STATIC
-    src/entity_model/entity_model.cpp
-)
-target_link_libraries(main PRIVATE entity_model)
-
-add_library(parallel STATIC
-    src/parallel/parallel.cpp
-)
-target_link_libraries(main PRIVATE parallel)
-
-add_library(rendering STATIC
-    src/rendering/rendering.cpp
-)
-target_link_libraries(main PRIVATE rendering)
 
 # find_package(BISON)
 # find_package(FLEX)

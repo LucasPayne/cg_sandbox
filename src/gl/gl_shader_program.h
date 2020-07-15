@@ -8,6 +8,7 @@ private:
 public:
     GLShader() {}
     GLShader(GLenum shader_type, std::string const &shader_path);
+    static GLShader from_string(GLenum shader_type, const char *source);
 
     GLuint ID() const {
         return m_gl_shader_id;

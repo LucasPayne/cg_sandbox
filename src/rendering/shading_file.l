@@ -6,7 +6,7 @@
     /* %option prefix="shading_file_yy" */
 
 %{
-    /* Code inserted at top */
+    /* Code included at top */
     // Container for lexer data (https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/enum.l)
     #define YYSTYPE std::string
     #include <string>
@@ -24,5 +24,5 @@
     /* Code */
 void yyerror(char *str)
 {
-    std::cout << "ERROR: " << str;
+    std::cout << "yyerror: " << str;
 }

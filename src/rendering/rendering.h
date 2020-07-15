@@ -11,6 +11,7 @@ namespace Rendering {
 //   The most important thing is for this to be easily used by the code generator.
 
 enum ShadingSources {
+    // It is important that these are in the correct order.
     SHADING_SOURCE_NONE,
     SHADING_SOURCE_VERTEX_ARRAY,
     SHADING_SOURCE_GEOMETRIC_MATERIAL,
@@ -48,6 +49,7 @@ struct ShadingOutput {
 
     // scratch space
     bool used;
+    uint8_t latest_using_stage;
 };
 struct ShadingDataflow {
     std::vector<ShadingOutput> outputs;

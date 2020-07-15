@@ -2,17 +2,6 @@
 #type gmat
 #primitive triangles
 
-/*
-expands to:
-out vec3 f_normal(in vec3 v_normal) {
-    return v_normal;
-}
-*/
-// #passthrough vec3 v_normal -> f_normal
-// #passthrough vec3 v_position -> f_position
-// #passthrough vec2 v_uv -> f_uv
-
-
 section vertex {
     out vec3 f_normal(in vec3 v_normal) {
         return v_normal;
@@ -27,4 +16,3 @@ section vertex {
         return (model_matrix * vec4(v_position, 1)).xyz;
     }
 }
-

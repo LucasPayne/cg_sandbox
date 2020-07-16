@@ -203,7 +203,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // ShadingModel geometry post-processing must always output clip position.
     auto clip_position_output_found = std::find(std::begin(sm.geom_post_dataflow.outputs),
                                       std::end(sm.geom_post_dataflow.outputs),
-                                      ShadingParameter("vec4", "gl_Position"));
+                                      ShadingParameter("vec4", "gl_Position", SHADING_PARAMETER_OUT));
     if (clip_position_output_found == std::end(sm.geom_post_dataflow.outputs)) {
         fprintf(stderr, "ERROR: No vec4 gl_Position output defined in shading model.\n");
         exit(EXIT_FAILURE);
@@ -377,9 +377,9 @@ void test_shading_dataflow()
     ShadingDataflow dataflow;
     
     ShadingOutput output1;
-    output1.output = ShadingParameter("vec3", "world_position");
-    output1.inputs.push_back(ShadingParameter("vec3", "v_position"));
-    output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix"));
+    output1.output = ShadingParameter("vec3", "world_position", SHADING_PARAMETER_OUT);
+    output1.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
+    output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix", SHADING_PARAMETER_UNIFORM));
     output1.snippet = "return (model_matrix * vec4(v_position, 1)).xyz\n";
 
     dataflow.outputs.push_back(output1);
@@ -394,19 +394,19 @@ void test_new_shading_program()
         ShadingOutput output2;
         ShadingOutput output3;
         ShadingDataflow dataflow;
-        output1.output = ShadingParameter("vec3", "world_position");
-        output1.inputs.push_back(ShadingParameter("vec3", "v_position"));
-        output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix"));
+        output1.output = ShadingParameter("vec3", "world_position", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix", SHADING_PARAMETER_UNIFORM));
         output1.snippet = "return (model_matrix * vec4(v_position, 1)).xyz;\n";
         dataflow.outputs.push_back(output1);
 
-        output2.output = ShadingParameter("vec3", "f_normal");
-        output2.inputs.push_back(ShadingParameter("vec3", "v_normal"));
+        output2.output = ShadingParameter("vec3", "f_normal", SHADING_PARAMETER_OUT);
+        output2.inputs.push_back(ShadingParameter("vec3", "v_normal", SHADING_PARAMETER_IN));
         output2.snippet = "return f_normal;\n";
         dataflow.outputs.push_back(output2);
 
-        output3.output = ShadingParameter("vec3", "f_position");
-        output3.inputs.push_back(ShadingParameter("vec3", "v_position"));
+        output3.output = ShadingParameter("vec3", "f_position", SHADING_PARAMETER_OUT);
+        output3.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
         output3.snippet = "return v_position;\n";
         dataflow.outputs.push_back(output3);
 
@@ -416,17 +416,17 @@ void test_new_shading_program()
     {
         ShadingDataflow dataflow;
         ShadingOutput output1;
-        output1.output = ShadingParameter("vec4", "color");
-        output1.inputs.push_back(ShadingParameter("vec3", "f_position"));
-        output1.uniforms.push_back(ShadingParameter("vec4", "uniform_color"));
+        output1.output = ShadingParameter("vec4", "color", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "f_position", SHADING_PARAMETER_OUT));
+        output1.uniforms.push_back(ShadingParameter("vec4", "uniform_color", SHADING_PARAMETER_OUT));
         output1.snippet = "return f_position.x * uniform_color;\n";
         dataflow.outputs.push_back(output1);
 
         ShadingOutput output2;
-        output2.output = ShadingParameter("float", "an_unused_thing");
-        output2.inputs.push_back(ShadingParameter("vec3", "f_uv"));
-        output2.inputs.push_back(ShadingParameter("vec3", "f_normal"));
-        output2.uniforms.push_back(ShadingParameter("mat4x4", "the_unused_matrix"));
+        output2.output = ShadingParameter("float", "an_unused_thing", SHADING_PARAMETER_OUT);
+        output2.inputs.push_back(ShadingParameter("vec3", "f_uv", SHADING_PARAMETER_IN));
+        output2.inputs.push_back(ShadingParameter("vec3", "f_normal", SHADING_PARAMETER_IN));
+        output2.uniforms.push_back(ShadingParameter("mat4x4", "the_unused_matrix", SHADING_PARAMETER_UNIFORM));
         output2.snippet = "return f_uv.x + f_normal.y + (the_unused_matrix * vec4(f_normal, 1)).z;\n";
         dataflow.outputs.push_back(output2);
 
@@ -436,9 +436,9 @@ void test_new_shading_program()
     {
         ShadingDataflow dataflow;
         ShadingOutput output1;
-        output1.output = ShadingParameter("vec4", "gl_Position");
-        output1.inputs.push_back(ShadingParameter("vec3", "world_position"));
-        output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix"));
+        output1.output = ShadingParameter("vec4", "gl_Position", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "world_position", SHADING_PARAMETER_IN));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix", SHADING_PARAMETER_UNIFORM));
         output1.snippet = "return (vp_matrix * vec4(world_position, 1));\n";
         dataflow.outputs.push_back(output1);
 
@@ -447,8 +447,8 @@ void test_new_shading_program()
     {
         ShadingDataflow dataflow;
         ShadingOutput output1;
-        output1.output = ShadingParameter("vec4", "rt_color");
-        output1.inputs.push_back(ShadingParameter("vec4", "color"));
+        output1.output = ShadingParameter("vec4", "rt_color", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec4", "color", SHADING_PARAMETER_IN));
         output1.snippet = "return color;\n";
         dataflow.outputs.push_back(output1);
 

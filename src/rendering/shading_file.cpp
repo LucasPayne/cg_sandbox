@@ -16,7 +16,8 @@ ShadingFile parse_shading_file(const std::string string_path)
         fprintf(stderr, "ERROR: Shading file \"%s\" doesn't exist.\n", path);
         exit(EXIT_FAILURE);
     }
-    parse_shading_file_push_file(file);
-    SHADING_FILE_BISON_PARSE_FUNCTION();
     // SHADING_FILE_FLEX_LEX_FUNCTION();
+    parse_shading_file_push_file(file);
+    ShadingFile *file = SHADING_FILE_BISON_PARSE_FUNCTION();
+    return *file;
 }

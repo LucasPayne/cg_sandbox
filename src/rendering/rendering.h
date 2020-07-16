@@ -18,13 +18,18 @@ enum ShadingSources {
     SHADING_SOURCE_MATERIAL,
     SHADING_SOURCE_FRAG_POST,
 };
+enum ShadingParameterKinds {
+    SHADING_PARAMETER_UNIFORM,
+    SHADING_PARAMETER_IN,
+    SHADING_PARAMETER_OUT,
+}
 struct ShadingParameter {
+    uint8_t kind; // uniform, in, out
     std::string type;
     std::string name;
-    ShadingParameter(std::string _type, std::string _name) {
-        type = _type;
-        name = _name;
-    }
+    ShadingParameter(std::string _type, std::string _name, uint8_t _kind) : 
+        type{_type}, name{_name}, kind{_kind}
+    {}
     ShadingParameter() {}
     // for std::find
     bool operator==(ShadingParameter other) {
@@ -83,7 +88,7 @@ struct ShadingModel {
     ShadingDataflow frag_post_dataflow;
 };
 
-// A ShadingProgram encapsulates the end-product of resolving a GeometricMaterial+Material+ShadingModel triple,
+// A ShadingProgram encapsulates the result of resolving a GeometricMaterial+Material+ShadingModel triple,
 // including an API handle to the program object, and introspective information so that property sheets can be synchronized.
 class ShadingProgram {
     // Other than construction and caching, this class just holds data. All usage interface goes through
@@ -216,8 +221,26 @@ private:
     Shading file parsing.
 --------------------------------------------------------------------------------*/
 
+// A ShadingFile is the structure created when a shading file is parsed.
+// This information will be used when deciding if this file makes sense in terms of a geometric material, etc.,
+// depending on the way those files sections and directives are structured.
+
+// Abstract syntax tree structures. The ShadingFile is just the AST read in, which will be interpreted
+// by further processing (to check its type directive, relevant sections, etc.).
+struct ShadingFileDirective {
+    std::string text;
+};
+struct ShadingFile;
+union ShadingFileNode {
+    ShadingFileDirective *directive;
+    ShadingFile *subsection;
+    ShadingOutput *output;
+};
 struct ShadingFile {
-    int nice;
+    std::vector<ShadingFileNode> children;
+    ShadingFile() {
+        children = std::vector<ShadingFileNode>(0);
+    }
 };
 
 ShadingFile parse_shading_file(const std::string string_path);

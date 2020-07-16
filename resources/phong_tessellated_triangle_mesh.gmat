@@ -5,13 +5,19 @@
 section vertex {
     // The vertex stage just passes everything through.
     out vec3 f_normal(in vec3 v_normal) {
+    GLSL
         return v_normal;
+    END
     }
     out vec3 f_position(in vec3 v_position) {
+    GLSL
         return v_position;
+    END
     }
     out vec2 f_uv(in vec3 v_uv) {
+    GLSL
         return v_uv;
+    END
     }
 }
 section tessellation_control {

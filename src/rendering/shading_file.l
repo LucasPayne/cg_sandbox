@@ -114,10 +114,8 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("Begin GLSL capture.\n");
     BEGIN GLSLCapture;
 }
-<GLSLCapture>.|"\n" {
+<GLSLCapture>(.|"\n")*(" "|"\n")"END" {
     // Read the GLSL snippet into the symbol table.
-}
-<GLSLCapture>"END" {
     tprint("End GLSL capture.\n");
     BEGIN INITIAL;
     return GLSL_SNIPPET;
@@ -127,6 +125,15 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("Identifier: %s\n", yytext);
     return IDENTIFIER;
 }
+    /* Complete lexing if at the bottom of the file stack, or pop a file and continue lexing where the previous open file was left of. */
+<<EOF>> {
+    parse_shading_file_pop_file();
+    if (g_file_stack_top == NULL) {
+        tprint("Token stream ended.\n");
+        yyterminate();
+    }
+}
+
 
 %%
     /* Code */

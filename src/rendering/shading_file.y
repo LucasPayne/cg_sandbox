@@ -8,6 +8,7 @@ NOTES:
     C++ "new" is being used here a lot since it seems convenient for ASTs.
     std::vectors are being used instead of linked lists. Maybe this is convenient.
 --------------------------------------------------------------------------------*/
+
 %{
     /* Code included at top. */
     #include "rendering/rendering.h"
@@ -17,28 +18,39 @@ NOTES:
     // The definition of this is in the lexer file, which is always linked with this parser file.
     void yyerror(char *str);
 %}
+    /* manual reference: https://www.gnu.org/software/bison/manual/html_node/Parser-Function.html */
+%parse-param {ShadingFileASTNode **ast_root_out}
     /* Token, union, type definitions. */
 %union {
     ShadingFileASTNode *node;
-    ShadingFileParameter *parameter;
+    ShadingFileASTDirective *directive;
+    ShadingFileASTSection *section;
+    ShadingFileASTOutput *output;
+    ShadingFileASTParameter *parameter;
+    std::string *string;
 }
-%token <symbol> DIRECTIVE
-%token <symbol> SECTION
-%token <symbol> OUT
-%token <symbol> IN
-%token <symbol> UNIFORM
-%token <symbol> GLSL_SNIPPET
-%token <symbol> IDENTIFIER
+%token <string> DIRECTIVE
+%token SECTION
+%token OUT
+%token IN
+%token UNIFORM
+%token <string> GLSL_SNIPPET
+%token <string> IDENTIFIER
 
 %type <node> ShadingFile
-%type <node> Directive
-%type <node> Section
-%type <node> ShadingOutput
+%type <directive> Directive
+%type <section> Section
+%type <output> ShadingOutput
 %type <parameter> OutputParameter
 %type <parameter> OutputParameterList
 
 %%
     /* Grammar rules. */
+    /* Special-case root ShadingFile, just so the parse-param pointer to the AST can be given. */
+ShadingFileRoot:
+    ShadingFile {
+        *ast_root_out = $1;
+    }
 
 ShadingFile: /* type: ShadingFileASTNode* */
     Section ShadingFile {
@@ -112,5 +124,3 @@ OutputParameter: /* type: ShadingFileASTParameter* */
     }
 
 %%
-    /* Code. */
-

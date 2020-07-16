@@ -225,14 +225,15 @@ private:
 // This information will be used when deciding if this file makes sense in terms of a geometric material, etc.,
 // depending on the way the files sections and directives are structured.
 
-struct ShadingFileASTNode {
-    ShadingFileASTNode *next;
-    virtual int kind() const = 0;
-};
 enum ShadingFileASTNodeKinds {
+    SHADING_FILE_NODE_ROOT,
     SHADING_FILE_NODE_DIRECTIVE,
     SHADING_FILE_NODE_SECTION,
     SHADING_FILE_NODE_OUTPUT,
+};
+struct ShadingFileASTNode {
+    virtual int kind() const { return SHADING_FILE_NODE_ROOT; }
+    ShadingFileASTNode *next;
 };
 struct ShadingFileASTDirective : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_DIRECTIVE; }
@@ -270,7 +271,7 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
     {}
 };
 
-ShadingFileASTNode parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
+ShadingFileASTNode *parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
 
 // Interact with the stack of files set for parsing. This can be used to concatenate files,
 // and implement C-style #includes.
@@ -278,6 +279,11 @@ ShadingFileASTNode parse_shading_file(const std::string string_path); // Returns
 void parse_shading_file_push_file(FILE *file);
 void parse_shading_file_pop_file(void);
 // Errors must be handled by a user-supplied function, declared here.
-void yyerror(char *str);
+void yyerror(ShadingFileASTNode **ast_root_out, char *str);
+#define SHADING_FILE_BISON_PARSE_FUNCTION yyparse
+int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
+#define SHADING_FILE_FLEX_LEX_FUNCTION yylex
+int SHADING_FILE_FLEX_LEX_FUNCTION(void);
+
 
 #endif // RENDERING_H

@@ -17,6 +17,6 @@ ShadingFile parse_shading_file(const std::string string_path)
         exit(EXIT_FAILURE);
     }
     parse_shading_file_push_file(file);
-    // SHADING_FILE_BISON_PARSE_FUNCTION();
-    SHADING_FILE_FLEX_LEX_FUNCTION();
+    SHADING_FILE_BISON_PARSE_FUNCTION();
+    // SHADING_FILE_FLEX_LEX_FUNCTION();
 }

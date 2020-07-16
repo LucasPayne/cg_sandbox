@@ -13,14 +13,55 @@
     void yyerror(char *str);
 %}
     /* Token, union, type definitions. */
-%token <symbol> NICE
+%union {
+    int symbol;
+    bool test;
+    bool another_test;
+}
+%token <symbol> DIRECTIVE
+%token <symbol> SECTION
+%token <symbol> OUT
+%token <symbol> IN
+%token <symbol> UNIFORM
+%token <symbol> GLSL_SNIPPET
+%token <symbol> IDENTIFIER
 
 %%
     /* Grammar rules. */
-Wow:
-    NICE NICE NICE {
-        printf("Nice\n");
+ShadingFile:
+    ShadingFile ShadingFile {
+
     }
+|   DIRECTIVE ShadingFile {
+
+    }
+|   SECTION IDENTIFIER '{' ShadingFile '}' {
+
+    }
+|   OUT IDENTIFIER IDENTIFIER '(' OutputParameterList ')' '{' GLSL_SNIPPET '}'
+|   /* nothing */ {
+
+    }
+
+OutputParameterList:
+    /* nothing */ {
+
+    }
+|   OutputParameter {
+
+    }
+|   OutputParameter ',' OutputParameterList {
+
+    }
+
+OutputParameter:
+    IN IDENTIFIER IDENTIFIER {
+
+    }
+|   UNIFORM IDENTIFIER IDENTIFIER {
+
+    }
+
 %%
     /* Code. */
 

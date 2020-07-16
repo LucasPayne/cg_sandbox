@@ -16,7 +16,7 @@
         FILE *file;
         FileStackEntry *prev;
         YY_BUFFER_STATE buffer_state; //page 26 for details on YY_BUFFER_STATE and flex's
-        			          //defaults for getting a stream to lex from, with yyin.
+        			      //defaults for getting a stream to lex from, with yyin.
     };
     struct FileStackEntry *g_file_stack_top = NULL;
 
@@ -34,10 +34,15 @@
         va_end(args);
     #endif
     }
+    // Macro for tracing encountered keywords.
+    #define KEYWORD() tprint("%s\n", yytext);
 %}
     /* Exclusive states. */
 %x CommentOneLine
 %x CommentMultiLine
+%x GLSLCapture
+    /* Pattern macros. */
+NAME    [_A-Za-z]+[_A-Za-z0-9]*
 
 %%
     /* Pattern rules */
@@ -49,7 +54,8 @@
 ^\s*"#".*$ {
     // Read the directive into the symbol table (everything after the #).
     char *directive = strchr(yytext, '#') + 1;
-    tprint("%s\n", directive);
+    tprint("Directive: %s\n", directive);
+    return DIRECTIVE;
 }
 <CommentOneLine>. { /* */ }
 <CommentOneLine>"\n" { BEGIN INITIAL; }
@@ -65,7 +71,63 @@
     tprint("End multi-line comment.\n");
     BEGIN INITIAL;
 }
-.|"\n" { /* */}
+    /* Eat whitespace and newlines. */
+"\n"|" " { /* */}
+    /* Keywords */
+"section" {
+    KEYWORD();
+    return SECTION;
+}
+"out" {
+    KEYWORD();
+    return OUT;
+}
+"in" {
+    KEYWORD();
+    return IN;
+}
+"uniform" {
+    KEYWORD();
+    return UNIFORM;
+}
+"{" {
+    KEYWORD();
+    return '{';
+}
+"}" {
+    KEYWORD();
+    return '}';
+}
+"(" {
+    KEYWORD();
+    return '(';
+}
+")" {
+    KEYWORD();
+    return ')';
+}
+"," {
+    KEYWORD();
+    return ',';
+}
+"GLSL" {
+    tprint("Begin GLSL capture.\n");
+    BEGIN GLSLCapture;
+}
+<GLSLCapture>.|"\n" {
+    // Read the GLSL snippet into the symbol table.
+}
+<GLSLCapture>"END" {
+    tprint("End GLSL capture.\n");
+    BEGIN INITIAL;
+    return GLSL_SNIPPET;
+}
+    /* Identifiers */
+{NAME} {
+    tprint("Identifier: %s\n", yytext);
+    return IDENTIFIER;
+}
+
 %%
     /* Code */
 void yyerror(char *str)

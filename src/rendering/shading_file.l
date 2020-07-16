@@ -110,19 +110,33 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     KEYWORD();
     return ',';
 }
-"GLSL" {
-    tprint("Begin GLSL capture.\n");
-    BEGIN GLSLCapture;
-}
-<GLSLCapture>(.|"\n")*(" "|"\n")"END" {
-    // Read the GLSL snippet into the symbol table.
-    tprint("End GLSL capture.\n");
-    // Insert a null terminator so the END isn't copied.
-    *(strchr(yytext, '\0') - 4) = '\0';
+"GLSL"" "*"\n".*"\n"" "*"END" {
+    tprint("GLSL snippet:\n");
+    yytext = strchr(yytext, '\n') + 1; // Ignore the GLSL line.
+    strrchr(yytext, '\n')[1] = '\0'; // Ignore the END line.
+    if (TRACE) {
+        printf("------------------------------------------------------------\n");
+        printf("%s", yytext);
+        printf("------------------------------------------------------------\n");
+    }
     yylval.string = new std::string(yytext);
-    BEGIN INITIAL;
     return GLSL_SNIPPET;
 }
+    /* <GLSLCapture>()"END" { */
+    /*     // Read the GLSL snippet into the symbol table. */
+    /*     tprint("End GLSL capture.\n"); */
+    /*     // Insert a null terminator so the END isn't copied. */
+    /*     *(strchr(yytext, '\0') - 4) = '\0'; */
+    /*     if (TRACE) { */
+    /*         printf("------------------------------------------------------------\n"); */
+    /*         printf("%s", yytext); */
+    /*         printf("------------------------------------------------------------\n"); */
+    /*     } */
+    /*     yylval.string = new std::string(yytext); */
+    /*     BEGIN INITIAL; */
+    /*     return GLSL_SNIPPET; */
+    /* } */
+
     /* Identifiers */
 {NAME} {
     tprint("Identifier: %s\n", yytext);

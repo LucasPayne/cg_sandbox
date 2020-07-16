@@ -36,6 +36,7 @@ add_executable(main
     lib/glad/glad.c
     src/cg_sandbox.cpp
     src/rendering/rendering.cpp
+    src/rendering/shading_file.cpp
     src/parallel/parallel.cpp
     src/entity_model/entity_model.cpp
     src/gl/gl.cpp

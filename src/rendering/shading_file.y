@@ -5,8 +5,7 @@
 %{
     /* Code included at top. */
     #define YYSTYPE std::string
-    #include <string>
-    #include <iostream>
+    #include <string> #include <iostream>
     #include <stdio.h>
     #include "shading_file.yy.hh"
 

@@ -43,6 +43,9 @@ void create_dude(EntityModel &em)
 
 void CGSandbox::init()
 {
+    // parse_shading_file("resources/triangle_mesh.gmat");
+    parse_shading_file("resources/test.gmat");
+
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
     EntityModel &em = entity_model;
@@ -59,6 +62,7 @@ void CGSandbox::init()
     camera_transform->position[2] = 0;
 
     for (int i = 0; i < 8; i++) create_dude(em);
+
 }
 void CGSandbox::close()
 {
@@ -67,8 +71,8 @@ void CGSandbox::close()
 
 void CGSandbox::loop()
 {
-    // Rendering::test_shading_dataflow();
-    Rendering::test_new_shading_program();
+    // test_shading_dataflow();
+    test_new_shading_program();
     getchar();
 
     printf("================================================================================\n");

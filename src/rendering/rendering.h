@@ -3,7 +3,6 @@
 #include "core.h"
 #include "gl/gl.h"
 #include <string>
-namespace Rendering {
 
 // Geometry, Material, and ShadingModel all describe dataflow,
 // describing what the stage provides in terms of glsl snippets and required inputs and properties.
@@ -213,6 +212,20 @@ private:
 };
 #endif
 
+/*--------------------------------------------------------------------------------
+    Shading file parsing.
+--------------------------------------------------------------------------------*/
 
-} // namespace Rendering
+struct ShadingFile {
+    int nice;
+};
+
+ShadingFile parse_shading_file(const std::string string_path);
+
+// #include(...) directives.
+void parse_shading_file_push_file(FILE *file);
+void parse_shading_file_pop_file(void);
+// Errors must be handled by a user-supplied function, declared here.
+void yyerror(char *str);
+
 #endif // RENDERING_H

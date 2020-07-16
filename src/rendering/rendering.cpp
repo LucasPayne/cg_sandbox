@@ -25,7 +25,6 @@ IDEAS/THINGS/NOTES:
 #include <algorithm> //find
 #include <functional>
 #include <sstream> //istringstream
-namespace Rendering {
 
 static void print_dataflows(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
@@ -492,5 +491,3 @@ void ShadingDataflow::print() {
         std::cout << "------------------------------------------------------------\n";
     }
 }
-
-} // namespace Rendering

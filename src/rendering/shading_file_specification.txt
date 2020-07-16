@@ -56,8 +56,8 @@ This is parsed into a data structure which is simply a tree of branching or leaf
 with "output" leaf nodes which each contain a list of "inputs" and "uniforms", as well as a glsl snippet.
 Directives are also leaf nodes in the tree.
 
-Once this data structure is read, verify that the first directive is
-#type [gmat | sm | mat]
+Once this data structure is read, verify that the first directive is one of
+#type {gmat,mat,sm}
 Depending on the type, different verifications are done. For example, a mat file has no section structure.
 An sm file has two sections, geom_post and frag_post. gmats have a vertex section, and will probably have multiple sections
 for handling things that will later map to the tessellation and geometry stages.

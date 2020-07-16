@@ -8,7 +8,6 @@ NOTES:
     C++ "new" is being used here a lot since it seems convenient for ASTs.
     std::vectors are being used instead of linked lists. Maybe this is convenient.
 --------------------------------------------------------------------------------*/
-
 %{
     /* Code included at top. */
     #include "rendering/rendering.h"
@@ -71,31 +70,31 @@ ShadingFile: /* type: ShadingFileASTNode* */
     
 Section: /* type: ShadingFileASTSection* : ShadingFileASTNode */
     SECTION IDENTIFIER '{' ShadingFile '}' {
-        auto &section_name = $2;
-        auto &section_internals = $4;
-        $$ = new ShadingFileASTSection(section_name);
+        auto section_name = $2;
+        auto section_internals = $4;
+        $$ = new ShadingFileASTSection(*section_name);
         $$->first_child = section_internals;
     }
 
 Directive: /* type: ShadingFileASTDirective* : ShadingFileASTNode */
     DIRECTIVE {
-        auto &directive_text = $1;
-        $$ = new ShadingFileDirective(directive_text);
+        auto directive_text = $1;
+        $$ = new ShadingFileASTDirective(*directive_text);
     }
 
 ShadingOutput: /* type: ShadingFileASTOutput* : ShadingFileASTNode */
     OUT IDENTIFIER IDENTIFIER '(' OutputParameterList ')' '{' GLSL_SNIPPET '}' {
-        auto &type = $2;
-        auto &name = $3;
-        auto &parameter_list = $5;
-        auto &snippet = $8;
-        $$ = new ShadingFileASTOutput(type, name, snippet);
+        auto type = $2;
+        auto name = $3;
+        auto parameter_list = $5;
+        auto snippet = $8;
+        $$ = new ShadingFileASTOutput(*type, *name, *snippet);
         ShadingFileASTParameter *cur = parameter_list;
         while (cur != NULL) {
             if (cur->kind == SHADING_PARAMETER_IN) {
-                inputs.push_back(ShadingParameter(cur->type, cur->name, cur->kind);
+                $$->inputs.push_back(ShadingParameter(cur->type, cur->name, cur->kind));
             } else { // Should be SHADING_PARAMETER_UNIFORM
-                uniforms.push_back(ShadingParameter(cur->type, cur->name, cur->kind);
+                $$->uniforms.push_back(ShadingParameter(cur->type, cur->name, cur->kind));
             }
             auto tmp = cur->next;
             delete cur; // delete these nodes, as they are not linked into the final AST.
@@ -117,10 +116,14 @@ OutputParameterList: /* type: ShadingFileASTParameter* */
 
 OutputParameter: /* type: ShadingFileASTParameter* */
     IN IDENTIFIER IDENTIFIER {
-        $$ = new ShadingFileASTParameter($2, $3, SHADING_PARAMETER_IN);
+        auto type = $2;
+        auto name = $3;
+        $$ = new ShadingFileASTParameter(*type, *name, SHADING_PARAMETER_IN);
     }
 |   UNIFORM IDENTIFIER IDENTIFIER {
-        $$ = new ShadingFileASTParameter($2, $3, SHADING_PARAMETER_UNIFORM);
+        auto type = $2;
+        auto name = $3;
+        $$ = new ShadingFileASTParameter(*type, *name, SHADING_PARAMETER_UNIFORM);
     }
 
 %%

@@ -7,7 +7,6 @@
 %{
     /* Code included at top */
     // Container for lexer data (https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/enum.l)
-    #define YYSTYPE std::string
     #include "rendering/rendering.h"
     #include "shading_file.tab.hh"
     // The file stack, for #include(...) directives.
@@ -55,7 +54,7 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     // Read the directive into the symbol table (everything after the #).
     char *directive = strchr(yytext, '#') + 1;
     tprint("Directive: %s\n", directive);
-    yylval.string = std::string(directive);
+    yylval.string = new std::string(directive);
     return DIRECTIVE;
 }
 <CommentOneLine>. { /* */ }
@@ -120,14 +119,14 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("End GLSL capture.\n");
     // Insert a null terminator so the END isn't copied.
     *(strchr(yytext, '\0') - 4) = '\0';
-    yylval.string = std::string(yytext);
+    yylval.string = new std::string(yytext);
     BEGIN INITIAL;
     return GLSL_SNIPPET;
 }
     /* Identifiers */
 {NAME} {
     tprint("Identifier: %s\n", yytext);
-    yylval.string = std::string(yytext);
+    yylval.string = new std::string(yytext);
     return IDENTIFIER;
 }
     /* Complete lexing if at the bottom of the file stack, or pop a file and continue lexing where the previous open file was left of. */
@@ -142,7 +141,7 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
 
 %%
     /* Code */
-void yyerror(char *str)
+void yyerror(ShadingFileASTNode **ast_root_out, char *str)
 {
     std::cout << "yyerror: " << str;
 }

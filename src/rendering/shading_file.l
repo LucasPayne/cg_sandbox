@@ -55,6 +55,7 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     // Read the directive into the symbol table (everything after the #).
     char *directive = strchr(yytext, '#') + 1;
     tprint("Directive: %s\n", directive);
+    yylval.string = std::string(directive);
     return DIRECTIVE;
 }
 <CommentOneLine>. { /* */ }
@@ -117,12 +118,16 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
 <GLSLCapture>(.|"\n")*(" "|"\n")"END" {
     // Read the GLSL snippet into the symbol table.
     tprint("End GLSL capture.\n");
+    // Insert a null terminator so the END isn't copied.
+    *(strchr(yytext, '\0') - 4) = '\0';
+    yylval.string = std::string(yytext);
     BEGIN INITIAL;
     return GLSL_SNIPPET;
 }
     /* Identifiers */
 {NAME} {
     tprint("Identifier: %s\n", yytext);
+    yylval.string = std::string(yytext);
     return IDENTIFIER;
 }
     /* Complete lexing if at the bottom of the file stack, or pop a file and continue lexing where the previous open file was left of. */

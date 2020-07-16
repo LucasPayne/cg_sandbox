@@ -19,13 +19,8 @@ NOTES:
 %}
     /* Token, union, type definitions. */
 %union {
-    ShadingFileDirective *directive;
-    ShadingFile *subsection;
-    ShadingOutput *output;
-    ShadingParameter *parameter;
-    std::vector<ShadingParameter *> shading_parameter_list;
-
-    // std::string symbol; // identifier names, directive text, GLSL ... END text tokens.
+    ShadingFileASTNode *node;
+    ShadingFileParameter *parameter;
 }
 %token <symbol> DIRECTIVE
 %token <symbol> SECTION
@@ -35,75 +30,85 @@ NOTES:
 %token <symbol> GLSL_SNIPPET
 %token <symbol> IDENTIFIER
 
-%type <directive> Directive
-%type <subsection> ShadingFile
-%type <output> ShadingOutput
+%type <node> ShadingFile
+%type <node> Directive
+%type <node> Section
+%type <node> ShadingOutput
 %type <parameter> OutputParameter
-%type <parameter_list> OutputParameterList
+%type <parameter> OutputParameterList
 
 %%
     /* Grammar rules. */
-ShadingFile: /* type: ShadingFile* */
-    ShadingFile ShadingFile {
-        // $$ = new ShadingFile(); // new...
-        // $$.children = // concat children
+
+ShadingFile: /* type: ShadingFileASTNode* */
+    Section ShadingFile {
+        $1->next = $2;
+        $$ = $1;
+    }
+|   ShadingOutput ShadingFile {
+        $1->next = $2;
+        $$ = $1;
     }
 |   Directive ShadingFile {
-        // $$ = new ShadingFile();
-        // $$->children.push_back(ShadingFileNode($1));
-        // for (auto &child : $2->children) $$->children.push_back(child);
-    }
-|   SECTION IDENTIFIER '{' ShadingFile '}' {
-
-    }
-|   ShadingOutput {
-
+        $1->next = $2;
+        $$ = $1;
     }
 |   /* nothing */ {
-
+        $$ = NULL;
+    }
+    
+Section: /* type: ShadingFileASTSection* : ShadingFileASTNode */
+    SECTION IDENTIFIER '{' ShadingFile '}' {
+        auto &section_name = $2;
+        auto &section_internals = $4;
+        $$ = new ShadingFileASTSection(section_name);
+        $$->first_child = section_internals;
     }
 
-Directive: /* type: ShadingFileDirective* */
+Directive: /* type: ShadingFileASTDirective* : ShadingFileASTNode */
     DIRECTIVE {
-         new ShadingFileDirective();
+        auto &directive_text = $1;
+        $$ = new ShadingFileDirective(directive_text);
     }
 
-ShadingOutput: /* type: ShadingOutput* */
+ShadingOutput: /* type: ShadingFileASTOutput* : ShadingFileASTNode */
     OUT IDENTIFIER IDENTIFIER '(' OutputParameterList ')' '{' GLSL_SNIPPET '}' {
-        ShadingOutput *output = new ShadingOutput();
-        output->inputs = std::vector<ShadingParameter>(0);
-        output->outputs = std::vector<ShadingParameter>(0); //-is this necessary?
-        for (ShadingParameter *parameter : $4) {
-            if (parameter->kind == SHADING_PARAMETER_IN) {
-                output->inputs.push_back(*parameter);
-            } else { // otherwise SHADING_PARAMETER_UNIFORM
-                output->uniforms.push_back(*parameter);
+        auto &type = $2;
+        auto &name = $3;
+        auto &parameter_list = $5;
+        auto &snippet = $8;
+        $$ = new ShadingFileASTOutput(type, name, snippet);
+        ShadingFileASTParameter *cur = parameter_list;
+        while (cur != NULL) {
+            if (cur->kind == SHADING_PARAMETER_IN) {
+                inputs.push_back(ShadingParameter(cur->type, cur->name, cur->kind);
+            } else { // Should be SHADING_PARAMETER_UNIFORM
+                uniforms.push_back(ShadingParameter(cur->type, cur->name, cur->kind);
             }
-            // !-Delete-! parameter.
-            delete parameter;
+            auto tmp = cur->next;
+            delete cur; // delete these nodes, as they are not linked into the final AST.
+            cur = tmp;
         }
-        output->snippet = $5;
-        return output;
     }
 
-OutputParameterList: /* type: std::vector<ShadingParameter *> */
+OutputParameterList: /* type: ShadingFileASTParameter* */
     /* nothing */ {
-        return std::vector<ShadingParameter *>(0);
+        $$ = NULL;
     }
 |   OutputParameter {
-        return std::vector<ShadingParameter *> {$1};
+        $$ = $1;
     }
-|   OutputParameterList "," OutputParameter {
-        $1.push_back($2);
-        return $2;
+|   OutputParameter ',' OutputParameterList {
+        $1->next = $3;
+        $$ = $1;
     }
 
-OutputParameter: /* type: ShadingParameter* */
+OutputParameter: /* type: ShadingFileASTParameter* */
     IN IDENTIFIER IDENTIFIER {
-        return new ShadingParameter($2, $3, SHADING_PARAMETER_IN);
+        $$ = new ShadingFileASTParameter($2, $3, SHADING_PARAMETER_IN);
     }
 |   UNIFORM IDENTIFIER IDENTIFIER {
-        return new ShadingParameter($2, $3, SHADING_PARAMETER_UNIFORM);
+        $$ = new ShadingFileASTParameter($2, $3, SHADING_PARAMETER_UNIFORM);
     }
 
 %%

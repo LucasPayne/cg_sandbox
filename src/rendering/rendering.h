@@ -22,7 +22,7 @@ enum ShadingParameterKinds {
     SHADING_PARAMETER_UNIFORM,
     SHADING_PARAMETER_IN,
     SHADING_PARAMETER_OUT,
-}
+};
 struct ShadingParameter {
     uint8_t kind; // uniform, in, out
     std::string type;
@@ -221,29 +221,56 @@ private:
     Shading file parsing.
 --------------------------------------------------------------------------------*/
 
-// A ShadingFile is the structure created when a shading file is parsed.
+// Shading file AST the parser constructs.
 // This information will be used when deciding if this file makes sense in terms of a geometric material, etc.,
-// depending on the way those files sections and directives are structured.
+// depending on the way the files sections and directives are structured.
 
-// Abstract syntax tree structures. The ShadingFile is just the AST read in, which will be interpreted
-// by further processing (to check its type directive, relevant sections, etc.).
-struct ShadingFileDirective {
+struct ShadingFileASTNode {
+    ShadingFileASTNode *next;
+    virtual int kind() const = 0;
+};
+enum ShadingFileASTNodeKinds {
+    SHADING_FILE_NODE_DIRECTIVE,
+    SHADING_FILE_NODE_SECTION,
+    SHADING_FILE_NODE_OUTPUT,
+};
+struct ShadingFileASTDirective : ShadingFileASTNode {
+    int kind() const { return SHADING_FILE_NODE_DIRECTIVE; }
     std::string text;
+    ShadingFileASTDirective(std::string _text) :
+        text{_text}
+    {}
 };
-struct ShadingFile;
-union ShadingFileNode {
-    ShadingFileDirective *directive;
-    ShadingFile *subsection;
-    ShadingOutput *output;
+struct ShadingFileASTSection : ShadingFileASTNode {
+    int kind() const { return SHADING_FILE_NODE_SECTION; }
+    std::string name;
+    ShadingFileASTNode *first_child;
+    ShadingFileASTSection(std::string _name) :
+        name{_name}, first_child{nullptr}
+    {}
 };
-struct ShadingFile {
-    std::vector<ShadingFileNode> children;
-    ShadingFile() {
-        children = std::vector<ShadingFileNode>(0);
-    }
+struct ShadingFileASTParameter {
+    uint8_t kind; // uniform, in, out
+    std::string type;
+    std::string name;
+    ShadingFileASTParameter *next;
+    ShadingFileASTParameter(std::string _type, std::string _name, uint8_t _kind) :
+        type{_type}, name{_name}, kind{_kind}, next{nullptr}
+    {}
+};
+struct ShadingFileASTOutput : ShadingFileASTNode {
+    int kind() const { return SHADING_FILE_NODE_OUTPUT; }
+    std::string type;
+    std::string name;
+    std::string snippet;
+    std::vector<ShadingParameter> inputs;
+    std::vector<ShadingParameter> uniforms;
+    ShadingFileASTOutput(std::string _type, std::string _name, std::string _snippet) :
+        type{_type}, name{_name}, snippet{_snippet}
+    {}
 };
 
-ShadingFile parse_shading_file(const std::string string_path);
+ShadingFileASTNode parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
 
 // Interact with the stack of files set for parsing. This can be used to concatenate files,
 // and implement C-style #includes.

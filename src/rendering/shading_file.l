@@ -1,17 +1,13 @@
 /*--------------------------------------------------------------------------------
-    flex lexer file for reading files describing stages in the
+    flex lexer file for reading files which describe stages in the
     GeometricMaterial + Material + ShadingModel system ("shading files").
 --------------------------------------------------------------------------------*/
 %option noyywrap nodefault
     /* %option prefix="shading_file_yy" */
-
 %{
     /* Code included at top */
     // Container for lexer data (https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/enum.l)
     #define YYSTYPE std::string
-    #include <string>
-    #include <iostream>
-    #include <stdio.h>
     #include "rendering/rendering.h"
     #include "shading_file.tab.hh"
     // The file stack, for #include(...) directives.
@@ -23,33 +19,55 @@
         			          //defaults for getting a stream to lex from, with yyin.
     };
     struct FileStackEntry *g_file_stack_top = NULL;
+
+    // Set TRACE to 1 to view trace output when scanning.
+    #include <stdarg.h>
+    #define TRACE 1
+    //--Empty inlines will still definitely have side-effect parameters evaluated.
+    static inline void tprint(const char *format, ...)
+    {
+    #if TRACE
+        va_list args;
+        va_start(args, format);
+        printf("FLEX: ");
+        vprintf(format, args);
+        va_end(args);
+    #endif
+    }
 %}
     /* Exclusive states. */
 %x CommentOneLine
 %x CommentMultiLine
 
-
-
 %%
-. { 
-    printf("choo\n");
+    /* Pattern rules */
+    /* Single-line comments. */
+"//" {
+    tprint("Begin one-line comment.\n");
+    BEGIN CommentOneLine;
 }
-
+^\s*"#".*$ {
+    // Read the directive into the symbol table (everything after the #).
+    char *directive = strchr(yytext, '#') + 1;
+    tprint("%s\n", directive);
+}
+<CommentOneLine>. { /* */ }
+<CommentOneLine>"\n" { BEGIN INITIAL; }
+    /* Multi-line comments. */
+    /*     note: Multiline comment syntax inside multiline comments doesn't work. */
+"/*" { 
+    tprint("Begin multi-line comment.\n");
+    BEGIN CommentMultiLine;
+}
+<CommentMultiLine>. { /* */ }
+<CommentMultiLine>"\n" { /* */ }
+<CommentMultiLine>"*/" { 
+    tprint("End multi-line comment.\n");
+    BEGIN INITIAL;
+}
+.|"\n" { /* */}
 %%
-//     /* Code */
-//     /* Pattern rules */
-//     /* Single-line comments. */
-// "//" { BEGIN CommentOneLine; }
-// <CommentOneLine>. {
-//     printf("One-line comment\n");
-// }
-// <CommentOneLine>"\n" { BEGIN INITIAL; }
-//     /* Multi-line comments. */
-//     /*     note: Multiline comment syntax inside multiline comments doesn't work. */
-// "/*" { BEGIN CommentMultiLine; }
-// <CommentMultiLine>. { /* */ }
-// <CommentMultiLine>"\n" { /* */ }
-// <CommentMultiLine>"*/" { BEGIN INITIAL; }
+    /* Code */
 void yyerror(char *str)
 {
     std::cout << "yyerror: " << str;

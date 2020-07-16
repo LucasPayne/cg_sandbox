@@ -222,7 +222,9 @@ struct ShadingFile {
 
 ShadingFile parse_shading_file(const std::string string_path);
 
-// #include(...) directives.
+// Interact with the stack of files set for parsing. This can be used to concatenate files,
+// and implement C-style #includes.
+//     note: this should probably not be in the usage interface.
 void parse_shading_file_push_file(FILE *file);
 void parse_shading_file_pop_file(void);
 // Errors must be handled by a user-supplied function, declared here.

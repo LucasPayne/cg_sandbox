@@ -5,8 +5,7 @@
 %{
     /* Code included at top. */
     #define YYSTYPE std::string
-    #include <string> #include <iostream>
-    #include <stdio.h>
+    #include "rendering/rendering.h"
     #include "shading_file.yy.hh"
 
     // Errors must be handled by a user-supplied function, declared here.

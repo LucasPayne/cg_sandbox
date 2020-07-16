@@ -45,6 +45,7 @@ void CGSandbox::init()
 {
     // parse_shading_file("resources/triangle_mesh.gmat");
     parse_shading_file("resources/test.gmat");
+    getchar();
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

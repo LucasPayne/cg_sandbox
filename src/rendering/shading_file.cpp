@@ -5,6 +5,8 @@
 
 #define SHADING_FILE_BISON_PARSE_FUNCTION yyparse
 int SHADING_FILE_BISON_PARSE_FUNCTION(void);
+#define SHADING_FILE_FLEX_LEX_FUNCTION yylex
+int SHADING_FILE_FLEX_LEX_FUNCTION(void);
 
 ShadingFile parse_shading_file(const std::string string_path)
 {
@@ -15,5 +17,6 @@ ShadingFile parse_shading_file(const std::string string_path)
         exit(EXIT_FAILURE);
     }
     parse_shading_file_push_file(file);
-    SHADING_FILE_BISON_PARSE_FUNCTION();
+    // SHADING_FILE_BISON_PARSE_FUNCTION();
+    SHADING_FILE_FLEX_LEX_FUNCTION();
 }

@@ -50,6 +50,8 @@ void CGSandbox::init()
     getchar();
     ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
     getchar();
+    ShadingProgram program = new_shading_program(gmat, mat, sm);
+    getchar();
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

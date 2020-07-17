@@ -3,6 +3,7 @@
 #include "core.h"
 #include "gl/gl.h"
 #include <string>
+#include <string_view>//read char buffers as std::strings, so it can be used in string arithmetic overloads.
 
 // Geometry, Material, and ShadingModel all describe dataflow,
 // describing what the stage provides in terms of glsl snippets and required inputs and properties.
@@ -25,11 +26,25 @@ enum ShadingParameterKinds {
 };
 struct ShadingParameter {
     uint8_t kind; // uniform, in, out
+    #define MAX_SHADING_PARAMETER_TYPE_NAME_LENGTH 63
+    #define MAX_SHADING_PARAMETER_NAME_LENGTH 63
+    char type_buffer[MAX_SHADING_PARAMETER_TYPE_NAME_LENGTH + 1];
+    char name_buffer[MAX_SHADING_PARAMETER_NAME_LENGTH + 1];
     std::string type;
     std::string name;
-    ShadingParameter(std::string _type, std::string _name, uint8_t _kind) : 
-        type{_type}, name{_name}, kind{_kind}
-    {}
+    ShadingParameter(const char *_type, const char *_name, uint8_t _kind) :
+        kind{_kind}
+    {
+        if (strlen(_type) > MAX_SHADING_PARAMETER_TYPE_NAME_LENGTH
+            || strlen(_name) > MAX_SHADING_PARAMETER_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Shading file parameter type/name too long.\n");
+            exit(EXIT_FAILURE);
+        }
+        strncpy(type_buffer, _type, MAX_SHADING_PARAMETER_TYPE_NAME_LENGTH);
+        strncpy(name_buffer, _name, MAX_SHADING_PARAMETER_NAME_LENGTH);
+        type = std::string(type_buffer);
+        name = std::string(name_buffer);
+    }
     ShadingParameter() {}
     // for std::find
     bool operator==(ShadingParameter other) {
@@ -260,10 +275,7 @@ struct ShadingFileASTParameter {
         type{_type}, name{_name}, kind{_kind}, next{nullptr}
     {}
     ShadingParameter deastify() const {
-        ShadingParameter param;
-        param.kind = kind;
-        param.type = std::string(type);
-        param.name = std::string(name);
+        ShadingParameter param(type, name, kind);
         return param;
     }
 };
@@ -281,7 +293,7 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
     // by "de-AST-ifying" it.
     ShadingOutput deastify() const {
         ShadingOutput deastified;
-        deastified.output = ShadingParameter(std::string(type), std::string(name), SHADING_PARAMETER_OUT);
+        deastified.output = ShadingParameter(type, name, SHADING_PARAMETER_OUT);
         ShadingFileASTParameter *param = parameter_list;
         while (param != nullptr) {
             if (param->kind == SHADING_PARAMETER_IN) {
@@ -295,7 +307,6 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
         return deastified;
     };
 };
-
 GeometricMaterial parse_geometric_material_file(const std::string string_path);
 Material parse_material_file(const std::string string_path);
 ShadingModel parse_shading_model_file(const std::string string_path);

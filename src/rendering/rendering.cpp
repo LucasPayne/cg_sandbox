@@ -77,10 +77,6 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
             }
         }
     }
-
-    print_dataflows(g, m, sm);
-    getchar();
-
     /*--------------------------------------------------------------------------------
     After this pass:
         All ShadingModel frag-post outputs are marked as used.
@@ -130,7 +126,11 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         
     // Propogate requirements back from the ShadingModel frag-post outputs. This sets the "used" flag, to later signify to the
     // code generator what it should include.
+    printf("DATAFLOW!!!\n");
+    sm.frag_post_dataflow.print();getchar();
     for (ShadingOutput &frag_post_output : sm.frag_post_dataflow.outputs) {
+        std::cout << "fpp -> " << frag_post_output.output.name << "\n";
+        std::cout << "fpp -> " << frag_post_output.output.type << "\n";
         // All ShadingModel frag-post outputs are used.
         set_used(frag_post_output);
         // For each ShadingModel frag-post output, propogate requirements.
@@ -141,7 +141,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
             auto found_for_frag_post = std::find(std::begin(m.dataflow.outputs), std::end(m.dataflow.outputs), frag_post_requires);
             if (found_for_frag_post == std::end(m.dataflow.outputs)) {
                 // Not found. The Material doesn't provide the wanted output.
-                fprintf(stderr, "ERROR\n");
+                fprintf(stderr, "ERROR: Material does not provide the wanted output.\n");
                 exit(EXIT_FAILURE);
             }
             // Flag this output as being required by frag-post. This might be useful during code generation.
@@ -230,14 +230,6 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
 	// No matter the input source, flag the output as being used by the geom-post stage.
         update_latest_using_stage(*found_for_clip_position, SHADING_SOURCE_GEOM_POST);
     }
-
-    // used_uniforms and used_vertex_attributes are now full. Sort them and make sure each entry is unique.
-    // Make sure not to sort the pointers by using a custom comparator to sort by order of their dereferenced objects.
-    //----
-    // std::sort(std::begin(used_uniforms), std::end(used_uniforms), [](ShadingParameter *a, ShadingParameter *b){ return *a < *b; });
-    // std::unique(std::begin(used_uniforms), std::end(used_uniforms), [](ShadingParameter *a, ShadingParameter *b){ return *a == *b; });
-    // std::sort(std::begin(used_vertex_attributes), std::end(used_vertex_attributes), [](ShadingParameter *a, ShadingParameter *b){ return *a < *b; });
-    // std::unique(std::begin(used_vertex_attributes), std::end(used_vertex_attributes), [](ShadingParameter *a, ShadingParameter *b){ return *a == *b; });
 
     // Generate glsl code for each relevant shader stage.
     // Vertex shader

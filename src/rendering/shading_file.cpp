@@ -156,13 +156,17 @@ Material parse_material_file(const std::string string_path)
     // Validate that this has the relevant directives and sections for a material (mat) shading file.
     if (find_directive(root, "type mat") == nullptr) parse_error("Materials must contain \"#type gmat\"");
 
+    ShadingFileASTNode *frag_section;
+    if ((frag_section = find_section(root, "frag")) == nullptr) parse_error("Materials must contain a \"frag\" section.");
+
     // Collect outputs in the root section.
-    ShadingDataflow dataflow = read_dataflow(root);
+    ShadingDataflow dataflow = read_dataflow(frag_section);
 
     Material mat;
     mat.dataflow = dataflow;
     printf("Parsed dataflow\n");
     mat.dataflow.print();
+    return mat;
     #undef parse_error
 }
 ShadingModel parse_shading_model_file(const std::string string_path)

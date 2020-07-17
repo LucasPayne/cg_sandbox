@@ -126,11 +126,8 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         
     // Propogate requirements back from the ShadingModel frag-post outputs. This sets the "used" flag, to later signify to the
     // code generator what it should include.
-    printf("DATAFLOW!!!\n");
-    sm.frag_post_dataflow.print();getchar();
     for (ShadingOutput &frag_post_output : sm.frag_post_dataflow.outputs) {
-        std::cout << "fpp -> " << frag_post_output.output.name << "\n";
-        std::cout << "fpp -> " << frag_post_output.output.type << "\n";
+        std::cout << "fpp -> " << frag_post_output.output.type + " " + frag_post_output.output.name << "\n";
         // All ShadingModel frag-post outputs are used.
         set_used(frag_post_output);
         // For each ShadingModel frag-post output, propogate requirements.

@@ -47,6 +47,7 @@ void CGSandbox::init()
     GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
     getchar();
     Material mat = parse_material_file("resources/color.mat");
+    printf("mat dataflow:\n");mat.dataflow.print();getchar();
     getchar();
     ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
     getchar();

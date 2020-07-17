@@ -1,8 +1,10 @@
 // Material for providing output "color", for use by a simple shading model.
 #type mat
 
-out vec4 color(uniform vec4 uniform_color) {
-GLSL
-    return uniform_color;
-END
+section frag {
+    out vec4 color(uniform vec4 uniform_color) {
+    GLSL
+        return uniform_color;
+    END
+    }
 }

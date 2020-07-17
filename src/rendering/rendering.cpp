@@ -45,9 +45,12 @@ ShadingProgram::ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm)
 }
 
 
-void print_listing(const std::string &text)
+void print_listing(const std::string &title, const std::string &text)
 {
-    // Print the given text with numbered lines.
+    // Print the title, then the given text with numbered lines.
+    std::cout << "============================================================\n";
+    std::cout << title << "\n";
+    std::cout << "------------------------------------------------------------\n";
     std::istringstream lines(text);
     std::string line;
     int line_num = 1;
@@ -424,27 +427,28 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     fragment_shader += "}\n";
     
 
-    std::cout << fragment_shader; getchar();
+    // print_dataflows(g, m, sm);
+    // std::cout << "Used uniforms:\n";
+    // for (auto *uniform : used_uniforms) {
+    //     std::cout << "    " << uniform->type << " " << uniform->name << "\n";
+    // }
+    // std::cout << "Used vertex attributes:\n";
+    // for (auto *va : used_vertex_attributes) {
+    //     std::cout << "    " << va->type << " " << va->name << "\n";
+    // }
+    print_listing("vertex_shader", vertex_shader);
+    print_listing("fragment_shader", fragment_shader);
 
-    // Compute introspective information.
-
-    print_dataflows(g, m, sm);
-    std::cout << "Used uniforms:\n";
-    for (auto *uniform : used_uniforms) {
-        std::cout << "    " << uniform->type << " " << uniform->name << "\n";
-    }
-    std::cout << "Used vertex attributes:\n";
-    for (auto *va : used_vertex_attributes) {
-        std::cout << "    " << va->type << " " << va->name << "\n";
-    }
-    print_listing(vertex_shader);
-    print_listing(fragment_shader);
-    // Create a ShadingProgram.
-    ShadingProgram program;
+    // Compile and link OpenGL program object.
     GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
     GLShader fragment_shader_object = GLShader::from_string(GL_FRAGMENT_SHADER, fragment_shader.c_str());
+    GLShaderProgram program_object(vertex_shader_object, fragment_shader_object);
 
-    getchar();
+    // Compute introspective information.
+    //todo----------
+
+    ShadingProgram program;
+    program.program_id = program_object.ID();
 
     return program;
 }

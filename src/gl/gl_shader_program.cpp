@@ -10,7 +10,6 @@ GLShader GLShader::from_string(GLenum shader_type, const char *source)
         exit(EXIT_FAILURE);
     }
     glShaderSource(shader_object.m_gl_shader_id, 1, (const GLchar **) &source, NULL);
-    delete[] source;
 
     glCompileShader(shader_object.m_gl_shader_id);
     GLint success;
@@ -51,10 +50,11 @@ GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
     fclose(file);
 }
 
-GLShaderProgram::GLShaderProgram(std::string const &vertex_shader_path, std::string const &fragment_shader_path)
+
+GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader)
 {
-    m_vertex_shader = GLShader(GL_VERTEX_SHADER, vertex_shader_path);
-    m_fragment_shader = GLShader(GL_FRAGMENT_SHADER, fragment_shader_path);
+    m_vertex_shader = vertex_shader;
+    m_fragment_shader = fragment_shader;
     m_gl_shader_program_id = glCreateProgram();
     if (m_gl_shader_program_id == 0) {
         std::cerr << "ERROR: Failed to create shader program.\n";

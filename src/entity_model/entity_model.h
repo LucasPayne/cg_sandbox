@@ -104,7 +104,6 @@ struct RuntimeAspectInfo {
 
 #define ENTITY_LIST_START_LENGTH 16
 #define ASPECT_LIST_START_LENGTH 16
-#define ALL_PUBLIC 1
 class EntityModel {
 public: // Usage interface
     EntityModel();

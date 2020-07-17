@@ -33,8 +33,7 @@ int main(int argc, char *argv[])
     context.open();
 
     // The CGSandbox is the main entry point for application behaviour.
-    // for application behaviour. It derives from two classes, providing a per-frame loop function
-    // and event callbacks.
+    // It derives from two classes, providing a per-frame loop function and event callbacks.
     CGSandbox cgs = CGSandbox();
     cgs.listening = true;
     context.add_looper(&cgs);

@@ -4,18 +4,16 @@
 
 BUGS:
 PROBLEMS:
+    String handling is not very good. The parser is non-reentrant and avoids explicit global variables
+    only through parse-param. A class to encapsulate a file being parsed could be nice, allowing it to have its
+    own symbol table, and destructor (cleaning the dynamic AST).
 NOTES:
     C++ "new" is being used here a lot since it seems convenient for ASTs.
-    std::vectors are being used instead of linked lists. Maybe this is convenient.
 --------------------------------------------------------------------------------*/
 %{
     /* Code included at top. */
     #include "rendering/rendering.h"
     #include "shading_file.yy.hh"
-
-    // Errors must be handled by a user-supplied function, declared here.
-    // The definition of this is in the lexer file, which is always linked with this parser file.
-    void yyerror(char *str);
 %}
     /* manual reference: https://www.gnu.org/software/bison/manual/html_node/Parser-Function.html */
 %parse-param {ShadingFileASTNode **ast_root_out}
@@ -26,7 +24,7 @@ NOTES:
     ShadingFileASTSection *section;
     ShadingFileASTOutput *output;
     ShadingFileASTParameter *parameter;
-    std::string *string;
+    const char *string;
 }
 %token <string> DIRECTIVE
 %token SECTION
@@ -65,46 +63,35 @@ ShadingFile: /* type: ShadingFileASTNode* */
         $$ = $1;
     }
 |   /* nothing */ {
-        $$ = NULL;
+        $$ = nullptr;
     }
     
 Section: /* type: ShadingFileASTSection* : ShadingFileASTNode */
     SECTION IDENTIFIER '{' ShadingFile '}' {
-        auto section_name = $2;
+        const char *section_name = $2;
         auto section_internals = $4;
-        $$ = new ShadingFileASTSection(*section_name);
+        $$ = new ShadingFileASTSection(section_name);
         $$->first_child = section_internals;
     }
 
 Directive: /* type: ShadingFileASTDirective* : ShadingFileASTNode */
     DIRECTIVE {
-        auto directive_text = $1;
-        $$ = new ShadingFileASTDirective(*directive_text);
+        const char *directive_text = $1;
+        $$ = new ShadingFileASTDirective(directive_text);
     }
 
 ShadingOutput: /* type: ShadingFileASTOutput* : ShadingFileASTNode */
     OUT IDENTIFIER IDENTIFIER '(' OutputParameterList ')' '{' GLSL_SNIPPET '}' {
-        auto type = $2;
-        auto name = $3;
+        const char *type = $2;
+        const char *name = $3;
         auto parameter_list = $5;
-        auto snippet = $8;
-        $$ = new ShadingFileASTOutput(*type, *name, *snippet);
-        ShadingFileASTParameter *cur = parameter_list;
-        while (cur != NULL) {
-            if (cur->kind == SHADING_PARAMETER_IN) {
-                $$->inputs.push_back(ShadingParameter(cur->type, cur->name, cur->kind));
-            } else { // Should be SHADING_PARAMETER_UNIFORM
-                $$->uniforms.push_back(ShadingParameter(cur->type, cur->name, cur->kind));
-            }
-            auto tmp = cur->next;
-            delete cur; // delete these nodes, as they are not linked into the final AST.
-            cur = tmp;
-        }
+        const char *snippet = $8;
+        $$ = new ShadingFileASTOutput(type, name, parameter_list, snippet);
     }
 
 OutputParameterList: /* type: ShadingFileASTParameter* */
     /* nothing */ {
-        $$ = NULL;
+        $$ = nullptr;
     }
 |   OutputParameter {
         $$ = $1;
@@ -116,14 +103,14 @@ OutputParameterList: /* type: ShadingFileASTParameter* */
 
 OutputParameter: /* type: ShadingFileASTParameter* */
     IN IDENTIFIER IDENTIFIER {
-        auto type = $2;
-        auto name = $3;
-        $$ = new ShadingFileASTParameter(*type, *name, SHADING_PARAMETER_IN);
+        const char *type = $2;
+        const char *name = $3;
+        $$ = new ShadingFileASTParameter(type, name, SHADING_PARAMETER_IN);
     }
 |   UNIFORM IDENTIFIER IDENTIFIER {
-        auto type = $2;
-        auto name = $3;
-        $$ = new ShadingFileASTParameter(*type, *name, SHADING_PARAMETER_UNIFORM);
+        const char *type = $2;
+        const char *name = $3;
+        $$ = new ShadingFileASTParameter(type, name, SHADING_PARAMETER_UNIFORM);
     }
 
 %%

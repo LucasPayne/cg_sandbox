@@ -39,7 +39,6 @@
     /* Exclusive states. */
 %x CommentOneLine
 %x CommentMultiLine
-%x GLSLCapture
     /* Pattern macros. */
 NAME    [_A-Za-z]+[_A-Za-z0-9]*
 
@@ -52,9 +51,9 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
 }
 ^\s*"#".*$ {
     // Read the directive into the symbol table (everything after the #).
-    char *directive = strchr(yytext, '#') + 1;
-    tprint("Directive: %s\n", directive);
-    yylval.string = new std::string(directive);
+    std::string *directive = new std::string(strchr(yytext, '#') + 1);
+    yylval.string = directive->c_str();
+    tprint("Directive: %s\n", yylval.string);
     return DIRECTIVE;
 }
 <CommentOneLine>. { /* */ }
@@ -114,33 +113,22 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("GLSL snippet:\n");
     yytext = strchr(yytext, '\n') + 1; // Ignore the GLSL line.
     strrchr(yytext, '\n')[1] = '\0'; // Ignore the END line.
+    std::string *snippet = new std::string(yytext);
+    yylval.string = snippet->c_str();
     if (TRACE) {
         printf("------------------------------------------------------------\n");
-        printf("%s", yytext);
+        printf("%s", yylval.string);
         printf("------------------------------------------------------------\n");
     }
-    yylval.string = new std::string(yytext);
     return GLSL_SNIPPET;
 }
-    /* <GLSLCapture>()"END" { */
-    /*     // Read the GLSL snippet into the symbol table. */
-    /*     tprint("End GLSL capture.\n"); */
-    /*     // Insert a null terminator so the END isn't copied. */
-    /*     *(strchr(yytext, '\0') - 4) = '\0'; */
-    /*     if (TRACE) { */
-    /*         printf("------------------------------------------------------------\n"); */
-    /*         printf("%s", yytext); */
-    /*         printf("------------------------------------------------------------\n"); */
-    /*     } */
-    /*     yylval.string = new std::string(yytext); */
-    /*     BEGIN INITIAL; */
-    /*     return GLSL_SNIPPET; */
-    /* } */
 
     /* Identifiers */
 {NAME} {
     tprint("Identifier: %s\n", yytext);
-    yylval.string = new std::string(yytext);
+    std::string *identifier = new std::string(yytext);
+    yylval.string = identifier->c_str();
+    printf("%s\n", yylval.string);
     return IDENTIFIER;
 }
     /* Complete lexing if at the bottom of the file stack, or pop a file and continue lexing where the previous open file was left of. */

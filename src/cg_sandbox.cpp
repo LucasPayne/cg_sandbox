@@ -44,7 +44,7 @@ void create_dude(EntityModel &em)
 void CGSandbox::init()
 {
     // parse_shading_file("resources/triangle_mesh.gmat");
-    parse_shading_file("resources/triangle_mesh.gmat");
+    parse_geometric_material_file("resources/triangle_mesh.gmat");
     getchar();
     parse_shading_file("resources/color.mat");
     getchar();

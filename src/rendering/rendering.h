@@ -234,45 +234,49 @@ enum ShadingFileASTNodeKinds {
 struct ShadingFileASTNode {
     virtual int kind() const { return SHADING_FILE_NODE_ROOT; }
     ShadingFileASTNode *next;
+    ShadingFileASTNode() : next{nullptr} {}
 };
 struct ShadingFileASTDirective : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_DIRECTIVE; }
-    std::string text;
-    ShadingFileASTDirective(std::string _text) :
+    const char *text;
+    ShadingFileASTDirective(const char *_text) :
         text{_text}
     {}
 };
 struct ShadingFileASTSection : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_SECTION; }
-    std::string name;
+    const char *name;
     ShadingFileASTNode *first_child;
-    ShadingFileASTSection(std::string _name) :
+    ShadingFileASTSection(const char *_name) :
         name{_name}, first_child{nullptr}
     {}
 };
 struct ShadingFileASTParameter {
     uint8_t kind; // uniform, in, out
-    std::string type;
-    std::string name;
+    const char *type;
+    const char *name;
     ShadingFileASTParameter *next;
-    ShadingFileASTParameter(std::string _type, std::string _name, uint8_t _kind) :
+    ShadingFileASTParameter(const char *_type, const char *_name, uint8_t _kind) :
         type{_type}, name{_name}, kind{_kind}, next{nullptr}
     {}
 };
 struct ShadingFileASTOutput : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_OUTPUT; }
-    std::string type;
-    std::string name;
-    std::string snippet;
-    std::vector<ShadingParameter> inputs;
-    std::vector<ShadingParameter> uniforms;
-    ShadingFileASTOutput(std::string _type, std::string _name, std::string _snippet) :
-        type{_type}, name{_name}, snippet{_snippet}
+    const char *type;
+    const char *name;
+    const char *snippet;
+    ShadingFileASTParameter *parameter_list;
+    ShadingFileASTOutput(const char *_type, const char *_name, ShadingFileASTParameter *_parameter_list, const char *_snippet) :
+        type{_type}, name{_name}, parameter_list{_parameter_list}, snippet{_snippet}
     {}
 };
 
-ShadingFileASTNode *parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
+GeometricMaterial parse_geometric_material_file(const std::string string_path);
+Material parse_material_file(const std::string string_path);
+ShadingModel parse_shading_model_file(const std::string string_path);
 
+// Implementation details.
+ShadingFileASTNode *parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
 // Interact with the stack of files set for parsing. This can be used to concatenate files,
 // and implement C-style #includes.
 //     note: this should probably not be in the usage interface.
@@ -285,5 +289,7 @@ int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
 #define SHADING_FILE_FLEX_LEX_FUNCTION yylex
 int SHADING_FILE_FLEX_LEX_FUNCTION(void);
 
+// Debug
+void print_shading_file_ast(ShadingFileASTNode *root, int indent = 0);
 
 #endif // RENDERING_H

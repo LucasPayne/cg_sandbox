@@ -44,6 +44,19 @@ ShadingProgram::ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm)
     *this = new_shading_program(g, m, sm);
 }
 
+
+void print_listing(const std::string &text)
+{
+    // Print the given text with numbered lines.
+    std::istringstream lines(text);
+    std::string line;
+    int line_num = 1;
+    while (std::getline(lines, line)) {
+        std::cout << std::to_string(line_num) << ": " << line << "\n";
+        line_num ++;
+    }
+}
+
 ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
     // Generate glsl code for the relevant stages, compile it, store the OpenGL handle to the program object,
@@ -127,7 +140,6 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     // Propogate requirements back from the ShadingModel frag-post outputs. This sets the "used" flag, to later signify to the
     // code generator what it should include.
     for (ShadingOutput &frag_post_output : sm.frag_post_dataflow.outputs) {
-        std::cout << "fpp -> " << frag_post_output.output.type + " " + frag_post_output.output.name << "\n";
         // All ShadingModel frag-post outputs are used.
         set_used(frag_post_output);
         // For each ShadingModel frag-post output, propogate requirements.
@@ -229,7 +241,14 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     }
 
     // Generate glsl code for each relevant shader stage.
+    //================================================================================
+    // Shared uniforms. This snippet will be included in each shader file.
+    std::string uniforms_snippet = "";
+    for (ShadingParameter *uniform : used_uniforms) {
+        uniforms_snippet += "uniform " + uniform->type + " " + uniform->name + ";\n";
+    }
     // Vertex shader
+    //--------------------------------------------------------------------------------
     std::string vertex_shader(
         "// Generated vertex shader.\n"
         "#version 420\n"
@@ -239,10 +258,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         vertex_shader += "in " + va->type + " " + va->name + ";\n";
     }
     vertex_shader += "\n";
-    // Uniforms (same for each shader stage).
-    for (ShadingParameter *uniform : used_uniforms) {
-        vertex_shader += "uniform " + uniform->type + " " + uniform->name + ";\n";
-    }
+    vertex_shader += uniforms_snippet;
     vertex_shader += "\n";
     // Outputs to next shader stage.
     // First, outputs from the GeometricMaterial.
@@ -295,7 +311,7 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         vertex_shader += "}\n";
     }
     vertex_shader += "\n";
-    // Main function.
+    // Main function
     vertex_shader += "void main(void) {\n";
     // GeometricMaterial outputs.
     // There are two cases for declarations here:
@@ -326,9 +342,89 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
         vertex_shader += ");\n";
     }
     vertex_shader += "}\n";
+    
+    // Fragment shader
+    //--------------------------------------------------------------------------------
+    std::string fragment_shader(
+        "// Generated fragment shader.\n"
+        "#version 420\n"
+    );
+    // Output rendertargets. These are what frag-post outputs. All outputs are used.
+    for (ShadingOutput &output : sm.frag_post_dataflow.outputs) {
+        fragment_shader += "out " + output.output.type + " " + output.output.name + ";\n";
+    }
+    fragment_shader += "\n";
+    // Input interpolators.
+    // Material interpolator inputs.
+    for (ShadingOutput &output : m.dataflow.outputs) {
+        if (!output.used) continue;
+        for (ShadingParameter &input : output.inputs) {
+            fragment_shader += "in " + input.type + " " + input.name + ";\n";
+        }
+    }
+    // Frag-post interpolator inputs. This is everything the material does not output, but is output from previous stages.
+    //todo------------------- (this will also remove inputs from the parameter lists of generated functions).
+    // Uniforms
+    fragment_shader += "\n";
+    fragment_shader += uniforms_snippet;
+    fragment_shader += "\n";
+    // The material provides inputs to frag-post. The functions are defined here, which are called in the "main" function.
+    for (ShadingOutput &output : m.dataflow.outputs) {
+        if (!output.used) continue;
+        fragment_shader += output.output.type + " _FUNCTION_" + output.output.name + "() {\n";
+        // Function body.
+        std::istringstream lines(output.snippet);
+        std::string line;
+        while (std::getline(lines, line)) {
+            fragment_shader += "    " + line + "\n";
+        }
+        fragment_shader += "}\n";
+    }
+    // frag-post output functions. Code is generated in "main" to set rendertargets to the return values of these functions.
+    // These can depend on material outputs.
+    for (ShadingOutput &output : sm.frag_post_dataflow.outputs) {
+        if (!output.used) continue;
+        fragment_shader += output.output.type + " _FUNCTION_" + output.output.name + "(";
+        // Function inputs.
+        bool any_params = false; // used to help comma insertion
+        for (ShadingParameter &input : output.inputs) {
+	    if (any_params) fragment_shader += ", ";
+	    fragment_shader += "in " + input.type + " " + input.name;
+	    any_params = true;
+        }
+        fragment_shader += ") {\n";
+        // Function body.
+        std::istringstream lines(output.snippet);
+        std::string line;
+        while (std::getline(lines, line)) {
+            fragment_shader += "    " + line + "\n";
+        }
+        fragment_shader += "}\n";
+    }
 
+    // Main function
+    fragment_shader += "void main(void) {\n";
+    // Computing the material outputs, which will be passed to functions to compute rendertarget outputs.
+    for (ShadingOutput &output : m.dataflow.outputs) {
+        if (!output.used) continue;
+        fragment_shader += "    " + output.output.type + " " + output.output.name + " = _FUNCTION_" + output.output.name + "();\n";
+    }
+    // Writing the rendertarget outputs.
+    for (ShadingOutput &output : sm.frag_post_dataflow.outputs) {
+        fragment_shader += "    " + output.output.name + " = _FUNCTION_" + output.output.name + "(";
+        // Parameters
+        bool any_params = false;
+        for (ShadingParameter &input : output.inputs) {
+            if (any_params) fragment_shader += ", ";
+            fragment_shader += input.name;
+            any_params = true;
+        }
+        fragment_shader += ");\n";
+    }
+    fragment_shader += "}\n";
+    
 
-    // Compile the program and retrieve a handle.
+    std::cout << fragment_shader; getchar();
 
     // Compute introspective information.
 
@@ -341,19 +437,12 @@ ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingMod
     for (auto *va : used_vertex_attributes) {
         std::cout << "    " << va->type << " " << va->name << "\n";
     }
-    {
-        std::istringstream lines(vertex_shader);
-        std::string line;
-        int i = 1;
-        while (std::getline(lines, line)) {
-            std::cout << std::to_string(i) << ": " << line << "\n";
-            i++;
-        }
-    }
+    print_listing(vertex_shader);
+    print_listing(fragment_shader);
     // Create a ShadingProgram.
     ShadingProgram program;
-
     GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
+    GLShader fragment_shader_object = GLShader::from_string(GL_FRAGMENT_SHADER, fragment_shader.c_str());
 
     getchar();
 

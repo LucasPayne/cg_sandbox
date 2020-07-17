@@ -259,6 +259,13 @@ struct ShadingFileASTParameter {
     ShadingFileASTParameter(const char *_type, const char *_name, uint8_t _kind) :
         type{_type}, name{_name}, kind{_kind}, next{nullptr}
     {}
+    ShadingParameter deastify() const {
+        ShadingParameter param;
+        param.kind = kind;
+        param.type = std::string(type);
+        param.name = std::string(name);
+        return param;
+    }
 };
 struct ShadingFileASTOutput : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_OUTPUT; }
@@ -269,6 +276,24 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
     ShadingFileASTOutput(const char *_type, const char *_name, ShadingFileASTParameter *_parameter_list, const char *_snippet) :
         type{_type}, name{_name}, parameter_list{_parameter_list}, snippet{_snippet}
     {}
+    // This is the AST version of the ShadingOutput structure.
+    // This is more convenient for parsing, but will need to be converted to the original structure,
+    // by "de-AST-ifying" it.
+    ShadingOutput deastify() const {
+        ShadingOutput deastified;
+        deastified.output = ShadingParameter(std::string(type), std::string(name), SHADING_PARAMETER_OUT);
+        ShadingFileASTParameter *param = parameter_list;
+        while (param != nullptr) {
+            if (param->kind == SHADING_PARAMETER_IN) {
+                deastified.inputs.push_back(param->deastify());
+            } else { // should be SHADING_PARAMETER_UNIFORM
+                deastified.uniforms.push_back(param->deastify());
+            }
+            param = param->next;
+        }
+        deastified.snippet = std::string(snippet);
+        return deastified;
+    };
 };
 
 GeometricMaterial parse_geometric_material_file(const std::string string_path);

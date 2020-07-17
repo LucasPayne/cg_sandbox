@@ -1,0 +1,15 @@
+// Material for providing output "color", for use by a simple shading model.
+#type mat
+
+section frag {
+    out vec4 color(uniform vec4 uniform_color, uniform float multiplier) {
+    GLSL
+        return uniform_color * multiplier;
+    END
+    }
+    out vec4 something_useless(in mat3x3 the_matrix) {
+    GLSL
+        return the_matrix * vec3(0.3,1,2);
+    END
+    }
+}

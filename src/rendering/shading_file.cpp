@@ -164,8 +164,6 @@ Material parse_material_file(const std::string string_path)
 
     Material mat;
     mat.dataflow = dataflow;
-    printf("Parsed dataflow\n");
-    mat.dataflow.print();
     return mat;
     #undef parse_error
 }

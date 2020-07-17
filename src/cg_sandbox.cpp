@@ -44,15 +44,12 @@ void create_dude(EntityModel &em)
 void CGSandbox::init()
 {
     // parse_shading_file("resources/triangle_mesh.gmat");
-    GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
-    getchar();
-    Material mat = parse_material_file("resources/color.mat");
-    printf("mat dataflow:\n");mat.dataflow.print();getchar();
-    getchar();
+    GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh2.gmat");
+    // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
+    //Material mat = parse_material_file("resources/color.mat");
+    Material mat = parse_material_file("resources/color2.mat");
     ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
-    getchar();
     ShadingProgram program = new_shading_program(gmat, mat, sm);
-    getchar();
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

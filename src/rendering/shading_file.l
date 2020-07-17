@@ -1,6 +1,10 @@
 /*--------------------------------------------------------------------------------
     flex lexer file for reading files which describe stages in the
     GeometricMaterial + Material + ShadingModel system ("shading files").
+BUGS:
+PROBLEMS:
+    Dynamically allocated strings, global buffer for reading GLSL snippets...
+THINGS/NOTES:
 --------------------------------------------------------------------------------*/
 %option noyywrap nodefault
     /* %option prefix="shading_file_yy" */
@@ -35,10 +39,14 @@
     }
     // Macro for tracing encountered keywords.
     #define KEYWORD() tprint("%s\n", yytext);
+
+    // Global buffer for reading in glsl snippets during lexing.
+    static std::vector<char> g_snippet(0);
 %}
     /* Exclusive states. */
 %x CommentOneLine
 %x CommentMultiLine
+%x GLSLCapture
     /* Pattern macros. */
 NAME    [_A-Za-z]+[_A-Za-z0-9]*
 
@@ -109,18 +117,24 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     KEYWORD();
     return ',';
 }
-"GLSL"" "*"\n".*"\n"" "*"END" {
+"GLSL" {
     tprint("GLSL snippet:\n");
-    yytext = strchr(yytext, '\n') + 1; // Ignore the GLSL line.
-    strrchr(yytext, '\n')[1] = '\0'; // Ignore the END line.
-    std::string *snippet = new std::string(yytext);
+    g_snippet.clear();
+    BEGIN GLSLCapture;
+}
+<GLSLCapture>(" "|"\n")"END" {
+    g_snippet.push_back('\0'); // remember the null terminator!
+    std::string *snippet = new std::string(&g_snippet[0]);
     yylval.string = snippet->c_str();
-    if (TRACE) {
-        printf("------------------------------------------------------------\n");
-        printf("%s", yylval.string);
-        printf("------------------------------------------------------------\n");
-    }
+    printf("------------------------------------------------------------\n");
+    printf("%s\n", yylval.string);
+    printf("------------------------------------------------------------\n");
+    g_snippet.clear();
+    BEGIN INITIAL;
     return GLSL_SNIPPET;
+}
+<GLSLCapture>.|"\n" {
+    g_snippet.push_back(yytext[0]); //-push_back for a char buffer...
 }
 
     /* Identifiers */

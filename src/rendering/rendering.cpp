@@ -455,7 +455,6 @@ void test_new_shading_program()
         sm.frag_post_dataflow = dataflow;
     }
     new_shading_program(g, m, sm);
-    
 }
 
 static char *shading_source_to_string(uint8_t source)

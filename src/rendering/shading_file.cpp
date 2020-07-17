@@ -124,9 +124,9 @@ GeometricMaterial parse_geometric_material_file(const std::string string_path)
         exit(EXIT_FAILURE);\
     }
     ShadingFileASTNode *root = parse_shading_file(string_path);
-    // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
     print_shading_file_ast(root);
 
+    // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
     if (find_directive(root, "type gmat") == nullptr) parse_error("Geometric materials must contain \"#type gmat\"");
     //-todo: primitive type
     ShadingFileASTNode *vertex_section;
@@ -140,9 +140,57 @@ GeometricMaterial parse_geometric_material_file(const std::string string_path)
     gmat.dataflow = dataflow;
     printf("Parsed dataflow\n");
     gmat.dataflow.print();
-    getchar();
-
     return gmat;
+    #undef parse_error
+}
+Material parse_material_file(const std::string string_path)
+{
+    printf("Parsing material file.\n");
+    #define parse_error(ERROR_STR) {\
+        fprintf(stderr, "MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
+        exit(EXIT_FAILURE);\
+    }
+    ShadingFileASTNode *root = parse_shading_file(string_path);
+    print_shading_file_ast(root);
+
+    // Validate that this has the relevant directives and sections for a material (mat) shading file.
+    if (find_directive(root, "type mat") == nullptr) parse_error("Materials must contain \"#type gmat\"");
+
+    // Collect outputs in the root section.
+    ShadingDataflow dataflow = read_dataflow(root);
+
+    Material mat;
+    mat.dataflow = dataflow;
+    printf("Parsed dataflow\n");
+    mat.dataflow.print();
+    #undef parse_error
+}
+ShadingModel parse_shading_model_file(const std::string string_path)
+{
+    printf("Parsing shading model file.\n");
+    #define parse_error(ERROR_STR) {\
+        fprintf(stderr, "SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
+        exit(EXIT_FAILURE);\
+    }
+    ShadingFileASTNode *root = parse_shading_file(string_path);
+    print_shading_file_ast(root);
+
+    // Validate that this has the relevant directives and sections for a shading model (sm) shading file.
+    if (find_directive(root, "type shading_model") == nullptr) parse_error("Shading models must contain \"#type shading_model\"");
+    ShadingFileASTNode *geom_post_section;
+    if ((geom_post_section = find_section(root, "geom_post")) == nullptr) parse_error("Shading models must contain a \"geom_post\" section.");
+    ShadingFileASTNode *frag_post_section;
+    if ((frag_post_section = find_section(root, "frag_post")) == nullptr) parse_error("Shading models must contain a \"frag_post\" section.");
+
+    // Collect outputs into the dataflows.
+    ShadingModel sm;
+    sm.frag_post_dataflow = read_dataflow(frag_post_section);
+    sm.geom_post_dataflow = read_dataflow(geom_post_section);
+
+    printf("Parsed dataflow\n");
+    sm.frag_post_dataflow.print();
+    sm.geom_post_dataflow.print();
+    return sm;
     #undef parse_error
 }
 

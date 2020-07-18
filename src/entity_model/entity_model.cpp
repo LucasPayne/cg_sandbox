@@ -115,10 +115,6 @@ EntityModel::EntityModel()
         }
     }
 }
-EntityModel::~EntityModel()
-{
-    
-}
 
 Entity EntityModel::new_entity()
 {

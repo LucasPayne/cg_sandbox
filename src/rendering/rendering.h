@@ -102,6 +102,22 @@ struct ShadingModel {
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 };
+#if 0
+define_resource(GeometricMaterial)
+    //-Vertex shader only.
+    GLenum primitive;
+    ShadingDataflow dataflow;
+end_define_resource(GeometricMaterial)
+
+define_resource(Material)
+    ShadingDataflow dataflow;
+end_define_resource(Material)
+
+define_resource(ShadingModel)
+    ShadingDataflow geom_post_dataflow;
+    ShadingDataflow frag_post_dataflow;
+end_define_resource(ShadingModel)
+#endif
 
 // A ShadingProgram encapsulates the result of resolving a GeometricMaterial+Material+ShadingModel triple,
 // including an API handle to the program object, and introspective information so that property sheets can be synchronized.
@@ -121,7 +137,7 @@ private:
 };
 
 
-#if 1
+#if 0
 struct PropertySheet {
     //...
     void set(char *property_name, int int_val) {
@@ -146,20 +162,6 @@ struct GeometricMaterialInstance {
 // vertex_array = new_resource<VertexArray>(create_mesh_icosahedron(...));
 // ...
 // properties.set("model_matrix", transform->model_matrix());
-
-struct Material {
-
-};
-struct MaterialInstance {
-
-};
-struct ShadingModel {
-
-};
-struct ShadingModelInstance {
-
-};
-
 class Draw {
 public:
     Draw(GeometricMaterialInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {

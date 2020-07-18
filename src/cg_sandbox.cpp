@@ -51,20 +51,6 @@ struct Resource {
         // all data (requiring a deep copy).
     }
 };
-struct PropertyBlock {
-
-};
-struct GeometricMaterialInstance {
-    Resource<GeometricMaterial> instantiates;
-    PropertyBlock property_block;
-};
-
-define_aspect(Drawable)
-    GeometricMaterialInstance geometric_material;
-    MaterialInstance material;
-
-    Resource<VertexArray> vertex_array;
-end_define_aspect(Drawable)
 
 void create_dude(EntityModel &em)
 {
@@ -73,11 +59,11 @@ void create_dude(EntityModel &em)
     t->position[0] = 1;
     t->position[1] = 2;
     t->position[2] = 3;
-    Drawable *d = em.add_aspect<Drawable>(e);
-    d->geometric_material = load_asset<GeometricMaterial>("triangle_mesh");
-    d->material = load_asset<GeometricMaterial>("color");
-    d->material.properties.set("uniform_color", vec4(1,0,1,1));
-    d->vertex_array = load_asset<VertexArray>("models/dragon");
+    // Drawable *d = em.add_aspect<Drawable>(e);
+    // d->geometric_material = load_asset<GeometricMaterial>("triangle_mesh");
+    // d->material = load_asset<GeometricMaterial>("color");
+    // d->material.properties.set("uniform_color", vec4(1,0,1,1));
+    // d->vertex_array = load_asset<VertexArray>("models/dragon");
     // d->vertex_array = new_resource<VertexArray>();
 }
 
@@ -126,6 +112,7 @@ void CGSandbox::loop()
     printf("================================================================================\n");
     EntityModel &em = entity_model;
 
+#if 0
     ShadingModelInstance shading_model("color_shading");
     for (auto [camera, camera_transform] : em.aspects<Camera, Transform>()) {
         printf("Camera\n");
@@ -154,6 +141,7 @@ void CGSandbox::loop()
             draw.draw();
         }
     }
+#endif
 }
 
 void CGSandbox::key_callback(int key, int action)

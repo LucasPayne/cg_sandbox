@@ -6,6 +6,27 @@ typedef uint8_t ResourceType;
 typedef uint32_t ResourceID;
 class ResourceModel;
 
+/*--------------------------------------------------------------------------------
+Macro delimiters for defining a new resource type. This is quite ugly, but is here
+since static initialization is being used to get type information, and with this syntax,
+all that is needed to add a type is in one place. Every resource type encountered on
+compilation will have type information available at runtime.
+
+define_resource(GeometricMaterial)
+    ...
+end_define_resource(GeometricMaterial)
+->
+struct GeometricMaterial : public ResourceTypeStaticData<GeometricMaterial> {
+    ...
+};
+char *GeometricMaterial::name("GeometricMaterial");
+--------------------------------------------------------------------------------*/
+#define define_resource(RESOURCE_TYPE_NAME)\
+    struct RESOURCE_TYPE_NAME : public ResourceTypeStaticData<RESOURCE_TYPE_NAME> {
+#define end_define_resource(RESOURCE_TYPE_NAME)\
+    }\
+    char * RESOURCE_TYPE_NAME ::name(#RESOURCE_TYPE_NAME);
+
 
 template <typename TYPE>
 struct Resource {
@@ -57,6 +78,7 @@ const ResourceType ResourceTypeStaticData<TYPE>::type(AspectInfo::new_aspect_typ
 struct ResourceTypeInfo {
     size_t size() const { return m_size; }
     const char *name() const { return m_name; }
+
     static int num_aspect_types() const { return m_num_aspect_types; }
 private:
     size_t m_size;

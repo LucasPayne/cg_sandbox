@@ -109,8 +109,9 @@ class ShadingProgram {
     // Other than construction and caching, this class just holds data. All usage interface goes through
     // the Draw class, which could be thought of as a ShadingProgram "instance".
 public:
-    ShadingProgram() {}
+    ShadingProgram() {};
     ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm);
+    static ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm);
 private:
     // OpenGL-related data
     GLuint program_id;
@@ -118,17 +119,16 @@ private:
     //... Vertex attribute bindings stuff.
     //... Render target bindings stuff.
 };
-ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm);
 
 
-#if 0
+#if 1
 struct PropertySheet {
     //...
     void set(char *property_name, int int_val) {
         //...
     }
 };
-struct VAO {
+struct VertexArray {
     GLuint vao_id;
     bool indexed;
     uint32_t num_vertices;
@@ -137,11 +137,16 @@ struct VAO {
     uint32_t num_indices;
     uint32_t indices_starting_index;
 };
-struct GeometryInstance {
-    Geometry &geometry; //instance of this
-    VAO vao;
+struct GeometricMaterialInstance {
+    Resource<GeometricMaterial> type;
+    Resource<VertexArray> vertex_array;
     PropertySheet properties;
 };
+// type = load_asset<GeometricMaterial>("triangle_mesh");
+// vertex_array = new_resource<VertexArray>(create_mesh_icosahedron(...));
+// ...
+// properties.set("model_matrix", transform->model_matrix());
+
 struct Material {
 
 };
@@ -155,52 +160,16 @@ struct ShadingModelInstance {
 
 };
 
-#include <unordered_map>
-// https://en.cppreference.com/w/cpp/container/unordered_map
-struct GMSMHash {
-    uint32_t g;
-    uint32_t m;
-    uint32_t sm;
-    GMSMHash(uint32_t _g, uint32_t _m, uint32_t _sm) : g{_g}, m{_m}, sm{_sm} {}
-};
-class ShadingProgram {
-    // Other than construction and caching, this class just holds data. All usage interface goes through
-    // the Draw class, which could be thought of as a ShadingProgram "instance".
-public:
-    ShadingProgram(Geometry g, Material m, ShadingModel sm) {
-        GMSMHash hash(g.id, m.id, sm.id);
-        for (auto &found : cache.find(hash)) {
-            *this = found;
-            return;
-        }
-        // Not cached.
-        cache[hash] = new_shading_program(g, m, sm);
-        *this = cache[hash];
-    }
-private:
-    ShadingProgram new_shading_program(Geometry g, Material m, ShadingModel sm) {
-        // Construct a new shading program. This is where all of the code generation starts.
-        //...
-    }
-    //-Global cache. Maybe should not be global.
-    static std::unordered_map<GMSMHash, ShadingProgram> cache;
-
-    // OpenGL-related data
-    GLuint program_id;
-    //... State interface information.
-    //... Vertex attribute bindings stuff.
-    //... Render target bindings stuff.
-};
-std::unordered_map<GMSMHash, ShadingProgram> ShadingProgram::cache;
-
 class Draw {
 public:
-    Draw(GeometryInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {
-        g_instance = gi;
-        m_instance = mi;
-        sm_instance = smi;
+    Draw(GeometricMaterialInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {
+        g_instance = &gi;
+        m_instance = &mi;
+        sm_instance = &smi;
 
-        shading_program = ShadingProgram(g_instance.geometry, m_instance.material, sm_instance.shading_model);
+        shading_program = ShadingProgram(get_resource(g_instance.type),
+                                         get_resource(m_instance.type),
+                                         get_resource(sm_instance.type));
     };
     void bind() {
         glUseProgram(shading_program.program_id);
@@ -224,9 +193,9 @@ public:
         }
     }
 private:
-    GeometryInstance g_instance;
-    MaterialInstance m_instance;
-    ShadingModelInstance sm_instance;
+    GeometryInstance *g_instance;
+    MaterialInstance *m_instance;
+    ShadingModelInstance *sm_instance;
 
     ShadingProgram shading_program;
 };

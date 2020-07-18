@@ -60,7 +60,7 @@ void print_listing(const std::string &title, const std::string &text)
     }
 }
 
-ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm)
+ShadingProgram ShadingProgram::new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
     // Generate glsl code for the relevant stages, compile it, store the OpenGL handle to the program object,
     // and compute and store introspective information about the program.
@@ -536,7 +536,7 @@ void test_new_shading_program()
 
         sm.frag_post_dataflow = dataflow;
     }
-    new_shading_program(g, m, sm);
+    ShadingProgram::new_shading_program(g, m, sm);
 }
 
 static char *shading_source_to_string(uint8_t source)

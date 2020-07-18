@@ -17,6 +17,10 @@ define_aspect(Transform)
     float position[3];
     float orientation[3];
     uint32_t flags;
+
+    // mat4x4 model_matrix() const {
+    //     //construct it
+    // }
 end_define_aspect(Transform)
 
 define_aspect(Camera)
@@ -24,11 +28,31 @@ define_aspect(Camera)
     float bottom_left[2];
     float top_right[2];
     float projection_matrix[16];
+
+    // mat4x4 vp_matrix() const {
+    //     Transform *t = entity_model.get_aspect<Transform>(entity);
+    //     return projection_matrix * t->model_matrix.inverse();
+    // }
+
 end_define_aspect(Camera)
 
+template <typename ResourceType>
+struct Resource {
+    
+};
+struct PropertyBlock {
+
+};
+struct GeometricMaterialInstance {
+    Resource<GeometricMaterial> instantiates;
+    PropertyBlock property_block;
+};
+
 define_aspect(Drawable)
-    // GeometryInstance geometry_instance;
-    // MaterialInstance material_instance;
+    GeometricMaterialInstance geometric_material;
+    MaterialInstance material;
+
+    Resource<VertexArray> vertex_array;
 end_define_aspect(Drawable)
 
 void create_dude(EntityModel &em)
@@ -49,7 +73,8 @@ void CGSandbox::init()
     //Material mat = parse_material_file("resources/color.mat");
     Material mat = parse_material_file("resources/color2.mat");
     ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
-    ShadingProgram program = new_shading_program(gmat, mat, sm);
+    // ShadingProgram program = new_shading_program(gmat, mat, sm);
+    ShadingProgram program(gmat, mat, sm);
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
@@ -90,19 +115,19 @@ void CGSandbox::loop()
         printf("bottom left: %.2f %.2f\n", camera.bottom_left[0], camera.bottom_left[1]);
         printf("top right: %.2f %.2f\n", camera.top_right[0], camera.top_right[1]);
 
-#if 0
-        ShadingModelInstance sm_instance = new_sm_instance("color_shading");
-        sm_instance.properties.set("vp_matrix", camera.vp_matrix);
+#if 1
+        ShadingModelInstance shading_model("color_shading");
+        shading_model.properties.set("vp_matrix", camera.vp_matrix());
 
         // Render with this camera.
         for (auto [drawable, transform] : em.aspects<Drawable, Transform>()) {
             printf("Drawable\n");
 
-            // Constructor looks up precompiled shading program in cache, if its not there, it is created and cached.
-            //-renamed Draw, rather than ShadingProgram, since that will be the instance-independent thing.
-            Draw draw(drawable.geometry_instance,
-                      drawable.material_instance,
-                      sm_instance);
+            drawable.geometric_material.properties.set("model_matrix", transform.model_matrix());
+
+            Draw draw(drawable.geometric_material,
+                      drawable.material,
+                      shading_model);
             // Binding the draw prepares the GPU pipeline for rendering with the G+M+SM.
             draw.bind();
 

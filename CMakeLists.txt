@@ -37,11 +37,12 @@ add_executable(main
     src/cg_sandbox.cpp
     src/rendering/rendering.cpp
     src/rendering/shading_file.cpp
-    src/parallel/parallel.cpp
     src/entity_model/entity_model.cpp
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp
+    src/standard_aspects/Transform.cpp
+    src/standard_aspects/Camera.cpp
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
 )

@@ -34,6 +34,7 @@ IDEAS/THINGS:
     Maybe these could both work, overloading copy from the same returned object.
 --------------------------------------------------------------------------------*/
 
+//-Helper functions---------------------------------------------------------------
 #include <stdarg.h>
 #define DEBUG 0
 // http://www.cplusplus.com/reference/cstdio/vsprintf/
@@ -48,35 +49,13 @@ static inline void dprint(const char *format, ...)
     va_end(args);
 #endif
 }
+//--------------------------------------------------------------------------------
 
-AspectInfo AspectInfo::aspect_infos[MAX_NUM_ASPECT_TYPES];
-// Aspect types (should) only be registered at static initialization, fixed at compile time.
-// So, this can be used to e.g. create arrays of aspects for each aspect type, indexed by the type.
-int AspectInfo::num_aspect_types = 0;
-AspectType AspectInfo::new_aspect_type(char *name, size_t size)
-{
-    if (num_aspect_types + 1 >  MAX_NUM_ASPECT_TYPES) {
-        std::cerr << "ERROR: Too many aspect types.\n";
-        exit(EXIT_FAILURE);
-    }
 
-    AspectInfo &info = aspect_infos[num_aspect_types];
-    info.name = name;
-    info.size = size;
-
-    return num_aspect_types ++;
-}
-AspectInfo AspectInfo::type_info(AspectType type)
-{
-    return aspect_infos[type];
-}
 
 EntityModel::EntityModel()
 {
-    //---The entity list uses a data structure that uses a std::vector for the storage. This should
-    //   be a separate implementation.
-
-    // Place the entity list on the heap somewhere.
+    // Initialize the entity list.
     entity_list = std::vector<EntityEntry>(ENTITY_LIST_START_LENGTH);
     for (int i = 0; i < ENTITY_LIST_START_LENGTH; i++) {
         entity_list[i].id = 0; // Mark each entry as null.
@@ -86,13 +65,7 @@ EntityModel::EntityModel()
     // This is never zero in any other case, so zero here signifies that there are no more free entries.
     entity_list[ENTITY_LIST_START_LENGTH - 1].next_free_index = 0;
 
-    //-The aspect types should by now be constant, none being added at (non static-initialization) runtime.
-    // Initialize the runtime aspect type metadata.
-    runtime_aspect_infos = std::vector<RuntimeAspectInfo>(AspectInfo::num_aspect_types);
-    for (RuntimeAspectInfo &rt_info : runtime_aspect_infos) {
-        rt_info.next_aspect_id = 1;
-        rt_info.first_free_index = 0;
-    }
+    aspect_tables = std::vector<AspectTable>(0);
     
     // Initialize the aspect lists.
     aspect_lists = std::vector<std::vector<uint8_t>>(AspectInfo::num_aspect_types);

@@ -43,6 +43,8 @@ public:
         // For example, if a resource is backed by an asset, the new resource is not, it duplicates
         // all data (requiring a deep copy).
         // The fork is not readonly.
+        // -This means that the handle needs access to the resource model state.
+        // -Maybe do this separately, such as resourc_model.fork(handle).
     }
     ResourceType type() const { return m_type; }
     ResourceID id() const { return m_id; }

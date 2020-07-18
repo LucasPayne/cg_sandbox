@@ -11,46 +11,7 @@ IDEAS/THINGS:
 #include "cg_sandbox.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
-
-
-define_aspect(Transform)
-    float position[3];
-    float orientation[3];
-    uint32_t flags;
-
-    // mat4x4 model_matrix() const {
-    //     //construct it
-    // }
-end_define_aspect(Transform)
-
-define_aspect(Camera)
-    // Viewport extents (in terms of the application subrectangle).
-    float bottom_left[2];
-    float top_right[2];
-    float projection_matrix[16];
-
-    // mat4x4 vp_matrix() const {
-    //     Transform *t = entity_model.get_aspect<Transform>(entity);
-    //     return projection_matrix * t->model_matrix.inverse();
-    // }
-
-end_define_aspect(Camera)
-
-template <typename TYPE>
-struct Resource {
-    uint8_t type;
-    uint32_t index;
-    uint32_t id;
-    // readonly
-    const TYPE *operator*() {
-        //...
-    }
-    Resource fork() const {
-        // Duplicate the resource. If the resource data has dependencies, this is handled.
-        // For example, if a resource is backed by an asset, the new resource is not, it duplicates
-        // all data (requiring a deep copy).
-    }
-};
+#include "standard_aspects/standard_aspects.h"
 
 void create_dude(EntityModel &em)
 {

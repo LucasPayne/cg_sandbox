@@ -6,22 +6,6 @@
 #include <tuple>
 #include "core.h"
 
-// !-TERRIBLE-! subject to change, hopefully.
-// Use this instead of writing out the struct definition directly.
-// This hides the fact that this weird C++ template thing is happening behind the scenes.
-//-A lot of this complication is due to static initialization wanting the name of the templated type as a string...
-// It can access T::name, and if that itself has static initialization, written out for each and every aspect type definition, then this works.
-#define define_aspect(ASPECT_NAME)\
-    struct ASPECT_NAME : public AspectEntry<ASPECT_NAME> {\
-        static char *name;
-#define end_define_aspect(ASPECT_NAME)\
-    };\
-    char * ASPECT_NAME ::name( #ASPECT_NAME );
-// example:
-// define_aspect(TheAspectWithOneFloat)
-//     float the_float;
-// end_define_aspect(TheAspectWithOneFloat)
-
 /*--------------------------------------------------------------------------------
     Handles.
     These are what application objects will hold instead of, e.g., pointers.
@@ -36,6 +20,7 @@ struct Entity {
     uint32_t id;
 };
 // A null Aspect has type -1 (== 255).
+#define MAX_NUM_ASPECT_TYPES 255
 typedef uint8_t AspectType;
 struct Aspect {
     uint32_t id;
@@ -44,21 +29,20 @@ struct Aspect {
 };
 
 
-// ID -1 == 255 is reserved for the null aspect type.
-#define MAX_NUM_ASPECT_TYPES 255
-struct AspectInfo {
-    size_t size;
-    char *name;
-
-    static int num_aspect_types;
-    static AspectType new_aspect_type(char *name, size_t size);
-    static AspectInfo type_info(AspectType type);
-    //-----
-    // Having problems with static initialization of std::vector.
-    // Using an array instead.
-    static AspectInfo aspect_infos[MAX_NUM_ASPECT_TYPES];
+// An entry in the entity table.
+struct EntityEntry {
+    uint32_t id;
+    union {
+        uint32_t num_aspects;
+        // If id == 0, this stores the index of the free entry after this.
+        uint32_t next_free_index;
+    };
+    Aspect first_aspect;
 };
-struct AspectEntryBase {
+
+
+// The base class of aspects in an aspect table.
+struct AspectEntry {
     uint32_t id;
     union {
         Entity entity;
@@ -70,37 +54,7 @@ struct AspectEntryBase {
     // its first aspect, and then following the next aspects.
     Aspect next_aspect;
 };
-template<typename T>
-struct AspectEntry : public AspectEntryBase
-{
-    static const AspectType type;
-    static const size_t size;
-};
-// Static initialization of run-time type information.
-template<typename T>
-const AspectType AspectEntry<T>::type(AspectInfo::new_aspect_type(
-    T::name,
-    sizeof(T)
-));
 
-struct EntityEntry {
-    uint32_t id;
-    union {
-        uint32_t num_aspects;
-        // If id == 0, this stores the index of the free entry after this.
-        uint32_t next_free_index;
-    };
-    Aspect first_aspect;
-    //-- Will probably put very common things here, such as transform, instead of in an aspect.
-    // I tried that, and a large portion of functions had to get the sibling transform aspect.
-};
-
-// Per-EntityModel aspect type metadata (doesn't need to be constant throughout runtime).
-// ---is the naming here fine?
-struct RuntimeAspectInfo {
-    uint32_t next_aspect_id; // init to 1. The null aspect id is 0.
-    uint32_t first_free_index; // First index free in the relevant aspect list.
-};
 
 #define ENTITY_LIST_START_LENGTH 16
 #define ASPECT_LIST_START_LENGTH 16
@@ -112,9 +66,7 @@ public: // Usage interface
     Entity new_entity();
     void destroy_entity(Entity entity);
 
-    // Aspect data derives from AspectEntryBase, so this function can be used to destroy given the pointer.
-    //-maybe this function shouldn't be available, and rather ID-based functions only.
-    void destroy_aspect(AspectEntryBase *aspect_entry);
+    void destroy_aspect(AspectEntry *aspect_entry);
     //todo
     // void destroy_aspect(Aspect aspect);
     // template <typename A>
@@ -141,7 +93,6 @@ public: // Usage interface
     // Add a new aspect to the entity.
     A *add_aspect(Entity entity);
     --------------------------------------------------------------------------------*/
-
 //public implementation details
     /*--------------------------------------------------------------------------------
     AspectIterator is defined purely so range-based for works, assuming it expands as:
@@ -355,15 +306,10 @@ public: // Usage interface
         return aspect;
     }
 private: // implementation details
-    // entity list data structure
-    // --------------------------
-    uint32_t entity_list_first_free_index;
-    std::vector<EntityEntry> entity_list;
-    // --------------------------
-    std::vector<std::vector<uint8_t>> aspect_lists;
-    // This is tracked here instead of in AspectInfo RTTI, since that should be constant through runtime,
-    // and ids don't need to be unique across EntityModel instances.
-    std::vector<RuntimeAspectInfo> runtime_aspect_infos;
+
+    Table<EntityEntry> entity_table;
+    std::vector<AspectTable> aspect_tables;
+
     
     // Retrieve the next available entry in the aspect list for the given aspect type.
     // It then has metadata filled and a pointer is returned, for the caller to do further initialization.

@@ -107,7 +107,6 @@ struct RuntimeAspectInfo {
 class EntityModel {
 public: // Usage interface
     EntityModel();
-    ~EntityModel();
 
     // Creation and destruction of entities.
     Entity new_entity();

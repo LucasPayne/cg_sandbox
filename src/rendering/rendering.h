@@ -129,7 +129,7 @@ struct PropertySheet {
     }
 };
 struct VertexArray {
-    GLuint vao_id;
+    GLuint gl_vao_id;
     bool indexed;
     uint32_t num_vertices;
     uint32_t vertex_starting_index;

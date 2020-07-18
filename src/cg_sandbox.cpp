@@ -36,9 +36,20 @@ define_aspect(Camera)
 
 end_define_aspect(Camera)
 
-template <typename ResourceType>
+template <typename TYPE>
 struct Resource {
-    
+    uint8_t type;
+    uint32_t index;
+    uint32_t id;
+    // readonly
+    const TYPE *operator*() {
+        //...
+    }
+    Resource fork() const {
+        // Duplicate the resource. If the resource data has dependencies, this is handled.
+        // For example, if a resource is backed by an asset, the new resource is not, it duplicates
+        // all data (requiring a deep copy).
+    }
 };
 struct PropertyBlock {
 
@@ -63,6 +74,11 @@ void create_dude(EntityModel &em)
     t->position[1] = 2;
     t->position[2] = 3;
     Drawable *d = em.add_aspect<Drawable>(e);
+    d->geometric_material = load_asset<GeometricMaterial>("triangle_mesh");
+    d->material = load_asset<GeometricMaterial>("color");
+    d->material.properties.set("uniform_color", vec4(1,0,1,1));
+    d->vertex_array = load_asset<VertexArray>("models/dragon");
+    // d->vertex_array = new_resource<VertexArray>();
 }
 
 void CGSandbox::init()
@@ -110,13 +126,12 @@ void CGSandbox::loop()
     printf("================================================================================\n");
     EntityModel &em = entity_model;
 
+    ShadingModelInstance shading_model("color_shading");
     for (auto [camera, camera_transform] : em.aspects<Camera, Transform>()) {
         printf("Camera\n");
         printf("bottom left: %.2f %.2f\n", camera.bottom_left[0], camera.bottom_left[1]);
         printf("top right: %.2f %.2f\n", camera.top_right[0], camera.top_right[1]);
 
-#if 1
-        ShadingModelInstance shading_model("color_shading");
         shading_model.properties.set("vp_matrix", camera.vp_matrix());
 
         // Render with this camera.
@@ -138,7 +153,6 @@ void CGSandbox::loop()
             // the ShadingProgram associated to the Geometry, Material, and ShadingModel.
             draw.draw();
         }
-#endif
     }
 }
 

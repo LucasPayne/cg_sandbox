@@ -16,22 +16,6 @@ TO DO:
     --- EntityModel destructor.
 
 IDEAS/THINGS:
-    Could something like this work?
-    template <typename A>
-    struct AspectConstructor {
-        A *operator()(A::A parameters ...) {
-            *A = A(A::A parameters ...);
-            return A;
-        }
-    };
-    purely for allowing syntax
-        entity_model.add_aspect<TheFloat>(e)(83.17);
-    Is there much point for this syntax?
-
-    What about overloading =?
-    Aspect a = ... versus
-    TheFloat *the_float = ...
-    Maybe these could both work, overloading copy from the same returned object.
 --------------------------------------------------------------------------------*/
 
 //-Helper functions---------------------------------------------------------------
@@ -51,19 +35,12 @@ static inline void dprint(const char *format, ...)
 }
 //--------------------------------------------------------------------------------
 
-
-
 EntityModel::EntityModel()
 {
-    // Initialize the entity list.
-    entity_list = std::vector<EntityEntry>(ENTITY_LIST_START_LENGTH);
-    for (int i = 0; i < ENTITY_LIST_START_LENGTH; i++) {
-        entity_list[i].id = 0; // Mark each entry as null.
-        entity_list[i].next_free_index = i + 1;
-    }
-    entity_list_first_free_index = 0;
-    // This is never zero in any other case, so zero here signifies that there are no more free entries.
-    entity_list[ENTITY_LIST_START_LENGTH - 1].next_free_index = 0;
+    #define ENTITY_TABLE_START_LENGTH 16
+    entity_table = EntityTable(ENTITY_TABLE_START_LENGTH);
+
+    aspect_tables
 
     aspect_tables = std::vector<AspectTable>(0);
     

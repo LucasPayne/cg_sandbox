@@ -4,15 +4,16 @@
 #ifndef ENTITY_MODEL_H
 #define ENTITY_MODEL_H
 #include <tuple>
+#include "data_structures/table.h"
 #include "core.h"
 
+/*================================================================================
+    Table data
+================================================================================*/
 /*--------------------------------------------------------------------------------
-    Handles.
-    These are what application objects will hold instead of, e.g., pointers.
--
-    Entity and aspect indices are constant across those objects' lifetimes.
-    The index lookup is fast, and the id is unique across the program lifetime,
-    allowing lookup validation.
+    Entity and aspect handles.
+    These are handles that conform to the Table data structure, having
+    an index and id.
 --------------------------------------------------------------------------------*/
 // A null Entity has id 0.
 struct Entity {
@@ -28,36 +29,28 @@ struct Aspect {
     AspectType type;
 };
 
-
+/*--------------------------------------------------------------------------------
+    Entity and aspect table entries.
+    AspectEntry is a base class. All aspect types derive from this class.
+--------------------------------------------------------------------------------*/
 // An entry in the entity table.
 struct EntityEntry {
     uint32_t id;
-    union {
-        uint32_t num_aspects;
-        // If id == 0, this stores the index of the free entry after this.
-        uint32_t next_free_index;
-    };
-    Aspect first_aspect;
-};
-
-
-// The base class of aspects in an aspect table.
-struct AspectEntry {
-    uint32_t id;
-    union {
-        Entity entity;
-        // If id == 0, this stores the index of the free entry after this.
-        uint32_t next_free_index;
-    };
     // The entity has a linked list of its aspects,
     // which can be traversed from an aspect by using its entity handle to look up
     // its first aspect, and then following the next aspects.
+    Aspect first_aspect;
+};
+// The base class of aspects in an aspect table.
+struct AspectEntry {
+    uint32_t id;
+    Entity entity;
     Aspect next_aspect;
 };
 
+typedef Table<EntityEntry, Entity> EntityTable;
+typedef GenericTable AspectTable;
 
-#define ENTITY_LIST_START_LENGTH 16
-#define ASPECT_LIST_START_LENGTH 16
 class EntityModel {
 public: // Usage interface
     EntityModel();
@@ -307,7 +300,7 @@ public: // Usage interface
     }
 private: // implementation details
 
-    Table<EntityEntry> entity_table;
+    EntityTable entity_table;
     std::vector<AspectTable> aspect_tables;
 
     

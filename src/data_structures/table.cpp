@@ -1,16 +1,17 @@
 #include "data_structures/table.h"
+#include <stdio.h>
 
 // public methods
 //--------------------------------------------------------------------------------
-GenericTable::GenericTable(size_t entry_type_size, int length = 1)
+GenericTable::GenericTable(size_t entry_type_size, int length)
 {
     // Length >= 1.
-    m_entry_type_size = entry_type_size;
+    m_next_id = 1; // 0 is the null ID.
     m_length = length;
     m_first_free_index = 0;
-    m_entries[0].next_free_index = 0;
     m_entry_size = sizeof(Header) + entry_type_size; // The size of per-entry metadata in the table must be accounted for.
     m_buffer = std::vector<uint8_t>(m_length * m_entry_size); // Allocate the buffer for the table. This must account for metadata size.
+    get_header(0)->next_free_index = 0;
 }
 
 GenericTableHandle GenericTable::add()
@@ -22,7 +23,9 @@ GenericTableHandle GenericTable::add()
         // Resize the table if needed.
         uint32_t old_length = m_length;
         m_length *= 2;
-        m_entries.resize(m_length * m_entry_size);
+        m_buffer.resize(m_length * m_entry_size);
+        // Remember to recompute the header pointer!
+        header = get_header(index);
         // Link the new slots into the free list.
         header->next_free_index = old_length;
         for (int i = old_length; i < m_length-1; i++) {
@@ -61,7 +64,7 @@ uint8_t *GenericTable::lookup(GenericTableHandle handle)
 
 // private methods
 //--------------------------------------------------------------------------------
-ResourceID GenericTable::next_id()
+TableEntryID GenericTable::next_id()
 {
     return m_next_id ++;
 }

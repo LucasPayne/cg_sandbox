@@ -3,12 +3,34 @@
 /*--------------------------------------------------------------------------------
     Table data structure
 ----------------------------------------------------------------------------------
+A Table is a container for objects of a certain size. When an object is added,
+a handle to the object is returned. This handle can be used to lookup the same
+object, retrieving a pointer to the data. Handles are always valid for as long as
+the object is in the table. Returned pointers, however, cannot be trusted after a call
+to add(). When a lookup is done with a handle given by add(), and the object has since
+been removed, a null pointer will always be returned.
+
+(Although this might not strictly be true, since the implementation uses a fixed-bit-size ID to achieve this.
+ This will likely not be a problem.)
+
 time complexity:
     add: O(1) in general (may trigger a buffer resize).
     remove: O(1).
     lookup from handle: O(1).
+
+memory usage:
+    The implementation, to achieve what is described above, uses a sparse array data structure.
+    Entries are always added contiguously if there have been no removals.
+    If the table is added to and removed from dynamically, this will lead to a non-optimal ratio
+    of active entries to array length.
+
+implementation notes:
+    Currently, the underlying buffer resizes if there is not enough space. It never downsizes.
+    This might be wanted, if for example, only very occasionally, many objects are added to the
+    table then removed.
 --------------------------------------------------------------------------------*/
 #include <vector>
+#include <stdint.h>
 typedef uint32_t TableEntryID;
 
 
@@ -24,6 +46,7 @@ struct GenericTableHandle {
     uint32_t index;
 };
 class GenericTable {
+public:
     GenericTable(size_t entry_type_size, int length = 1);
     // Turn the next available slot in the table into an active entry,
     // then return a handle to it.
@@ -39,16 +62,18 @@ private:
         TableEntryID id;
         uint32_t next_free_index;
     };
-    ResourceID next_id();
+    TableEntryID next_id();
     // Get the header of the entry/slot at the given index. This contains the ID and index of the next in the free list.
     inline Header *get_header(uint32_t index) {
-        return reinterpret_cast<Header *> &m_entries[m_entry_size * index];
+        return reinterpret_cast<Header *>(&m_buffer[m_entry_size * index]);
     }
     std::vector<uint8_t> m_buffer;
     size_t m_entry_size; // This includes the GenericTableEntryHeader size!
     uint32_t m_first_free_index;
     uint32_t m_length;
+    TableEntryID m_next_id;
 };
+
 
 /*--------------------------------------------------------------------------------
     Templated table types. These are wrappers around an underlying generic

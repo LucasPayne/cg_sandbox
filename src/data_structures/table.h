@@ -250,10 +250,9 @@ private:
 
 /*--------------------------------------------------------------------------------
     Templated table types. These are wrappers around an underlying generic
-    table, with a custom handle type (that can have extra data, which won't be initialized
-    by these methods), and for which lookups return a pointer to the actually stored type.
+    table and for which lookups return a pointer to the actually stored type.
 --------------------------------------------------------------------------------*/
-template <typename T, typename HANDLE_TYPE>
+template <typename T>
 class Table {
 public:
     Table(int length = 1) : m_table(GenericTable(sizeof(T), length)) {}
@@ -261,27 +260,17 @@ public:
     // These methods are the same as for the GenericTable, except each converts the custom handle
     // into a generic handle and passes it to the corresponding GenericTable method.
     // The lookup also casts to a pointer to the actual type.
-    HANDLE_TYPE add() {
+    inline TableHandle add() {
         // note: This could be faster if it is known that HANDLE_TYPE inherits from TableHandle.
         //           HANDLE_TYPE handle;
         //           *((TableHandle *) &handle) = m_table.add();
-        TableHandle generic_handle = m_table.add();
-        HANDLE_TYPE handle;
-        handle.id = generic_handle.id;
-        handle.index = generic_handle.index;
-        return handle;
+        return m_table.add();
     }
-    void remove(HANDLE_TYPE handle) {
-        TableHandle generic_handle;
-        generic_handle.id = handle.id;
-        generic_handle.index = handle.index;
-        m_table.remove(generic_handle);
+    void remove(TableHandle handle) {
+        m_table.remove(handle);
     }
-    T *lookup(HANDLE_TYPE handle) {
-        TableHandle generic_handle;
-        generic_handle.id = handle.id;
-        generic_handle.index = handle.index;
-        return reinterpret_cast<T *>(m_table.lookup(generic_handle));
+    T *lookup(TableHandle handle) {
+        return reinterpret_cast<T *>(m_table.lookup(handle));
     }
 
     inline GenericTable::Iterator iterator() {

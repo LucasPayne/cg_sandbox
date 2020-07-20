@@ -7,7 +7,7 @@
 EntityModel::EntityModel()
 {
     #define ENTITY_TABLE_START_LENGTH 16
-    m_entity_table = Table<EntityEntry, Entity>(ENTITY_TABLE_START_LENGTH);
+    m_entity_table = Table<EntityEntry>(ENTITY_TABLE_START_LENGTH);
     m_aspect_tables = TableCollection<AspectBase>();
 }
 

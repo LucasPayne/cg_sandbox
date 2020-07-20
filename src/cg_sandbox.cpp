@@ -61,7 +61,8 @@ void CGSandbox::init()
 
     for (int i = 0; i < 1000000; i++) {
         Entity e = em.new_entity();
-        if (frand() > 0.5) em.destroy_entity(e);
+        if (frand() > 0.8) em.add_aspect<Transform>(e);
+        else if (frand() > 0.5) em.destroy_entity(e);
     }
 
 }
@@ -88,9 +89,11 @@ void CGSandbox::loop()
     printf("%d\n", num);
 
     
-    // for (Transform *t : em.aspects<Transform>()) {
-
-    // }
+    int num_transforms = 0;
+    for (Transform *t : em.aspects<Transform>()) {
+        num_transforms++;
+    }
+    printf("%d\n", num_transforms);
 
 
 

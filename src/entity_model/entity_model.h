@@ -70,9 +70,33 @@ public: // Usage interface
     inline GenericTable::Iterator entities() {
         return m_entity_table.iterator();
     }
+
     template <typename TYPE>
-    inline GenericTable::Iterator aspects() {
-        return m_aspect_tables.iterator<TYPE>();
+    struct AspectIterator {
+        struct AspectIteratorPosition {
+            GenericTable::IteratorPosition pos;
+            TableCollection<AspectBase> *aspect_table;
+            inline void operator++() { ++pos; }
+            inline TYPE *operator*() { return aspect_table->lookup<TYPE>(*pos); }
+            inline bool operator!=(int throwaway) { return pos != 0; }
+            AspectIteratorPosition(GenericTable::IteratorPosition _pos, TableCollection<AspectBase> *_aspect_table) :
+                pos{_pos}, aspect_table{_aspect_table}
+            {}
+        };
+        inline AspectIteratorPosition begin() {
+            return AspectIteratorPosition(iter.begin(), aspect_table);
+        }
+        inline int end() { return 0; }
+
+        GenericTable::Iterator iter;
+        TableCollection<AspectBase> *aspect_table;
+        AspectIterator(GenericTable::Iterator _iter, TableCollection<AspectBase> *_aspect_table) :
+            iter{_iter}, aspect_table{_aspect_table}
+        {}
+    };
+    template <typename TYPE>
+    inline AspectIterator<TYPE> aspects() {
+        return AspectIterator<TYPE>(m_aspect_tables.iterator<TYPE>(), &m_aspect_tables);
     }
 
     // Creation and destruction of aspects.
@@ -153,7 +177,7 @@ private:
         return entity;
     }
 
-    Table<EntityEntry, Entity> m_entity_table;
+    Table<EntityEntry> m_entity_table;
     TableCollection<AspectBase> m_aspect_tables;
 };
 

@@ -8,6 +8,21 @@ struct Thing {
     int c;
 };
 
+struct Stuff {
+    static TableCollectionType type_id;
+    Thing thing;
+    int num;
+    uint16_t shorts[20];
+};
+TableCollectionType Stuff::type_id = 0;
+
+struct OtherStuff {
+    static TableCollectionType type_id;
+    int num;
+    uint64_t longs[3];
+};
+TableCollectionType OtherStuff::type_id = 0;
+
 int main(void)
 {
     printf("hello, world\n");
@@ -33,4 +48,11 @@ int main(void)
             }
         }
     }
+    printf("--------------------------------------------------------------------------------\n");
+    printf("table collections\n");
+    printf("--------------------------------------------------------------------------------\n");
+
+    TableCollection collection;
+    collection.add_type<Stuff>("Stuff");
+    collection.add_type<OtherStuff>("OtherStuff");
 }

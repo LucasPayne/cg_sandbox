@@ -30,7 +30,11 @@ implementation notes:
     table then removed.
 --------------------------------------------------------------------------------*/
 #include <vector>
+#include <limits>//numeric_limits
+#include <string>//std::string
 #include <stdint.h>
+#include <stdio.h>//error logging
+#include <stdlib.h>//exit
 typedef uint32_t TableEntryID;
 
 
@@ -47,6 +51,7 @@ struct GenericTableHandle {
 };
 class GenericTable {
 public:
+    GenericTable() {} //empty constructor, appears to be needed for std::vector.
     GenericTable(size_t entry_type_size, int length = 1);
     // Turn the next available slot in the table into an active entry,
     // then return a handle to it.
@@ -72,6 +77,107 @@ private:
     uint32_t m_first_free_index;
     uint32_t m_length;
     TableEntryID m_next_id;
+};
+
+
+/*--------------------------------------------------------------------------------
+    TableCollection data structure.
+----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------*/
+typedef uint8_t TableCollectionType;
+#define TABLE_COLLECTION_MAX_NUM_TYPES ( std::numeric_limits<TableCollectionType>::max() )
+
+///*--------------------------------------------------------------------------------
+//All types which will be stored in a TableCollection _must_ derive from this class.
+//This allows that type to store its own static data, which holds the type ID. This type
+//ID is then available to templated methods, which can then retrieve the relevant table from
+//their type template-parameter.
+//--------------------------------------------------------------------------------*/
+//struct TableCollectionTypeEntry {
+//    static TableCollectionType type_id;
+//};
+// A handle to a member of a table in a TableCollection contains the type ID, so the
+// interface can switch the table used depending on this ID.
+struct TypedTableHandle : public GenericTableHandle {
+    TableCollectionType type;
+};
+
+// this class should only be usable by TableCollection. ---
+class MemberTable : public GenericTable {
+public:
+    MemberTable() {} //empty constructor, appears to be needed for std::vector.
+    MemberTable(TableCollectionType _type, size_t _size, const std::string &_name, int length = 1) :
+        GenericTable(_size, length),
+        m_type{_type}, m_name{_name}
+    {}
+    TableCollectionType type() const { return m_type; }
+    std::string name() const { return m_name; }
+private:
+    TableCollectionType m_type;
+    size_t m_type_size;
+    std::string m_name;
+};
+class TableCollection {
+public:
+    std::vector<MemberTable> m_tables;
+    TableCollection() {
+        m_tables = std::vector<MemberTable>(0);
+    }
+    template <typename TYPE> // TYPE must contain a static member "type_id". todo: require this with concepts?
+    void add_type(const std::string &name) {
+        #define TABLE_COLLECTION_TABLE_START_LENGTH 16
+        int num_types = m_tables.size();
+        if (num_types >= TABLE_COLLECTION_MAX_NUM_TYPES) {
+            fprintf(stderr, "ERROR: Exceeded the maximum number of types in a TableCollection.\n");
+            exit(EXIT_FAILURE);
+        }
+        TableCollectionType next_type_id = num_types;
+        // Set the type ID so that templated methods can access it.
+        TYPE::type_id = next_type_id;
+        m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
+    }
+
+    // This provides the table interface, but switches the table based on the type id.
+    // lookup() is templated only.
+    TypedTableHandle add(TableCollectionType type) {
+        return to_typed_table_handle(m_tables[type].add(), type);
+    }
+    void remove(TypedTableHandle handle) {
+        m_tables[handle.type].remove(to_generic_table_handle(handle));
+    }
+
+    // Templated table interface. remove() is not templated.
+    template <typename TYPE>
+    TypedTableHandle add() {
+        MemberTable *table = get_table<TYPE>();
+        return to_typed_table_handle(table->add(), TYPE::type_id);
+    }
+    template <typename TYPE>
+    TYPE *lookup(TypedTableHandle handle) {
+        MemberTable *table = get_table<TYPE>();
+        return table->lookup(to_generic_table_handle(handle));
+    }
+private:
+    // Decay the typed handle to a regular GenericTableHandle.
+    inline GenericTableHandle to_generic_table_handle(const TypedTableHandle &handle) const {
+        GenericTableHandle generic_handle;
+        generic_handle.id = handle.id;
+        generic_handle.index = handle.index;
+        return generic_handle;
+    }
+    // Upgrade the regular GenericTableHandle to include the type ID.
+    inline TypedTableHandle to_typed_table_handle(const GenericTableHandle &generic_handle, TableCollectionType type) const {
+        TypedTableHandle handle;
+        handle.id = generic_handle.id;
+        handle.index = generic_handle.index;
+        handle.type = type;
+        return handle;
+    }
+    // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
+    template <typename TYPE>
+    inline MemberTable *get_table() {
+        return &m_tables[TYPE::type_id];
+    }
 };
 
 

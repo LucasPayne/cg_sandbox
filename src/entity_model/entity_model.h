@@ -15,7 +15,7 @@
 typedef Table<EntityEntry, Entity> EntityTable;
 typedef uint8_t AspectType;
 // A null Aspect has the maximum type ID.
-#define MAX_NUM_ASPECT_TYPES ( std::numeric_limits<AspectType>::max )
+#define MAX_NUM_ASPECT_TYPES ( std::numeric_limits<AspectType>::max() )
 
 /*--------------------------------------------------------------------------------
     Entity and aspect handles.

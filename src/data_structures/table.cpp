@@ -11,7 +11,13 @@ GenericTable::GenericTable(size_t entry_type_size, int length)
     m_first_free_index = 0;
     m_entry_size = sizeof(Header) + entry_type_size; // The size of per-entry metadata in the table must be accounted for.
     m_buffer = std::vector<uint8_t>(m_length * m_entry_size); // Allocate the buffer for the table. This must account for metadata size.
-    get_header(0)->next_free_index = 0;
+    // Initialize the free list.
+    for (int index = 0; index < m_length-1; index++) {
+        get_header(index)->next_free_index = index + 1;
+    }
+    if (m_length >= 1) {
+        get_header(m_length-1)->next_free_index = 0;
+    }
 }
 
 TableHandle GenericTable::add()
@@ -39,6 +45,8 @@ TableHandle GenericTable::add()
     TableHandle handle;
     handle.id = header->id;
     handle.index = index;
+
+    //printf("added new entity at index %u, id %u\n", handle.index, header->id);getchar();
     return handle;
 }
 

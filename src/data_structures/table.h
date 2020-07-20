@@ -67,25 +67,30 @@ public:
     // This iterator is implemented _only_ so that range-based-for works.
     //    https://en.cppreference.com/w/cpp/language/range-for
     struct IteratorPosition {
-        IteratorPosition(uint32_t _index, GenericTable &_table) :
-            done{false}, index{_index}, table{_table}
-        {}
-        bool done;
-        uint32_t index;
-        GenericTable &table;
-        void operator++() {
-            ++index;
+        inline void seek_to_next() {
             while (true) {
-                if (index == table.m_length) {
+                if (index == table->m_length) {
                     done = true;
                     return;
                 }
-                if (table.get_header(index)->id != 0) return;
+                if (table->get_header(index)->id != 0) return;
                 ++index;
             }
         }
+        IteratorPosition(GenericTable *_table) :
+            done{false}, index{0}, table{_table}
+        {
+            seek_to_next();
+        }
+        bool done;
+        uint32_t index;
+        GenericTable *table;
+        void operator++() {
+            ++index;
+            seek_to_next();
+        }
         uint8_t *operator*() {
-            return &table.m_buffer[table.m_entry_size * index];
+            return &table->m_buffer[table->m_entry_size * index];
         }
         bool operator!=(int throwaway) {
             return !done;
@@ -93,12 +98,12 @@ public:
     };
     friend IteratorPosition;
     IteratorPosition begin() {
-        return IteratorPosition(m_first_free_index, *this);
+        return IteratorPosition(this);
     };
     int end() { return 0; }
     //-end iterator hack--------------------------------------------------------------
 
-private:
+//private:
     struct Header {
         TableEntryID id;
         uint32_t next_free_index;
@@ -264,9 +269,11 @@ public:
     }
 
     //-begin iterator hack------------------------------------------------------------
+    // This iterator is just a wrapper around the iterator hack used for GenericTable,
+    // which casts to the relevant type.
     struct IteratorPosition {
-        IteratorPosition(GenericTable &table) :
-            generic_pos{GenericTable::IteratorPosition(table.m_first_free_index, table)}
+        IteratorPosition(GenericTable *table) :
+            generic_pos{GenericTable::IteratorPosition(table)}
         {}
         GenericTable::IteratorPosition generic_pos;
 
@@ -281,7 +288,7 @@ public:
         }
     };
     IteratorPosition begin() {
-        return IteratorPosition(m_table);
+        return IteratorPosition(&m_table);
     }
     int end() { return 0; }
     //-end iterator hack--------------------------------------------------------------

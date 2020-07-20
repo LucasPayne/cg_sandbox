@@ -128,7 +128,7 @@ public: // Usage interface
     }
 */
 
-private:
+//private:
     EntityEntry *try_get_entity(Entity entity_handle) {
         // This is private, since only the implementation will know what an "EntityEntry" is.
         return m_entity_table.lookup(entity_handle);

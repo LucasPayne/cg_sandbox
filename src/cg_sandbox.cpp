@@ -46,18 +46,20 @@ void CGSandbox::init()
     em.register_aspect_type<Transform>("Transform");
     em.register_aspect_type<Camera>("Camera");
 
-    Entity cameraman = em.new_entity();
-    Camera *camera = em.add_aspect<Camera>(cameraman);
-    camera->bottom_left[0] = 0;
-    camera->bottom_left[1] = 0;
-    camera->top_right[0] = 1;
-    camera->top_right[1] = 1;
-    Transform *camera_transform = em.add_aspect<Transform>(cameraman);
-    camera_transform->position[0] = 0;
-    camera_transform->position[1] = 0;
-    camera_transform->position[2] = 0;
+    // Entity cameraman = em.new_entity();
+    // Camera *camera = em.add_aspect<Camera>(cameraman);
+    // camera->bottom_left[0] = 0;
+    // camera->bottom_left[1] = 0;
+    // camera->top_right[0] = 1;
+    // camera->top_right[1] = 1;
+    // Transform *camera_transform = em.add_aspect<Transform>(cameraman);
+    // camera_transform->position[0] = 0;
+    // camera_transform->position[1] = 0;
+    // camera_transform->position[2] = 0;
 
-    for (int i = 0; i < 8; i++) create_dude(em);
+    // for (int i = 0; i < 8; i++) create_dude(em);
+
+    for (int i = 0; i < 8; i++) em.new_entity();
 
 }
 void CGSandbox::close()
@@ -75,6 +77,10 @@ void CGSandbox::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
     EntityModel &em = entity_model;
+
+    for (EntityEntry *e : em.m_entity_table) {
+        printf("nice\n");
+    }
 
 #if 0
     ShadingModelInstance shading_model("color_shading");

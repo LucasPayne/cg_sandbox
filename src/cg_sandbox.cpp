@@ -61,8 +61,11 @@ void CGSandbox::init()
 
     for (int i = 0; i < 1000000; i++) {
         Entity e = em.new_entity();
-        // if (frand() > 0.8) em.add_aspect<Transform>(e);
-        // if (frand() > 0.6) em.add_aspect<Camera>(e);
+        if (frand() > 0.8) {
+            em.add_aspect<Transform>(e);
+            if (frand() > 0.3) em.destroy_aspect<Transform>(e);
+        }
+        if (frand() > 0.6) em.add_aspect<Camera>(e);
         if (frand() > 0.5) em.destroy_entity(e);
     }
 
@@ -90,7 +93,7 @@ void CGSandbox::loop()
     printf("entities: %d\n", num);
 
     
-#if 0
+#if 1
     int num_transforms = 0;
     for (Transform *t : em.aspects<Transform>()) {
         num_transforms++;
@@ -101,7 +104,6 @@ void CGSandbox::loop()
     int num_cameras_with_transforms = 0;
     for (Camera *c : em.aspects<Camera>()) {
         num_cameras++;
-        // if (em.try_get_aspect<Transform>(c->entity) != nullptr) num_cameras_with_transforms++;
         if (em.try_get_sibling<Transform>(c) != nullptr) num_cameras_with_transforms++;
     }
     printf("cameras: %d\n", num_cameras);

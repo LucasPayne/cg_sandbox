@@ -25,9 +25,8 @@ void EntityModel::destroy_entity(Entity entity_handle)
 
     // Destroy the entity's aspects.
     TypedAspect cur_aspect_handle = entity->first_aspect;
-    AspectBase *cur_aspect = m_aspect_tables.lookup(entity->first_aspect);
+    AspectBase *cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
     while (cur_aspect != nullptr) {
-        // printf("%u\n", entity->first_aspect.id);getchar();
         TypedAspect next_aspect = cur_aspect->next_aspect;
         // Destroy the aspect.
         m_aspect_tables.remove(cur_aspect_handle);
@@ -35,7 +34,6 @@ void EntityModel::destroy_entity(Entity entity_handle)
 
         cur_aspect_handle = next_aspect;
         cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
-        printf("deletin\n");
     }
 
     m_entity_table.remove(entity_handle);

@@ -9,6 +9,7 @@ TO DO:
     --- EntityModel destructor.
 
 IDEAS/THINGS:
+    Passing null handles to e.g. get_entity is not defined!
 --------------------------------------------------------------------------------*/
 #include <tuple>
 #include <stdio.h> //error logging
@@ -104,11 +105,44 @@ public: // Usage interface
 
     // Creation and destruction of aspects.
     template <typename TYPE>
-    void destroy_aspect(Aspect<TYPE> aspect) {
-        //-------------todo: Delink from entity linked list.
-        ////////////////////////////////////////////////////////////////////////////////
-        m_aspect_tables.remove<TYPE>(aspect);
+    void destroy_aspect(Aspect<TYPE> aspect_handle) {
+        // Delink from entity linked list.
+        AspectBase *aspect = get_aspect<TYPE>(aspect_handle);
+        if (aspect == nullptr) return; // Do nothing if the entity does not exist.
+        // First, retrieve the entity.
+        EntityEntry *entity = get_entity(aspect->entity);
+        // If this aspect is at the head of the list, remove it.
+        if (entity->first_aspect.type == TYPE::type_id && entity->first_aspect.id == aspect_handle.id) {
+            // Found the aspect. Removed from head.
+            entity->first_aspect = aspect->next_aspect;
+	    m_aspect_tables.remove<TYPE>(aspect_handle);
+            return;
+        } else {
+            // Otherwise, find it then delink it.
+            AspectBase *prev_aspect = m_aspect_tables.lookup(entity->first_aspect);
+            TypedAspect cur_aspect_handle = prev_aspect->next_aspect;
+            AspectBase *cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
+            while (cur_aspect != nullptr) {
+                if (cur_aspect_handle.type == TYPE::type_id && cur_aspect_handle.id == aspect_handle.id) {
+                    // Found the aspect. Removed from middle or end.
+                    prev_aspect->next_aspect = cur_aspect->next_aspect;
+                    m_aspect_tables.remove<TYPE>(aspect_handle);
+                    return;
+                }
+                prev_aspect = cur_aspect;
+                cur_aspect_handle = cur_aspect->next_aspect;
+                cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
+            }
+        }
+        fprintf(stderr, "ERROR: This shouldn't happen.\n");
+        exit(EXIT_FAILURE);
     }
+    // This destroy_aspect searches for an aspect of the given type attached to the entity and destroys it.
+    // template <typename TYPE>
+    // void destroy_aspect(Entity entity_handle) {
+    //     AspectBase *try_get_aspect
+    // }
+
     template <typename TYPE>
     TYPE *add_aspect(Entity entity_handle) {
         Aspect<TYPE> new_aspect_handle = m_aspect_tables.add<TYPE>();

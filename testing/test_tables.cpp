@@ -1,7 +1,9 @@
 #include "core.h"
 #include "data_structures/table.h"
 
-struct ThingHandle : public GenericTableHandle {};
+
+
+struct ThingHandle : public TableHandle {};
 struct Thing {
     int a;
     char b[8];
@@ -23,10 +25,11 @@ struct OtherStuff {
 };
 TableCollectionType OtherStuff::type_id = 0;
 
-typedef TypedTableHandle Asset;
+typedef TableHandle Asset;
 
 int main(void)
 {
+/*
     printf("hello, world\n");
     Table<Thing, ThingHandle> table(1);
     for (int i = 0; i < 10; i++) {
@@ -97,4 +100,5 @@ int main(void)
         printf("Removing ...\n");
         assets.remove(a);
     }
+*/
 }

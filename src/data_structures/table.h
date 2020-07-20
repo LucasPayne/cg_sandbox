@@ -45,7 +45,7 @@ can be constructed from arbitrary types at runtime.
 The table stores the correct size entries, for the given type size, but lookups
 return a byte pointer which must be interpreted by the caller.
 --------------------------------------------------------------------------------*/
-struct GenericTableHandle {
+struct TableHandle {
     TableEntryID id;
     uint32_t index;
 };
@@ -55,13 +55,13 @@ public:
     GenericTable(size_t entry_type_size, int length = 1);
     // Turn the next available slot in the table into an active entry,
     // then return a handle to it.
-    GenericTableHandle add();
+    TableHandle add();
     // Remove the entry. If it is not there, nothing happens.
-    void remove(GenericTableHandle handle);
+    void remove(TableHandle handle);
     
     // Lookup the entry. If it is not there, return a null pointer.
     // The pointer is to the byte array that starts at the actual data, not including the header.
-    uint8_t *lookup(GenericTableHandle handle);
+    uint8_t *lookup(TableHandle handle);
 private:
     struct Header {
         TableEntryID id;
@@ -87,20 +87,14 @@ private:
 typedef uint8_t TableCollectionType;
 #define TABLE_COLLECTION_MAX_NUM_TYPES ( std::numeric_limits<TableCollectionType>::max() )
 
-///*--------------------------------------------------------------------------------
-//All types which will be stored in a TableCollection _must_ derive from this class.
-//This allows that type to store its own static data, which holds the type ID. This type
-//ID is then available to templated methods, which can then retrieve the relevant table from
-//their type template-parameter.
-//--------------------------------------------------------------------------------*/
-//struct TableCollectionTypeEntry {
-//    static TableCollectionType type_id;
-//};
-// A handle to a member of a table in a TableCollection contains the type ID, so the
-// interface can switch the table used depending on this ID.
-struct TypedTableHandle : public GenericTableHandle {
-    TableCollectionType type;
-};
+/*--------------------------------------------------------------------------------
+    Handles into the TableCollection are templated. This is purely a type variant,
+    and adds no extra data. This means the user of the TableCollection will
+    declare things such as TableCollectionHandle<Thing>, and there is no generic
+    handle into the tables as a whole.
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+struct TableCollectionHandle : public TableHandle {};
 
 // this class should only be usable by TableCollection. ---
 class MemberTable : public GenericTable {
@@ -117,6 +111,7 @@ private:
     size_t m_type_size;
     std::string m_name;
 };
+
 class TableCollection {
 public:
     std::vector<MemberTable> m_tables;
@@ -136,47 +131,36 @@ public:
         TYPE::type_id = next_type_id;
         m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
-
-    // This provides the table interface, but switches the table based on the type id.
-    // lookup() is templated only.
-    TypedTableHandle add(TableCollectionType type) {
-        return to_typed_table_handle(m_tables[type].add(), type);
-    }
-    void remove(TypedTableHandle handle) {
-        m_tables[handle.type].remove(to_generic_table_handle(handle));
-    }
-
-    // Templated table interface. remove() is not templated.
     template <typename TYPE>
-    TypedTableHandle add() {
-        MemberTable *table = get_table<TYPE>();
-        return to_typed_table_handle(table->add(), TYPE::type_id);
+    TableHandle add() {
+        return get_table<TYPE>()->add();
     }
     template <typename TYPE>
-    TYPE *lookup(TypedTableHandle handle) {
-        MemberTable *table = get_table<TYPE>();
-        return reinterpret_cast<TYPE *>(table->lookup(to_generic_table_handle(handle)));
+    void remove(TableCollectionHandle<TYPE> handle) {
+        TableHandle table_handle = to_table_handle<TYPE>(handle);
+        get_table<TYPE>()->remove(table_handle);
     }
+    template <typename TYPE>
+    TYPE *lookup(TableHandle handle) {
+        TableHandle table_handle = to_table_handle<TYPE>(handle);
+        return reinterpret_cast<TYPE *>(get_table<TYPE>()->lookup(table_handle));
+    }
+
 private:
-    // Decay the typed handle to a regular GenericTableHandle.
-    inline GenericTableHandle to_generic_table_handle(const TypedTableHandle &handle) const {
-        GenericTableHandle generic_handle;
-        generic_handle.id = handle.id;
-        generic_handle.index = handle.index;
-        return generic_handle;
-    }
-    // Upgrade the regular GenericTableHandle to include the type ID.
-    inline TypedTableHandle to_typed_table_handle(const GenericTableHandle &generic_handle, TableCollectionType type) const {
-        TypedTableHandle handle;
-        handle.id = generic_handle.id;
-        handle.index = generic_handle.index;
-        handle.type = type;
-        return handle;
-    }
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
     template <typename TYPE>
     inline MemberTable *get_table() {
         return &m_tables[TYPE::type_id];
+    }
+    // Helper method to decay the templated TableCollectionHandle into a regular TableHandle, so it can be used
+    // with the relevant Table.
+    template <typename TYPE>
+    inline TableHandle to_table_handle(TableCollectionHandle<TYPE> handle) {
+        //- If TableCollectionHandle<TYPE> is just a different typename for the same struct data, a cast would be better.
+        TableHandle table_handle;
+        table_handle.id = handle.id;
+        table_handle.index = handle.index;
+        return table_handle;
     }
 };
 
@@ -195,23 +179,23 @@ public:
     // into a generic handle and passes it to the corresponding GenericTable method.
     // The lookup also casts to a pointer to the actual type.
     HANDLE_TYPE add() {
-        // note: This could be faster if it is known that HANDLE_TYPE inherits from GenericTableHandle.
+        // note: This could be faster if it is known that HANDLE_TYPE inherits from TableHandle.
         //           HANDLE_TYPE handle;
-        //           *((GenericTableHandle *) &handle) = m_table.add();
-        GenericTableHandle generic_handle = m_table.add();
+        //           *((TableHandle *) &handle) = m_table.add();
+        TableHandle generic_handle = m_table.add();
         HANDLE_TYPE handle;
         handle.id = generic_handle.id;
         handle.index = generic_handle.index;
         return handle;
     }
     void remove(HANDLE_TYPE handle) {
-        GenericTableHandle generic_handle;
+        TableHandle generic_handle;
         generic_handle.id = handle.id;
         generic_handle.index = handle.index;
         m_table.remove(generic_handle);
     }
     T *lookup(HANDLE_TYPE handle) {
-        GenericTableHandle generic_handle;
+        TableHandle generic_handle;
         generic_handle.id = handle.id;
         generic_handle.index = handle.index;
         return reinterpret_cast<T *>(m_table.lookup(generic_handle));

@@ -14,7 +14,7 @@ GenericTable::GenericTable(size_t entry_type_size, int length)
     get_header(0)->next_free_index = 0;
 }
 
-GenericTableHandle GenericTable::add()
+TableHandle GenericTable::add()
 {
     uint32_t index = m_first_free_index;
     Header *header = get_header(index);
@@ -36,13 +36,13 @@ GenericTableHandle GenericTable::add()
     // Delink this slot from the free list.
     m_first_free_index = header->next_free_index;
     // Construct and return a handle to the new entry.
-    GenericTableHandle handle;
+    TableHandle handle;
     handle.id = header->id;
     handle.index = index;
     return handle;
 }
 
-void GenericTable::remove(GenericTableHandle handle)
+void GenericTable::remove(TableHandle handle)
 {
     Header *header = get_header(handle.index);
     if (handle.id != header->id) return; // not there.
@@ -53,7 +53,7 @@ void GenericTable::remove(GenericTableHandle handle)
     m_first_free_index = handle.index;
 }
 
-uint8_t *GenericTable::lookup(GenericTableHandle handle)
+uint8_t *GenericTable::lookup(TableHandle handle)
 {
     Header *header = get_header(handle.index);
     if (header->id != handle.id) return nullptr; // not there.

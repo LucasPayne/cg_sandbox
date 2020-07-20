@@ -62,6 +62,42 @@ public:
     // Lookup the entry. If it is not there, return a null pointer.
     // The pointer is to the byte array that starts at the actual data, not including the header.
     uint8_t *lookup(TableHandle handle);
+
+    //-begin iterator hack------------------------------------------------------------
+    // This iterator is implemented _only_ so that range-based-for works.
+    //    https://en.cppreference.com/w/cpp/language/range-for
+    struct IteratorPosition {
+        IteratorPosition(uint32_t _index, GenericTable &_table) :
+            done{false}, index{_index}, table{_table}
+        {}
+        bool done;
+        uint32_t index;
+        GenericTable &table;
+        void operator++() {
+            ++index;
+            while (true) {
+                if (index == table.m_length) {
+                    done = true;
+                    return;
+                }
+                if (table.get_header(index)->id != 0) return;
+                ++index;
+            }
+        }
+        uint8_t *operator*() {
+            return &table.m_buffer[table.m_entry_size * index];
+        }
+        bool operator!=(int throwaway) {
+            return !done;
+        }
+    };
+    friend IteratorPosition;
+    IteratorPosition begin() {
+        return IteratorPosition(m_first_free_index, *this);
+    };
+    int end() { return 0; }
+    //-end iterator hack--------------------------------------------------------------
+
 private:
     struct Header {
         TableEntryID id;
@@ -146,7 +182,7 @@ public:
     // These methods are simple wrappers around the GenericTable interface, instead dispatching the call
     // to the relevant table.
     // A TYPE pointer is returned instead of the byte pointer returned by GenericTable, since the type is known.
-
+    //
     // Interface taking a templated handle.
     template <typename TYPE>
     TableCollectionHandle<TYPE> add() {
@@ -226,6 +262,29 @@ public:
         generic_handle.index = handle.index;
         return reinterpret_cast<T *>(m_table.lookup(generic_handle));
     }
+
+    //-begin iterator hack------------------------------------------------------------
+    struct IteratorPosition {
+        IteratorPosition(GenericTable &table) :
+            generic_pos{GenericTable::IteratorPosition(table.m_first_free_index, table)}
+        {}
+        GenericTable::IteratorPosition generic_pos;
+
+        inline T *operator*() {
+            return reinterpret_cast<T *>(*generic_pos);
+        }
+        inline void operator++() {
+            ++generic_pos;
+        }
+        inline bool operator!=(int throwaway) {
+            return generic_pos != throwaway;
+        }
+    };
+    IteratorPosition begin() {
+        return IteratorPosition(m_table);
+    }
+    int end() { return 0; }
+    //-end iterator hack--------------------------------------------------------------
 private:
     GenericTable m_table;
 };

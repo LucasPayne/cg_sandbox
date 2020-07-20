@@ -59,7 +59,10 @@ void CGSandbox::init()
 
     // for (int i = 0; i < 8; i++) create_dude(em);
 
-    for (int i = 0; i < 8; i++) em.new_entity();
+    for (int i = 0; i < 1000000; i++) {
+        Entity e = em.new_entity();
+        if (frand() > 0.5) em.destroy_entity(e);
+    }
 
 }
 void CGSandbox::close()
@@ -78,9 +81,18 @@ void CGSandbox::loop()
     printf("================================================================================\n");
     EntityModel &em = entity_model;
 
-    for (EntityEntry *e : em.m_entity_table) {
-        printf("nice\n");
-    }
+    int num = 0;
+    for (Entity e : em.entities()) {
+        num++;
+    };
+    printf("%d\n", num);
+
+    
+    // for (Transform *t : em.aspects<Transform>()) {
+
+    // }
+
+
 
 #if 0
     ShadingModelInstance shading_model("color_shading");

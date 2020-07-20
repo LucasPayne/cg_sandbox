@@ -86,30 +86,23 @@ public:
         bool done;
         TableHandle handle;
         GenericTable *table;
-        inline void operator++() {
+        void operator++() {
             ++handle.index;
             seek_to_next();
         }
-        inline TableHandle operator*() {
+        TableHandle operator*() {
             handle.id = table->get_header(handle.index)->id;
             return handle;
         }
-        inline bool operator!=(int throwaway) {
+        bool operator!=(int throwaway) {
             return !done;
         }
     };
     friend IteratorPosition;
-    struct Iterator {
-        GenericTable *table;
-        Iterator(GenericTable *_table) : table{_table} {}
-        inline IteratorPosition begin() {
-            return IteratorPosition(table);
-        }
-        inline int end() { return 0; }
+    IteratorPosition begin() {
+        return IteratorPosition(this);
     };
-    inline Iterator iterator() {
-        return Iterator(this);
-    }
+    int end() { return 0; }
     //-end iterator hack--------------------------------------------------------------
 
 //private:
@@ -235,9 +228,7 @@ public:
 
     // Templated iterator. Iterate over a certain type.
     template <typename TYPE>
-    inline GenericTable::Iterator iterator() {
-        return get_table<TYPE>()->iterator();
-    }
+    inline TypeIterator 
 
 private:
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
@@ -284,9 +275,12 @@ public:
         return reinterpret_cast<T *>(m_table.lookup(generic_handle));
     }
 
-    inline GenericTable::Iterator iterator() {
-        return m_table.iterator();
+    //-begin iterator hack------------------------------------------------------------
+    inline GenericTable::IteratorPosition begin() {
+        return m_table.begin();
     }
+    int end() { return 0; }
+    //-end iterator hack--------------------------------------------------------------
 private:
     GenericTable m_table;
 };

@@ -65,7 +65,17 @@ public: // Usage interface
     // Creation and destruction of entities.
     Entity new_entity();
     void destroy_entity(Entity entity);
-    
+
+    // Iterators. Iterate over entities, or aspects of a certain type.
+    inline GenericTable::Iterator entities() {
+        return m_entity_table.iterator();
+    }
+    template <typename TYPE>
+    inline GenericTable::Iterator aspects() {
+        return m_aspect_tables.iterator<TYPE>();
+    }
+
+    // Creation and destruction of aspects.
     template <typename TYPE>
     void destroy_aspect(Aspect<TYPE> aspect) {
         //-todo: Delink from entity linked list.
@@ -128,7 +138,7 @@ public: // Usage interface
     }
 */
 
-//private:
+private:
     EntityEntry *try_get_entity(Entity entity_handle) {
         // This is private, since only the implementation will know what an "EntityEntry" is.
         return m_entity_table.lookup(entity_handle);

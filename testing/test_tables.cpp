@@ -25,11 +25,12 @@ struct OtherStuff {
 };
 TableCollectionType OtherStuff::type_id = 0;
 
-typedef TableHandle Asset;
+// C++11 alias declaration to rename (without a # macro).
+template <typename TYPE>
+using Asset = TableCollectionHandle<TYPE>;
 
 int main(void)
 {
-/*
     printf("hello, world\n");
     Table<Thing, ThingHandle> table(1);
     for (int i = 0; i < 10; i++) {
@@ -57,14 +58,15 @@ int main(void)
     printf("table collections\n");
     printf("--------------------------------------------------------------------------------\n");
 
-    std::vector<Asset> added_assets(0);
-
     TableCollection assets;
     assets.add_type<Stuff>("Stuff");
     assets.add_type<OtherStuff>("OtherStuff");
+    std::vector<Asset<Stuff>> added_stuff(0);
+    std::vector<Asset<OtherStuff>> added_otherstuff(0);
+
     for (int i = 0; i < 10; i++) {
         {
-            Asset a = assets.add<Stuff>();
+            Asset<Stuff> a = assets.add<Stuff>();
             printf("Adding Stuff\n");
             Stuff *stuff = assets.lookup<Stuff>(a);
             stuff->num = ((i + 1)*13)%7;
@@ -77,10 +79,10 @@ int main(void)
             stuff = assets.lookup<Stuff>(a);
             if (stuff == nullptr) printf("    GONE\n");
             else printf("    FOUND, num=%d\n", stuff->num);
-            added_assets.push_back(a);
+            added_stuff.push_back(a);
         }
         {
-            Asset a = assets.add<OtherStuff>();
+            Asset<OtherStuff> a = assets.add<OtherStuff>();
             printf("Adding OtherStuff\n");
             OtherStuff *stuff = assets.lookup<OtherStuff>(a);
             stuff->longs[1] = ((i + 1)*13)%7;
@@ -93,12 +95,17 @@ int main(void)
             stuff = assets.lookup<OtherStuff>(a);
             if (stuff == nullptr) printf("    GONE\n");
             else printf("    FOUND, longs[1]=%lu\n", stuff->longs[1]);
-            added_assets.push_back(a);
+            added_otherstuff.push_back(a);
         }
     }
-    for (Asset a : added_assets) {
+    printf("removing stuff\n");
+    for (Asset<Stuff> a : added_stuff) {
         printf("Removing ...\n");
         assets.remove(a);
     }
-*/
+    printf("removing other stuff\n");
+    for (Asset<OtherStuff> a : added_otherstuff) {
+        printf("Removing ...\n");
+        assets.remove(a);
+    }
 }

@@ -131,18 +131,23 @@ public:
         TYPE::type_id = next_type_id;
         m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
+
+    // These methods are simple wrappers around the GenericTable interface, instead dispatching the call
+    // to the relevant table.
+    // A TYPE pointer is returned instead of the byte pointer returned by GenericTable, since the type is known.
     template <typename TYPE>
-    TableHandle add() {
-        return get_table<TYPE>()->add();
+    TableCollectionHandle<TYPE> add() {
+        TableHandle handle = get_table<TYPE>()->add();
+        return *reinterpret_cast<TableCollectionHandle<TYPE> *>(&handle);
     }
     template <typename TYPE>
     void remove(TableCollectionHandle<TYPE> handle) {
-        TableHandle table_handle = to_table_handle<TYPE>(handle);
+        TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         get_table<TYPE>()->remove(table_handle);
     }
     template <typename TYPE>
     TYPE *lookup(TableHandle handle) {
-        TableHandle table_handle = to_table_handle<TYPE>(handle);
+        TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         return reinterpret_cast<TYPE *>(get_table<TYPE>()->lookup(table_handle));
     }
 
@@ -151,16 +156,6 @@ private:
     template <typename TYPE>
     inline MemberTable *get_table() {
         return &m_tables[TYPE::type_id];
-    }
-    // Helper method to decay the templated TableCollectionHandle into a regular TableHandle, so it can be used
-    // with the relevant Table.
-    template <typename TYPE>
-    inline TableHandle to_table_handle(TableCollectionHandle<TYPE> handle) {
-        //- If TableCollectionHandle<TYPE> is just a different typename for the same struct data, a cast would be better.
-        TableHandle table_handle;
-        table_handle.id = handle.id;
-        table_handle.index = handle.index;
-        return table_handle;
     }
 };
 

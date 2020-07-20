@@ -42,6 +42,9 @@ void CGSandbox::init()
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
     EntityModel &em = entity_model;
+    // Register aspect types. Remember to do this!
+    em.register_aspect_type<Transform>("Transform");
+    em.register_aspect_type<Camera>("Camera");
 
     Entity cameraman = em.new_entity();
     Camera *camera = em.add_aspect<Camera>(cameraman);
@@ -72,8 +75,6 @@ void CGSandbox::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
     EntityModel &em = entity_model;
-    em.register_aspect_type<Transform>("Transform");
-    em.register_aspect_type<Camera>("Camera");
 
 #if 0
     ShadingModelInstance shading_model("color_shading");

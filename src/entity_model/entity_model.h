@@ -70,7 +70,9 @@ public: // Usage interface
     inline GenericTable::Iterator entities() {
         return m_entity_table.iterator();
     }
-
+    //-begin iterator hack------------------------------------------------------------
+    //    This is all just for overriding the dereference operator to match the syntax.
+    //   -There really should just be two options for iterating a GenericTable, handle iterator and pointer iterator.
     template <typename TYPE>
     struct AspectIterator {
         struct AspectIteratorPosition {
@@ -98,11 +100,13 @@ public: // Usage interface
     inline AspectIterator<TYPE> aspects() {
         return AspectIterator<TYPE>(m_aspect_tables.iterator<TYPE>(), &m_aspect_tables);
     }
+    //-end iterator hack--------------------------------------------------------------
 
     // Creation and destruction of aspects.
     template <typename TYPE>
     void destroy_aspect(Aspect<TYPE> aspect) {
-        //-todo: Delink from entity linked list.
+        //-------------todo: Delink from entity linked list.
+        ////////////////////////////////////////////////////////////////////////////////
         m_aspect_tables.remove<TYPE>(aspect);
     }
     template <typename TYPE>
@@ -110,6 +114,9 @@ public: // Usage interface
         Aspect<TYPE> new_aspect_handle = m_aspect_tables.add<TYPE>();
         TYPE *new_aspect = m_aspect_tables.lookup<TYPE>(new_aspect_handle);
         EntityEntry *entity = try_get_entity(entity_handle);
+
+        // Store the entity handle in the aspect entry.
+        new_aspect->entity = entity_handle;
 
         // Link this aspect to the head of the entity's aspect linked list.
         TypedAspect prev_head_handle = entity->first_aspect;
@@ -145,14 +152,15 @@ public: // Usage interface
         return aspect;
     }
 
-/*
+    // Retrieve sibling aspects. A sibling aspect is the first occurence of an aspect of a certain type
+    // attached to the same entity.
     template <typename TYPE>
-    TYPE *try_get_sibling(TableHandle aspect_handle) const {
-        
+    inline TYPE *try_get_sibling(AspectBase *aspect) {
+        return try_get_aspect<TYPE>(aspect->entity);
     }
     template <typename TYPE>
-    inline TYPE *get_sibling(TableHandle aspect_handle) const {
-        TYPE *sibling = try_get_sibling(aspect_handle);
+    inline TYPE *get_sibling(AspectBase *aspect) {
+        TYPE *sibling = try_get_sibling<TYPE>(aspect);
         if (sibling == nullptr) {
             // error
             fprintf(stderr, "ERROR\n");
@@ -160,7 +168,6 @@ public: // Usage interface
         }
         return sibling;
     }
-*/
 
 private:
     EntityEntry *try_get_entity(Entity entity_handle) {

@@ -230,7 +230,14 @@ public:
         TableHandle handle;
         handle.id = typed_handle.id;
         handle.index = typed_handle.index;
-        return reinterpret_cast<BASE_TYPE *>(m_tables[typed_handle.type].lookup(handle));
+        return reinterpret_cast<BASE_TYPE *>(get_table(typed_handle.type)->lookup(handle));
+    }
+    // A typed handle can also be used for removal.
+    void remove(TypedTableCollectionHandle typed_handle) {
+        TableHandle handle;
+        handle.id = typed_handle.id;
+        handle.index = typed_handle.index;
+        get_table(typed_handle.type)->remove(handle);
     }
 
     // Templated iterator. Iterate over a certain type.
@@ -244,6 +251,9 @@ private:
     template <typename TYPE>
     inline MemberTable *get_table() {
         return &m_tables[TYPE::type_id];
+    }
+    inline MemberTable *get_table(TableCollectionType type) {
+        return &m_tables[type];
     }
 };
 

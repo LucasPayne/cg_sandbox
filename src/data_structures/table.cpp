@@ -64,7 +64,8 @@ void GenericTable::remove(TableHandle handle)
 uint8_t *GenericTable::lookup(TableHandle handle)
 {
     Header *header = get_header(handle.index);
-    if (header->id != handle.id) return nullptr; // not there.
+    if (header->id == 0) return nullptr; // ID 0 represents null, so the entry is not there.
+    if (header->id != handle.id) return nullptr; // Not there.
     return reinterpret_cast<uint8_t *>(header+1); // Adding one will move the pointer to the start of the data.
           // -Is this always true? Is pointer arithmetic always +n*sizeof(T) or could structure padding affect this?
 }

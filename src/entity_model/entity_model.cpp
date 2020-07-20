@@ -18,8 +18,26 @@ Entity EntityModel::new_entity()
     entity->first_aspect.id = 0; // Nullify the head of the aspect linked list.
     return handle;
 }
-void EntityModel::destroy_entity(Entity entity)
+void EntityModel::destroy_entity(Entity entity_handle)
 {
-    m_entity_table.remove(entity);
+    EntityEntry *entity = m_entity_table.lookup(entity_handle);
+    if (entity == nullptr) return; // Do nothing if the entity does not exist.
+
+    // Destroy the entity's aspects.
+    TypedAspect cur_aspect_handle = entity->first_aspect;
+    AspectBase *cur_aspect = m_aspect_tables.lookup(entity->first_aspect);
+    while (cur_aspect != nullptr) {
+        // printf("%u\n", entity->first_aspect.id);getchar();
+        TypedAspect next_aspect = cur_aspect->next_aspect;
+        // Destroy the aspect.
+        m_aspect_tables.remove(cur_aspect_handle);
+        // ---teardown here, once that is a thing.
+
+        cur_aspect_handle = next_aspect;
+        cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
+        printf("deletin\n");
+    }
+
+    m_entity_table.remove(entity_handle);
 }
 

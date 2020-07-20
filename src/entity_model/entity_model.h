@@ -6,26 +6,24 @@
 #include <tuple>
 #include "data_structures/table.h"
 #include "core.h"
+#include <stdio.h> //error logging
 
 /*================================================================================
     Table data
 ================================================================================*/
+// typedefs
+typedef Table<EntityEntry, Entity> EntityTable;
+typedef uint8_t AspectType;
+// A null Aspect has the maximum type ID.
+#define MAX_NUM_ASPECT_TYPES ( std::numeric_limits<AspectType>::max )
+
 /*--------------------------------------------------------------------------------
     Entity and aspect handles.
     These are handles that conform to the Table data structure, having
     an index and id.
 --------------------------------------------------------------------------------*/
-// A null Entity has id 0.
-struct Entity {
-    uint32_t index;
-    uint32_t id;
-};
-// A null Aspect has type -1 (== 255).
-#define MAX_NUM_ASPECT_TYPES 255
-typedef uint8_t AspectType;
-struct Aspect {
-    uint32_t id;
-    uint32_t index;
+struct Entity : public GenericTableHandle;
+struct Aspect : public GenericTableHandle {
     AspectType type;
 };
 
@@ -35,21 +33,123 @@ struct Aspect {
 --------------------------------------------------------------------------------*/
 // An entry in the entity table.
 struct EntityEntry {
-    uint32_t id;
     // The entity has a linked list of its aspects,
     // which can be traversed from an aspect by using its entity handle to look up
     // its first aspect, and then following the next aspects.
     Aspect first_aspect;
 };
+
+struct AspectTypeStaticData {
+    static AspectType type_id;
+};
 // The base class of aspects in an aspect table.
-struct AspectEntry {
-    uint32_t id;
+// The AspectEntry:: namespace also serves as the location of static type data - the type_id,
+// which templated methods need so they can get the relevant table from their type template-parameter.
+struct AspectEntry : public AspectTypeStaticData {
     Entity entity;
     Aspect next_aspect;
 };
 
-typedef Table<EntityEntry, Entity> EntityTable;
-typedef GenericTable AspectTable;
+//---not part of the interface. Maybe put in a namespace called "detail".
+class AspectTable {
+public:
+    AspectTable(AspectType type, size_t size, const std::string &name, int length) :
+        m_aspect_type{type}, m_aspect_size{size}, m_aspect_type_name{std::move(name)}
+    {
+        m_table = GenericTable(m_aspect_size, length);
+    }
+    size_t aspect_size() const { return m_aspect_size; }
+    std::string aspect_type_name() const { return m_aspect_type_name; }
+    AspectType aspect_type() const { return m_aspect_type; }
+
+    // Same interface as GenericTable, but accounts for the type of aspect.
+    Aspect add() {
+        GenericTableHandle generic_handle = m_table.add();
+        Aspect handle;
+        handle.id = generic_handle.id;
+        handle.index = generic_handle.index;
+        handle.type = m_aspect_type;
+        return handle;
+    }
+    void remove(Aspect handle) {
+        // assert(aspect.type == m_aspect_type);
+        GenericTableHandle generic_handle = get_generic_handle(handle);
+        m_table.remove(generic_handle);
+    }
+    // This still returns a byte array. AspectTables::lookup is templated and will return the actual type, which is what the module user will use.
+    uint8_t *lookup(Aspect handle) {
+        GenericTableHandle generic_handle = get_generic_handle(handle);
+        return m_table.lookup(generic_handle);
+    }
+private:
+    inline GenericTableHandle get_generic_handle(Aspect handle) const {
+        GenericTableHandle generic_handle;
+        generic_handle.id = handle.id;
+        generic_handle.index = handle.index;
+        return generic_handle;
+    }
+
+    AspectType m_aspect_type;
+    size_t m_aspect_size;
+    std::string m_aspect_type_name;
+
+    GenericTable m_table;
+};
+
+class AspectTables {
+public:
+    AspectTables() {
+        m_tables = std::vector<AspectTable>(0);
+    }
+
+    template <typename ASPECT_TYPE>
+    void add_aspect_type(const std::string &name) {
+        #define ASPECT_TABLE_START_LENGTH 16
+        int num_aspect_types = m_tables.size();
+        if (num_aspect_Types >= MAX_NUM_ASPECT_TYPES) {
+            fprintf(stderr, "ERROR: Exceeded the maximum number of aspect types.\n");
+            exit(EXIT_FAILURE);
+        }
+        AspectType next_aspect_type_id = num_aspect_types;
+        // Set the type ID so that templated methods can access it.
+        ASPECT_TYPE::type_id = next_aspect_type_id;
+        m_tables.push_back(AspectTable(next_aspect_type_id, sizeof(ASPECT_TYPE), name, ASPECT_TABLE_START_LENGTH));
+    }
+
+    // This provides the table interface, but switches the table based on the type id.
+    // There are templated versions purely for syntax. lookup() is templated only.
+    Aspect add(AspectType type) {
+        return m_tables[type].add();
+    }
+    void remove(AspectType type, Aspect handle) {
+        m_tables[type].remove(handle);
+    }
+    template <typename ASPECT_TYPE>
+    Aspect add() {
+        AspectTable &table = get_table<ASPECT_TYPE>();
+        return table.add();
+    }
+    template <typename ASPECT_TYPE>
+    void remove(Aspect handle) {
+        AspectTable &table = get_table<ASPECT_TYPE>();
+        table.reomve(handle);
+    }
+    template <typename ASPECT_TYPE>
+    ASPECT_TYPE *lookup(Aspect handle) {
+        AspectTable &table = get_table<ASPECT_TYPE>();
+        return table.lookup(handle);
+    }
+
+private:
+    // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
+    template <typename ASPECT_TYPE>
+    inline AspectTable &get_table() const {
+        return m_tables[ASPECT_TYPE::type_id];
+    }
+    std::vector<AspectTable> m_tables;
+};
+
+
 
 class EntityModel {
 public: // Usage interface
@@ -300,8 +400,8 @@ public: // Usage interface
     }
 private: // implementation details
 
-    EntityTable entity_table;
-    std::vector<AspectTable> aspect_tables;
+    EntityTable m_entity_table;
+    std::vector<AspectTable> m_aspect_tables;
 
     
     // Retrieve the next available entry in the aspect list for the given aspect type.

@@ -39,75 +39,13 @@ EntityModel::EntityModel()
 {
     #define ENTITY_TABLE_START_LENGTH 16
     entity_table = EntityTable(ENTITY_TABLE_START_LENGTH);
-
-    aspect_tables
-
-    aspect_tables = std::vector<AspectTable>(0);
-    
-    // Initialize the aspect lists.
-    aspect_lists = std::vector<std::vector<uint8_t>>(AspectInfo::num_aspect_types);
-    for (int i = 0; i < AspectInfo::num_aspect_types; i++) {
-        const AspectInfo &info = AspectInfo::type_info(i);
-        aspect_lists[i] = std::vector<uint8_t>(info.size * ASPECT_LIST_START_LENGTH, 0);
-        std::vector<uint8_t> &list = aspect_lists[i];
-        // Initialize this aspect list, connecting a free list in the same way done for the entity list.
-        for (int entry_index = 0; entry_index < ASPECT_LIST_START_LENGTH; entry_index ++) {
-            // This is a contiguous array of derived types, so iterate over the full entries and cast
-            // them to the AspectEntryBase class, so common metadata can be filled.
-            AspectEntryBase *entry = (AspectEntryBase *) &list[entry_index * info.size];
-            entry->id = 0;
-            if (entry_index == ASPECT_LIST_START_LENGTH - 1) {
-                // The last free entry has next_free_index zero, meaning there are no more free entries.
-                entry->next_free_index = 0;
-            } else {
-                entry->next_free_index = entry_index + 1;
-            }
-        }
-    }
+    aspect_tables = AspectTables();
 }
 
 Entity EntityModel::new_entity()
 {
     dprint("Creating new entity\n");
-
-    // Get an index in the entity list.
-    int index = entity_list_first_free_index;
-    if (entity_list[index].next_free_index == 0) {
-        dprint("Resizing entity list\n");
-        // The entity list is full, resize it.
-        size_t old_size = entity_list.size();
-        entity_list.resize(old_size * 2);
-        for (int i = old_size; i < old_size * 2; i++) {
-            // Make sure the new entries are null and connect to the free list.
-            entity_list[i].id = 0;
-            entity_list[i].next_free_index = i + 1;
-        }
-        // The last new entry is the last in the free list.
-        entity_list[entity_list.size() - 1].next_free_index = 0;
-        // The list has been resized, the next free entry is at the start of the expanded part of the list.
-        entity_list_first_free_index = old_size;
-        dprint("    %zu -> %zu\n", old_size, entity_list.size());
-    } else {
-        // Update the first free index to the next available entry.
-        entity_list_first_free_index = entity_list[index].next_free_index;
-    }
-
-    static int next_entity_id = 1; // 0 is reserved for the null entity ID.
-
-    // Create the Entity handle that will be returned.
-    Entity e;
-    e.id = next_entity_id ++;
-    e.index = index;
-    dprint("    id: %u\n", e.id);
-    dprint("    index: %u\n", e.index);
-
-    // Fill the entry in the entity list.
-    EntityEntry entry;
-    entry.id = e.id;
-    entry.num_aspects = 0;
-    entity_list[index] = entry;
-
-    return e;
+    return m_entity_table.add();
 }
 
 AspectEntryBase *EntityModel::new_aspect_entry(Entity entity, AspectType aspect_type, uint32_t *index_out)
@@ -203,31 +141,18 @@ EntityEntry *EntityModel::get_entity_entry(Entity entity)
 void EntityModel::destroy_entity(Entity entity)
 {
     dprint("Destroying entity %u\n", entity.id);
-    EntityEntry *entry = get_entity_entry(entity);
-
-    //-Since aspects can't be destroyed while looping directly, instead destroy the previous aspects when
-    // iterating. It might be reasonable to expect that this works with the iterator (this is the case.)
-    AspectEntryBase *prev = nullptr;
-    for (Aspect aspect : entity_aspects(entity)) {
-        AspectEntryBase *aspect_entry = get_aspect_base(aspect);
-        if (prev != nullptr) {
-            // Destroy the previous aspect in the iteration.
-            prev->id = 0;
-            //---teardown stuff.
-        }
-        prev = aspect_entry;
+    EntityEntry *entity_entry = m_entity_table.lookup(entity);
+    if (entity_entry == nullptr) return; // don't do anything if the entity doesn't exist.
+    // Destroy the entity's aspects.
+    Aspect cur_aspect = entity_entry->first_aspect;
+    AspectEntry *cur_aspect_entry = m_aspect_tables.lookup(cur_aspect);
+    while (cur_aspect_entry != nullptr) {
+        m_aspect_tables.remove(cur_aspect);
+        cur_aspect = cur_aspect_entry->next_aspect;
+        cur_aspect_entry = m_aspect_tables.lookup(cur_aspect);
     }
-    if (prev != nullptr) {
-        // Destroy the previous aspect in the iteration.
-        prev->id = 0;
-        //---teardown stuff.
-    }
-    entry->id = 0;
-
-    // Link this space back into the free list.
-    uint32_t prev_free_index = entity_list_first_free_index;
-    entity_list_first_free_index = entity.index;
-    entry->next_free_index = prev_free_index;
+    // Destroy the entity.
+    m_entity_table.remove(entity);
 }
 
 void EntityModel::destroy_aspect(AspectEntryBase *aspect_entry)

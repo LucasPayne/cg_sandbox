@@ -68,7 +68,7 @@ private:
         return reinterpret_cast<Header *>(&m_buffer[m_entry_size * index]);
     }
     std::vector<uint8_t> m_buffer;
-    size_t m_entry_size; // This includes the GenericTableEntryHeader size!
+    size_t m_entry_size; // This includes the Header size!
     uint32_t m_first_free_index;
     uint32_t m_length;
     TableEntryID m_next_id;

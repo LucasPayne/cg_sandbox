@@ -23,7 +23,14 @@ int main(void)
             printf("lookup\n");
             Thing *t = table.lookup(h);
             if (t == nullptr) printf("GONE\n");
-            else printf("Found\n");
+            else {
+                printf("Found\n");
+                int n = (i*i)%7;
+                printf("    Storing %d\n", n);
+                t->a = n;
+                t = table.lookup(h);
+                printf("    Lookup %d\n", t->a);
+            }
         }
     }
 }

@@ -3,20 +3,6 @@
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "entity_model/entity_model.h"
-/*--------------------------------------------------------------------------------
-BUGS:
-    --- Past length 8192, list resize gives a segfault.
-PROBLEMS:
-    --- Iteration over the aspect linked lists is too verbose.
-        - Working on with iterators (could be better).
-    --- Multithreading.
-    --- Interaction with entity model is broken! Double buffering?
-TO DO:
-    --- Aspect creation and teardown.
-    --- EntityModel destructor.
-
-IDEAS/THINGS:
---------------------------------------------------------------------------------*/
 
 EntityModel::EntityModel()
 {

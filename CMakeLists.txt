@@ -33,11 +33,13 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 #================================================================================
 add_executable(main
     src/main.cpp
-    lib/glad/glad.c
+    src/data_structures/table.cpp
     src/cg_sandbox.cpp
     src/rendering/rendering.cpp
     src/rendering/shading_file.cpp
     src/entity_model/entity_model.cpp
+    src/standard_aspects/Transform.cpp
+    src/standard_aspects/Camera.cpp
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp
@@ -45,6 +47,7 @@ add_executable(main
     src/standard_aspects/Camera.cpp
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
+    lib/glad/glad.c
 )
 # set_property(TARGET main PROPERTY CXX_STANDARD 11)
 target_compile_options(main PRIVATE -Wall)

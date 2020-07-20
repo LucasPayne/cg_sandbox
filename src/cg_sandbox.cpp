@@ -72,6 +72,8 @@ void CGSandbox::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
     EntityModel &em = entity_model;
+    em.register_aspect_type<Transform>("Transform");
+    em.register_aspect_type<Camera>("Camera");
 
 #if 0
     ShadingModelInstance shading_model("color_shading");
@@ -116,19 +118,19 @@ void CGSandbox::key_callback(int key, int action)
         }
 
         if (key == GLFW_KEY_K) {
-            for (auto &t : em.aspects<Transform>()) {
-                t.position[1] += 2.3;
-            }
+            // for (auto &t : em.aspects<Transform>()) {
+            //     t.position[1] += 2.3;
+            // }
         }
         if (key == GLFW_KEY_C) {
             create_dude(em);
         }
         if (key == GLFW_KEY_M) {
-            for (auto &t : em.aspects<Transform>()) {
-                // if (frand() > 0.8) em.destroy_entity(t.entity);
-                em.destroy_entity(t.entity);
-                break;
-            }
+            // for (auto &t : em.aspects<Transform>()) {
+            //     // if (frand() > 0.8) em.destroy_entity(t.entity);
+            //     em.destroy_entity(t.entity);
+            //     break;
+            // }
         }
         // This is broken!
         // if (key == GLFW_KEY_V) {

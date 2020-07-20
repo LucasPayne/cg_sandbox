@@ -1,8 +1,15 @@
-/*--------------------------------------------------------------------------------
-    Declarations and interface for the entity model.
---------------------------------------------------------------------------------*/
 #ifndef ENTITY_MODEL_H
 #define ENTITY_MODEL_H
+/*--------------------------------------------------------------------------------
+    Declarations and interface for the entity model.
+
+BUGS:
+PROBLEMS:
+TO DO:
+    --- EntityModel destructor.
+
+IDEAS/THINGS:
+--------------------------------------------------------------------------------*/
 #include <tuple>
 #include <stdio.h> //error logging
 #include "data_structures/table.h"
@@ -49,6 +56,12 @@ class EntityModel {
 public: // Usage interface
     EntityModel();
 
+    // Registration of aspect types. Aspect types cannot be unregistered.
+    template <typename TYPE>
+    void register_aspect_type(const std::string &name) {
+        m_aspect_tables.add_type<TYPE>(name);
+    }
+
     // Creation and destruction of entities.
     Entity new_entity();
     void destroy_entity(Entity entity);
@@ -59,7 +72,7 @@ public: // Usage interface
         m_aspect_tables.remove<TYPE>(aspect);
     }
     template <typename TYPE>
-    Aspect<TYPE> add_aspect(Entity entity_handle) {
+    TYPE *add_aspect(Entity entity_handle) {
         Aspect<TYPE> new_aspect_handle = m_aspect_tables.add<TYPE>();
         TYPE *new_aspect = m_aspect_tables.lookup<TYPE>(new_aspect_handle);
         EntityEntry *entity = try_get_entity(entity_handle);
@@ -69,7 +82,7 @@ public: // Usage interface
         entity->first_aspect = m_aspect_tables.typed_handle<TYPE>(new_aspect_handle);
         new_aspect->next_aspect = prev_head_handle;
         
-        return new_aspect_handle;
+        return new_aspect;
     }
     template <typename TYPE>
     TYPE *try_get_aspect(Entity entity_handle) {

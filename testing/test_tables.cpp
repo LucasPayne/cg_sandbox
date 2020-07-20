@@ -23,6 +23,8 @@ struct OtherStuff {
 };
 TableCollectionType OtherStuff::type_id = 0;
 
+typedef TypedTableHandle Asset;
+
 int main(void)
 {
     printf("hello, world\n");
@@ -52,7 +54,47 @@ int main(void)
     printf("table collections\n");
     printf("--------------------------------------------------------------------------------\n");
 
-    TableCollection collection;
-    collection.add_type<Stuff>("Stuff");
-    collection.add_type<OtherStuff>("OtherStuff");
+    std::vector<Asset> added_assets(0);
+
+    TableCollection assets;
+    assets.add_type<Stuff>("Stuff");
+    assets.add_type<OtherStuff>("OtherStuff");
+    for (int i = 0; i < 10; i++) {
+        {
+            Asset a = assets.add<Stuff>();
+            printf("Adding Stuff\n");
+            Stuff *stuff = assets.lookup<Stuff>(a);
+            stuff->num = ((i + 1)*13)%7;
+            printf("    storing num=%d\n", stuff->num);
+            if (frand() > 0.5) {
+                printf("    REMOVED\n");
+                assets.remove(a);
+            }
+            printf("    Lookup:\n");
+            stuff = assets.lookup<Stuff>(a);
+            if (stuff == nullptr) printf("    GONE\n");
+            else printf("    FOUND, num=%d\n", stuff->num);
+            added_assets.push_back(a);
+        }
+        {
+            Asset a = assets.add<OtherStuff>();
+            printf("Adding OtherStuff\n");
+            OtherStuff *stuff = assets.lookup<OtherStuff>(a);
+            stuff->longs[1] = ((i + 1)*13)%7;
+            printf("    storing longs[1]=%lu\n", stuff->longs[1]);
+            if (frand() > 0.5) {
+                printf("    REMOVED\n");
+                assets.remove(a);
+            }
+            printf("    Lookup:\n");
+            stuff = assets.lookup<OtherStuff>(a);
+            if (stuff == nullptr) printf("    GONE\n");
+            else printf("    FOUND, longs[1]=%lu\n", stuff->longs[1]);
+            added_assets.push_back(a);
+        }
+    }
+    for (Asset a : added_assets) {
+        printf("Removing ...\n");
+        assets.remove(a);
+    }
 }

@@ -155,7 +155,7 @@ public:
     template <typename TYPE>
     TYPE *lookup(TypedTableHandle handle) {
         MemberTable *table = get_table<TYPE>();
-        return table->lookup(to_generic_table_handle(handle));
+        return reinterpret_cast<TYPE *>(table->lookup(to_generic_table_handle(handle)));
     }
 private:
     // Decay the typed handle to a regular GenericTableHandle.

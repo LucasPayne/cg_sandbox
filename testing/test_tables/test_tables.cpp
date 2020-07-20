@@ -10,7 +10,10 @@ struct Thing {
     int c;
 };
 
-struct Stuff {
+struct AssetBase {
+    bool LOADED;
+};
+struct Stuff : public AssetBase {
     static TableCollectionType type_id;
     Thing thing;
     int num;
@@ -18,7 +21,7 @@ struct Stuff {
 };
 TableCollectionType Stuff::type_id = 0;
 
-struct OtherStuff {
+struct OtherStuff : public AssetBase {
     static TableCollectionType type_id;
     int num;
     uint64_t longs[3];
@@ -58,7 +61,7 @@ int main(void)
     printf("table collections\n");
     printf("--------------------------------------------------------------------------------\n");
 
-    TableCollection assets;
+    TableCollection<AssetBase> assets;
     assets.add_type<Stuff>("Stuff");
     assets.add_type<OtherStuff>("OtherStuff");
     std::vector<Asset<Stuff>> added_stuff(0);
@@ -108,4 +111,6 @@ int main(void)
         printf("Removing ...\n");
         assets.remove(a);
     }
+    printf("Stuff type_id: %d\n", Stuff::type_id);
+    printf("OtherStuff type_id: %d\n", OtherStuff::type_id);
 }

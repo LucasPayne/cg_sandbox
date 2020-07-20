@@ -82,6 +82,12 @@ private:
 
 /*--------------------------------------------------------------------------------
     TableCollection data structure.
+
+reasons for extensions:
+    Having a BASE_TYPE template parameter, as well as TypedTableCollectionHandle,
+    was originally for linked lists of "aspects" - Each table entry holds
+    the typed handle to the next aspect in its header. This header is declared
+    in the common BASE_TYPE.
 ----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------*/
 typedef uint8_t TableCollectionType;
@@ -90,11 +96,15 @@ typedef uint8_t TableCollectionType;
 /*--------------------------------------------------------------------------------
     Handles into the TableCollection are templated. This is purely a type variant,
     and adds no extra data. This means the user of the TableCollection will
-    declare things such as TableCollectionHandle<Thing>, and there is no generic
-    handle into the tables as a whole.
+    declare things such as TableCollectionHandle<Thing>.
 --------------------------------------------------------------------------------*/
 template <typename TYPE>
 struct TableCollectionHandle : public TableHandle {};
+// A "typed" handle is not templated, and instead stores the type ID. When it is used with the TableCollection interface,
+// the type ID is used for dispatching to the relevant table.
+struct TypedTableCollectionHandle : public TableHandle {
+    TableCollectionType type;
+};
 
 // this class should only be usable by TableCollection. ---
 class MemberTable : public GenericTable {
@@ -112,6 +122,7 @@ private:
     std::string m_name;
 };
 
+template<typename BASE_TYPE> // BASE_TYPE: All types in the collection, at least logically, inherit from this.
 class TableCollection {
 public:
     std::vector<MemberTable> m_tables;
@@ -135,6 +146,8 @@ public:
     // These methods are simple wrappers around the GenericTable interface, instead dispatching the call
     // to the relevant table.
     // A TYPE pointer is returned instead of the byte pointer returned by GenericTable, since the type is known.
+
+    // Interface taking a templated handle.
     template <typename TYPE>
     TableCollectionHandle<TYPE> add() {
         TableHandle handle = get_table<TYPE>()->add();
@@ -151,6 +164,24 @@ public:
         return reinterpret_cast<TYPE *>(get_table<TYPE>()->lookup(table_handle));
     }
 
+    // Convert a templated handle into a "typed" handle, which contains the type ID.
+    template <typename TYPE>
+    TypedTableCollectionHandle typed_handle(TableCollectionHandle<TYPE> handle) const {
+        TypedTableCollectionHandle typed_handle;
+        typed_handle.id = handle.id;
+        typed_handle.index = handle.index;
+        typed_handle.type = TYPE::type_id;
+        return typed_handle;
+    }
+    // A typed handle can be used for lookup. The relevant table is searched,
+    // and a pointer to the common base class between all types in the collection is returned.
+    // This gives a common base of data for the entries in each table in the collection.
+    BASE_TYPE *lookup(TypedTableCollectionHandle typed_handle) {
+        TableHandle handle;
+        handle.id = typed_handle.id;
+        handle.index = typed_handle.index;
+        return reinterpret_cast<BASE_TYPE *>(m_tables[typed_handle.type].lookup(handle));
+    }
 private:
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
     template <typename TYPE>

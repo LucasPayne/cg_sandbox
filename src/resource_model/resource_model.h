@@ -23,11 +23,16 @@ struct ResourceTypeStaticData {
     static ResourceLoadFunction load_function;
     static ResourceUnloadFunction unload_function;
 };
+// Static initialization of type information. Defaults to null values.
 template <typename T> ResourceType ResourceTypeStaticData<T>::type_id(-1);
 template <typename T> ResourceLoadFunction ResourceTypeStaticData<T>::load_function(nullptr);
 template <typename T> ResourceUnloadFunction ResourceTypeStaticData<T>::unload_function(nullptr);
-
+// ResourceBase: Shared data every resource entry has.
 struct ResourceBase {};
+// When defining a resource type T, inherit from IResourceType<T>. In this way, static data for the resource type
+// is initialized, and further non-shared struct data is defined in the body.
+template <typename T>
+struct IResourceType : public ResourceTypeStaticData<T>, public ResourceBase {};
 
 class ResourceModel {
 public:

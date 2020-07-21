@@ -12,15 +12,12 @@ IDEAS/THINGS:
 #include "rendering/rendering.h"
 #include "standard_aspects/standard_aspects.h"
 
-struct Texture : public ResourceTypeStaticData<Texture> {
+struct Texture : public IResourceType<Texture> {
     static bool load(void *data, const std::istream &stream);
     static bool unload(void *data);
 
     int a;
 };
-// ResourceType Texture::type_id = -1;
-// ResourceLoadFunction Texture::load_function = nullptr;
-// ResourceUnloadFunction Texture::unload_function = nullptr;
 bool Texture::load(void *data, const std::istream &stream)
 {
 }

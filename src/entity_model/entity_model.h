@@ -41,16 +41,22 @@ struct EntityEntry {
     TypedAspect first_aspect;
 };
 
+template <typename T>
 struct AspectTypeStaticData {
     static AspectType type_id;
 };
+template <typename T> AspectType AspectTypeStaticData<T>::type_id(-1);
 // The base class of aspects in an aspect table.
 // The AspectBase:: namespace also serves as the location of static type data -- the type_id,
 // which templated methods need so they can get the relevant table from their type template-parameter.
-struct AspectBase : public AspectTypeStaticData {
+struct AspectBase {
     Entity entity;
     TypedAspect next_aspect;
 };
+// When defining an aspect type T, inherit from IAspectType<T>. In this way, static data for the aspect type is initialized,
+// and the actual aspect-instance data struct is defined in the body.
+template <typename T>
+struct IAspectType : public AspectTypeStaticData<T>, public AspectBase {};
 
 
 class EntityModel {

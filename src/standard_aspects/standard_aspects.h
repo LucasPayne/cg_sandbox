@@ -3,8 +3,7 @@
 #include "core.h"
 #include "entity_model/entity_model.h"
 
-struct Transform : public AspectBase {
-    static TableCollectionType type_id;
+struct Transform : public IAspectType<Transform> {
 
     float position[3];
     float rotation[3];
@@ -15,8 +14,7 @@ struct Transform : public AspectBase {
     // }
 };
 
-struct Camera : public AspectBase {
-    static TableCollectionType type_id;
+struct Camera : public IAspectType<Transform> {
 
     // Viewport extents (in terms of the application subrectangle).
     float bottom_left[2];

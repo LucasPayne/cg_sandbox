@@ -12,6 +12,7 @@ THINGS/NOTES:
     /* Code included at top */
     // Container for lexer data (https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/enum.l)
     #include "rendering/rendering.h"
+    using namespace ShadingFileDetails;
     #include "shading_file.tab.hh"
     // The file stack, for #include(...) directives.
     // flex and bison, page 28
@@ -162,7 +163,7 @@ void yyerror(ShadingFileASTNode **ast_root_out, char *str)
     std::cout << "yyerror: " << str;
 }
 
-void parse_shading_file_push_file(FILE *file)
+void ShadingFileDetails::parse_shading_file_push_file(FILE *file)
 {
     FileStackEntry *new_entry = (FileStackEntry *) malloc(sizeof(FileStackEntry));
     new_entry->file = file;
@@ -171,7 +172,7 @@ void parse_shading_file_push_file(FILE *file)
     yy_switch_to_buffer(new_entry->buffer_state);
     g_file_stack_top = new_entry;
 }
-void parse_shading_file_pop_file(void)
+void ShadingFileDetails::parse_shading_file_pop_file(void)
 {
     if (g_file_stack_top == NULL) {
         fprintf(stderr, "ERROR: Attempted to pop from empty file-stack.\n");

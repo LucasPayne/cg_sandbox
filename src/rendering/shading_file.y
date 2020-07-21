@@ -13,6 +13,7 @@ NOTES:
 %{
     /* Code included at top. */
     #include "rendering/rendering.h"
+    using namespace ShadingFileDetails;
     #include "shading_file.yy.hh"
 %}
     /* manual reference: https://www.gnu.org/software/bison/manual/html_node/Parser-Function.html */

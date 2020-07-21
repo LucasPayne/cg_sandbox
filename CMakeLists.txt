@@ -35,9 +35,8 @@ add_executable(main
     src/main.cpp
     src/data_structures/table.cpp
     src/cg_sandbox.cpp
-    # src/rendering/rendering.cpp
-    # src/rendering/shading_file.cpp
     src/resource_model/resource_model.cpp
+    src/rendering/rendering.cpp
     src/entity_model/entity_model.cpp
     src/standard_aspects/Transform.cpp
     src/standard_aspects/Camera.cpp

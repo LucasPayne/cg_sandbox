@@ -151,9 +151,9 @@ public: // Usage interface
 
     template <typename TYPE>
     TYPE *add_aspect(Entity entity_handle) {
+        EntityEntry *entity = get_entity(entity_handle); // Fail if the entity doesn't exist.
         Aspect<TYPE> new_aspect_handle = m_aspect_tables.add<TYPE>();
         TYPE *new_aspect = m_aspect_tables.lookup<TYPE>(new_aspect_handle);
-        EntityEntry *entity = try_get_entity(entity_handle);
 
         // Store the entity handle in the aspect entry.
         new_aspect->entity = entity_handle;

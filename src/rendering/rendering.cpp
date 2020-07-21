@@ -15,13 +15,13 @@ Resource loading and unloading functions.
 bool GeometricMaterial::load(void *data, const std::istream &stream)
 {
     GeometricMaterial *geometric_material = reinterpret_cast<GeometricMaterial *>(data);
-    printf("Parsing geometric material file.\n");
+    // printf("Parsing geometric material file.\n");
     #define parse_error(ERROR_STR) {\
         printf("GEOMETRIC MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
         return false;\
     }
     ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
+    // print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
     if (find_directive(root, "type gmat") == nullptr) parse_error("Geometric materials must contain \"#type gmat\"");
@@ -34,8 +34,8 @@ bool GeometricMaterial::load(void *data, const std::istream &stream)
 
     //-todo: set primitive type
     geometric_material->dataflow = dataflow;
-    printf("Parsed dataflow\n");
-    geometric_material->dataflow.print();
+    // printf("Parsed dataflow\n");
+    // geometric_material->dataflow.print();
     return true;
     #undef parse_error
 }
@@ -46,13 +46,13 @@ bool GeometricMaterial::unload(void *data)
 bool Material::load(void *data, const std::istream &stream)
 {
     Material *material = reinterpret_cast<Material *>(data);
-    printf("Parsing material file.\n");
+    // printf("Parsing material file.\n");
     #define parse_error(ERROR_STR) {\
         printf("MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
         return false;\
     }
     ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
+    // print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a material (mat) shading file.
     if (find_directive(root, "type mat") == nullptr) parse_error("Materials must contain \"#type gmat\"");
@@ -74,13 +74,13 @@ bool Material::unload(void *data)
 bool ShadingModel::load(void *data, const std::istream &stream)
 {
     ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
-    printf("Parsing shading model file.\n");
+    // printf("Parsing shading model file.\n");
     #define parse_error(ERROR_STR) {\
         printf("SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
         return false;\
     }
     ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
+    // print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a shading model (sm) shading file.
     if (find_directive(root, "type shading_model") == nullptr) parse_error("Shading models must contain \"#type shading_model\"");
@@ -94,9 +94,9 @@ bool ShadingModel::load(void *data, const std::istream &stream)
     sm.frag_post_dataflow = read_dataflow(frag_post_section);
     sm.geom_post_dataflow = read_dataflow(geom_post_section);
 
-    printf("Parsed dataflow\n");
-    shading_model->frag_post_dataflow.print();
-    shading_model->geom_post_dataflow.print();
+    // printf("Parsed dataflow\n");
+    // shading_model->frag_post_dataflow.print();
+    // shading_model->geom_post_dataflow.print();
     return true;
     #undef parse_error
 }
@@ -490,8 +490,8 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // for (auto *va : used_vertex_attributes) {
     //     std::cout << "    " << va->type << " " << va->name << "\n";
     // }
-    print_listing("vertex_shader", vertex_shader);
-    print_listing("fragment_shader", fragment_shader);
+    // print_listing("vertex_shader", vertex_shader);
+    // print_listing("fragment_shader", fragment_shader);
 
     // Compile and link OpenGL program object.
     GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
@@ -517,23 +517,23 @@ ShadingFileASTNode *ShadingFileDetails::parse_shading_file(const std::istream &s
     // }
     // parse_shading_file_push_file(file);
 
-    parse_shading_file_push_stream(stream);
-    ShadingFileASTNode *root = nullptr;
-    int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
-    if (root == NULL) {
-        // no AST retrieved.
-        fprintf(stderr, "ERROR: Bison yyparse function did not output the AST root!\n");
-        exit(EXIT_FAILURE);
-    } else if (error_code == 1) {
-        // invalid input.
-        fprintf(stderr, "ERROR: Failed to parse shading file.\n");
-        exit(EXIT_FAILURE);
-    } else if (error_code == 2) {
-        // out-of-memory error (or maybe a misc. bison error ...)
-        fprintf(stderr, "FATAL ERROR: Something went very wrong when attempting to parse a shading file.\n");
-        exit(EXIT_FAILURE);
-    }
-    return root;
+    // parse_shading_file_push_stream(stream);
+    // ShadingFileASTNode *root = nullptr;
+    // int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
+    // if (root == NULL) {
+    //     // no AST retrieved.
+    //     fprintf(stderr, "ERROR: Bison yyparse function did not output the AST root!\n");
+    //     exit(EXIT_FAILURE);
+    // } else if (error_code == 1) {
+    //     // invalid input.
+    //     fprintf(stderr, "ERROR: Failed to parse shading file.\n");
+    //     exit(EXIT_FAILURE);
+    // } else if (error_code == 2) {
+    //     // out-of-memory error (or maybe a misc. bison error ...)
+    //     fprintf(stderr, "FATAL ERROR: Something went very wrong when attempting to parse a shading file.\n");
+    //     exit(EXIT_FAILURE);
+    // }
+    // return root;
 }
 
 

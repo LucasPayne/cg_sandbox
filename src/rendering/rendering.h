@@ -15,7 +15,6 @@
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
 --------------------------------------------------------------------------------*/
-
 //-Shading dataflow structure-----------------------------------------------------
 //    --- only this module will want to know about dataflows. Could they be hidden from this interface?
 //    --- Can the structs just be defined and the rest put in the ShadingFileDetails:: namespace?
@@ -77,7 +76,9 @@ struct ShadingDataflow {
     ShadingDataflow() {}
 };
 //-End shading dataflow structure-------------------------------------------------
-
+/*--------------------------------------------------------------------------------
+    GeometricMaterial, Material, ShadingModel
+--------------------------------------------------------------------------------*/
 struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     static bool load(void *data, const std::istream &stream);
     static bool unload(void *data);
@@ -96,12 +97,12 @@ struct ShadingModel : public IResourceType<ShadingModel> {
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 };
-
-class ShadingProgram : public IResourceType<ShadingProgram> {
-public:
+/*--------------------------------------------------------------------------------
+    ShadingProgram, outcome of GeometricMaterial+Material+ShadingModel.
+--------------------------------------------------------------------------------*/
+struct ShadingProgram : public IResourceType<ShadingProgram> {
     // static bool load(void *data, const std::istream &stream) { NO_LOAD };
     // static bool unload(void *data) { NO_LOAD };
-private:
     // OpenGL-related data
     GLuint program_id;
     //... State interface information.
@@ -114,7 +115,7 @@ private:
 ================================================================================*/
 namespace ShadingFileDetails {
 // Create a new shading program from the triple of GeometricMaterial + Material + ShadingModel.
-ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel *sm);
+ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm);
 
 /*--------------------------------------------------------------------------------
     Shading file abstract-syntax-tree structure.
@@ -208,12 +209,6 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
 void parse_shading_file_push_file(FILE *file);
 void parse_shading_file_pop_file(void);
 
-// Errors must be handled by a user-supplied function, declared here.
-void yyerror(ShadingFileASTNode **ast_root_out, char *str);
-#define SHADING_FILE_BISON_PARSE_FUNCTION yyparse
-int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
-#define SHADING_FILE_FLEX_LEX_FUNCTION yylex
-int SHADING_FILE_FLEX_LEX_FUNCTION(void);
 
 /*--------------------------------------------------------------------------------
     Using the parser.
@@ -234,7 +229,22 @@ ShadingFileASTOutput *next_output(ShadingFileASTNode *node);
 // Collect the ouputs in the node's section, starting at the node, into a dataflow structure.
 ShadingDataflow read_dataflow(ShadingFileASTNode *node);
 } // namespace ShadingFileDetails
+using namespace ShadingFileDetails;
+
+//================================================================================
+// Implementation details in the top namespace. I don't know if this is necessary,
+// but it allows flex/bison to access these functions properly.
+//================================================================================
+// Errors must be handled by a user-supplied function, declared here.
+void yyerror(ShadingFileASTNode **ast_root_out, char *str);
+#define SHADING_FILE_BISON_PARSE_FUNCTION yyparse
+int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
+#define SHADING_FILE_FLEX_LEX_FUNCTION yylex
+int SHADING_FILE_FLEX_LEX_FUNCTION(void);
+//================================================================================
+
 /*================================================================================
     END private implementation details.
 ================================================================================*/
+
 #endif // RENDERING_H

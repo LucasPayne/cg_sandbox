@@ -45,7 +45,7 @@ template <typename T>
 struct AspectTypeStaticData {
     static AspectType type_id;
 };
-template <typename T> AspectType AspectTypeStaticData<T>::type_id(-1);
+template <typename T> AspectType AspectTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
 // The base class of aspects in an aspect table.
 // The AspectBase:: namespace also serves as the location of static type data -- the type_id,
 // which templated methods need so they can get the relevant table from their type template-parameter.

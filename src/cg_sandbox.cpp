@@ -63,14 +63,22 @@ void CGSandbox::init()
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
+    REGISTER_RESOURCE_TYPE(ShadingProgram);
+    #define PRINT_ID(NAME) printf(#NAME ": %u\n", NAME ::type_id);
+    PRINT_ID(Texture);
+    PRINT_ID(Material);
+    PRINT_ID(GeometricMaterial);
+    PRINT_ID(ShadingModel);
+    PRINT_ID(ShadingProgram);
 
-    Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
     Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
+    Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
     Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
 
-    // Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
+    GeometricMaterial *_gmat = rm.get_resource<GeometricMaterial>(gmat);
 
-getchar();
+    Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
+    // getchar();
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

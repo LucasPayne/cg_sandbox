@@ -117,6 +117,9 @@ Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
     *program = new_shading_program(*g, *m, *sm);
     return program_handle;
 }
+bool ShadingProgram::unload(void *data)
+{
+}
 
 /*================================================================================
     BEGIN private implementation details.

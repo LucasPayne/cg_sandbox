@@ -142,6 +142,7 @@ reasons for extensions:
 --------------------------------------------------------------------------------*/
 typedef uint8_t TableCollectionType;
 #define TABLE_COLLECTION_MAX_NUM_TYPES ( std::numeric_limits<TableCollectionType>::max() )
+#define NULL_TABLE_COLLECTION_TYPE_ID ( std::numeric_limits<TableCollectionType>::max() )
 
 /*--------------------------------------------------------------------------------
     Handles into the TableCollection are templated. This is purely a type variant,
@@ -192,7 +193,15 @@ public:
         TYPE::type_id = next_type_id;
         m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
-
+    // Unregistered types are statically initialized to -1. This macro is used by the templated methods, so that
+    // the probably common bug of forgetting to register a type is easily discovered. However, this is a slight overhead
+    // every call to a templated method.
+    #define CHECK_IF_REGISTERED(TYPE) {\
+        if (TYPE::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
+            fprintf(stderr, "ERROR: Forgot to register a type in a TableCollection!\n");\
+            exit(EXIT_FAILURE);\
+        }\
+    }
     // These methods are simple wrappers around the GenericTable interface, instead dispatching the call
     // to the relevant table.
     // A TYPE pointer is returned instead of the byte pointer returned by GenericTable, since the type is known.
@@ -200,16 +209,19 @@ public:
     // Interface taking a templated handle.
     template <typename TYPE>
     TableCollectionHandle<TYPE> add() {
+        CHECK_IF_REGISTERED(TYPE);
         TableHandle handle = get_table<TYPE>()->add();
         return *reinterpret_cast<TableCollectionHandle<TYPE> *>(&handle);
     }
     template <typename TYPE>
     void remove(TableCollectionHandle<TYPE> handle) {
+        CHECK_IF_REGISTERED(TYPE);
         TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         get_table<TYPE>()->remove(table_handle);
     }
     template <typename TYPE>
     TYPE *lookup(TableHandle handle) {
+        CHECK_IF_REGISTERED(TYPE);
         TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         return reinterpret_cast<TYPE *>(get_table<TYPE>()->lookup(table_handle));
     }
@@ -217,6 +229,7 @@ public:
     // Convert a templated handle into a "typed" handle, which contains the type ID.
     template <typename TYPE>
     TypedTableCollectionHandle typed_handle(TableCollectionHandle<TYPE> handle) const {
+        CHECK_IF_REGISTERED(TYPE);
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;
         typed_handle.index = handle.index;
@@ -243,6 +256,7 @@ public:
     // Templated iterator. Iterate over a certain type.
     template <typename TYPE>
     inline GenericTable::Iterator iterator() {
+        CHECK_IF_REGISTERED(TYPE);
         return get_table<TYPE>()->iterator();
     }
 

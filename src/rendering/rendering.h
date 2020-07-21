@@ -110,7 +110,11 @@ struct ShadingProgram : public IResourceType<ShadingProgram> {
                                            Resource<GeometricMaterial> geometric_material,
                                            Resource<Material> material,
                                            Resource<ShadingModel> shading_model);
-    // static bool unload(void *data);
+    static bool load(void *data, std::istream &stream) {
+        fprintf(stderr, "ERROR: ShadingProgram cannot be loaded from a stream.\n");
+        exit(EXIT_FAILURE);
+    }
+    static bool unload(void *data);
     // OpenGL-related data
     GLuint program_id;
     //... State interface information.

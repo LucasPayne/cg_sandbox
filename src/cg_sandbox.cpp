@@ -9,7 +9,7 @@ IDEAS/THINGS:
 #include "core.h"
 #include "gl/gl.h"
 #include "cg_sandbox.h"
-// #include "rendering/rendering.h"
+#include "rendering/rendering.h"
 #include "standard_aspects/standard_aspects.h"
 
 struct Texture : public IResourceType<Texture> {
@@ -51,6 +51,8 @@ void CGSandbox::init()
     // ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
     // // ShadingProgram program = new_shading_program(gmat, mat, sm);
     // ShadingProgram program(gmat, mat, sm);
+    
+
 
     // Initialize the resource model.
     resource_model = ResourceModel();
@@ -58,9 +60,17 @@ void CGSandbox::init()
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) rm.register_resource_type<NAME>(#NAME, NAME ::load, NAME ::unload)
     REGISTER_RESOURCE_TYPE(Texture);
-    // REGISTER_RESOURCE_TYPE(Material);
-    // REGISTER_RESOURCE_TYPE(GeometricMaterial);
-    // REGISTER_RESOURCE_TYPE(ShadingModel);
+    REGISTER_RESOURCE_TYPE(Material);
+    REGISTER_RESOURCE_TYPE(GeometricMaterial);
+    REGISTER_RESOURCE_TYPE(ShadingModel);
+
+    Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
+    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
+    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
+
+    // Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
+
+getchar();
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

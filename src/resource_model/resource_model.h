@@ -67,6 +67,26 @@ public:
         return handle;
     }
 
+    // Lookup resources.
+    template <typename TYPE>
+    inline TYPE *try_get_resource(Resource<TYPE> handle) {
+        return m_resource_tables.lookup<TYPE>(handle);
+    }
+    template <typename TYPE>
+    inline TYPE *get_resource(Resource<TYPE> handle) {
+        TYPE *found = try_get_resource<TYPE>(handle);
+        if (found == nullptr) {
+            std::cerr << "ERROR\n";
+            exit(EXIT_FAILURE);
+        }
+        return found;
+    }
+    
+    // Create new resources (which the caller will initialize).
+    template <typename TYPE>
+    inline Resource<TYPE> new_resource() {
+        return m_resource_tables.add<TYPE>();
+    }
 
 private:
     TableCollection<ResourceBase> m_resource_tables;

@@ -3,9 +3,12 @@
 /*--------------------------------------------------------------------------------
     Rendering module.
     Provides rendering resources:
-        GeometricMaterial - Describes geometry-processing dataflow, taking a vertex array and global data and giving outputs (for example, a triangle mesh).
-        Material          - Describes per-fragment outputs, which can be understood by ShadingModels (for example, modulated diffuse from a texture).
-        ShadingModel      - Describes geometry-post-processing (such as a screenspace transformation), definition of clip position, and final fragment processing.
+        GeometricMaterial - Describes geometry-processing dataflow, taking a vertex array
+                            and global data and giving outputs (for example, a triangle mesh).
+        Material          - Describes per-fragment outputs, which can be understood by ShadingModels
+                            (for example, modulated diffuse from a texture).
+        ShadingModel      - Describes geometry-post-processing (such as a screenspace transformation),
+                            definition of clip position, and final fragment processing.
         ShadingProgram    - Encapsulates a GPU rasterization dataflow resolved from a GM+M+SM triple.
 --------------------------------------------------------------------------------*/
 #include "core.h"
@@ -101,8 +104,13 @@ struct ShadingModel : public IResourceType<ShadingModel> {
     ShadingProgram, outcome of GeometricMaterial+Material+ShadingModel.
 --------------------------------------------------------------------------------*/
 struct ShadingProgram : public IResourceType<ShadingProgram> {
-    // static bool load(void *data, const std::istream &stream) { NO_LOAD };
-    // static bool unload(void *data) { NO_LOAD };
+    // There is no loading from a stream. ShadingPrograms are rather created with create(),
+    // constructed from a G+M+SM triple.
+    static Resource<ShadingProgram> create(ResourceModel &rm,
+                                           Resource<GeometricMaterial> geometric_material,
+                                           Resource<Material> material,
+                                           Resource<ShadingModel> shading_model);
+    // static bool unload(void *data);
     // OpenGL-related data
     GLuint program_id;
     //... State interface information.

@@ -74,6 +74,7 @@ bool Material::unload(void *data)
 bool ShadingModel::load(void *data, std::istream &stream)
 {
     ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
+
     // printf("Parsing shading model file.\n");
     #define parse_error(ERROR_STR) {\
         printf("SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
@@ -90,9 +91,8 @@ bool ShadingModel::load(void *data, std::istream &stream)
     if ((frag_post_section = find_section(root, "frag_post")) == nullptr) parse_error("Shading models must contain a \"frag_post\" section.");
 
     // Collect outputs into the dataflows.
-    ShadingModel sm;
-    sm.frag_post_dataflow = read_dataflow(frag_post_section);
-    sm.geom_post_dataflow = read_dataflow(geom_post_section);
+    shading_model->frag_post_dataflow = read_dataflow(frag_post_section);
+    shading_model->geom_post_dataflow = read_dataflow(geom_post_section);
 
     // printf("Parsed dataflow\n");
     // shading_model->frag_post_dataflow.print();
@@ -103,7 +103,20 @@ bool ShadingModel::load(void *data, std::istream &stream)
 bool ShadingModel::unload(void *data)
 {
 }
-
+Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
+                                                Resource<GeometricMaterial> geometric_material,
+                                                Resource<Material> material,
+                                                Resource<ShadingModel> shading_model)
+{
+    GeometricMaterial *g = rm.get_resource<GeometricMaterial>(geometric_material);
+    Material *m = rm.get_resource<Material>(material);
+    ShadingModel *sm = rm.get_resource<ShadingModel>(shading_model);
+    
+    Resource<ShadingProgram> program_handle = rm.new_resource<ShadingProgram>();
+    ShadingProgram *program = rm.get_resource<ShadingProgram>(program_handle);
+    *program = new_shading_program(*g, *m, *sm);
+    return program_handle;
+}
 
 /*================================================================================
     BEGIN private implementation details.

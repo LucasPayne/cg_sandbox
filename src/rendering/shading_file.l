@@ -33,7 +33,7 @@ references:
 
     // Set TRACE to 1 to view trace output when scanning.
     #include <stdarg.h>
-    #define TRACE 1
+    #define TRACE 0
     //--Empty inlines will still definitely have side-effect parameters evaluated.
     static inline void tprint(const char *format, ...)
     {
@@ -150,9 +150,9 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     g_snippet.push_back('\0'); // remember the null terminator!
     std::string *snippet = new std::string(&g_snippet[0]);
     yylval.string = snippet->c_str();
-    printf("------------------------------------------------------------\n");
-    printf("%s\n", yylval.string);
-    printf("------------------------------------------------------------\n");
+    tprint("------------------------------------------------------------\n");
+    tprint("%s\n", yylval.string);
+    tprint("------------------------------------------------------------\n");
     g_snippet.clear();
     BEGIN INITIAL;
     return GLSL_SNIPPET;
@@ -166,7 +166,7 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("Identifier: %s\n", yytext);
     std::string *identifier = new std::string(yytext);
     yylval.string = identifier->c_str();
-    printf("%s\n", yylval.string);
+    tprint("%s\n", yylval.string);
     return IDENTIFIER;
 }
 <<EOF>> {

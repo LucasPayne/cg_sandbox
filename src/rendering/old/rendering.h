@@ -1,24 +1,30 @@
 #ifndef RENDERING_H
 #define RENDERING_H
-/*--------------------------------------------------------------------------------
-    Rendering module.
-    Provides rendering resources:
-        GeometricMaterial - Describes geometry-processing dataflow, taking a vertex array and global data and giving outputs (for example, a triangle mesh).
-        Material          - Describes per-fragment outputs, which can be understood by ShadingModels (for example, modulated diffuse from a texture).
-        ShadingModel      - Describes geometry-post-processing (such as a screenspace transformation), definition of clip position, and final fragment processing.
-        ShadingProgram    - Encapsulates a GPU rasterization dataflow resolved from a GM+M+SM triple.
---------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
+#include <string>
+#include <string_view>//read char buffers as std::strings, so it can be used in string arithmetic overloads.
 
-/*--------------------------------------------------------------------------------
-    GeometricMaterial + Material + ShadingModel system.
---------------------------------------------------------------------------------*/
+// Geometry, Material, and ShadingModel all describe dataflow,
+// describing what the stage provides in terms of glsl snippets and required inputs and properties.
+// - Efficiency of data representation is not very important here, as these will only be used when compiling a shading pipeline.
+//   The most important thing is for this to be easily used by the code generator.
 
-//-Shading dataflow structure-----------------------------------------------------
-//    --- only this module will want to know about dataflows. Could they be hidden from this interface?
-//    --- Can the structs just be defined and the rest put in the ShadingFileDetails:: namespace?
+enum ShadingSources {
+    // It is important that these are in the correct order.
+    SHADING_SOURCE_NONE,
+    SHADING_SOURCE_VERTEX_ARRAY,
+    SHADING_SOURCE_GEOMETRIC_MATERIAL,
+    SHADING_SOURCE_GEOM_POST,
+    SHADING_SOURCE_MATERIAL,
+    SHADING_SOURCE_FRAG_POST,
+};
+enum ShadingParameterKinds {
+    SHADING_PARAMETER_UNIFORM,
+    SHADING_PARAMETER_IN,
+    SHADING_PARAMETER_OUT,
+};
 struct ShadingParameter {
     uint8_t kind; // uniform, in, out
     #define MAX_SHADING_PARAMETER_TYPE_NAME_LENGTH 63
@@ -63,10 +69,12 @@ struct ShadingOutput {
     std::vector<ShadingParameter> uniforms;
     std::string snippet;
     ShadingOutput() {}
+
     // This operator overload is here so that std::find can find a matching output to an input parameter.
     bool operator==(ShadingParameter parameter) {
         return output == parameter;
     }
+
     // scratch space
     bool used;
     uint8_t latest_using_stage;
@@ -76,8 +84,13 @@ struct ShadingDataflow {
     void print();
     ShadingDataflow() {}
 };
-//-End shading dataflow structure-------------------------------------------------
 
+void test_shading_dataflow();
+void test_new_shading_program();
+
+
+// These structs (GeometricMaterial, Material, ShadingModel)
+// are purely for processing when making ShadingPrograms.
 struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     static bool load(void *data, const std::istream &stream);
     static bool unload(void *data);
@@ -90,6 +103,7 @@ struct Material : public IResourceType<Material> {
     static bool unload(void *data);
     ShadingDataflow dataflow;
 };
+
 struct ShadingModel : public IResourceType<ShadingModel> {
     static bool load(void *data, const std::istream &stream);
     static bool unload(void *data);
@@ -97,10 +111,16 @@ struct ShadingModel : public IResourceType<ShadingModel> {
     ShadingDataflow frag_post_dataflow;
 };
 
-class ShadingProgram : public IResourceType<ShadingProgram> {
+
+// A ShadingProgram encapsulates the result of resolving a GeometricMaterial+Material+ShadingModel triple,
+// including an API handle to the program object, and introspective information so that property sheets can be synchronized.
+class ShadingProgram {
+    // Other than construction and caching, this class just holds data. All usage interface goes through
+    // the Draw class, which could be thought of as a ShadingProgram "instance".
 public:
-    // static bool load(void *data, const std::istream &stream) { NO_LOAD };
-    // static bool unload(void *data) { NO_LOAD };
+    ShadingProgram() {};
+    ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm);
+    static ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm);
 private:
     // OpenGL-related data
     GLuint program_id;
@@ -109,30 +129,81 @@ private:
     //... Render target bindings stuff.
 };
 
-/*================================================================================
-    BEGIN private implementation details.
-================================================================================*/
-namespace ShadingFileDetails {
-// Create a new shading program from the triple of GeometricMaterial + Material + ShadingModel.
-ShadingProgram new_shading_program(GeometricMaterial &g, Material &m, ShadingModel *sm);
+
+#if 0
+struct PropertySheet {
+    //...
+    void set(char *property_name, int int_val) {
+        //...
+    }
+};
+struct VertexArray {
+    GLuint gl_vao_id;
+    bool indexed;
+    uint32_t num_vertices;
+    uint32_t vertex_starting_index;
+    GLenum indices_type; // GL_UNSIGNED{BYTE,SHORT,INT}
+    uint32_t num_indices;
+    uint32_t indices_starting_index;
+};
+struct GeometricMaterialInstance {
+    Resource<GeometricMaterial> type;
+    Resource<VertexArray> vertex_array;
+    PropertySheet properties;
+};
+// type = load_asset<GeometricMaterial>("triangle_mesh");
+// vertex_array = new_resource<VertexArray>(create_mesh_icosahedron(...));
+// ...
+// properties.set("model_matrix", transform->model_matrix());
+class Draw {
+public:
+    Draw(GeometricMaterialInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) {
+        g_instance = &gi;
+        m_instance = &mi;
+        sm_instance = &smi;
+
+        shading_program = ShadingProgram(get_resource(g_instance.type),
+                                         get_resource(m_instance.type),
+                                         get_resource(sm_instance.type));
+    };
+    void bind() {
+        glUseProgram(shading_program.program_id);
+        glBindVertexArray(g_instance.vao.id); //-Make sure this binds the element buffer as well.
+    }
+    void upload_properties() {
+        //...
+        // Instances could have dirty flags.
+        // UBOs, samplers with glUniform1i, 
+    }
+    void draw() {
+        if (g_instance.indexed) {
+            glDrawElements(g_instance.geometry.primitive, //mode
+                           g_instance.vao.num_indices, // count
+                           g_instance.vao.indices_type, // type (GL_UNSIGNED_{BYTE,SHORT,INT})
+                           (const void *) g_instance.vao.indices_starting_index);
+        } else {
+            glDrawArrays(g_instance.geometry.primitive, //mode
+                         g_instance.vao.vertex_starting_index //first
+                         g_instance.vao.num_vertices); // count
+        }
+    }
+private:
+    GeometryInstance *g_instance;
+    MaterialInstance *m_instance;
+    ShadingModelInstance *sm_instance;
+
+    ShadingProgram shading_program;
+};
+#endif
 
 /*--------------------------------------------------------------------------------
-    Shading file abstract-syntax-tree structure.
+    Shading file parsing.
 --------------------------------------------------------------------------------*/
-enum ShadingSources {
-    // It is important that these are in the correct order.
-    SHADING_SOURCE_NONE,
-    SHADING_SOURCE_VERTEX_ARRAY,
-    SHADING_SOURCE_GEOMETRIC_MATERIAL,
-    SHADING_SOURCE_GEOM_POST,
-    SHADING_SOURCE_MATERIAL,
-    SHADING_SOURCE_FRAG_POST,
-};
-enum ShadingParameterKinds {
-    SHADING_PARAMETER_UNIFORM,
-    SHADING_PARAMETER_IN,
-    SHADING_PARAMETER_OUT,
-};
+
+// Shading file AST the parser constructs.
+// This information will be used when deciding if this file makes sense in terms of a geometric material, etc.,
+// depending on the way the files sections and directives are structured.
+
 enum ShadingFileASTNodeKinds {
     SHADING_FILE_NODE_ROOT,
     SHADING_FILE_NODE_DIRECTIVE,
@@ -200,14 +271,17 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
         return deastified;
     };
 };
-/*--------------------------------------------------------------------------------
-    Low level parser details.
---------------------------------------------------------------------------------*/
+GeometricMaterial parse_geometric_material_file(const std::string string_path);
+Material parse_material_file(const std::string string_path);
+ShadingModel parse_shading_model_file(const std::string string_path);
+
+// Implementation details.
+ShadingFileASTNode *parse_shading_file(const std::string string_path); // Returns the root of the parsed AST.
 // Interact with the stack of files set for parsing. This can be used to concatenate files,
 // and implement C-style #includes.
+//     note: this should probably not be in the usage interface.
 void parse_shading_file_push_file(FILE *file);
 void parse_shading_file_pop_file(void);
-
 // Errors must be handled by a user-supplied function, declared here.
 void yyerror(ShadingFileASTNode **ast_root_out, char *str);
 #define SHADING_FILE_BISON_PARSE_FUNCTION yyparse
@@ -215,26 +289,7 @@ int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
 #define SHADING_FILE_FLEX_LEX_FUNCTION yylex
 int SHADING_FILE_FLEX_LEX_FUNCTION(void);
 
-/*--------------------------------------------------------------------------------
-    Using the parser.
---------------------------------------------------------------------------------*/
-// Given an input stream, parse this into a shading file AST and return the root. 
-ShadingFileASTNode *parse_shading_file(const std::istream &stream);
+// Debug
+void print_shading_file_ast(ShadingFileASTNode *root, int indent = 0);
 
-/*--------------------------------------------------------------------------------
-    Traversing and interpreting the parsed AST.
---------------------------------------------------------------------------------*/
-// Functions for traversing the shading-file abstract syntax tree.
-// These are used by the specialized functions for parsing different types of shading files,
-// and converting them to the data structure that the application runtime will actually use.
-ShadingFileASTDirective *find_directive(ShadingFileASTNode *node, const std::string match);
-ShadingFileASTNode *find_section(ShadingFileASTNode *node, const std::string name);
-ShadingFileASTOutput *first_output(ShadingFileASTNode *node);
-ShadingFileASTOutput *next_output(ShadingFileASTNode *node);
-// Collect the ouputs in the node's section, starting at the node, into a dataflow structure.
-ShadingDataflow read_dataflow(ShadingFileASTNode *node);
-} // namespace ShadingFileDetails
-/*================================================================================
-    END private implementation details.
-================================================================================*/
 #endif // RENDERING_H

@@ -1,124 +1,70 @@
 /*--------------------------------------------------------------------------------
-    Rendering module implementations.
+BUGS:
+PROBLEMS:
+    Maybe parameter passing for GeometricMaterial and geom-post was uneccessary, if
+    glsl functions can just read from previously-written-to out variables.
+TO DO:
+    Duplicate inputs and outputs are fine, but remember to setify them when generating code.
+IDEAS/THINGS/NOTES:
+    When things aren't in inner loops, or just aren't performance critical, and especially if they also
+    involve non-fixed-size data (trees, strings, etc.), maybe using the standard
+    C++ facilities which are easiest to use and read, no matter the overhead (as long as it is not very noticeable),
+    will be fine. Also, especially when prototyping or trying out ideas for ways to structure data relationships / control flow.
+
+    Maybe the term shading versus shader is useful to distinguish between G+M+SM model and actual glsl and the shader model.
+
+    So far this has been assuming vertex+fragment. Since a major reason for geometric materials is seamless
+    use of tessellated surfaces, the other stages will be needed. I think this will just be more case-by-case for
+    the code-generator, deciding where to put what (such as geometry post-processing being in either the vertex shader or evaluation shader).
+
+    It looks like a lot of the logic in the first pass over the shading pipeline is constructing a graph.
+    Maybe start with thinking about what the code-generator wants to pass over, then construct that as a data structure
+    with a pass over the dataflow structures.
 --------------------------------------------------------------------------------*/
 #include "rendering/rendering.h"
-using namespace ShadingFileDetails;
 #include <algorithm> //find
+#include <functional>
 #include <sstream> //istringstream
 
-
-/*--------------------------------------------------------------------------------
-    GeometricMaterial + Material + ShadingModel system.
-
-Resource loading and unloading functions.
---------------------------------------------------------------------------------*/
-bool GeometricMaterial::load(void *data, const std::istream &stream)
+static void print_dataflows(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
-    GeometricMaterial *geometric_material = reinterpret_cast<GeometricMaterial *>(data);
-    printf("Parsing geometric material file.\n");
-    #define parse_error(ERROR_STR) {\
-        printf("GEOMETRIC MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        return false;\
+    printf("ShadingModel frag-post dataflow\n");
+    sm.frag_post_dataflow.print();
+    printf("\nMaterial dataflow\n");
+    m.dataflow.print();
+    printf("\nShadingModel geom-post dataflow\n");
+    sm.geom_post_dataflow.print();
+    printf("\nGeometricMaterial dataflow\n");
+    g.dataflow.print();
+}
+
+ShadingProgram::ShadingProgram(GeometricMaterial g, Material m, ShadingModel sm)
+{
+    //todo: lookup in cache.
+    *this = new_shading_program(g, m, sm);
+}
+
+
+void print_listing(const std::string &title, const std::string &text)
+{
+    // Print the title, then the given text with numbered lines.
+    std::cout << "============================================================\n";
+    std::cout << title << "\n";
+    std::cout << "------------------------------------------------------------\n";
+    std::istringstream lines(text);
+    std::string line;
+    int line_num = 1;
+    while (std::getline(lines, line)) {
+        std::cout << std::to_string(line_num) << ": " << line << "\n";
+        line_num ++;
     }
-    ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
-
-    // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
-    if (find_directive(root, "type gmat") == nullptr) parse_error("Geometric materials must contain \"#type gmat\"");
-    //-todo: primitive type
-    ShadingFileASTNode *vertex_section;
-    if ((vertex_section = find_section(root, "vertex")) == nullptr) parse_error("Geometric materials must contain a \"vertex\" section.");
-
-    // Collect outputs in the vertex section.
-    ShadingDataflow dataflow = read_dataflow(vertex_section);
-
-    //-todo: set primitive type
-    geometric_material->dataflow = dataflow;
-    printf("Parsed dataflow\n");
-    geometric_material->dataflow.print();
-    return true;
-    #undef parse_error
-}
-bool GeometricMaterial::unload(void *data)
-{
 }
 
-bool Material::load(void *data, const std::istream &stream)
+ShadingProgram ShadingProgram::new_shading_program(GeometricMaterial &g, Material &m, ShadingModel &sm)
 {
-    Material *material = reinterpret_cast<Material *>(data);
-    printf("Parsing material file.\n");
-    #define parse_error(ERROR_STR) {\
-        printf("MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        return false;\
-    }
-    ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
+    // Generate glsl code for the relevant stages, compile it, store the OpenGL handle to the program object,
+    // and compute and store introspective information about the program.
 
-    // Validate that this has the relevant directives and sections for a material (mat) shading file.
-    if (find_directive(root, "type mat") == nullptr) parse_error("Materials must contain \"#type gmat\"");
-
-    ShadingFileASTNode *frag_section;
-    if ((frag_section = find_section(root, "frag")) == nullptr) parse_error("Materials must contain a \"frag\" section.");
-
-    // Collect outputs in the root section.
-    ShadingDataflow dataflow = read_dataflow(frag_section);
-
-    material->dataflow = dataflow;
-    return true;
-    #undef parse_error
-}
-bool Material::unload(void *data)
-{
-}
-
-bool ShadingModel::load(void *data, const std::istream &stream)
-{
-    ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
-    printf("Parsing shading model file.\n");
-    #define parse_error(ERROR_STR) {\
-        printf("SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        return false;\
-    }
-    ShadingFileASTNode *root = parse_shading_file(stream);
-    print_shading_file_ast(root);
-
-    // Validate that this has the relevant directives and sections for a shading model (sm) shading file.
-    if (find_directive(root, "type shading_model") == nullptr) parse_error("Shading models must contain \"#type shading_model\"");
-    ShadingFileASTNode *geom_post_section;
-    if ((geom_post_section = find_section(root, "geom_post")) == nullptr) parse_error("Shading models must contain a \"geom_post\" section.");
-    ShadingFileASTNode *frag_post_section;
-    if ((frag_post_section = find_section(root, "frag_post")) == nullptr) parse_error("Shading models must contain a \"frag_post\" section.");
-
-    // Collect outputs into the dataflows.
-    ShadingModel sm;
-    sm.frag_post_dataflow = read_dataflow(frag_post_section);
-    sm.geom_post_dataflow = read_dataflow(geom_post_section);
-
-    printf("Parsed dataflow\n");
-    shading_model->frag_post_dataflow.print();
-    shading_model->geom_post_dataflow.print();
-    return true;
-    #undef parse_error
-}
-bool ShadingModel::unload(void *data)
-{
-}
-
-
-/*================================================================================
-    BEGIN private implementation details.
-================================================================================*/
-/*--------------------------------------------------------------------------------
-Create a new shading program from the triple of GeometricMaterial + Material + ShadingModel.
-
-1) Generate glsl code for the relevant stages
-2) Compile it, and store the OpenGL handle to the program object,
-3) Compute and store introspective information about the program.
---------------------------------------------------------------------------------*/
-ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
-                                                       Material &m,
-                                                       ShadingModel &sm)
-{
     // Generating glsl code.
     // ---------------------
     // First, propogate requirements to the minimal set that the ShadingModel says it needs for inputs.
@@ -126,10 +72,9 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // set is minimized. Then, pass over again and minimize the uniforms.
     // While doing this, catch whether requirements are missing. If so, give an error.
 
-    // Reset each dataflow's scratch-space data.
-    //   - Disable the "used" flag on all dataflow structures.
-    //   - Set the "source" flag to SHADING_SOURCE_NONE on all dataflow structures (this flag is only meaningful for inputs).
-    //   - Set the "latest_using_stage" flag to SHADING_SOURCE_NONE on all outputs.
+    // Disable the "used" flag on all dataflow structures.
+    // Set the "source" flag to SHADING_SOURCE_NONE on all dataflow structures (this flag is only meaningful for inputs).
+    // Set the "latest_using_stage" flag to SHADING_SOURCE_NONE on all outputs.
     ShadingDataflow *dataflows[] = {&g.dataflow, &m.dataflow, &sm.frag_post_dataflow, &sm.geom_post_dataflow};
     for (ShadingDataflow *dataflow : dataflows) {
         for (ShadingOutput &output : dataflow->outputs) {
@@ -159,6 +104,7 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     notes/todo:
         Possibly frag-post will also want to look for inputs from geom-post and GeometricMaterial.
     --------------------------------------------------------------------------------*/
+
     std::vector<ShadingParameter *> used_uniforms(0);
     std::vector<ShadingParameter *> used_vertex_attributes(0);
 
@@ -268,8 +214,8 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // clip position (vec4 gl_Position)
     // ShadingModel geometry post-processing must always output clip position.
     auto clip_position_output_found = std::find(std::begin(sm.geom_post_dataflow.outputs),
-                                                std::end(sm.geom_post_dataflow.outputs),
-                                                ShadingParameter("vec4", "gl_Position", SHADING_PARAMETER_OUT));
+                                      std::end(sm.geom_post_dataflow.outputs),
+                                      ShadingParameter("vec4", "gl_Position", SHADING_PARAMETER_OUT));
     if (clip_position_output_found == std::end(sm.geom_post_dataflow.outputs)) {
         fprintf(stderr, "ERROR: No vec4 gl_Position output defined in shading model.\n");
         exit(EXIT_FAILURE);
@@ -507,106 +453,122 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     return program;
 }
 
-ShadingFileASTNode *ShadingFileDetails::parse_shading_file(const std::istream &stream)
-{
-    // const char *path = string_path.c_str();
-    // FILE *file = fopen(path, "r");
-    // if (file == NULL) {
-    //     fprintf(stderr, "ERROR: Shading file \"%s\" doesn't exist.\n", path);
-    //     exit(EXIT_FAILURE);
-    // }
-    // parse_shading_file_push_file(file);
 
-    parse_shading_file_push_stream(stream);
-    ShadingFileASTNode *root = nullptr;
-    int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
-    if (root == NULL) {
-        // no AST retrieved.
-        fprintf(stderr, "ERROR: Bison yyparse function did not output the AST root!\n");
-        exit(EXIT_FAILURE);
-    } else if (error_code == 1) {
-        // invalid input.
-        fprintf(stderr, "ERROR: Failed to parse shading file.\n");
-        exit(EXIT_FAILURE);
-    } else if (error_code == 2) {
-        // out-of-memory error (or maybe a misc. bison error ...)
-        fprintf(stderr, "FATAL ERROR: Something went very wrong when attempting to parse a shading file.\n");
-        exit(EXIT_FAILURE);
-    }
-    return root;
-}
-
-
-// Functions for traversing the shading-file abstract syntax tree.
-// These are used by the specialized functions for parsing different types of shading files,
-// and converting them to the data structure that the application runtime will actually use.
-ShadingFileASTDirective *ShadingFileDetails::find_directive(ShadingFileASTNode *node, const std::string match)
+void test_shading_dataflow()
 {
-    // Search this section for a certain directive. Only registers the last match.
-    ShadingFileASTDirective *last_found = nullptr;
-    while (node != nullptr) {
-        if (node->kind() == SHADING_FILE_NODE_DIRECTIVE) {
-            auto *directive = (ShadingFileASTDirective *) node;
-            if (directive->text == match) { //-could do a regex thing, if that would be useful.
-                last_found = directive;
-            }
-        }
-        node = node->next;
-    }
-    return last_found;
-}
-ShadingFileASTNode *ShadingFileDetails::find_section(ShadingFileASTNode *node, const std::string name)
-{
-    // Find a subsection of the given name in the section starting at the given node.
-    // Returns the first node in that subsection.
-    ShadingFileASTSection *last_found = nullptr;
-    while (node != nullptr) {
-        if (node->kind() == SHADING_FILE_NODE_SECTION) {
-            ShadingFileASTSection *section = (ShadingFileASTSection *) node;
-            if (section->name == name) {
-                last_found = section;
-            }
-        }
-        node = node->next;
-    }
-    return last_found->first_child;
-}
-
-ShadingFileASTOutput *ShadingFileDetails::first_output(ShadingFileASTNode *node)
-{
-    // Find the first output starting at the given node in this section.
-    if (node == nullptr) return nullptr;
-    do {
-        if (node->kind() == SHADING_FILE_NODE_OUTPUT) return (ShadingFileASTOutput *) node;
-        node = node->next;
-    } while (node != nullptr);
-    return nullptr;
-}
-ShadingFileASTOutput *ShadingFileDetails::next_output(ShadingFileASTNode *node)
-{
-    // Find the next output starting at the given node in this section.
-    while (node != nullptr) {
-        if ((node = node->next) == nullptr) return nullptr;
-        if (node->kind() == SHADING_FILE_NODE_OUTPUT) return (ShadingFileASTOutput *) node;
-    }
-    return nullptr;
-}
-
-ShadingDataflow ShadingFileDetails::read_dataflow(ShadingFileASTNode *node)
-{
-    // Collect the ouputs in the node's section, starting at the node, into a dataflow structure.
-
     ShadingDataflow dataflow;
+    
+    ShadingOutput output1;
+    output1.output = ShadingParameter("vec3", "world_position", SHADING_PARAMETER_OUT);
+    output1.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
+    output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix", SHADING_PARAMETER_UNIFORM));
+    output1.snippet = "return (model_matrix * vec4(v_position, 1)).xyz\n";
 
-    ShadingFileASTOutput *output = first_output(node);
-    std::vector<ShadingOutput> outputs(0);
-    do {
-        // Each output is converted from its form in the AST to its form as stored in the ShadingDataflow structure.
-        outputs.push_back(output->deastify());
-    } while ((output = next_output(output)) != nullptr);
-    dataflow.outputs = outputs;
-    return dataflow;
+    dataflow.outputs.push_back(output1);
+    dataflow.print();
 }
-/*================================================================================
-    END private implementation details.
-================================================================================*/
+
+void test_new_shading_program()
+{
+    GeometricMaterial g;
+    {
+        ShadingOutput output1;
+        ShadingOutput output2;
+        ShadingOutput output3;
+        ShadingDataflow dataflow;
+        output1.output = ShadingParameter("vec3", "world_position", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "model_matrix", SHADING_PARAMETER_UNIFORM));
+        output1.snippet = "return (model_matrix * vec4(v_position, 1)).xyz;\n";
+        dataflow.outputs.push_back(output1);
+
+        output2.output = ShadingParameter("vec3", "f_normal", SHADING_PARAMETER_OUT);
+        output2.inputs.push_back(ShadingParameter("vec3", "v_normal", SHADING_PARAMETER_IN));
+        output2.snippet = "return f_normal;\n";
+        dataflow.outputs.push_back(output2);
+
+        output3.output = ShadingParameter("vec3", "f_position", SHADING_PARAMETER_OUT);
+        output3.inputs.push_back(ShadingParameter("vec3", "v_position", SHADING_PARAMETER_IN));
+        output3.snippet = "return v_position;\n";
+        dataflow.outputs.push_back(output3);
+
+        g.dataflow = dataflow;
+    }
+    Material m;
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("vec4", "color", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "f_position", SHADING_PARAMETER_OUT));
+        output1.uniforms.push_back(ShadingParameter("vec4", "uniform_color", SHADING_PARAMETER_OUT));
+        output1.snippet = "return f_position.x * uniform_color;\n";
+        dataflow.outputs.push_back(output1);
+
+        ShadingOutput output2;
+        output2.output = ShadingParameter("float", "an_unused_thing", SHADING_PARAMETER_OUT);
+        output2.inputs.push_back(ShadingParameter("vec3", "f_uv", SHADING_PARAMETER_IN));
+        output2.inputs.push_back(ShadingParameter("vec3", "f_normal", SHADING_PARAMETER_IN));
+        output2.uniforms.push_back(ShadingParameter("mat4x4", "the_unused_matrix", SHADING_PARAMETER_UNIFORM));
+        output2.snippet = "return f_uv.x + f_normal.y + (the_unused_matrix * vec4(f_normal, 1)).z;\n";
+        dataflow.outputs.push_back(output2);
+
+        m.dataflow = dataflow;
+    }
+    ShadingModel sm;
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("vec4", "gl_Position", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec3", "world_position", SHADING_PARAMETER_IN));
+        output1.uniforms.push_back(ShadingParameter("mat4x4", "vp_matrix", SHADING_PARAMETER_UNIFORM));
+        output1.snippet = "return (vp_matrix * vec4(world_position, 1));\n";
+        dataflow.outputs.push_back(output1);
+
+        sm.geom_post_dataflow = dataflow;
+    }
+    {
+        ShadingDataflow dataflow;
+        ShadingOutput output1;
+        output1.output = ShadingParameter("vec4", "rt_color", SHADING_PARAMETER_OUT);
+        output1.inputs.push_back(ShadingParameter("vec4", "color", SHADING_PARAMETER_IN));
+        output1.snippet = "return color;\n";
+        dataflow.outputs.push_back(output1);
+
+        sm.frag_post_dataflow = dataflow;
+    }
+    ShadingProgram::new_shading_program(g, m, sm);
+}
+
+static char *shading_source_to_string(uint8_t source)
+{
+    if (source == SHADING_SOURCE_NONE) return "NONE";
+    if (source == SHADING_SOURCE_VERTEX_ARRAY) return "VERTEX_ARRAY";
+    if (source == SHADING_SOURCE_GEOMETRIC_MATERIAL) return "GEOMETRIC_MATERIAL";
+    if (source == SHADING_SOURCE_GEOM_POST) return "GEOM_POST";
+    if (source == SHADING_SOURCE_MATERIAL) return "MATERIAL";
+    if (source == SHADING_SOURCE_FRAG_POST) return "FRAG_POST";
+    return "!-ERROR-!";
+}
+void ShadingDataflow::print() {
+    for (const ShadingOutput &output : outputs) {
+        if (output.used) {
+            std::cout << "USED ";
+            std::cout << "REQUIRED(" << shading_source_to_string(output.latest_using_stage) << ") ";
+        }
+        std::cout << "out " << output.output.type << " " << output.output.name << "\n";
+        for (const ShadingParameter &input : output.inputs) {
+            std::cout << "    ";
+            if (input.used) {
+                std::cout << "USED ";
+                std::cout << "SOURCE(" << shading_source_to_string(input.source) << ") ";
+            }
+	    std::cout << "in " << input.type << " " << input.name << "\n";
+        }
+        for (const ShadingParameter &uniform : output.uniforms) {
+            std::cout << "    " << (uniform.used ? "USED " : "") << "uniform " << uniform.type << " " << uniform.name << "\n";
+        }
+        std::cout << "    snippet ------------------------------------------------\n";
+        std::cout << output.snippet;
+        std::cout << "------------------------------------------------------------\n";
+    }
+}

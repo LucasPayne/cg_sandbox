@@ -12,7 +12,7 @@ using namespace ShadingFileDetails;
 
 Resource loading and unloading functions.
 --------------------------------------------------------------------------------*/
-bool GeometricMaterial::load(void *data, const std::istream &stream)
+bool GeometricMaterial::load(void *data, std::istream &stream)
 {
     GeometricMaterial *geometric_material = reinterpret_cast<GeometricMaterial *>(data);
     // printf("Parsing geometric material file.\n");
@@ -43,7 +43,7 @@ bool GeometricMaterial::unload(void *data)
 {
 }
 
-bool Material::load(void *data, const std::istream &stream)
+bool Material::load(void *data, std::istream &stream)
 {
     Material *material = reinterpret_cast<Material *>(data);
     // printf("Parsing material file.\n");
@@ -71,7 +71,7 @@ bool Material::unload(void *data)
 {
 }
 
-bool ShadingModel::load(void *data, const std::istream &stream)
+bool ShadingModel::load(void *data, std::istream &stream)
 {
     ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
     // printf("Parsing shading model file.\n");
@@ -507,7 +507,7 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     return program;
 }
 
-ShadingFileASTNode *ShadingFileDetails::parse_shading_file(const std::istream &stream)
+ShadingFileASTNode *ShadingFileDetails::parse_shading_file(std::istream &stream)
 {
     // const char *path = string_path.c_str();
     // FILE *file = fopen(path, "r");
@@ -517,23 +517,23 @@ ShadingFileASTNode *ShadingFileDetails::parse_shading_file(const std::istream &s
     // }
     // parse_shading_file_push_file(file);
 
-    // parse_shading_file_push_stream(stream);
-    // ShadingFileASTNode *root = nullptr;
-    // int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
-    // if (root == NULL) {
-    //     // no AST retrieved.
-    //     fprintf(stderr, "ERROR: Bison yyparse function did not output the AST root!\n");
-    //     exit(EXIT_FAILURE);
-    // } else if (error_code == 1) {
-    //     // invalid input.
-    //     fprintf(stderr, "ERROR: Failed to parse shading file.\n");
-    //     exit(EXIT_FAILURE);
-    // } else if (error_code == 2) {
-    //     // out-of-memory error (or maybe a misc. bison error ...)
-    //     fprintf(stderr, "FATAL ERROR: Something went very wrong when attempting to parse a shading file.\n");
-    //     exit(EXIT_FAILURE);
-    // }
-    // return root;
+    shading_file_lexer_set_istream(stream);
+    ShadingFileASTNode *root = nullptr;
+    int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
+    if (root == NULL) {
+        // no AST retrieved.
+        fprintf(stderr, "ERROR: Bison yyparse function did not output the AST root!\n");
+        exit(EXIT_FAILURE);
+    } else if (error_code == 1) {
+        // invalid input.
+        fprintf(stderr, "ERROR: Failed to parse shading file.\n");
+        exit(EXIT_FAILURE);
+    } else if (error_code == 2) {
+        // out-of-memory error (or maybe a misc. bison error ...)
+        fprintf(stderr, "FATAL ERROR: Something went very wrong when attempting to parse a shading file.\n");
+        exit(EXIT_FAILURE);
+    }
+    return root;
 }
 
 

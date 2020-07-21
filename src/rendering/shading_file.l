@@ -5,8 +5,24 @@ BUGS:
 PROBLEMS:
     Dynamically allocated strings, global buffer for reading GLSL snippets...
 THINGS/NOTES:
+
+references:
+    Setting up flex to read from a std::istream.
+    https://stackoverflow.com/questions/9628099/c-istream-with-lex
+
+    Flex and Bison, p125, YY_INPUT
+        YY_INPUT(buf, result, max_size)
+      Whenever the scanner needs more input and the buffer is empty, it invokes
+      YY_INPUT, where buf and max_size are the buffer and its size, respectively,
+      and result is where to put the actual amount read or zero at EOF.
+      (pass in result as-is, since this is a macro).
+
+      The main situation where redefining YY_INPUT is useful is when reading from
+      and input source that is neither a string nor a stdio file.
 --------------------------------------------------------------------------------*/
 %option noyywrap nodefault
+    /* "stdinit not required - since using streams" - stackexchange post */
+%option nostdinit
     /* %option prefix="shading_file_yy" */
 %{
     /* Code included at top */
@@ -34,6 +50,22 @@ THINGS/NOTES:
 
     // Global buffer for reading in glsl snippets during lexing.
     static std::vector<char> g_snippet(0);
+
+    // Global pointer to a std::istream that the generated lexer will read from.
+    extern std::istream *g_istream;
+    // Redefine the YY_INPUT macro to read from the global std::istream. RESULT must hold the number of characters read,
+    // or zero at EOF.
+    //     reference: https://stackoverflow.com/questions/9628099/c-istream-with-lex
+    // -This stops once one line is read, supposedly for interactive input, which doesn't seem useful in this case.
+    #define YY_INPUT(BUFFER,RESULT,MAX_SIZE) {\
+        ( RESULT ) = 0;\
+        while (1) {\
+            int c = g_istream->get();\
+            if (g_istream->eof()) break;\
+            ( BUFFER )[( RESULT )++] = c;\
+            if (( RESULT ) == (MAX_SIZE) || c == '\n') break;\
+        }\
+    }
 %}
     /* Exclusive states. */
 %x CommentOneLine
@@ -145,6 +177,11 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
 
 %%
     /* Code */
+std::istream *g_istream = nullptr;
+void shading_file_lexer_set_istream(std::istream &stream)
+{
+    g_istream = &stream;
+}
 void yyerror(ShadingFileASTNode **ast_root_out, char *str)
 {
     std::cout << "yyerror: " << str;

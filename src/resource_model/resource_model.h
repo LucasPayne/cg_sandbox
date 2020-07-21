@@ -14,7 +14,7 @@ typedef TableCollectionType ResourceType;
 template <typename TYPE>
 using Resource = TableCollectionHandle<TYPE>;
 
-typedef bool (*ResourceLoadFunction)(void *data, const std::istream &stream);
+typedef bool (*ResourceLoadFunction)(void *data, std::istream &stream);
 typedef bool (*ResourceUnloadFunction)(void *data);
 
 template <typename T>

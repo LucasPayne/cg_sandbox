@@ -13,12 +13,12 @@ IDEAS/THINGS:
 #include "standard_aspects/standard_aspects.h"
 
 struct Texture : public IResourceType<Texture> {
-    static bool load(void *data, const std::istream &stream);
+    static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
 
     int a;
 };
-bool Texture::load(void *data, const std::istream &stream)
+bool Texture::load(void *data, std::istream &stream)
 {
 }
 bool Texture::unload(void *data)
@@ -66,8 +66,9 @@ void CGSandbox::init()
     entity_model = EntityModel(); 
     EntityModel &em = entity_model;
     // Register aspect types. Remember to do this!
-    em.register_aspect_type<Transform>("Transform");
-    em.register_aspect_type<Camera>("Camera");
+    #define REGISTER_ASPECT_TYPE(NAME) em.register_aspect_type<NAME>(#NAME)
+    REGISTER_ASPECT_TYPE(Transform);
+    REGISTER_ASPECT_TYPE(Camera);
 
     // Entity cameraman = em.new_entity();
     // Camera *camera = em.add_aspect<Camera>(cameraman);

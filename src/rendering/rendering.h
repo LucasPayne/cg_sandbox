@@ -80,19 +80,19 @@ struct ShadingDataflow {
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
 struct GeometricMaterial : public IResourceType<GeometricMaterial> {
-    static bool load(void *data, const std::istream &stream);
+    static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     //-Vertex shader only.
     GLenum primitive;
     ShadingDataflow dataflow;
 };
 struct Material : public IResourceType<Material> {
-    static bool load(void *data, const std::istream &stream);
+    static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     ShadingDataflow dataflow;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
-    static bool load(void *data, const std::istream &stream);
+    static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
@@ -208,7 +208,7 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
     Using the parser.
 --------------------------------------------------------------------------------*/
 // Given an input stream, parse this into a shading file AST and return the root. 
-ShadingFileASTNode *parse_shading_file(const std::istream &stream);
+ShadingFileASTNode *parse_shading_file(std::istream &stream);
 
 /*--------------------------------------------------------------------------------
     Traversing and interpreting the parsed AST.
@@ -235,6 +235,7 @@ void yyerror(ShadingFileASTNode **ast_root_out, char *str);
 int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
 #define SHADING_FILE_FLEX_LEX_FUNCTION yylex
 int SHADING_FILE_FLEX_LEX_FUNCTION(void);
+void shading_file_lexer_set_istream(std::istream &stream);
 //================================================================================
 
 /*================================================================================

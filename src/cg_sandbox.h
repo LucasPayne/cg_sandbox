@@ -4,11 +4,10 @@ Declarations and interface for the CGSandbox class.
 #ifndef CG_SANDBOX_H
 #define CG_SANDBOX_H
 #include "core.h"
+#include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
 
 class CGSandbox : public Looper, public InputListener {
-private:
-    EntityModel entity_model;
 public:
     CGSandbox() {}
 
@@ -25,6 +24,9 @@ public:
     // Testing and debugging.
     void test_init();
     void test_loop();
+private:
+    EntityModel entity_model;
+    ResourceModel resource_model;
 };
 
 #endif // CG_SANDBOX_H

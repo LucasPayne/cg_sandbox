@@ -9,9 +9,25 @@ IDEAS/THINGS:
 #include "core.h"
 #include "gl/gl.h"
 #include "cg_sandbox.h"
-#include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "standard_aspects/standard_aspects.h"
+
+struct Texture : public ResourceTypeStaticData<Texture> {
+    static bool load(void *data, const std::istream &stream);
+    static bool unload(void *data);
+
+    int a;
+};
+// ResourceType Texture::type_id = -1;
+// ResourceLoadFunction Texture::load_function = nullptr;
+// ResourceUnloadFunction Texture::unload_function = nullptr;
+bool Texture::load(void *data, const std::istream &stream)
+{
+}
+bool Texture::unload(void *data)
+{
+}
+
 
 void create_dude(EntityModel &em)
 {
@@ -39,6 +55,12 @@ void CGSandbox::init()
     // ShadingProgram program = new_shading_program(gmat, mat, sm);
     ShadingProgram program(gmat, mat, sm);
 
+    // Initialize the resource model.
+    resource_model = ResourceModel();
+    ResourceModel &rm = resource_model;
+    // Register resource types. Remember to do this!
+    rm.register_resource_type<Texture>("Texture", Texture::load, Texture::unload);
+
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
     EntityModel &em = entity_model;
@@ -63,7 +85,7 @@ void CGSandbox::init()
         Entity e = em.new_entity();
         if (frand() > 0.8) {
             em.add_aspect<Transform>(e);
-            if (frand() > 0.3) em.destroy_aspect<Transform>(e);
+            // if (frand() > 0.3) em.destroy_aspect<Transform>(e);
         }
         if (frand() > 0.6) em.add_aspect<Camera>(e);
         if (frand() > 0.5) em.destroy_entity(e);

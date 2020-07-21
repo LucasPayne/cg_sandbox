@@ -3,15 +3,17 @@
 --------------------------------------------------------------------------------*/
 #include "rendering/rendering.h"
 
-ShadingFileASTNode *parse_shading_file(const std::string string_path)
+ShadingFileASTNode *parse_shading_file(const std::istream &stream)
 {
-    const char *path = string_path.c_str();
-    FILE *file = fopen(path, "r");
-    if (file == NULL) {
-        fprintf(stderr, "ERROR: Shading file \"%s\" doesn't exist.\n", path);
-        exit(EXIT_FAILURE);
-    }
-    parse_shading_file_push_file(file);
+    // const char *path = string_path.c_str();
+    // FILE *file = fopen(path, "r");
+    // if (file == NULL) {
+    //     fprintf(stderr, "ERROR: Shading file \"%s\" doesn't exist.\n", path);
+    //     exit(EXIT_FAILURE);
+    // }
+    // parse_shading_file_push_file(file);
+
+    parse_shading_file_push_stream(stream);
     ShadingFileASTNode *root = nullptr;
     int error_code = SHADING_FILE_BISON_PARSE_FUNCTION(&root);
     if (root == NULL) {
@@ -116,14 +118,15 @@ Starts with directive
 #type mat
 outputs in root section are used.
 */
-GeometricMaterial parse_geometric_material_file(const std::string string_path)
+bool GeometricMaterial::load(void *data, const std::istream &stream)
 {
+    GeometricMaterial *geometric_material = reinterpret_cast<GeometricMaterial *>(data);
     printf("Parsing geometric material file.\n");
     #define parse_error(ERROR_STR) {\
-        fprintf(stderr, "GEOMETRIC MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        exit(EXIT_FAILURE);\
+        printf("GEOMETRIC MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
+        return false;\
     }
-    ShadingFileASTNode *root = parse_shading_file(string_path);
+    ShadingFileASTNode *root = parse_shading_file(stream);
     print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
@@ -135,22 +138,27 @@ GeometricMaterial parse_geometric_material_file(const std::string string_path)
     // Collect outputs in the vertex section.
     ShadingDataflow dataflow = read_dataflow(vertex_section);
 
-    GeometricMaterial gmat;
     //-todo: set primitive type
-    gmat.dataflow = dataflow;
+    geometric_material->dataflow = dataflow;
     printf("Parsed dataflow\n");
-    gmat.dataflow.print();
-    return gmat;
+    geometric_material->dataflow.print();
+    return true;
     #undef parse_error
 }
-Material parse_material_file(const std::string string_path)
+bool GeometricMaterial::unload(void *data)
 {
+}
+
+
+bool Material::load(void *data, const std::istream &stream)
+{
+    Material *material = reinterpret_cast<Material *>(data);
     printf("Parsing material file.\n");
     #define parse_error(ERROR_STR) {\
-        fprintf(stderr, "MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        exit(EXIT_FAILURE);\
+        printf("MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
+        return false;\
     }
-    ShadingFileASTNode *root = parse_shading_file(string_path);
+    ShadingFileASTNode *root = parse_shading_file(stream);
     print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a material (mat) shading file.
@@ -162,19 +170,23 @@ Material parse_material_file(const std::string string_path)
     // Collect outputs in the root section.
     ShadingDataflow dataflow = read_dataflow(frag_section);
 
-    Material mat;
-    mat.dataflow = dataflow;
-    return mat;
+    material->dataflow = dataflow;
+    return true;
     #undef parse_error
 }
-ShadingModel parse_shading_model_file(const std::string string_path)
+bool Material::unload(void *data)
 {
+}
+
+bool ShadingModel::load(void *data, const std::istream &stream)
+{
+    ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
     printf("Parsing shading model file.\n");
     #define parse_error(ERROR_STR) {\
-        fprintf(stderr, "SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
-        exit(EXIT_FAILURE);\
+        printf("SHADING MODEL PARSE ERROR: %s\n", ( ERROR_STR ));\
+        return false;\
     }
-    ShadingFileASTNode *root = parse_shading_file(string_path);
+    ShadingFileASTNode *root = parse_shading_file(stream);
     print_shading_file_ast(root);
 
     // Validate that this has the relevant directives and sections for a shading model (sm) shading file.
@@ -190,9 +202,9 @@ ShadingModel parse_shading_model_file(const std::string string_path)
     sm.geom_post_dataflow = read_dataflow(geom_post_section);
 
     printf("Parsed dataflow\n");
-    sm.frag_post_dataflow.print();
-    sm.geom_post_dataflow.print();
-    return sm;
+    shading_model->frag_post_dataflow.print();
+    shading_model->geom_post_dataflow.print();
+    return true;
     #undef parse_error
 }
 

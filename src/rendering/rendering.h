@@ -2,6 +2,7 @@
 #define RENDERING_H
 #include "core.h"
 #include "gl/gl.h"
+#include "resource_model/resource_model.h"
 #include <string>
 #include <string_view>//read char buffers as std::strings, so it can be used in string arithmetic overloads.
 
@@ -90,34 +91,26 @@ void test_new_shading_program();
 
 // These structs (GeometricMaterial, Material, ShadingModel)
 // are purely for processing when making ShadingPrograms.
-struct GeometricMaterial {
+struct GeometricMaterial : public IResourceType<GeometricMaterial> {
+    static bool load(void *data, const std::istream &stream);
+    static bool unload(void *data);
     //-Vertex shader only.
     GLenum primitive;
     ShadingDataflow dataflow;
 };
-struct Material {
+struct Material : public IResourceType<Material> {
+    static bool load(void *data, const std::istream &stream);
+    static bool unload(void *data);
     ShadingDataflow dataflow;
 };
-struct ShadingModel {
+
+struct ShadingModel : public IResourceType<ShadingModel> {
+    static bool load(void *data, const std::istream &stream);
+    static bool unload(void *data);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 };
-#if 0
-define_resource(GeometricMaterial)
-    //-Vertex shader only.
-    GLenum primitive;
-    ShadingDataflow dataflow;
-end_define_resource(GeometricMaterial)
 
-define_resource(Material)
-    ShadingDataflow dataflow;
-end_define_resource(Material)
-
-define_resource(ShadingModel)
-    ShadingDataflow geom_post_dataflow;
-    ShadingDataflow frag_post_dataflow;
-end_define_resource(ShadingModel)
-#endif
 
 // A ShadingProgram encapsulates the result of resolving a GeometricMaterial+Material+ShadingModel triple,
 // including an API handle to the program object, and introspective information so that property sheets can be synchronized.

@@ -43,20 +43,24 @@ void create_dude(EntityModel &em)
 
 void CGSandbox::init()
 {
-    // parse_shading_file("resources/triangle_mesh.gmat");
-    GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh2.gmat");
-    // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
-    //Material mat = parse_material_file("resources/color.mat");
-    Material mat = parse_material_file("resources/color2.mat");
-    ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
-    // ShadingProgram program = new_shading_program(gmat, mat, sm);
-    ShadingProgram program(gmat, mat, sm);
+    // // parse_shading_file("resources/triangle_mesh.gmat");
+    // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh2.gmat");
+    // // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
+    // //Material mat = parse_material_file("resources/color.mat");
+    // Material mat = parse_material_file("resources/color2.mat");
+    // ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
+    // // ShadingProgram program = new_shading_program(gmat, mat, sm);
+    // ShadingProgram program(gmat, mat, sm);
 
     // Initialize the resource model.
     resource_model = ResourceModel();
     ResourceModel &rm = resource_model;
     // Register resource types. Remember to do this!
-    rm.register_resource_type<Texture>("Texture", Texture::load, Texture::unload);
+    #define REGISTER_RESOURCE_TYPE(NAME) rm.register_resource_type<NAME>(#NAME, NAME ::load, NAME ::unload)
+    REGISTER_RESOURCE_TYPE(Texture);
+    REGISTER_RESOURCE_TYPE(Material);
+    REGISTER_RESOURCE_TYPE(GeometricMaterial);
+    REGISTER_RESOURCE_TYPE(ShadingModel);
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 

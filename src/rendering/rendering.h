@@ -204,12 +204,6 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
 /*--------------------------------------------------------------------------------
     Low level parser details.
 --------------------------------------------------------------------------------*/
-// Interact with the stack of files set for parsing. This can be used to concatenate files,
-// and implement C-style #includes.
-void parse_shading_file_push_file(FILE *file);
-void parse_shading_file_pop_file(void);
-
-
 /*--------------------------------------------------------------------------------
     Using the parser.
 --------------------------------------------------------------------------------*/

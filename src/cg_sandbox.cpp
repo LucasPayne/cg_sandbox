@@ -84,13 +84,14 @@ void CGSandbox::init()
 
     for (int i = 0; i < 1000000; i++) {
         Entity e = em.new_entity();
-        if (frand() > 0.8) {
+        if (frand() > 0.3) {
             em.add_aspect<Transform>(e);
             // if (frand() > 0.3) em.destroy_aspect<Transform>(e);
         }
         if (frand() > 0.6) em.add_aspect<Camera>(e);
         if (frand() > 0.5) em.destroy_entity(e);
     }
+
 
 }
 void CGSandbox::close()

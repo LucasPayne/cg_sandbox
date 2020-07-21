@@ -14,7 +14,7 @@ struct Transform : public IAspectType<Transform> {
     // }
 };
 
-struct Camera : public IAspectType<Transform> {
+struct Camera : public IAspectType<Camera> {
 
     // Viewport extents (in terms of the application subrectangle).
     float bottom_left[2];

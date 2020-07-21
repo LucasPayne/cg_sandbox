@@ -48,7 +48,7 @@ add_executable(main
     lib/glad/glad.c
 )
 # set_property(TARGET main PROPERTY CXX_STANDARD 11)
-target_compile_options(main PRIVATE -Wall)
+target_compile_options(main PRIVATE -Wall -g)
 
 # External libraries
 #================================================================================

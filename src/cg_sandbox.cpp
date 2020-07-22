@@ -76,9 +76,6 @@ void CGSandbox::init()
     Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
     Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
 
-    printf("primitive: %u\n", gmat->primitive);
-    getchar();
-
     GeometricMaterial *_gmat = rm.get_resource<GeometricMaterial>(gmat);
 
     Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);

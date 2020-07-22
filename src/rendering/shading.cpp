@@ -24,15 +24,19 @@ bool GeometricMaterial::load(void *data, std::istream &stream)
 
     // Validate that this has the relevant directives and sections for a geometric material (gmat) shading file.
     if (find_directive(root, "type gmat") == nullptr) parse_error("Geometric materials must contain \"#type gmat\"");
-    //-todo: primitive type
     ShadingFileASTNode *vertex_section;
     if ((vertex_section = find_section(root, "vertex")) == nullptr) parse_error("Geometric materials must contain a \"vertex\" section.");
+
+    //-todo: primitive type
+    GLenum primitive_type;
+    primitive_type = GL_TRIANGLES;
 
     // Collect outputs in the vertex section.
     ShadingDataflow dataflow = read_dataflow(vertex_section);
 
     //-todo: set primitive type
     geometric_material->dataflow = dataflow;
+    geometric_material->primitive = primitive_type;
     // printf("Parsed dataflow\n");
     // geometric_material->dataflow.print();
     return true;

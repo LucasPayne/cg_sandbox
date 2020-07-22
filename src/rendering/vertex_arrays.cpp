@@ -65,6 +65,8 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
 Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, VertexArrayData &data)
 {
     //-----pointer to resource model stored in all resources.
+    printf("Uploading vertex array.\n");
+    getchar();
 
     GLuint vao_id;
     glCreateVertexArrays(1, &vao_id);
@@ -85,6 +87,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     // The VertexArrayData has separate buffers for each attribute.
     // Interleave these into the single mapped buffer.
     for (int i = 0; i < data.layout.num_vertices; i++) {
+        printf("Interleaving vertex\n");
         size_t interleaved_offset = 0;
         for (int j = 0; j < num_attributes; j++) {
             size_t attribute_size = data.layout.semantics[j].type_size();
@@ -112,6 +115,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
 
     size_t interleaved_offset = 0;
     for (int i = 0; i < num_attributes; i++) {
+        printf("Vertex attribute index binding\n");
         VertexSemantic &semantic = data.layout.semantics[i];
         VertexAttributeBindingIndex index = semantic.get_binding_index();
         glVertexAttribPointer(index,
@@ -134,5 +138,6 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    printf("Uploaded vertex array.\n");getchar();
     return vertex_array;
 }

@@ -1,0 +1,20 @@
+#include "rendering/drawing.h"
+
+void Draw::draw()
+{
+    glUseProgram(shading_program->program_id);
+    glBindVertexArray(g_instance->vertex_array->gl_vao_id);
+
+    GLenum primitive_type = g_instance->base->primitive;
+    VertexArrayLayout &layout = g_instance->vertex_array->layout;
+    if (layout.indexed) {
+        glDrawElements(primitive_type,
+                       (GLsizei) layout.num_indices,
+                       layout.index_type,
+                       (const void *) layout.indices_starting_index);
+    } else {
+        glDrawArrays(primitive_type,
+                     (GLint) layout.vertices_starting_index,
+                     (GLsizei) layout.num_vertices);
+    }
+}

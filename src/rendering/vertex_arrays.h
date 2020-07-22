@@ -27,6 +27,18 @@ struct VertexSemantic {
     }
     // Returns the byte-length of a single attribute of this semantic.
     size_t type_size() const;
+
+    VertexSemantic(GLenum _type, GLint _size, const std::string &_name) :
+        type{_type}, size{_size}
+    {
+        if (_name.length() > MAX_VERTEX_SEMANTIC_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Vertex semantic name too long.\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(name, MAX_VERTEX_SEMANTIC_NAME_LENGTH+1, "%s", _name);
+    }
+
+    VertexSemantic() {}//testing
 };
 
 struct VertexArrayLayout {

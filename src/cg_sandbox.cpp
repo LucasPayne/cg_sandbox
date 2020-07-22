@@ -41,6 +41,9 @@ void create_dude(EntityModel &em)
     // d->vertex_array = new_resource<VertexArray>();
 }
 
+//testing global
+Draw draw;
+
 void CGSandbox::init()
 {
     // // parse_shading_file("resources/triangle_mesh.gmat");
@@ -76,10 +79,43 @@ void CGSandbox::init()
     Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
     Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
 
-    GeometricMaterial *_gmat = rm.get_resource<GeometricMaterial>(gmat);
+    VertexArrayData vad;
+    vad.layout.num_vertices = 6;
+    vad.layout.vertices_starting_index = 0;
+    vad.layout.indexed = false;
+    vad.attribute_buffers = std::vector<std::vector<uint8_t>>(2);
+    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*6);
+    vad.attribute_buffers[1] = std::vector<uint8_t>(2*sizeof(float)*6);
+    float *positions = (float *) &(vad.attribute_buffers[0][0]);
+    float *uvs = (float *) &(vad.attribute_buffers[1][0]);
+    static float _positions[6*3] = {
+        0,0,1,
+        1,0,1,
+        1,1,1,
+        0,0,1,
+        1,1,1,
+        0,1,1,
+    };
+    static float _uvs[6*2] = {
+        0,0,
+        1,0,
+        1,1,
+        0,0,
+        1,1,
+        0,1,
+    };
+    memcpy(positions, _positions, sizeof(_positions));
+    memcpy(uvs, _uvs, sizeof(_uvs));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 2, "v_uv"));
 
-    Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
-    // getchar();
+    Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
+
+    GeometricMaterialInstance *gi = new GeometricMaterialInstance(gmat, va);
+    MaterialInstance *mi = new MaterialInstance(mat);
+    ShadingModelInstance *smi = new ShadingModelInstance(sm);
+    // Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
+    draw = Draw(rm, *gi, *mi, *smi);
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
@@ -149,6 +185,7 @@ void CGSandbox::loop()
     // }
     // printf("num Drawable with Transform: %d\n", num_drawable);
 
+    draw.draw();
 
 #if 0
     EntityModel &em = entity_model;

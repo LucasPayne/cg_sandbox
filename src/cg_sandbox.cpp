@@ -64,16 +64,20 @@ void CGSandbox::init()
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
     REGISTER_RESOURCE_TYPE(ShadingProgram);
-    #define PRINT_ID(NAME) printf(#NAME ": %u\n", NAME ::type_id);
-    PRINT_ID(Texture);
-    PRINT_ID(Material);
-    PRINT_ID(GeometricMaterial);
-    PRINT_ID(ShadingModel);
-    PRINT_ID(ShadingProgram);
+    REGISTER_RESOURCE_TYPE(VertexArray);
+    // #define PRINT_ID(NAME) printf(#NAME ": %u\n", NAME ::type_id);
+    // PRINT_ID(Texture);
+    // PRINT_ID(Material);
+    // PRINT_ID(GeometricMaterial);
+    // PRINT_ID(ShadingModel);
+    // PRINT_ID(ShadingProgram);
 
     Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
     Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
     Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
+
+    printf("primitive: %u\n", gmat->primitive);
+    getchar();
 
     GeometricMaterial *_gmat = rm.get_resource<GeometricMaterial>(gmat);
 
@@ -87,6 +91,7 @@ void CGSandbox::init()
     #define REGISTER_ASPECT_TYPE(NAME) em.register_aspect_type<NAME>(#NAME)
     REGISTER_ASPECT_TYPE(Transform);
     REGISTER_ASPECT_TYPE(Camera);
+    REGISTER_ASPECT_TYPE(Drawable);
 
     // Entity cameraman = em.new_entity();
     // Camera *camera = em.add_aspect<Camera>(cameraman);
@@ -101,6 +106,7 @@ void CGSandbox::init()
 
     // for (int i = 0; i < 8; i++) create_dude(em);
 
+    /*
     for (int i = 0; i < 1000000; i++) {
         Entity e = em.new_entity();
         if (frand() > 0.3) {
@@ -110,8 +116,21 @@ void CGSandbox::init()
         if (frand() > 0.6) em.add_aspect<Camera>(e);
         if (frand() > 0.5) em.destroy_entity(e);
     }
+    */
 
-
+    #if 0
+    for (int i = 0; i < 10; i++) {
+        Entity e = em.new_entity();
+        Transform *t = em.add_aspect<Transform>(e);
+        t->position[0] = 3*frand();
+        t->position[1] = 3*frand();
+        t->position[2] = 3*frand();
+        Drawable *d = em.add_aspect<Drawable>(e);
+        d->geometric_material = gmat->new_instance();
+        d->material = mat->new_instance();
+        d->material.properties.set("vec4 uniform_color", vec4(0,1,1,1));
+    }
+    #endif
 }
 void CGSandbox::close()
 {
@@ -120,13 +139,21 @@ void CGSandbox::close()
 
 void CGSandbox::loop()
 {
-    // test_shading_dataflow();
-    // test_new_shading_program();
-    // getchar();
-
     printf("================================================================================\n");
     printf("Frame start\n");
     printf("================================================================================\n");
+
+    // int num_drawable = 0;
+    // for (Drawable *drawable : em.aspects<Drawable>()) {
+    //     Transform *t = em.try_get_sibling<Transform>(drawable);
+    //     if (t == nullptr) continue;
+    //     num_drawable++;
+    //     
+    // }
+    // printf("num Drawable with Transform: %d\n", num_drawable);
+
+
+#if 0
     EntityModel &em = entity_model;
 
     int num = 0;
@@ -136,7 +163,6 @@ void CGSandbox::loop()
     printf("entities: %d\n", num);
 
     
-#if 1
     int num_transforms = 0;
     for (Transform *t : em.aspects<Transform>()) {
         num_transforms++;

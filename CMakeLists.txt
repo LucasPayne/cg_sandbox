@@ -1,7 +1,7 @@
 # Example CMakeLists files for reference:
 # https://github.com/mmp/pbrt-v3/blob/master/CMakeLists.txt
 # https://github.com/ArthurSonzogni/OpenGL_CMake_Skeleton/blob/master/CMakeLists.txt
-# Use of bison and flex
+# Use of flex and bison
 # https://gist.github.com/scan/3179356
 # https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/CMakeLists.txt
 
@@ -28,7 +28,6 @@ bison_target(
 # in the bison parser file.
 add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 
-
 # Executable
 #================================================================================
 add_executable(main
@@ -37,9 +36,13 @@ add_executable(main
     src/cg_sandbox.cpp
     src/resource_model/resource_model.cpp
     src/rendering/rendering.cpp
+    src/rendering/shading.cpp
+    src/rendering/vertex_arrays.cpp
+    src/rendering/drawing.cpp
     src/entity_model/entity_model.cpp
     src/standard_aspects/Transform.cpp
     src/standard_aspects/Camera.cpp
+    src/standard_aspects/Drawable.cpp
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp

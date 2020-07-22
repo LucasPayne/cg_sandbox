@@ -10,9 +10,11 @@ IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "data_structures/table.h"
+
+class ResourceModel;
 typedef TableCollectionType ResourceType;
 template <typename TYPE>
-using Resource = TableCollectionHandle<TYPE>;
+struct Resource; // Fully declared after ResourceModel.
 
 typedef bool (*ResourceLoadFunction)(void *data, std::istream &stream);
 typedef bool (*ResourceUnloadFunction)(void *data);
@@ -50,7 +52,7 @@ public:
     Resource<TYPE> load_from_file(const std::string &filename) {
         //todo: caching
 
-        Resource<TYPE> handle = m_resource_tables.add<TYPE>();
+        Resource<TYPE> handle = new_resource<TYPE>();
         TYPE *data = m_resource_tables.lookup<TYPE>(handle);
 
         std::ifstream file;
@@ -85,11 +87,32 @@ public:
     // Create new resources (which the caller will initialize).
     template <typename TYPE>
     inline Resource<TYPE> new_resource() {
-        return m_resource_tables.add<TYPE>();
+        // The handle type has been extended, using the HANDLE_TYPE TableCollection template parameter.
+        // This is uninitialized by the TableCollection, so make sure to initialize that extra data here.
+        Resource<TYPE> handle = m_resource_tables.add<TYPE>();
+        // Give the handle a pointer to the resource model.
+        handle.rm = this;
+        return handle;
     }
 
 private:
-    TableCollection<ResourceBase> m_resource_tables;
+    TableCollection<ResourceBase, Resource> m_resource_tables;
+};
+
+
+template <typename TYPE>
+struct Resource : TableCollectionHandle<TYPE> {
+    // The resource model is passed as a pointer to each handle. This allows, without introducing a singleton resource model,
+    // for a dereference operator to get a pointer to the actual data. I think this is convenient enough for the handle-size overhead.
+    ResourceModel *rm;
+
+    // Dereference operator. Returns a reference to the actual data.
+    inline TYPE &operator*() {
+        return *(rm->get_resource<TYPE>(*this));
+    }
+    inline TYPE *operator->() {
+        return rm->get_resource<TYPE>(*this);
+    }
 };
 
 

@@ -28,6 +28,11 @@ implementation notes:
     Currently, the underlying buffer resizes if there is not enough space. It never downsizes.
     This might be wanted, if for example, only very occasionally, many objects are added to the
     table then removed.
+
+reasons for extensions:
+    A templated template parameter for passing the templated (for the type, not any change in data) extension class of handles
+    was added to allow the table to directly return handles with space for extra data, so that conversions don't have to be made.
+    This was done for the resource system, since each handle needs a reference to the resource model it is a part of.
 --------------------------------------------------------------------------------*/
 #include <vector>
 #include <limits>//numeric_limits
@@ -173,7 +178,10 @@ private:
     std::string m_name;
 };
 
-template<typename BASE_TYPE> // BASE_TYPE: All types in the collection, at least logically, inherit from this.
+// BASE_TYPE: All types in the collection, at least logically, inherit from this.
+// HANDLE_TYPE: Must inherit from TableCollectionHandle. Optionally overridden to allow extra data in handles, to be initialized by
+//              something which wraps the underlying table.
+template<typename BASE_TYPE, template<typename> typename HANDLE_TYPE = TableCollectionHandle>
 class TableCollection {
 public:
     std::vector<MemberTable> m_tables;
@@ -208,13 +216,13 @@ public:
     //
     // Interface taking a templated handle.
     template <typename TYPE>
-    TableCollectionHandle<TYPE> add() {
+    HANDLE_TYPE<TYPE> add() {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle handle = get_table<TYPE>()->add();
-        return *reinterpret_cast<TableCollectionHandle<TYPE> *>(&handle);
+        return *reinterpret_cast<HANDLE_TYPE<TYPE> *>(&handle);
     }
     template <typename TYPE>
-    void remove(TableCollectionHandle<TYPE> handle) {
+    void remove(HANDLE_TYPE<TYPE> handle) {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         get_table<TYPE>()->remove(table_handle);
@@ -228,7 +236,7 @@ public:
 
     // Convert a templated handle into a "typed" handle, which contains the type ID.
     template <typename TYPE>
-    TypedTableCollectionHandle typed_handle(TableCollectionHandle<TYPE> handle) const {
+    TypedTableCollectionHandle typed_handle(HANDLE_TYPE<TYPE> handle) const {
         CHECK_IF_REGISTERED(TYPE);
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;

@@ -13,7 +13,7 @@ bool VertexArray::unload(void *data)
     return false;
 }
 
-size_t VertexSemantic::type_size()
+size_t VertexSemantic::type_size() const
 {
     #define CASE(TYPE,SIZE) if (type == ( TYPE )) return size * ( SIZE );
     CASE(GL_BYTE, 1);
@@ -31,7 +31,7 @@ size_t VertexSemantic::type_size()
 
 size_t VertexArrayLayout::vertex_size() const {
     size_t total = 0;
-    for (VertexSemantic &semantic : semantics) {
+    for (const VertexSemantic &semantic : semantics) {
         total += semantic.type_size();
     }
     return total;
@@ -47,9 +47,11 @@ size_t VertexArrayLayout::index_type_size() const {
 
 VertexAttributeBindingIndex VertexSemantic::get_binding_index()
 {
+    //!-WARNING-! This is a global list. Something will go wrong.
+    // todo: Think of a better implementation for this.
     static std::vector<VertexSemantic> encountered_semantics(0);
     
-    for (int i = 0; i < encountered_semantics.length(); i++) {
+    for (int i = 0; i < encountered_semantics.size(); i++) {
         if (*this == encountered_semantics[i]) {
             // Semantic has already been encountered, return the index (which is the binding index).
             return i;
@@ -57,7 +59,7 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
     }
     // This semantic has not been encountered yet. Add it to the list.
     encountered_semantics.push_back(*this);
-    return encountered_semantics.length() - 1;
+    return encountered_semantics.size() - 1;
 }
 
 Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, VertexArrayData &data)
@@ -69,13 +71,13 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     glBindVertexArray(vao_id);
     // Create a single buffer, and interleave vertex attributes.
     size_t vertex_size = data.layout.vertex_size();
-    int num_attributes = data.layout.semantics.length();
+    int num_attributes = data.layout.semantics.size();
     size_t buffer_size = vertex_size * data.layout.num_vertices;
     GLuint buffer_id;
     glGenBuffers(1, &buffer_id);
     glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
     glBufferData(GL_ARRAY_BUFFER,
-                 reinterpret_cast<GLsizeiptr>(buffer_size),
+                 (GLsizeiptr) buffer_size,
                  nullptr,         // Data pointer is null so nothing is uploaded.
                  GL_STATIC_DRAW); // Supposedly this was created for some sort of model, so this hint makes sense.
     // Map the buffer into accessible memory.
@@ -87,7 +89,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
         for (int j = 0; j < num_attributes; j++) {
             size_t attribute_size = data.layout.semantics[j].type_size();
             memcpy(&mapped_buffer[i*vertex_size + interleaved_offset],
-                   &data.layout.attribute_buffers[j][i*attribute_size],
+                   &data.attribute_buffers[j][i*attribute_size],
                    attribute_size);
             interleaved_offset += attribute_size;
         }
@@ -103,20 +105,23 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
         glGenBuffers(1, &index_buffer_id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     reinterpret_cast<GLsizeiptr>(index_buffer_size),
-                     data.layout.index_buffer,
+                     (GLsizeiptr) index_buffer_size,
+                     (const void *) &data.index_buffer[0],
                      GL_STATIC_DRAW);
     }
 
+    size_t interleaved_offset = 0;
     for (int i = 0; i < num_attributes; i++) {
-        VertexSemantic &semantic = data.semantics[i];
+        VertexSemantic &semantic = data.layout.semantics[i];
         VertexAttributeBindingIndex index = semantic.get_binding_index();
         glVertexAttribPointer(index,
                               semantic.size,
                               semantic.type,
                               false, //don't normalized
-                              vertex_size); //stride
+                              vertex_size, //stride
+                              (const void *) interleaved_offset); // start at the first of this attribute in the interleaved buffer.
         glEnableVertexAttribArray(index);
+        interleaved_offset += semantic.size * semantic.type_size(); // shift the interleaving offset so the next attributes have the correct starting position.
     }
 
     Resource<VertexArray> vertex_array = rm.new_resource<VertexArray>();

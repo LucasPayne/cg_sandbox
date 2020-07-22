@@ -26,7 +26,7 @@ struct VertexSemantic {
                 && (strncmp(name, other.name, MAX_VERTEX_SEMANTIC_NAME_LENGTH) == 0);
     }
     // Returns the byte-length of a single attribute of this semantic.
-    size_t type_size();
+    size_t type_size() const;
 };
 
 struct VertexArrayLayout {
@@ -50,7 +50,7 @@ struct VertexArray : public IResourceType<VertexArray> {
     
     static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
-    static Resource<VertexArray> from_vertex_array_data(VertexArrayData &data);
+    static Resource<VertexArray> from_vertex_array_data(ResourceModel &rm, VertexArrayData &data);
 
     VertexArrayLayout layout;
     // The OpenGL vertex array object must conform to the vertex concrete layout, determined by the semantics.

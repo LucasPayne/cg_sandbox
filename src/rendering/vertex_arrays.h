@@ -35,7 +35,7 @@ struct VertexSemantic {
             fprintf(stderr, "ERROR: Vertex semantic name too long.\n");
             exit(EXIT_FAILURE);
         }
-        snprintf(name, MAX_VERTEX_SEMANTIC_NAME_LENGTH+1, "%s", _name);
+        snprintf(name, MAX_VERTEX_SEMANTIC_NAME_LENGTH+1, "%s", _name.c_str());
     }
 
     VertexSemantic() {}//testing

@@ -2,6 +2,7 @@
 
 void Draw::draw()
 {
+    printf("Drawing\n");
     glUseProgram(shading_program->program_id);
     glBindVertexArray(g_instance->vertex_array->gl_vao_id);
 

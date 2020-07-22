@@ -2,6 +2,7 @@
     Implementations for the shading submodule of the rendering module.
 --------------------------------------------------------------------------------*/
 #include "rendering/shading.h"
+#include "rendering/vertex_arrays.h"
 using namespace ShadingFileDetails;
 #include <algorithm> //find
 #include <sstream> //istringstream
@@ -525,6 +526,38 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
 
     ShadingProgram program;
     program.program_id = program_object.ID();
+
+
+    // Vertex attribute index binding.
+    // The used inputs to the geometric material stage are the semantics of vertex attributes.
+    for (ShadingParameter *input : used_vertex_attributes) {
+        //--------------------------------------------------------------------------------
+        //-conversion to OpenGL type/size parameters here. Does this have to be done? Could vertex semantic types be given in terms of strings
+        //     and string to type/size conversion be done elsewhere?
+        GLenum type;
+        GLint size;
+        if (input->type == "float") {
+            type = GL_FLOAT;
+            size = 1;
+        } else if (input->type == "vec2") {
+            type = GL_FLOAT;
+            size = 2;
+        } else if (input->type == "vec3") {
+            type = GL_FLOAT;
+            size = 3;
+        } else if (input->type == "vec4") {
+            type = GL_FLOAT;
+            size = 4;
+        } else {
+            fprintf(stderr, "Generated vertex shader inputs have unaccounted-for type.\n");
+            exit(EXIT_FAILURE);
+        }
+        VertexSemantic semantic(type, size, input->name);
+        VertexAttributeBindingIndex binding_index = semantic.get_binding_index();
+        printf("Program %u binding index %u to semantic \"%s %s\", type: %u, size: %u.\n", program.program_id, binding_index, input->type.c_str(),
+                                                    input->name.c_str(), type, size);getchar();
+        glBindAttribLocation(program.program_id, binding_index, (const GLchar *) input->name.c_str());
+    }
 
     return program;
 }

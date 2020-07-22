@@ -29,14 +29,16 @@ size_t VertexSemantic::type_size() const
     exit(EXIT_FAILURE);
 }
 
-size_t VertexArrayLayout::vertex_size() const {
+size_t VertexArrayLayout::vertex_size() const
+{
     size_t total = 0;
     for (const VertexSemantic &semantic : semantics) {
         total += semantic.type_size();
     }
     return total;
 }
-size_t VertexArrayLayout::index_type_size() const {
+size_t VertexArrayLayout::index_type_size() const
+{
     #define CASE(TYPE,SIZE) if (index_type == ( TYPE )) return ( SIZE )
     CASE(GL_UNSIGNED_BYTE, 1);
     CASE(GL_UNSIGNED_SHORT, 2);
@@ -57,16 +59,19 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
             return i;
         }
     }
-    // This semantic has not been encountered yet. Add it to the list.
+    // This semantic has not been encountered yet. Add it to the list and return this newly used binding index.
     encountered_semantics.push_back(*this);
-    return encountered_semantics.size() - 1;
+    VertexAttributeBindingIndex new_binding_index = encountered_semantics.size() - 1;
+    printf("Adding new vertex semantic, %s, binding index %u, type: %u, size: %u\n", name, new_binding_index, type, size);
+    getchar();
+    return new_binding_index;
 }
 
 Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, VertexArrayData &data)
 {
     //-----pointer to resource model stored in all resources.
     printf("Uploading vertex array.\n");
-    getchar();
+    // getchar();
 
     GLuint vao_id;
     glCreateVertexArrays(1, &vao_id);
@@ -121,7 +126,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
         glVertexAttribPointer(index,
                               semantic.size,
                               semantic.type,
-                              false, //don't normalized
+                              false, //don't normalize
                               vertex_size, //stride
                               (const void *) interleaved_offset); // start at the first of this attribute in the interleaved buffer.
         glEnableVertexAttribArray(index);
@@ -138,6 +143,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    printf("Uploaded vertex array.\n");getchar();
+    printf("Uploaded vertex array.\n");
+    // getchar();
     return vertex_array;
 }

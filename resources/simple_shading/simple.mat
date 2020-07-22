@@ -1,0 +1,9 @@
+#type mat
+
+section frag {
+    out vec3 color(in vec3 f_color) {
+    GLSL
+        return f_color;
+    END
+    }
+}

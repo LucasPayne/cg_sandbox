@@ -7,6 +7,15 @@ using namespace ShadingFileDetails;
 #include <algorithm> //find
 #include <sstream> //istringstream
 
+static void print_listing(const std::string &title, const std::string &text)
+{
+    printf("================================================================================\n");
+    std::cout << title << "\n";
+    printf("--------------------------------------------------------------------------------\n");
+    std::cout << text;
+    printf("--------------------------------------------------------------------------------\n");
+}
+
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
 
@@ -501,6 +510,8 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
         }
         fragment_shader += ");\n";
     }
+    // fragment_shader += "    rt_color = vec4(1,0,0,1);\n";//---------
+
     fragment_shader += "}\n";
     
 
@@ -513,21 +524,20 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // for (auto *va : used_vertex_attributes) {
     //     std::cout << "    " << va->type << " " << va->name << "\n";
     // }
-    // print_listing("vertex_shader", vertex_shader);
-    // print_listing("fragment_shader", fragment_shader);
+    print_listing("vertex_shader", vertex_shader);
+    getchar();
+    print_listing("fragment_shader", fragment_shader);
+    getchar();
 
     // Compile and link OpenGL program object.
     GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
     GLShader fragment_shader_object = GLShader::from_string(GL_FRAGMENT_SHADER, fragment_shader.c_str());
-    GLShaderProgram program_object(vertex_shader_object, fragment_shader_object);
 
     // Compute introspective information.
     //todo----------
 
-    ShadingProgram program;
-    program.program_id = program_object.ID();
-
-
+    // Pre-link setup.
+    GLuint program_id = glCreateProgram();
     // Vertex attribute index binding.
     // The used inputs to the geometric material stage are the semantics of vertex attributes.
     for (ShadingParameter *input : used_vertex_attributes) {
@@ -554,10 +564,15 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
         }
         VertexSemantic semantic(type, size, input->name);
         VertexAttributeBindingIndex binding_index = semantic.get_binding_index();
-        printf("Program %u binding index %u to semantic \"%s %s\", type: %u, size: %u.\n", program.program_id, binding_index, input->type.c_str(),
-                                                    input->name.c_str(), type, size);getchar();
-        glBindAttribLocation(program.program_id, binding_index, (const GLchar *) input->name.c_str());
+        // printf("Program %u binding index %u to semantic \"%s %s\", type: %u, size: %u.\n", program_id, binding_index, input->type.c_str(),
+        //                                             input->name.c_str(), type, size);getchar();
+        glBindAttribLocation(program_id, binding_index, (const GLchar *) input->name.c_str());
     }
+
+    // Pass in a pointer to the program ID, since some pre-link setup was done.
+    GLShaderProgram program_object(vertex_shader_object, fragment_shader_object, &program_id);
+    ShadingProgram program;
+    program.program_id = program_object.ID();
 
     return program;
 }

@@ -2,6 +2,8 @@
 
 GLShader GLShader::from_string(GLenum shader_type, const char *source)
 {
+    
+
     GLShader shader_object;
     shader_object.m_gl_shader_type = shader_type;
     shader_object.m_gl_shader_id = glCreateShader(shader_type);
@@ -28,6 +30,9 @@ GLShader GLShader::from_string(GLenum shader_type, const char *source)
         std::cerr << "--------------------------------------------------------------------------------\n";
         exit(EXIT_FAILURE);
     }
+    // printf("Created new shader of type %u, id %u\n", shader_object.m_gl_shader_type, shader_object.m_gl_shader_id);
+    // getchar();
+    return shader_object;
 }
 
 // Load a shader.
@@ -51,15 +56,22 @@ GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
 }
 
 
-GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader)
+GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader, GLuint *passed_program_id)
 {
     m_vertex_shader = vertex_shader;
     m_fragment_shader = fragment_shader;
-    m_gl_shader_program_id = glCreateProgram();
+    if (passed_program_id == nullptr) {
+        m_gl_shader_program_id = glCreateProgram();
+    } else {
+        // A pointer to a program ID can be passed. This allows the caller to do pre-link setup.
+        m_gl_shader_program_id = *passed_program_id;
+    }
     if (m_gl_shader_program_id == 0) {
         std::cerr << "ERROR: Failed to create shader program.\n";
         exit(EXIT_FAILURE);
     }
+    printf("Linking v and f: %u, %u\n", m_vertex_shader.ID(), m_fragment_shader.ID());
+    getchar();
     glAttachShader(m_gl_shader_program_id, m_vertex_shader.ID());
     glAttachShader(m_gl_shader_program_id, m_fragment_shader.ID());
     glLinkProgram(m_gl_shader_program_id);
@@ -70,4 +82,6 @@ GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shade
         //----print log
         exit(EXIT_FAILURE);
     }
+    glDetachShader(m_gl_shader_program_id, m_vertex_shader.ID());
+    glDetachShader(m_gl_shader_program_id, m_fragment_shader.ID());
 }

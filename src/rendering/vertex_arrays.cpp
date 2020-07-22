@@ -135,6 +135,9 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
 
     Resource<VertexArray> vertex_array = rm.new_resource<VertexArray>();
     vertex_array->layout = data.layout; //---copy?
+    vertex_array->layout.semantics = std::vector<VertexSemantic>(0);
+            //----- doing this to copy
+            for (VertexSemantic semantic : data.layout.semantics) vertex_array->layout.semantics.push_back(semantic);
     vertex_array->gl_vao_id = vao_id;
     vertex_array->gl_buffer_id = buffer_id;
     vertex_array->gl_index_buffer_id = index_buffer_id;

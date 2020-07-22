@@ -11,6 +11,7 @@ IDEAS/THINGS:
 #include "cg_sandbox.h"
 #include "rendering/rendering.h"
 #include "standard_aspects/standard_aspects.h"
+#include <math.h>
 
 struct Texture : public IResourceType<Texture> {
     static bool load(void *data, std::istream &stream);
@@ -75,39 +76,36 @@ void CGSandbox::init()
     // PRINT_ID(ShadingModel);
     // PRINT_ID(ShadingProgram);
 
-    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
-    Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
-    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
+    // Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
+    // Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
+    // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
+    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/simple_shading/simple.gmat");
+    Resource<Material> mat = rm.load_from_file<Material>("resources/simple_shading/simple.mat");
+    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/simple_shading/simple.sm");
 
     VertexArrayData vad;
-    vad.layout.num_vertices = 6;
+    vad.layout.num_vertices = 3;
     vad.layout.vertices_starting_index = 0;
     vad.layout.indexed = false;
     vad.attribute_buffers = std::vector<std::vector<uint8_t>>(2);
-    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*6);
-    vad.attribute_buffers[1] = std::vector<uint8_t>(2*sizeof(float)*6);
+    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*3);
+    vad.attribute_buffers[1] = std::vector<uint8_t>(3*sizeof(float)*3);
     float *positions = (float *) &(vad.attribute_buffers[0][0]);
-    float *uvs = (float *) &(vad.attribute_buffers[1][0]);
-    static float _positions[6*3] = {
-        0,0,1,
-        1,0,1,
-        1,1,1,
-        0,0,1,
-        1,1,1,
-        0,1,1,
+    float *colors = (float *) &(vad.attribute_buffers[1][0]);
+    static float _positions[3*3] = {
+        -0.5,-0.5,  0.5,
+        0.5,-0.5,  0.5,
+        0, 1.0/sqrt(2),  0.5
     };
-    static float _uvs[6*2] = {
-        0,0,
-        1,0,
-        1,1,
-        0,0,
-        1,1,
-        0,1,
+    static float _colors[3*3] = {
+        1,0,0,
+        0,1,0,
+        0,0,1,
     };
     memcpy(positions, _positions, sizeof(_positions));
-    memcpy(uvs, _uvs, sizeof(_uvs));
+    memcpy(colors, _colors, sizeof(_colors));
     vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
-    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 2, "v_uv"));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_color"));
 
     Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
 

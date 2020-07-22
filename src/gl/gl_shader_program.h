@@ -25,7 +25,7 @@ private:
 
     GLuint m_gl_shader_program_id;
 public:
-    GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader);
+    GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader, GLuint *passed_program_id = nullptr);
     GLShaderProgram(std::string const &vertex_shader_path, std::string const &fragment_shader_path) :
         // Constructor variant to compile from shader paths.
         GLShaderProgram(GLShader(GL_VERTEX_SHADER, vertex_shader_path),

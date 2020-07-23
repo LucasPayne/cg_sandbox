@@ -81,6 +81,33 @@ struct ShadingDataflow {
     ShadingDataflow() {}
 };
 //-End shading dataflow structure-------------------------------------------------
+#define MAX_PROPERTY_SEMANTIC_NAME_LENGTH 31
+struct PropertySemantic {
+    size_t offset;
+    size_t size;
+
+    GLenum type;
+    GLint type_size;
+
+    char name[MAX_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
+    PropertySemantic(size_t _offset, size_t _size, const std::string &_type_and_name) :
+        offset{_offset}, size{_size}
+    {
+        if (_type_and_name.length() > MAX_PROPERTY_SEMANTIC_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Property semantic name too long.\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(name, MAX_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _type_and_name.c_str());
+    }
+};
+struct PropertyLayout {
+    std::vector<PropertySemantic> semantics;
+    size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
+        for (const Semantic &semantic : semantics) {
+            if (semantic.type_and_name
+        }
+    }
+};
 /*--------------------------------------------------------------------------------
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
@@ -92,17 +119,23 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     // The dataflow is dependent on the primitives it processes, so that information is here.
     GLenum primitive;
     uint32_t patch_length; // used if primitive == GL_PATCHES
+
+    PropertyLayout property_layout;
 };
 struct Material : public IResourceType<Material> {
     static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     ShadingDataflow dataflow;
+
+    PropertyLayout property_layout;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
     static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
+
+    PropertyLayout property_layout;
 };
 
 /*--------------------------------------------------------------------------------
@@ -122,9 +155,6 @@ struct ShadingProgram : public IResourceType<ShadingProgram> {
     static bool unload(void *data);
     // OpenGL-related data
     GLuint program_id;
-    //... State interface information.
-    //... Vertex attribute bindings stuff.
-    //... Render target bindings stuff.
 };
 
 /*================================================================================

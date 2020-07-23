@@ -7,35 +7,46 @@ Drawing submodule of the rendering module.
 #include "rendering/vertex_arrays.h"
 #include "resource_model/resource_model.h"
 
-struct PropertySheet {
 
+template <typename T>
+struct GMSMInstance {
+    Resource<T> base;
+    void bind() {
+        if (in_sync) return;
+        glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer_id);
+        glBufferSubData(GL_UNIFORM_BUFFER, (GLintptr) 0, (GLsizeiptr) uniform_buffer_size, &data[0]);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        in_sync = true;
+    }
+
+    GLuint uniform_buffer_id;
+    size_t uniform_buffer_size;
+
+    bool in_sync;
+    std::vector<uint8_t> data;
+
+    GMSMInstance(Resource<T> _base) : base{_base} {
+        // Create the uniform buffer object. This is a handle for globally accessible constant data in graphics memory.
+        glGenBuffers
+    }
 };
 
-struct GeometricMaterialInstance {
-    Resource<GeometricMaterial> base;
+struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
     Resource<VertexArray> vertex_array;
-    PropertySheet properties;
 
     GeometricMaterialInstance(Resource<GeometricMaterial> _base, Resource<VertexArray> _vertex_array) :
-        base{_base}, vertex_array{_vertex_array}
+        GMSMInstance<GeometricMaterial>(_base), vertex_array{_vertex_array}
     {}
 };
 
-
-struct MaterialInstance {
-    Resource<Material> base;
-    PropertySheet properties;
-
+struct MaterialInstance : public GMSMInstance<Material> {
     MaterialInstance(Resource<Material> _base) :
-        base{_base}
+        GMSMInstance<Material>(_base)
     {}
 };
-struct ShadingModelInstance {
-    Resource<ShadingModel> base;
-    PropertySheet properties;
-
+struct ShadingModelInstance : public GMSMInstance<ShadingModel> {
     ShadingModelInstance(Resource<ShadingModel> _base) :
-        base{_base}
+        GMSMInstance<ShadingModel>(_base)
     {}
 };
 

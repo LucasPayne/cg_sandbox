@@ -14,35 +14,41 @@ IDEAS/THINGS:
 #include "assets/models.h"
 #include <math.h>
 
-void test_world(EntityModel &em, ResourceModel &rm)
-{
-    // Create a camera man.
-    Entity cameraman = em.new_entity();
-    Camera *camera = em.add_aspect<Camera>(cameraman);
-    camera->bottom_left[0] = 0;
-    camera->bottom_left[1] = 0;
-    camera->top_right[0] = 1;
-    camera->top_right[1] = 1;
-    Transform *camera_transform = em.add_aspect<Transform>(cameraman);
-    camera_transform->position[0] = 0;
-    camera_transform->position[1] = 0;
-    camera_transform->position[2] = 0;
 
-    // Create a dolphin.
-    {
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
-        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
-        Entity dolphin = em.new_entity();
-        Transform *t = em.add_aspect<Transform>(dolphin);
-        Drawable *drawable = em.add_aspect<Drawable>(dolphin);
-        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
-        drawable->material = MaterialInstance(mat);
-        drawable->material->properties.set_float(
-    }
+void create_dude(EntityModel &em)
+{
+    Entity e = em.new_entity();
+    Transform *t = em.add_aspect<Transform>(e);
+    t->position[0] = 1;
+    t->position[1] = 2;
+    t->position[2] = 3;
+    // Drawable *d = em.add_aspect<Drawable>(e);
+    // d->geometric_material = load_asset<GeometricMaterial>("triangle_mesh");
+    // d->material = load_asset<GeometricMaterial>("color");
+    // d->material.properties.set("uniform_color", vec4(1,0,1,1));
+    // d->vertex_array = load_asset<VertexArray>("models/dragon");
+    // d->vertex_array = new_resource<VertexArray>();
 }
+
+//testing globals
+Draw draw;
+GeometricMaterialInstance *gi;
+MaterialInstance *mi;
+ShadingModelInstance *smi;
 
 void CGSandbox::init()
 {
+    // // parse_shading_file("resources/triangle_mesh.gmat");
+    // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh2.gmat");
+    // // GeometricMaterial gmat = parse_geometric_material_file("resources/triangle_mesh.gmat");
+    // //Material mat = parse_material_file("resources/color.mat");
+    // Material mat = parse_material_file("resources/color2.mat");
+    // ShadingModel sm = parse_shading_model_file("resources/color_shading.sm");
+    // // ShadingProgram program = new_shading_program(gmat, mat, sm);
+    // ShadingProgram program(gmat, mat, sm);
+    
+
+
     // Initialize the resource model.
     resource_model = ResourceModel();
     ResourceModel &rm = resource_model;
@@ -53,6 +59,51 @@ void CGSandbox::init()
     REGISTER_RESOURCE_TYPE(ShadingModel);
     REGISTER_RESOURCE_TYPE(ShadingProgram);
     REGISTER_RESOURCE_TYPE(VertexArray);
+    // #define PRINT_ID(NAME) printf(#NAME ": %u\n", NAME ::type_id);
+    // PRINT_ID(Material);
+    // PRINT_ID(GeometricMaterial);
+    // PRINT_ID(ShadingModel);
+    // PRINT_ID(ShadingProgram);
+
+
+    // Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/triangle_mesh2.gmat");
+    // Resource<Material> mat = rm.load_from_file<Material>("resources/color.mat");
+    // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/color_shading.sm");
+    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/simple_shading/simple.gmat");
+    Resource<Material> mat = rm.load_from_file<Material>("resources/simple_shading/simple.mat");
+    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/simple_shading/simple.sm");
+
+    VertexArrayData vad;
+    vad.layout.num_vertices = 3;
+    vad.layout.vertices_starting_index = 0;
+    vad.layout.indexed = false;
+    vad.attribute_buffers = std::vector<std::vector<uint8_t>>(2);
+    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*3);
+    vad.attribute_buffers[1] = std::vector<uint8_t>(3*sizeof(float)*3);
+    float *positions = (float *) &(vad.attribute_buffers[0][0]);
+    float *colors = (float *) &(vad.attribute_buffers[1][0]);
+    float _positions[3*3] = {
+        -0.5,-0.5,  0.5,
+        0.5,-0.5,  0.5,
+        0, 1.0/sqrt(2),  0.5
+    };
+    float _colors[3*3] = {
+        1,0,0,
+        0,1,0,
+        0,0,1,
+    };
+    memcpy(positions, _positions, sizeof(_positions));
+    memcpy(colors, _colors, sizeof(_colors));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_color"));
+
+    Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
+
+    gi = new GeometricMaterialInstance(gmat, va);
+    mi = new MaterialInstance(mat);
+    smi = new ShadingModelInstance(sm);
+    // Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);
+    draw = Draw(rm, *gi, *mi, *smi);
 
     // Initialize the entity model, with no entities.
     entity_model = EntityModel(); 
@@ -63,12 +114,56 @@ void CGSandbox::init()
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
 
-    // Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/simple_shading/simple.gmat");
-    // Resource<Material> mat = rm.load_from_file<Material>("resources/simple_shading/simple.mat");
-    // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/simple_shading/simple.sm");
+    // Entity cameraman = em.new_entity();
+    // Camera *camera = em.add_aspect<Camera>(cameraman);
+    // camera->bottom_left[0] = 0;
+    // camera->bottom_left[1] = 0;
+    // camera->top_right[0] = 1;
+    // camera->top_right[1] = 1;
+    // Transform *camera_transform = em.add_aspect<Transform>(cameraman);
+    // camera_transform->position[0] = 0;
+    // camera_transform->position[1] = 0;
+    // camera_transform->position[2] = 0;
 
+    // for (int i = 0; i < 8; i++) create_dude(em);
 
-    test_world(em, rm);
+    /*
+    for (int i = 0; i < 1000000; i++) {
+        Entity e = em.new_entity();
+        if (frand() > 0.3) {
+            em.add_aspect<Transform>(e);
+            // if (frand() > 0.3) em.destroy_aspect<Transform>(e);
+        }
+        if (frand() > 0.6) em.add_aspect<Camera>(e);
+        if (frand() > 0.5) em.destroy_entity(e);
+    }
+    */
+
+    #if 0
+    for (int i = 0; i < 10; i++) {
+        Entity e = em.new_entity();
+        Transform *t = em.add_aspect<Transform>(e);
+        t->position[0] = 3*frand();
+        t->position[1] = 3*frand();
+        t->position[2] = 3*frand();
+        Drawable *d = em.add_aspect<Drawable>(e);
+        d->geometric_material = gmat->new_instance();
+        d->material = mat->new_instance();
+        d->material.properties.set("vec4 uniform_color", vec4(0,1,1,1));
+    }
+    #endif
+
+    {
+        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
+        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
+        Entity dolphin = em.new_entity();
+        Transform *t = em.add_aspect<Transform>(dolphin);
+        Drawable *drawable = em.add_aspect<Drawable>(dolphin);
+        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        drawable->material = MaterialInstance(mat);
+        drawable->material->properties.set_float(
+    }
+
 }
 void CGSandbox::close()
 {

@@ -11,7 +11,8 @@ section vertex {
     GLSL
         // if (multiply_before_adding) return color_multiplier * v_color + add_to_color;
         // else return color_multiplier * (v_color + add_to_color);
-        return v_color + add_to_color;
+        // return v_color + add_to_color;
+        return v_color * color_multiplier;
     END
     }
 }

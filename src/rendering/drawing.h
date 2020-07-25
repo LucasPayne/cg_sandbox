@@ -8,18 +8,25 @@ Drawing submodule of the rendering module.
 #include "resource_model/resource_model.h"
 
 struct PropertySheet {
+    ShadingBlock *block;
     std::vector<uint8_t> data;
     size_t size;
     bool in_sync;
     GLuint buffer_id;
 
     // Create a property sheet for a specific block. This matches the size of the block.
-    static PropertySheet instantiate_from(ShadingBlock properties);
+    static PropertySheet instantiate_from(ShadingBlock &properties);
 
     // Synchronize application data with graphics data. This only uploads if a property changes.
     void synchronize();
 
-    //todo: interface for setting properties.
+    // Interface for setting properties.
+    // These functions used a string hash, which might not be ideal for properties which change a lot.
+    inline void set_float(const std::string &name, float val) {
+        size_t offset = block->entry_layout[name].offset;
+        *((float *) &data[offset]) = val;
+        in_sync = false;
+    }
 };
 
 template <typename T>
@@ -33,6 +40,7 @@ struct GMSMInstance {
         } else {
             properties.size = 0;
             properties.buffer_id = 0;
+            properties.block = nullptr;
         }
     }
 };

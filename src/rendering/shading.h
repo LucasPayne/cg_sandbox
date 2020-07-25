@@ -158,7 +158,7 @@ struct ShadingProgram : public IResourceType<ShadingProgram> {
         exit(EXIT_FAILURE);
     }
     static bool unload(void *data);
-    // OpenGL-related data
+
     GLuint program_id;
 };
 

@@ -155,6 +155,9 @@ Create a new shading program from the triple of GeometricMaterial + Material + S
 2) Compile it, and store the OpenGL handle to the program object,
 3) Compute and store introspective information about the program.
 --------------------------------------------------------------------------------*/
+// Helper function declarations
+std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name);
+//--------------------------------------------------------------------------------
 ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
                                                        Material &m,
                                                        ShadingModel &sm)
@@ -342,12 +345,16 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     //================================================================================
     // Shared uniforms. This snippet will be included in each shader file.
     std::string uniforms_snippet = "";
-    // for (ShadingParameter *uniform : used_uniforms) {
-    //     uniforms_snippet += "uniform " + uniform->type + " " + uniform->name + ";\n";
-    // }
-
-    //todo: include global property blocks
-    //////////////////////////////////////////////////////////////////////////////////
+    // Generation of GLSL property block declarations is separated into another function.
+    if (g.has_properties) {
+        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_GeometricMaterial");
+    }
+    if (m.has_properties) {
+        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_Material");
+    }
+    if (sm.has_properties) {
+        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_ShadingModel");
+    }
 
     // Vertex shader
     //--------------------------------------------------------------------------------
@@ -589,6 +596,25 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
 
     return program;
 }
+// More GLSL code generation, for property block declarations (std140-layout uniform blocks for material properties).
+std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name)
+{
+    std::string declaration = "";
+    declaration += "layout (std140) uniform " + block_name + "{\n";
+
+    for (ShadingBlockEntry &entry : block.entries) {
+        GLSLType type = GLSLType::from_ID(entry.type);
+        if (entry.is_array) {
+            declaration += "    " + type.name + " " + entry.name + "[" + std::to_string(entry.array_length) + "];\n";
+        } else {
+            declaration += "    " + type.name + " " + entry.name + ";\n";
+        }
+    }
+
+    declaration += "};\n";
+    return declaration;
+}
+
 
 ShadingFileASTNode *ShadingFileDetails::parse_shading_file(std::istream &stream)
 {
@@ -699,43 +725,20 @@ ShadingFileASTBlock *ShadingFileDetails::find_block(ShadingFileASTNode *node, co
     return last_found;
 }
 
-/*--------------------------------------------------------------------------------
-A ShadingBlock describes the layout of a "block", a block of memory with
-named entries declared in shading files. These lead to, in generated glsl code,
-deterministic-layout (achieved with glsl's std140 feature) uniform/constant blocks
-that can be mapped to ranges uniform/constant buffers, which data can be uploaded by
-the applicaiton.
-
-Since the application has a ShadingBlock structure detailing the layout, it can
-write to it correctly and update uniform values available in the shader program.
---------------------------------------------------------------------------------*/
-class ShadingBlock {
-public:
-    size_t block_size;
-private:
-    std::unordered_map<ShadingBlockSemantic, size_t> offsets;
-};
-// class ShadingProperties {
-// public:
-//     size_t property_block_size;
-//     
-// 
-// 
-// 
-//     // std::vector<PropertySemantic> semantics;
-//     // size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
-//     //     for (const Semantic &semantic : semantics) {
-//     //         if (semantic.type_and_name
-//     //     }
-//     // }
-// 
-// private:
-//     std::unordered_map<ShadingPropertySemantic, size_t> offsets;
-// };
 
 ShadingBlock ShadingFileDetails::create_block(ShadingFileASTBlock *block)
 {
     // Given a block node in the shading file AST, try to create a block structure from it.
+
+    size_t current_offset = 0;
+    ShadingFileASTBlockEntry *entry = block->first_entry;
+    while (entry != nullptr) {
+
+        GLSLType type = GLSLType::from_name(entry->type);
+        // if (
+
+        entry = entry->next_entry;
+    }
 }
 
 

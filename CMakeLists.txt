@@ -33,6 +33,7 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 add_executable(main
     src/main.cpp
     src/data_structures/table.cpp
+    src/mathematics/mathematics.cpp
     src/cg_sandbox.cpp
     src/resource_model/resource_model.cpp
     src/rendering/rendering.cpp

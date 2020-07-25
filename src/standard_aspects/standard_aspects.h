@@ -8,7 +8,9 @@
 struct Transform : public IAspectType<Transform> {
     float position[3];
     float rotation[3];
-    uint32_t flags;
+
+    void init(float x, float y, float z);
+    void init(float x, float y, float z, float theta_x, float theta_y, float theta_z);
 
     // mat4x4 model_matrix() const {
     //     //construct it
@@ -20,6 +22,9 @@ struct Camera : public IAspectType<Camera> {
     float bottom_left[2];
     float top_right[2];
     float projection_matrix[16];
+
+    // Initialize this to a projective camera, with the default full viewport.
+    void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
 
     // mat4x4 vp_matrix() const {
     //     Transform *t = entity_model.get_aspect<Transform>(entity);

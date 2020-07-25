@@ -78,6 +78,14 @@ bool Material::load(void *data, std::istream &stream)
     // Validate that this has the relevant directives and sections for a material (mat) shading file.
     if (find_directive(root, "type mat") == nullptr) parse_error("Materials must contain \"#type gmat\"");
 
+    // Look for the optional properties block.
+    ShadingFileASTBlock *properties_block = find_block(root, "properties");
+    if (properties_block != nullptr) {
+        // This shading file has a property block.
+        material->has_properties = true;
+        material->properties = properties_block->deastify();
+    }
+
     ShadingFileASTNode *frag_section;
     if ((frag_section = find_section(root, "frag")) == nullptr) parse_error("Materials must contain a \"frag\" section.");
 
@@ -106,6 +114,15 @@ bool ShadingModel::load(void *data, std::istream &stream)
 
     // Validate that this has the relevant directives and sections for a shading model (sm) shading file.
     if (find_directive(root, "type shading_model") == nullptr) parse_error("Shading models must contain \"#type shading_model\"");
+
+    // Look for the optional properties block.
+    ShadingFileASTBlock *properties_block = find_block(root, "properties");
+    if (properties_block != nullptr) {
+        // This shading file has a property block.
+        shading_model->has_properties = true;
+        shading_model->properties = properties_block->deastify();
+    }
+
     ShadingFileASTNode *geom_post_section;
     if ((geom_post_section = find_section(root, "geom_post")) == nullptr) parse_error("Shading models must contain a \"geom_post\" section.");
     ShadingFileASTNode *frag_post_section;
@@ -545,9 +562,9 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     //     std::cout << "    " << va->type << " " << va->name << "\n";
     // }
     print_listing("vertex_shader", vertex_shader);
-    getchar();
+    // getchar();
     print_listing("fragment_shader", fragment_shader);
-    getchar();
+    // getchar();
 
     // Compile and link OpenGL program object.
     GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
@@ -784,7 +801,6 @@ A single-structure definition, or an array of structures
 --------------------------------------------------------------------------------*/
 ShadingBlock ShadingFileASTBlock::deastify() const
 {
-    printf("deast\n");getchar();
     ShadingBlock block;
 
     size_t current_offset = 0;
@@ -805,7 +821,7 @@ ShadingBlock ShadingFileASTBlock::deastify() const
         entry_node = entry_node->next_entry;
     }
     block.block_size = current_offset;
-    printf("block size: %zu\n", block.block_size);getchar();
+    // printf("block size: %zu\n", block.block_size);getchar();
     
     return block;
 }

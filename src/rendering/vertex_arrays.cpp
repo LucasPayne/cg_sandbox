@@ -62,8 +62,8 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
     // This semantic has not been encountered yet. Add it to the list and return this newly used binding index.
     encountered_semantics.push_back(*this);
     VertexAttributeBindingIndex new_binding_index = encountered_semantics.size() - 1;
-    printf("Adding new vertex semantic, %s, binding index %u, type: %u, size: %u\n", name, new_binding_index, type, size);
-    getchar();
+    // printf("Adding new vertex semantic, %s, binding index %u, type: %u, size: %u\n", name, new_binding_index, type, size);
+    // getchar();
     return new_binding_index;
 }
 

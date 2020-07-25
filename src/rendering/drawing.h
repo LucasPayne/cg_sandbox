@@ -41,6 +41,19 @@ struct PropertySheet {
         *((vec3 *) &data[offset]) = v;
         in_sync = false;
     }
+    inline void set_vec4(const std::string &name, float a, float b, float c, float d) {
+        size_t offset = block->entry_layout[name].offset;
+        *(((float *) &data[offset]) + 0) = a;
+        *(((float *) &data[offset]) + 1) = b;
+        *(((float *) &data[offset]) + 2) = c;
+        *(((float *) &data[offset]) + 3) = d;
+        in_sync = false;
+    }
+    inline void set_vec4(const std::string &name, const vec4 &v) {
+        size_t offset = block->entry_layout[name].offset;
+        *((vec4 *) &data[offset]) = v;
+        in_sync = false;
+    }
     inline void set_mat4x4(const std::string &name, const mat4x4 &M) {
         size_t offset = block->entry_layout[name].offset;
         *((mat4x4 *) &data[offset]) = M;

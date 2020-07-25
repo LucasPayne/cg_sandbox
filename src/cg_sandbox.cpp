@@ -37,14 +37,45 @@ void test_world(EntityModel &em, ResourceModel &rm)
         Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
         shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
+        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
+        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
         Entity dolphin = em.new_entity();
         Transform *t = em.add_aspect<Transform>(dolphin);
         t->init(0,0,1);
         Drawable *drawable = em.add_aspect<Drawable>(dolphin);
-        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        //drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
+        drawable->material.properties.set_vec4("color", 1,0,1,1);
+#if 1
+    VertexArrayData vad;
+    vad.layout.num_vertices = 3;
+    vad.layout.vertices_starting_index = 0;
+    vad.layout.indexed = false;
+    vad.attribute_buffers = std::vector<std::vector<uint8_t>>(2);
+    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*3);
+    vad.attribute_buffers[1] = std::vector<uint8_t>(3*sizeof(float)*3);
+    float *positions = (float *) &(vad.attribute_buffers[0][0]);
+    float *colors = (float *) &(vad.attribute_buffers[1][0]);
+    float _positions[3*3] = {
+        -0.5,-0.5,  0.5,
+        0.5,-0.5,  0.5,
+        0, 1.0/sqrt(2),  0.5
+    };
+    float _colors[3*3] = {
+        1,0,0,
+        0,1,0,
+        0,0,1,
+    };
+    memcpy(positions, _positions, sizeof(_positions));
+    memcpy(colors, _colors, sizeof(_colors));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
+    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_color"));
+
+    Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
+
+        drawable->geometric_material = GeometricMaterialInstance(gmat, va);
+#endif
     }
 }
 
@@ -70,6 +101,7 @@ void CGSandbox::init()
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
 
+    glDisable(GL_CULL_FACE);
     test_world(em, rm);
 }
 void CGSandbox::close()

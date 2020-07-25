@@ -17,6 +17,49 @@ Provides rendering resources:
 #include "resource_model/resource_model.h"
 #include "rendering/shading.h"
 
+//--GLSL stuff--------------------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////
+#define MAX_GLSL_TYPE_NAME_LENGTH 31
+typedef uint8_t GLSLTypeID;
+struct GLSLType {
+    GLSLTypeID id;
+    char name[MAX_GLSL_TYPE_NAME_LENGTH + 1];
+    size_t size;
+
+    // All glsl types are defined in a global array. This holds information the application might need
+    // about a glsl type.
+    static GLSLType glsl_types[];
+    static inline GLSLType from_name(const std::string &name) {
+        for (GLSLType type : glsl_types) {
+            if (strncmp(name, name.c_str(), MAX_GLSL_TYPE_NAME_LENGTH) == 0) return type;
+        }
+        fprintf(stderr, "ERROR: GLSL type \"%s\" doesn't exist or is not accounted for.\n", name);
+        exit(EXIT_FAILURE);
+    };
+    static inline GLSLType from_ID(GLSLTypeID id) {
+        for (GLSLType type : glsl_types) {
+            if (type.id == id) return type;
+        }
+        fprintf(stderr, "ERROR: GLSL type with ID \"%u\" doesn't exist.\n", id);
+        exit(EXIT_FAILURE);
+    };
+
+    //---std140 stuff?
+};
+#define TYPE
+static GLSLType GLSLType::glsl_types[] = {
+    // The glsl type ID is the index into this array.
+    // !-IMPORTANT-! Make sure the ID written here is correct.
+    {0, "float", 4},
+    {1, "vec2", 8},
+    {2, "vec3", 12},
+    {3, "vec4", 16},
+    {4, "bool", 1},
+    {5, "int", 4},
+};
+#undef TYPE
+//--end GLSL stuff----------------------------------------------------------------
+
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
 --------------------------------------------------------------------------------*/
@@ -101,27 +144,40 @@ struct PropertySemantic {
     // }
 };
 
-typedef uint8_t ShadingPropertyType;
-enum ShadingPropertyTypes {
-    SHADING_PROPERTY_TYPE_FLOAT,
-    SHADING_PROPERTY_TYPE_VEC2,
-    SHADING_PROPERTY_TYPE_VEC3,
-    SHADING_PROPERTY_TYPE_VEC4,
-};
-#define MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH 31
-struct ShadingPropertySemantic {
-    ShadingPropertyType type;
-    char name[MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
+#define MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH 31
+struct ShadingBlockEntry {
+    GLSLTypeID type;
+    char name[MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH + 1];
+    bool is_array;
+    unsigned int array_length;
 
-    ShadingPropertySemantic(ShadingPropertyType _type, const std::string &_name) :
-        type{_type}
+    ShadingBlockEntry(GLSLType &_type, const std::string &_name) :
+        type{_type}, is_array{false}
     {
-        if (_name.length() > MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH) {
-            fprintf(stderr, "ERROR: Shading property semantic name too long.\n");
+        if (_name.length() > MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Shading block entry name too long.\n");
             exit(EXIT_FAILURE);
         }
-        snprintf(name, MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _name.c_str());
+        snprintf(name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH+1, "%s", _name.c_str());
     }
+};
+
+/*--------------------------------------------------------------------------------
+A ShadingBlock describes the layout of a block of memory with
+named entries declared in shading files. These lead to, in generated glsl code,
+deterministic-layout (achieved with glsl's std140 feature) uniform/constant blocks
+that can be mapped to ranges uniform/constant buffers, whose data can be uploaded by
+the application.
+
+Since the application has a ShadingBlock structure detailing the layout, it can
+write to it correctly and update uniform values available in the shader program.
+--------------------------------------------------------------------------------*/
+class ShadingBlock {
+public:
+    size_t block_size;
+private:
+    std::vector<ShadingBlockEntry> entries;
+    // std::unordered_map<ShadingBlockEntry, size_t> offsets;
 };
 // class ShadingProperties {
 // public:

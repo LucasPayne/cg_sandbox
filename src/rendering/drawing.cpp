@@ -6,9 +6,10 @@ void Draw::draw()
     glUseProgram(shading_program->program_id);
     glBindVertexArray(g_instance->vertex_array->gl_vao_id);
 
-    g_instance->bind();
-    m_instance->bind();
-    sm_instance->bind();
+    //todo: bind property sheets
+    //g_instance->bind();
+    //m_instance->bind();
+    //sm_instance->bind();
 
     GLenum primitive_type = g_instance->base->primitive;
     VertexArrayLayout &layout = g_instance->vertex_array->layout;

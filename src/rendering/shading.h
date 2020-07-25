@@ -83,31 +83,63 @@ struct ShadingDataflow {
 //-End shading dataflow structure-------------------------------------------------
 #define MAX_PROPERTY_SEMANTIC_NAME_LENGTH 31
 struct PropertySemantic {
-    size_t offset;
-    size_t size;
+    // size_t offset;
+    // size_t size;
 
-    GLenum type;
-    GLint type_size;
+    // GLenum type;
+    // GLint type_size;
 
-    char name[MAX_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
-    PropertySemantic(size_t _offset, size_t _size, const std::string &_type_and_name) :
-        offset{_offset}, size{_size}
+    // char name[MAX_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
+    // PropertySemantic(size_t _offset, size_t _size, const std::string &_type_and_name) :
+    //     offset{_offset}, size{_size}
+    // {
+    //     if (_type_and_name.length() > MAX_PROPERTY_SEMANTIC_NAME_LENGTH) {
+    //         fprintf(stderr, "ERROR: Property semantic name too long.\n");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     snprintf(name, MAX_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _type_and_name.c_str());
+    // }
+};
+
+typedef uint8_t ShadingPropertyType;
+enum ShadingPropertyTypes {
+    SHADING_PROPERTY_TYPE_FLOAT,
+    SHADING_PROPERTY_TYPE_VEC2,
+    SHADING_PROPERTY_TYPE_VEC3,
+    SHADING_PROPERTY_TYPE_VEC4,
+};
+#define MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH 31
+struct ShadingPropertySemantic {
+    ShadingPropertyType type;
+    char name[MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
+
+    ShadingPropertySemantic(ShadingPropertyType _type, const std::string &_name) :
+        type{_type}
     {
-        if (_type_and_name.length() > MAX_PROPERTY_SEMANTIC_NAME_LENGTH) {
-            fprintf(stderr, "ERROR: Property semantic name too long.\n");
+        if (_name.length() > MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Shading property semantic name too long.\n");
             exit(EXIT_FAILURE);
         }
-        snprintf(name, MAX_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _type_and_name.c_str());
+        snprintf(name, MAX_SHADING_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _name.c_str());
     }
 };
-struct PropertyLayout {
-    std::vector<PropertySemantic> semantics;
-    size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
-        for (const Semantic &semantic : semantics) {
-            if (semantic.type_and_name
-        }
-    }
-};
+// class ShadingProperties {
+// public:
+//     size_t property_block_size;
+//     
+// 
+// 
+// 
+//     // std::vector<PropertySemantic> semantics;
+//     // size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
+//     //     for (const Semantic &semantic : semantics) {
+//     //         if (semantic.type_and_name
+//     //     }
+//     // }
+// 
+// private:
+//     std::unordered_map<ShadingPropertySemantic, size_t> offsets;
+// };
 /*--------------------------------------------------------------------------------
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
@@ -120,14 +152,16 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     GLenum primitive;
     uint32_t patch_length; // used if primitive == GL_PATCHES
 
-    PropertyLayout property_layout;
+    bool has_properties;
+    ShadingProperties properties;
 };
 struct Material : public IResourceType<Material> {
     static bool load(void *data, std::istream &stream);
     static bool unload(void *data);
     ShadingDataflow dataflow;
 
-    PropertyLayout property_layout;
+    bool has_properties;
+    ShadingProperties properties;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
     static bool load(void *data, std::istream &stream);
@@ -135,7 +169,8 @@ struct ShadingModel : public IResourceType<ShadingModel> {
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 
-    PropertyLayout property_layout;
+    bool has_properties;
+    ShadingProperties properties;
 };
 
 /*--------------------------------------------------------------------------------
@@ -186,6 +221,7 @@ enum ShadingFileASTNodeKinds {
     SHADING_FILE_NODE_DIRECTIVE,
     SHADING_FILE_NODE_SECTION,
     SHADING_FILE_NODE_OUTPUT,
+    SHADING_FILE_NODE_BLOCK,
 };
 struct ShadingFileASTNode {
     virtual int kind() const { return SHADING_FILE_NODE_ROOT; }
@@ -248,6 +284,33 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
         return deastified;
     };
 };
+
+// Block AST parts.
+struct ShadingFileASTBlockEntry {
+    const char *type;
+    const char *name;
+    bool is_array;
+    unsigned int array_length;
+    ShadingFileASTBlockEntry *next_entry;
+
+    ShadingFileASTBlockEntry(const char *_type, const char *_name) :
+        type{_type}, name{_name}, is_array{false}, next_entry{nullptr}
+    {}
+    ShadingFileASTBlockEntry(const char *_type, const char *_name, unsigned int _array_length) :
+        type{_type}, name{_name}, is_array{true}, array_length{_array_length}, next_entry{nullptr}
+    {}
+};
+struct ShadingFileASTBlock : ShadingFileASTNode {
+    int kind() const { return SHADING_FILE_NODE_BLOCK; }
+    const char *name;
+    ShadingFileASTBlockEntry *first_entry;
+    ShadingFileASTBlock(const char *_name) :
+        name{_name}, first_entry{nullptr}
+    {}
+};
+
+
+
 /*--------------------------------------------------------------------------------
     Low level parser details.
 --------------------------------------------------------------------------------*/

@@ -25,19 +25,27 @@ NOTES:
     ShadingFileASTSection *section;
     ShadingFileASTOutput *output;
     ShadingFileASTParameter *parameter;
+    ShadingFileASTBlock *block;
+    ShadingFileASTBlockEntry *block_entry;
     const char *string;
+    unsigned int unsigned_int;
 }
 %token <string> DIRECTIVE
 %token SECTION
+%token BLOCK
 %token OUT
 %token IN
 %token UNIFORM
 %token <string> GLSL_SNIPPET
 %token <string> IDENTIFIER
+%token <unsigned_int> UNSIGNED_INT
 
 %type <node> ShadingFile
 %type <directive> Directive
 %type <section> Section
+%type <block> Block
+%type <block_entry> BlockEntry
+%type <block_entry> BlockEntries
 %type <output> ShadingOutput
 %type <parameter> OutputParameter
 %type <parameter> OutputParameterList
@@ -63,6 +71,10 @@ ShadingFile: /* type: ShadingFileASTNode* */
         $1->next = $2;
         $$ = $1;
     }
+|   Block ShadingFile {
+        $1->next = $2;
+        $$ = $1;
+    }
 |   /* nothing */ {
         $$ = nullptr;
     }
@@ -73,6 +85,37 @@ Section: /* type: ShadingFileASTSection* : ShadingFileASTNode */
         auto section_internals = $4;
         $$ = new ShadingFileASTSection(section_name);
         $$->first_child = section_internals;
+    }
+
+Block: /* type ShadingFileASTBlock* : ShadingFileASTNode */
+    BLOCK IDENTIFIER '{' BlockEntries '}' {
+        const char *block_name = $2;
+        auto block_entries = $4;
+        $$ = new ShadingFileASTBlock(block_name);
+        $$->first_entry = block_entries;
+    }
+BlockEntries: /* type: ShadingFileASTBlockEntry* */
+    /* nothing */ {
+        $$ = nullptr;
+    }
+|   BlockEntry BlockEntries {
+        $1->next_entry = $2;
+        $$ = $1;
+    }
+BlockEntry: /* type: ShadingFileASTBlockEntry* */
+    IDENTIFIER IDENTIFIER ';' {
+        // Regular entry, e.g. "vec4 color;"
+        const char *type = $1;
+        const char *name = $2;
+        $$ = new ShadingFileASTBlockEntry(type, name);
+    }
+|   IDENTIFIER IDENTIFIER '[' UNSIGNED_INT ']' ';' {
+        // Array entry with integer literal array size, e.g.
+        //     "vec4 colors[3];"
+        const char *type = $1;
+        const char *name = $2;
+        const unsigned int array_length = $4;
+        $$ = new ShadingFileASTBlockEntry(type, name, array_length);
     }
 
 Directive: /* type: ShadingFileASTDirective* : ShadingFileASTNode */

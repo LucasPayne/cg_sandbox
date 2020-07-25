@@ -142,7 +142,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     vertex_array->gl_buffer_id = buffer_id;
     vertex_array->gl_index_buffer_id = index_buffer_id;
 
-    // Release OpenGL IDs.
+    // Unbind OpenGL state.
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 

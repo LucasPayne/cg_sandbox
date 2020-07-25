@@ -37,6 +37,14 @@ bool GeometricMaterial::load(void *data, std::istream &stream)
     ShadingFileASTNode *vertex_section;
     if ((vertex_section = find_section(root, "vertex")) == nullptr) parse_error("Geometric materials must contain a \"vertex\" section.");
 
+    // Look for the optional properties block.
+    ShadingFileASTBlock *properties_block = find_block(root, "properties");
+    if (properties_block != nullptr) {
+        // This shading file has a property block.
+        geometric_material->has_property_block = true;
+        geometric_material->property_block = create_block(properties_block);
+    }
+
     //-todo: primitive type
     GLenum primitive_type;
     primitive_type = GL_TRIANGLES;
@@ -186,12 +194,13 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
         The minimum set of required outputs at each stage are marked as used.
         The minimum set of required vertex attributes, inputs to the GeometricMaterial stage, are marked as used.
         The special case of the always-required clip_position is accounted for.
-        Used uniforms will be stored in a list. This is all that is needed for the uniform-declaration code.
+            // Used uniforms will be stored in a list. This is all that is needed for the uniform-declaration code.
         Used vertex attributes will be stored in a list.
     notes/todo:
         Possibly frag-post will also want to look for inputs from geom-post and GeometricMaterial.
     --------------------------------------------------------------------------------*/
     std::vector<ShadingParameter *> used_uniforms(0);
+        // addendum: currently this isn't really useful, since all uniforms are added to the property blocks anyway.
     std::vector<ShadingParameter *> used_vertex_attributes(0);
 
     // This macro is used to mark an output as used, along with its inputs and uniforms.
@@ -333,9 +342,13 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     //================================================================================
     // Shared uniforms. This snippet will be included in each shader file.
     std::string uniforms_snippet = "";
-    for (ShadingParameter *uniform : used_uniforms) {
-        uniforms_snippet += "uniform " + uniform->type + " " + uniform->name + ";\n";
-    }
+    // for (ShadingParameter *uniform : used_uniforms) {
+    //     uniforms_snippet += "uniform " + uniform->type + " " + uniform->name + ";\n";
+    // }
+
+    //todo: include global property blocks
+    //////////////////////////////////////////////////////////////////////////////////
+
     // Vertex shader
     //--------------------------------------------------------------------------------
     std::string vertex_shader(
@@ -667,6 +680,66 @@ ShadingDataflow ShadingFileDetails::read_dataflow(ShadingFileASTNode *node)
     dataflow.outputs = outputs;
     return dataflow;
 }
+
+
+// Blocks
+ShadingFileASTBlock *ShadingFileDetails::find_block(ShadingFileASTNode *node, const std::string name)
+{
+    // Find a block defined in the node's section, starting at the node.
+    ShadingFileASTBlock *last_found = nullptr;
+    while (node != nullptr) {
+        if (node->kind() == SHADING_FILE_NODE_BLOCK) {
+            ShadingFileASTBlock *block = (ShadingFileNode *) node;
+            if (block->name == name) {
+                last_found = section;
+            }
+        }
+        node = node->next;
+    }
+    return last_found;
+}
+
+/*--------------------------------------------------------------------------------
+A ShadingBlock describes the layout of a "block", a block of memory with
+named entries declared in shading files. These lead to, in generated glsl code,
+deterministic-layout (achieved with glsl's std140 feature) uniform/constant blocks
+that can be mapped to ranges uniform/constant buffers, which data can be uploaded by
+the applicaiton.
+
+Since the application has a ShadingBlock structure detailing the layout, it can
+write to it correctly and update uniform values available in the shader program.
+--------------------------------------------------------------------------------*/
+class ShadingBlock {
+public:
+    size_t block_size;
+private:
+    std::unordered_map<ShadingBlockSemantic, size_t> offsets;
+};
+// class ShadingProperties {
+// public:
+//     size_t property_block_size;
+//     
+// 
+// 
+// 
+//     // std::vector<PropertySemantic> semantics;
+//     // size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
+//     //     for (const Semantic &semantic : semantics) {
+//     //         if (semantic.type_and_name
+//     //     }
+//     // }
+// 
+// private:
+//     std::unordered_map<ShadingPropertySemantic, size_t> offsets;
+// };
+
+ShadingBlock ShadingFileDetails::create_block(ShadingFileASTBlock *block)
+{
+    // Given a block node in the shading file AST, try to create a block structure from it.
+}
+
+
+
 /*================================================================================
     END private implementation details.
 ================================================================================*/

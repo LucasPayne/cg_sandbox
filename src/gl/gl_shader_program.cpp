@@ -70,8 +70,6 @@ GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shade
         std::cerr << "ERROR: Failed to create shader program.\n";
         exit(EXIT_FAILURE);
     }
-    printf("Linking v and f: %u, %u\n", m_vertex_shader.ID(), m_fragment_shader.ID());
-    getchar();
     glAttachShader(m_gl_shader_program_id, m_vertex_shader.ID());
     glAttachShader(m_gl_shader_program_id, m_fragment_shader.ID());
     glLinkProgram(m_gl_shader_program_id);

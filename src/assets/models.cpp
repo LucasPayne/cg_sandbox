@@ -54,16 +54,16 @@ VertexArrayData load_OFF_model(const std::string &path)
         if (should_be_three != 3) load_error("Non-triangle faces are not supported.");
         if (index_bytes == 1) {
             ((uint8_t *) &index_data[0])[3*i + 0] = (uint8_t) a;
-            ((uint8_t *) &index_data[0])[3*i + 0] = (uint8_t) b;
-            ((uint8_t *) &index_data[0])[3*i + 0] = (uint8_t) c;
+            ((uint8_t *) &index_data[0])[3*i + 1] = (uint8_t) b;
+            ((uint8_t *) &index_data[0])[3*i + 2] = (uint8_t) c;
         } else if (index_bytes == 2) {
             ((uint16_t *) &index_data[0])[3*i + 0] = (uint16_t) a;
-            ((uint16_t *) &index_data[0])[3*i + 0] = (uint16_t) b;
-            ((uint16_t *) &index_data[0])[3*i + 0] = (uint16_t) c;
+            ((uint16_t *) &index_data[0])[3*i + 1] = (uint16_t) b;
+            ((uint16_t *) &index_data[0])[3*i + 2] = (uint16_t) c;
         } else if (index_bytes == 4) {
             ((uint32_t *) &index_data[0])[3*i + 0] = (uint32_t) a;
-            ((uint32_t *) &index_data[0])[3*i + 0] = (uint32_t) b;
-            ((uint32_t *) &index_data[0])[3*i + 0] = (uint32_t) c;
+            ((uint32_t *) &index_data[0])[3*i + 1] = (uint32_t) b;
+            ((uint32_t *) &index_data[0])[3*i + 2] = (uint32_t) c;
         }
     }
     // Edge data is ignored.
@@ -74,15 +74,20 @@ VertexArrayData load_OFF_model(const std::string &path)
     data.layout.num_vertices = num_vertices;
     data.layout.vertices_starting_index = 0;
     data.attribute_buffers = std::vector<std::vector<uint8_t>>(1);
-    data.attribute_buffers[0] = vertex_data;
+    data.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
+    data.attribute_buffers[0] = std::vector<uint8_t>(vertex_data.size());
+        //--copying for debug
+        memcpy(&(data.attribute_buffers[0])[0], &vertex_data[0], vertex_data.size());
     // Indices
     data.layout.indexed = true;
     if (index_bytes == 1) data.layout.index_type = GL_UNSIGNED_BYTE;
     else if (index_bytes == 2) data.layout.index_type = GL_UNSIGNED_SHORT;
     else if (index_bytes == 4) data.layout.index_type = GL_UNSIGNED_INT;
     data.layout.num_indices = 3 * num_triangles;
-    data.index_buffer = index_data;
-    data.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
+    data.layout.indices_starting_index = 0;
+    data.index_buffer = std::vector<uint8_t>(index_data.size());
+        //--copying for debug
+        memcpy(&data.index_buffer[0], &index_data[0], index_data.size());
 
     return data;
 }

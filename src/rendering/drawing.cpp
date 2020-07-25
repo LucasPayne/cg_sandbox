@@ -6,12 +6,28 @@ void Draw::draw()
     glUseProgram(shading_program->program_id);
     glBindVertexArray(g_instance->vertex_array->gl_vao_id);
 
+    GeometricMaterial &geometric_material = *(g_instance->base);
+    Material &material = *(m_instance->base);
+    ShadingModel &shading_model = *(sm_instance->base);
+
     // Bind property sheets.
     // First, make sure that the data in graphics memory is up-to-date.
-    g_instance->properties.synchronize();
-    m_instance->properties.synchronize();
-    sm_instance->properties.synchronize();
-    // 
+    // Then, bind the property sheet buffers to the reserved binding points, 0, 1, and 2.
+    //     0: GeometricMaterial properties
+    //     1: Material properties
+    //     2: ShadingModel properties
+    if (geometric_material.has_properties) {
+        g_instance->properties.synchronize();
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, g_instance->properties.buffer_id);
+    }
+    if (material.has_properties) {
+        m_instance->properties.synchronize();
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_instance->properties.buffer_id);
+    }
+    if (shading_model.has_properties) {
+        sm_instance->properties.synchronize();
+        glBindBufferBase(GL_UNIFORM_BUFFER, 2, sm_instance->properties.buffer_id);
+    }
 
     GLenum primitive_type = g_instance->base->primitive;
     VertexArrayLayout &layout = g_instance->vertex_array->layout;
@@ -30,10 +46,11 @@ void Draw::draw()
 }
 
 
-PropertySheet PropertySheet::instantiate_from(ShadingBlock properties)
+PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)
 {
     // Create a property sheet for a specific block. This matches the size of the block.
     PropertySheet sheet;
+    sheet.block = &properties;
     sheet.size = properties.block_size;
     // Create properties data in application memory.
     sheet.data = std::vector<uint8_t>(sheet.size);

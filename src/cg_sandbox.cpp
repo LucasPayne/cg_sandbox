@@ -92,12 +92,12 @@ void CGSandbox::init()
     vad.attribute_buffers[1] = std::vector<uint8_t>(3*sizeof(float)*3);
     float *positions = (float *) &(vad.attribute_buffers[0][0]);
     float *colors = (float *) &(vad.attribute_buffers[1][0]);
-    static float _positions[3*3] = {
+    float _positions[3*3] = {
         -0.5,-0.5,  0.5,
         0.5,-0.5,  0.5,
         0, 1.0/sqrt(2),  0.5
     };
-    static float _colors[3*3] = {
+    float _colors[3*3] = {
         1,0,0,
         0,1,0,
         0,0,1,
@@ -110,6 +110,7 @@ void CGSandbox::init()
     Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
 
     GeometricMaterialInstance *gi = new GeometricMaterialInstance(gmat, va);
+    gi->properties.set_float("color_multiplier", 3);
     MaterialInstance *mi = new MaterialInstance(mat);
     ShadingModelInstance *smi = new ShadingModelInstance(sm);
     // Resource<ShadingProgram> program = ShadingProgram::create(rm, gmat, mat, sm);

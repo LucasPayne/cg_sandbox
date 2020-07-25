@@ -156,7 +156,7 @@ Create a new shading program from the triple of GeometricMaterial + Material + S
 3) Compute and store introspective information about the program.
 --------------------------------------------------------------------------------*/
 // Helper function declarations
-std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name);
+std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name, int binding_index);
 //--------------------------------------------------------------------------------
 ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
                                                        Material &m,
@@ -347,13 +347,13 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     std::string uniforms_snippet = "";
     // Generation of GLSL property block declarations is separated into another function.
     if (g.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_GeometricMaterial");
+        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_GeometricMaterial", 0);
     }
     if (m.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_Material");
+        uniforms_snippet += generate_glsl_property_block_declaration(m.properties, "PROPERTIES_Material", 1);
     }
     if (sm.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_ShadingModel");
+        uniforms_snippet += generate_glsl_property_block_declaration(sm.properties, "PROPERTIES_ShadingModel", 2);
     }
 
     // Vertex shader
@@ -594,13 +594,16 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     ShadingProgram program;
     program.program_id = program_object.ID();
 
+    glUniformBlockBinding(program.program_id, 0, 0);
+
     return program;
 }
 // More GLSL code generation, for property block declarations (std140-layout uniform blocks for material properties).
-std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name)
+// This is given a name and a binding index. OpenGL 4.2+ explicit uniform block binding indices in glsl shaders is used.
+std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name, int binding_index)
 {
     std::string declaration = "";
-    declaration += "layout (std140) uniform " + block_name + " {\n";
+    declaration += "layout (binding = " + std::to_string(binding_index) + ", std140) uniform " + block_name + " {\n";
 
     for (ShadingBlockEntry &entry : block.entries) {
         GLSLType type = GLSLType::from_ID(entry.type);

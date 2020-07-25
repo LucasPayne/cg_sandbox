@@ -1,16 +1,19 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
 #include "core.h"
+#include "mathematics/mathematics.h"
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 
 struct Transform : public IAspectType<Transform> {
-    float position[3];
-    float rotation[3];
+    vec3 position;
+    vec3 rotation;
 
     void init(float x, float y, float z);
+    void init(vec3 _position);
     void init(float x, float y, float z, float theta_x, float theta_y, float theta_z);
+    void init(vec3 _position, vec3 _rotation);
 
     // mat4x4 model_matrix() const {
     //     //construct it

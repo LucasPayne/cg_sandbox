@@ -7,11 +7,11 @@ Global GLSL type information.
 GLSLType GLSLType::glsl_types[] = {
     // The glsl type ID is the index into this array.
     // !-IMPORTANT-! Make sure the ID written here is correct.
-    {0, "float", 4},
-    {1, "vec2", 8},
-    {2, "vec3", 12},
-    {3, "vec4", 16},
-    {4, "bool", 1},
-    {5, "int", 4},
+    {0, "float", 4, 4},
+    {1, "vec2", 8, 8},
+    {2, "vec3", 12, 16},
+    {3, "vec4", 16, 16},
+    {4, "bool", 1, 1},
+    {5, "int", 4, 4},
 };
 #undef TYPE

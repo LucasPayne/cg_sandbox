@@ -99,16 +99,6 @@ struct ShadingBlockEntry {
     char name[MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH + 1];
     bool is_array;
     unsigned int array_length;
-
-    // ShadingBlockEntry(GLSLTypeID &_type, const std::string &_name) :
-    //     type{_type}, is_array{false}
-    // {
-    //     if (_name.length() > MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH) {
-    //         fprintf(stderr, "ERROR: Shading block entry name too long.\n");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     snprintf(name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH+1, "%s", _name.c_str());
-    // }
 };
 struct ShadingBlockEntryLayout {
     // Contains layout information for a single entry in a ShadingBlock.

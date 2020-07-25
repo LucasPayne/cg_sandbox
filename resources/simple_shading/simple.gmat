@@ -1,10 +1,16 @@
 #type gmat
 #primitive triangles
 
+block properties {
+    float color_multiplier;
+    vec4 add_to_color;
+    bool multiply_before_adding;
+}
 section vertex {
     out vec3 f_color(in vec3 v_color) {
     GLSL
-        return v_color;
+        if (multiply_before_adding) return color_multiplier * v_color + add_to_color;
+        else return color_multiplier * (v_color + add_to_color);
     END
     }
 }

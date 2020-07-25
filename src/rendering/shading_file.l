@@ -30,6 +30,7 @@ references:
     #include "rendering/rendering.h"
     using namespace ShadingFileDetails;
     #include "shading_file.tab.hh"
+    #include <assert.h>//assertions are used to verify lexing of integer literals was correct.
 
     // Set TRACE to 1 to view trace output when scanning.
     #include <stdarg.h>
@@ -109,6 +110,10 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     KEYWORD();
     return SECTION;
 }
+"block" {
+    KEYWORD();
+    return BLOCK;
+}
 "out" {
     KEYWORD();
     return OUT;
@@ -141,6 +146,10 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     KEYWORD();
     return ',';
 }
+";" {
+    KEYWORD();
+    return ';';
+}
 "GLSL" {
     tprint("GLSL snippet:\n");
     g_snippet.clear();
@@ -169,6 +178,15 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
     tprint("%s\n", yylval.string);
     return IDENTIFIER;
 }
+    /* Numerical values */
+"0"|[1-9][0-9]* {
+    tprint("Unsigned integer: %s\n", yytext);
+    unsigned int val;
+    assert(sscanf(yytext, "%u", &val) == 0);
+    yylval.unsigned_int = val;
+    return UNSIGNED_INT;
+}
+
 <<EOF>> {
     tprint("Token stream ended.\n");
     yyterminate();

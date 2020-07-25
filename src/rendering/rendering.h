@@ -21,6 +21,8 @@ Submodules:
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
 
+#include "rendering/glsl.h"
+
 #include "rendering/shading.h"
 #include "rendering/vertex_arrays.h"
 #include "rendering/drawing.h"

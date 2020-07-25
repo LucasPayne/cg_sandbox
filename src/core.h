@@ -1,6 +1,3 @@
-/*
-    
-*/
 #ifndef CORE_H
 #define CORE_H
 
@@ -14,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 
 #define frand() (rand() / (RAND_MAX * 1.0))
 

@@ -16,49 +16,7 @@ Provides rendering resources:
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
 #include "rendering/shading.h"
-
-//--GLSL stuff--------------------------------------------------------------------
-//////////////////////////////////////////////////////////////////////////////////
-#define MAX_GLSL_TYPE_NAME_LENGTH 31
-typedef uint8_t GLSLTypeID;
-struct GLSLType {
-    GLSLTypeID id;
-    char name[MAX_GLSL_TYPE_NAME_LENGTH + 1];
-    size_t size;
-
-    // All glsl types are defined in a global array. This holds information the application might need
-    // about a glsl type.
-    static GLSLType glsl_types[];
-    static inline GLSLType from_name(const std::string &name) {
-        for (GLSLType type : glsl_types) {
-            if (strncmp(name, name.c_str(), MAX_GLSL_TYPE_NAME_LENGTH) == 0) return type;
-        }
-        fprintf(stderr, "ERROR: GLSL type \"%s\" doesn't exist or is not accounted for.\n", name);
-        exit(EXIT_FAILURE);
-    };
-    static inline GLSLType from_ID(GLSLTypeID id) {
-        for (GLSLType type : glsl_types) {
-            if (type.id == id) return type;
-        }
-        fprintf(stderr, "ERROR: GLSL type with ID \"%u\" doesn't exist.\n", id);
-        exit(EXIT_FAILURE);
-    };
-
-    //---std140 stuff?
-};
-#define TYPE
-static GLSLType GLSLType::glsl_types[] = {
-    // The glsl type ID is the index into this array.
-    // !-IMPORTANT-! Make sure the ID written here is correct.
-    {0, "float", 4},
-    {1, "vec2", 8},
-    {2, "vec3", 12},
-    {3, "vec4", 16},
-    {4, "bool", 1},
-    {5, "int", 4},
-};
-#undef TYPE
-//--end GLSL stuff----------------------------------------------------------------
+#include "rendering/glsl.h"
 
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
@@ -124,26 +82,17 @@ struct ShadingDataflow {
     ShadingDataflow() {}
 };
 //-End shading dataflow structure-------------------------------------------------
-#define MAX_PROPERTY_SEMANTIC_NAME_LENGTH 31
-struct PropertySemantic {
-    // size_t offset;
-    // size_t size;
 
-    // GLenum type;
-    // GLint type_size;
+/*--------------------------------------------------------------------------------
+A ShadingBlock describes the layout of a block of memory with
+named entries declared in shading files. These lead to, in generated glsl code,
+deterministic-layout (achieved with glsl's std140 feature) uniform/constant blocks
+that can be mapped to ranges of uniform/constant buffers, whose data can be uploaded by
+the application.
 
-    // char name[MAX_PROPERTY_SEMANTIC_NAME_LENGTH + 1];
-    // PropertySemantic(size_t _offset, size_t _size, const std::string &_type_and_name) :
-    //     offset{_offset}, size{_size}
-    // {
-    //     if (_type_and_name.length() > MAX_PROPERTY_SEMANTIC_NAME_LENGTH) {
-    //         fprintf(stderr, "ERROR: Property semantic name too long.\n");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     snprintf(name, MAX_PROPERTY_SEMANTIC_NAME_LENGTH+1, "%s", _type_and_name.c_str());
-    // }
-};
-
+Since the application has a ShadingBlock structure detailing the layout, it can
+write to it correctly and update uniform values available in the shader program.
+--------------------------------------------------------------------------------*/
 #define MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH 31
 struct ShadingBlockEntry {
     GLSLTypeID type;
@@ -151,51 +100,26 @@ struct ShadingBlockEntry {
     bool is_array;
     unsigned int array_length;
 
-    ShadingBlockEntry(GLSLType &_type, const std::string &_name) :
-        type{_type}, is_array{false}
-    {
-        if (_name.length() > MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH) {
-            fprintf(stderr, "ERROR: Shading block entry name too long.\n");
-            exit(EXIT_FAILURE);
-        }
-        snprintf(name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH+1, "%s", _name.c_str());
-    }
+    // ShadingBlockEntry(GLSLTypeID &_type, const std::string &_name) :
+    //     type{_type}, is_array{false}
+    // {
+    //     if (_name.length() > MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH) {
+    //         fprintf(stderr, "ERROR: Shading block entry name too long.\n");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     snprintf(name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH+1, "%s", _name.c_str());
+    // }
 };
-
-/*--------------------------------------------------------------------------------
-A ShadingBlock describes the layout of a block of memory with
-named entries declared in shading files. These lead to, in generated glsl code,
-deterministic-layout (achieved with glsl's std140 feature) uniform/constant blocks
-that can be mapped to ranges uniform/constant buffers, whose data can be uploaded by
-the application.
-
-Since the application has a ShadingBlock structure detailing the layout, it can
-write to it correctly and update uniform values available in the shader program.
---------------------------------------------------------------------------------*/
-class ShadingBlock {
-public:
+struct ShadingBlockEntryLayout {
+    // Contains layout information for a single entry in a ShadingBlock.
+    size_t offset;
+};
+struct ShadingBlock {
     size_t block_size;
-private:
     std::vector<ShadingBlockEntry> entries;
-    // std::unordered_map<ShadingBlockEntry, size_t> offsets;
+    std::unordered_map<std::string, ShadingBlockEntryLayout> entry_layout;
 };
-// class ShadingProperties {
-// public:
-//     size_t property_block_size;
-//     
-// 
-// 
-// 
-//     // std::vector<PropertySemantic> semantics;
-//     // size_t offset_and_size(const std::string &name, size_t *out_offset, size_t *out_size) const {
-//     //     for (const Semantic &semantic : semantics) {
-//     //         if (semantic.type_and_name
-//     //     }
-//     // }
-// 
-// private:
-//     std::unordered_map<ShadingPropertySemantic, size_t> offsets;
-// };
+
 /*--------------------------------------------------------------------------------
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
@@ -209,7 +133,7 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     uint32_t patch_length; // used if primitive == GL_PATCHES
 
     bool has_properties;
-    ShadingProperties properties;
+    ShadingBlock properties;
 };
 struct Material : public IResourceType<Material> {
     static bool load(void *data, std::istream &stream);
@@ -217,7 +141,7 @@ struct Material : public IResourceType<Material> {
     ShadingDataflow dataflow;
 
     bool has_properties;
-    ShadingProperties properties;
+    ShadingBlock properties;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
     static bool load(void *data, std::istream &stream);
@@ -226,7 +150,7 @@ struct ShadingModel : public IResourceType<ShadingModel> {
     ShadingDataflow frag_post_dataflow;
 
     bool has_properties;
-    ShadingProperties properties;
+    ShadingBlock properties;
 };
 
 /*--------------------------------------------------------------------------------
@@ -355,6 +279,8 @@ struct ShadingFileASTBlockEntry {
     ShadingFileASTBlockEntry(const char *_type, const char *_name, unsigned int _array_length) :
         type{_type}, name{_name}, is_array{true}, array_length{_array_length}, next_entry{nullptr}
     {}
+
+    ShadingBlockEntry deastify() const;
 };
 struct ShadingFileASTBlock : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_BLOCK; }
@@ -363,8 +289,9 @@ struct ShadingFileASTBlock : ShadingFileASTNode {
     ShadingFileASTBlock(const char *_name) :
         name{_name}, first_entry{nullptr}
     {}
-};
 
+    ShadingBlock deastify() const;
+};
 
 
 /*--------------------------------------------------------------------------------
@@ -384,6 +311,7 @@ ShadingFileASTNode *parse_shading_file(std::istream &stream);
 // and converting them to the data structure that the application runtime will actually use.
 ShadingFileASTDirective *find_directive(ShadingFileASTNode *node, const std::string match);
 ShadingFileASTNode *find_section(ShadingFileASTNode *node, const std::string name);
+ShadingFileASTBlock *find_block(ShadingFileASTNode *node, const std::string name);
 ShadingFileASTOutput *first_output(ShadingFileASTNode *node);
 ShadingFileASTOutput *next_output(ShadingFileASTNode *node);
 // Collect the ouputs in the node's section, starting at the node, into a dataflow structure.

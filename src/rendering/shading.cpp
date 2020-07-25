@@ -38,12 +38,12 @@ bool GeometricMaterial::load(void *data, std::istream &stream)
     if ((vertex_section = find_section(root, "vertex")) == nullptr) parse_error("Geometric materials must contain a \"vertex\" section.");
 
     // Look for the optional properties block.
-    ShadingFileASTBlock *properties_block = find_block(root, "properties");
-    if (properties_block != nullptr) {
-        // This shading file has a property block.
-        geometric_material->has_property_block = true;
-        geometric_material->property_block = create_block(properties_block);
-    }
+    // ShadingFileASTBlock *properties_block = find_block(root, "properties");
+    // if (properties_block != nullptr) {
+    //     // This shading file has a property block.
+    //     geometric_material->has_properties = true;
+    //     geometric_material->property_block = create_block(properties_block);
+    // }
 
     //-todo: primitive type
     GLenum primitive_type;
@@ -605,9 +605,9 @@ std::string generate_glsl_property_block_declaration(ShadingBlock block, const s
     for (ShadingBlockEntry &entry : block.entries) {
         GLSLType type = GLSLType::from_ID(entry.type);
         if (entry.is_array) {
-            declaration += "    " + type.name + " " + entry.name + "[" + std::to_string(entry.array_length) + "];\n";
+            declaration += "    " + std::string(type.name) + " " + std::string(entry.name) + "[" + std::to_string(entry.array_length) + "];\n";
         } else {
-            declaration += "    " + type.name + " " + entry.name + ";\n";
+            declaration += "    " + std::string(type.name) + " " + std::string(entry.name) + ";\n";
         }
     }
 
@@ -715,9 +715,9 @@ ShadingFileASTBlock *ShadingFileDetails::find_block(ShadingFileASTNode *node, co
     ShadingFileASTBlock *last_found = nullptr;
     while (node != nullptr) {
         if (node->kind() == SHADING_FILE_NODE_BLOCK) {
-            ShadingFileASTBlock *block = (ShadingFileNode *) node;
+            ShadingFileASTBlock *block = (ShadingFileASTBlock *) node;
             if (block->name == name) {
-                last_found = section;
+                last_found = block;
             }
         }
         node = node->next;
@@ -726,21 +726,79 @@ ShadingFileASTBlock *ShadingFileDetails::find_block(ShadingFileASTNode *node, co
 }
 
 
-ShadingBlock ShadingFileDetails::create_block(ShadingFileASTBlock *block)
+/*--------------------------------------------------------------------------------
+de-AST-ification of shading blocks. This isn't just a straightforward copy to a similar
+data structure -- it has to parse the information in the block and generate
+data layout metadata, which can be used to
+    - Generate GLSL declarations for deterministic-layout (std140) uniform blocks.
+    - Generate header files for C code to use those blocks with the same layout.
+    - Allow calls to functions such as "set_vec4(name, val)" to update the correct location in the block buffer.
+--------------------------------------------------------------------------------*/
+ShadingBlockEntry ShadingFileASTBlockEntry::deastify() const
 {
-    // Given a block node in the shading file AST, try to create a block structure from it.
+    ShadingBlockEntry entry;
+    entry.type = GLSLType::from_name(type).id;
+    strncpy(entry.name, name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH);
+    entry.is_array = is_array;
+    entry.array_length = array_length;
+}
+/*--------------------------------------------------------------------------------
+    OpenGL programming guide 8th edition
+         Appendix I, page 886, The std140 Layout Rules
+----------------------------------------
+Scalar bool, int, uint, float and double
+----------------------------------------
+    Both the size and alignment are the size of the scalar in basic machine types (e.g., sizeof(GLfloat)).
+-----------------------------------
+Two-component vectors (e.g., ivec2)
+-----------------------------------
+    Both the size and alignment are twice the size of the underlying scalar type.
+----------------------------------------------------------------------------
+Three-component vectors (e.g., vec3) and Four-component vectors (e.g., vec4)
+----------------------------------------------------------------------------
+    Both the size and alignment are four times the size of the underlying scalar type.
+------------------------------
+An array of scalars or vectors
+------------------------------
+    The size of each element in the array will be the size of the element type, rounded up to a multiple of the size of a
+    vec4. This is also the array’s alignment.  The array’s size will be this rounded-up element’s size times the number of
+    elements in the array.
+---------------------------------------------------------------------------------------
+A column-major matrix or an array of column-major matrices of size C columns and R rows
+---------------------------------------------------------------------------------------
+    Same layout as an array of N vectors each with R components, where N is the total number of columns present.
+------------------------------------------------------------------------------
+A row-major matrix or an array of row-major matrices with R rows and C columns
+------------------------------------------------------------------------------
+    Same layout as an array of N vectors each with C components, where N is the total number of rows present.
+--------------------------------------------------------
+A single-structure definition, or an array of structures
+--------------------------------------------------------
+    Structure alignment will be the alignment for the biggest structure member, according to the previous
+    rules, rounded up to a multiple of the size of a vec4. Each structure will start on this alignment, and its size will be the
+    space needed by its members, according to the previous rules, rounded up to a multiple of the structure alignment.
+--------------------------------------------------------------------------------*/
+ShadingBlock ShadingFileASTBlock::deastify() const
+{
+    ShadingBlock block;
 
     size_t current_offset = 0;
-    ShadingFileASTBlockEntry *entry = block->first_entry;
-    while (entry != nullptr) {
+    ShadingFileASTBlockEntry *entry_node = first_entry;
+    while (entry_node != nullptr) {
+        ShadingBlockEntry entry = entry_node->deastify();
+        GLSLType entry_type = GLSLType::from_ID(entry.type);
 
-        GLSLType type = GLSLType::from_name(entry->type);
-        // if (
+        block.entries.push_back(entry);
+        block.entry_layout[entry.name].offset = current_offset;
+        //--todo: fully conform to std140.
+        current_offset += entry_type.size;
 
-        entry = entry->next_entry;
+        entry_node = entry_node->next_entry;
     }
+    block.block_size = current_offset;
+    
+    return block;
 }
-
 
 
 /*================================================================================

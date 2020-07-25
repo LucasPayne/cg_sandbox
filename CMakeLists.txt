@@ -40,6 +40,7 @@ add_executable(main
     src/rendering/vertex_arrays.cpp
     src/rendering/drawing.cpp
     src/rendering/glsl.cpp
+    src/assets/models.cpp
     src/entity_model/entity_model.cpp
     src/standard_aspects/Transform.cpp
     src/standard_aspects/Camera.cpp

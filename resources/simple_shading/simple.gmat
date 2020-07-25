@@ -2,17 +2,15 @@
 #primitive triangles
 
 block properties {
-    float color_multiplier;
     vec3 add_to_color;
+    float color_multiplier;
     bool multiply_before_adding;
 }
 section vertex {
     out vec3 f_color(in vec3 v_color) {
     GLSL
-        // if (multiply_before_adding) return color_multiplier * v_color + add_to_color;
-        // else return color_multiplier * (v_color + add_to_color);
-        // return v_color + add_to_color;
-        return v_color * color_multiplier;
+        if (multiply_before_adding) return color_multiplier * v_color + add_to_color;
+        else return color_multiplier * (v_color + add_to_color);
     END
     }
 }

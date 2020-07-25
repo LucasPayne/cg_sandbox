@@ -16,7 +16,7 @@ IDEAS/THINGS:
 #include <math.h>
 
 //testing global
-ShadingModelInstance *shading_model_model_testing;
+ShadingModelInstance *shading_model_model_test;
 
 void test_world(EntityModel &em, ResourceModel &rm)
 {
@@ -32,10 +32,10 @@ void test_world(EntityModel &em, ResourceModel &rm)
 
     // Create a dolphin.
     {
-        Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/model_testing/model_testing.gmat");
-        Resource<Material> mat = rm.load_from_file<Material>("resources/model_testing/model_testing.mat");
-        Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_testing/model_testing.sm");
-        shading_model_model_testing = new ShadingModelInstance(sm); // create a global shading model instance for testing.
+        Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
+        Resource<Material> mat = rm.load_from_file<Material>("resources/model_test/model_test.mat");
+        Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
+        shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
         VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
@@ -86,23 +86,21 @@ void CGSandbox::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
 
-#if 0
     for (Camera *camera : em.aspects<Camera>()) {
         Transform *camera_transform = em.get_sibling<Transform>(camera);
-        mat4x4 vp_matrix = camera_transform->inverse_model_matrix();
-        vp_matrix.left_multiply(camera->projection_matrix);
-        shading_model_model_testing.properties.set_mat4x4("vp_matrix", vp_matrix);
+        mat4x4 view_matrix = camera_transform->inverse_matrix();
+        mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
+        shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
         for (Drawable *drawable : em.aspects<Drawable>()) {
             Transform *t = em.get_sibling<Transform>(drawable);
-            mat4x4 model_matrix = t->model_matrix();
+            mat4x4 model_matrix = t->matrix();
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
             
-            Draw draw(rm, drawable->geometric_material, drawable->material, shading_model_model_testing);
+            Draw draw(rm, drawable->geometric_material, drawable->material, *shading_model_model_test);
             draw.draw();
         }
     }
-#endif
 }
 
 void CGSandbox::key_callback(int key, int action)

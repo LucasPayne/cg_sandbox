@@ -15,24 +15,29 @@ struct Transform : public IAspectType<Transform> {
     void init(float x, float y, float z, float theta_x, float theta_y, float theta_z);
     void init(vec3 _position, vec3 _rotation);
 
-    // mat4x4 model_matrix() const {
-    //     //construct it
-    // }
+    inline mat4x4 matrix() const {
+        // note: mat4x4 constructor parameter order is column-major.
+        return mat4x4(1,0,0,0,
+                      0,1,0,0,
+                      0,0,1,0,
+                      position.x(),position.y(),position.z(),1);
+    }
+    inline mat4x4 inverse_matrix() const {
+        return mat4x4(1,0,0,0,
+                      0,1,0,0,
+                      0,0,1,0,
+                      -position.x(),-position.y(),-position.z(),1);
+    }
 };
 
 struct Camera : public IAspectType<Camera> {
     // Viewport extents (in terms of the application subrectangle).
     float bottom_left[2];
     float top_right[2];
-    float projection_matrix[16];
+    mat4x4 projection_matrix;
 
     // Initialize this to a projective camera, with the default full viewport.
     void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
-
-    // mat4x4 vp_matrix() const {
-    //     Transform *t = entity_model.get_aspect<Transform>(entity);
-    //     return projection_matrix * t->model_matrix.inverse();
-    // }
 };
 
 struct Drawable : public IAspectType<Drawable> {

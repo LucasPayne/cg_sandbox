@@ -1,0 +1,12 @@
+#type mat
+
+block properties {
+    vec4 color;
+}
+section frag {
+    out vec4 diffuse() {
+    GLSL
+        return color;
+    END
+    }
+}

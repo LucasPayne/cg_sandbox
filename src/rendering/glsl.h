@@ -13,6 +13,7 @@ struct GLSLType {
     GLSLTypeID id;
     char name[MAX_GLSL_TYPE_NAME_LENGTH + 1];
     size_t size;
+    size_t alignment; //std140 alignment
 
     // All glsl types are defined in a global array. This holds information the application might need
     // about a glsl type.
@@ -31,8 +32,6 @@ struct GLSLType {
         fprintf(stderr, "ERROR: GLSL type with ID \"%u\" doesn't exist.\n", id);
         exit(EXIT_FAILURE);
     };
-
-    //---std140 stuff?
 };
 
 #endif // RENDERING_GLSL_H

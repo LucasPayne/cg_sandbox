@@ -8,13 +8,33 @@ Drawing submodule of the rendering module.
 #include "resource_model/resource_model.h"
 
 struct PropertySheet {
+    std::vector<uint8_t> data;
+    size_t size;
+    bool in_sync;
+    GLuint buffer_id;
+
+    // Create a property sheet for a specific block. This matches the size of the block.
+    static PropertySheet instantiate_from(ShadingBlock properties);
+
+    // Synchronize application data with graphics data. This only uploads if a property changes.
+    void synchronize();
+
+    //todo: interface for setting properties.
 };
 
 template <typename T>
 struct GMSMInstance {
     Resource<T> base;
-    PropertySheet property_sheet;
-    GMSMInstance(Resource<T> _base) : base{_base} {}
+    PropertySheet properties;
+    GMSMInstance(Resource<T> _base) : base{_base} {
+        // Instantiate a property sheet if the base material has any properties.
+        if (base->has_properties) {
+            properties = PropertySheet::instantiate_from(base->properties);
+        } else {
+            properties.size = 0;
+            properties.buffer_id = 0;
+        }
+    }
 };
 struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
     Resource<VertexArray> vertex_array;

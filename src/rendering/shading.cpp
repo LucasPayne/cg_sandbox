@@ -38,12 +38,12 @@ bool GeometricMaterial::load(void *data, std::istream &stream)
     if ((vertex_section = find_section(root, "vertex")) == nullptr) parse_error("Geometric materials must contain a \"vertex\" section.");
 
     // Look for the optional properties block.
-    // ShadingFileASTBlock *properties_block = find_block(root, "properties");
-    // if (properties_block != nullptr) {
-    //     // This shading file has a property block.
-    //     geometric_material->has_properties = true;
-    //     geometric_material->property_block = create_block(properties_block);
-    // }
+    ShadingFileASTBlock *properties_block = find_block(root, "properties");
+    if (properties_block != nullptr) {
+        // This shading file has a property block.
+        geometric_material->has_properties = true;
+        geometric_material->properties = properties_block->deastify();
+    }
 
     //-todo: primitive type
     GLenum primitive_type;
@@ -600,7 +600,7 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
 std::string generate_glsl_property_block_declaration(ShadingBlock block, const std::string &block_name)
 {
     std::string declaration = "";
-    declaration += "layout (std140) uniform " + block_name + "{\n";
+    declaration += "layout (std140) uniform " + block_name + " {\n";
 
     for (ShadingBlockEntry &entry : block.entries) {
         GLSLType type = GLSLType::from_ID(entry.type);
@@ -741,6 +741,7 @@ ShadingBlockEntry ShadingFileASTBlockEntry::deastify() const
     strncpy(entry.name, name, MAX_SHADING_BLOCK_ENTRY_NAME_LENGTH);
     entry.is_array = is_array;
     entry.array_length = array_length;
+    return entry;
 }
 /*--------------------------------------------------------------------------------
     OpenGL programming guide 8th edition
@@ -780,26 +781,31 @@ A single-structure definition, or an array of structures
 --------------------------------------------------------------------------------*/
 ShadingBlock ShadingFileASTBlock::deastify() const
 {
+    printf("deast\n");getchar();
     ShadingBlock block;
 
     size_t current_offset = 0;
     ShadingFileASTBlockEntry *entry_node = first_entry;
     while (entry_node != nullptr) {
         ShadingBlockEntry entry = entry_node->deastify();
+        printf("Entry name: %s\n", entry.name);
         GLSLType entry_type = GLSLType::from_ID(entry.type);
 
         block.entries.push_back(entry);
+        while ((current_offset % entry_type.alignment) != 0) {
+            current_offset ++;
+        }
         block.entry_layout[entry.name].offset = current_offset;
-        //--todo: fully conform to std140.
         current_offset += entry_type.size;
+        //--todo: fully conform to std140.
 
         entry_node = entry_node->next_entry;
     }
     block.block_size = current_offset;
+    printf("block size: %zu\n", block.block_size);getchar();
     
     return block;
 }
-
 
 /*================================================================================
     END private implementation details.

@@ -1,6 +1,7 @@
 #ifndef MATHEMATICS_VEC3_VEC4_H
 #define MATHEMATICS_VEC3_VEC4_H
 #include "mathematics/mathematics.h"
+#include <math.h>
 
 // vec3 and vec4 classes.
 // references:
@@ -82,6 +83,13 @@ struct vec3 {
         return vec3(a[1]*b[2] - a[2]*b[1],
                     a[2]*b[0] - a[0]*b[2],
                     a[0]*b[1] - a[1]*b[0]);
+    }
+    inline float length() {
+        return sqrt(x()*x() + y()*y() + z()*z());
+    }
+    inline vec3 normalized() {
+        float inv_length = 1.0 / length();
+        return vec3(inv_length*x(), inv_length*y(), inv_length*z());
     }
 };
 
@@ -197,6 +205,13 @@ struct vec4 {
 
     static inline float dot(vec4 a, vec4 b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+    }
+    inline float length() {
+        return sqrt(x()*x() + y()*y() + z()*z() + w()*w());
+    }
+    inline vec4 normalized() {
+        float inv_length = 1.0 / length();
+        return vec4(inv_length*x(), inv_length*y(), inv_length*z(), inv_length*w());
     }
 };
 

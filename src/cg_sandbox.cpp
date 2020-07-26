@@ -31,23 +31,24 @@ void test_world(EntityModel &em, ResourceModel &rm)
     }
 
     // Create a dolphin.
-    {
-        Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
-        Resource<Material> mat = rm.load_from_file<Material>("resources/model_test/model_test.mat");
-        Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-        shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
-
+    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
+    Resource<Material> mat = rm.load_from_file<Material>("resources/model_test/model_test.mat");
+    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
+    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
+    for (int i = 0; i < 35; i++) {
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
+        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
+        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
         Entity dolphin = em.new_entity();
         Transform *t = em.add_aspect<Transform>(dolphin);
-        t->init(0,0,1);
+        t->init(-0.5 + frand(),-0.5 + frand(),-1);
         Drawable *drawable = em.add_aspect<Drawable>(dolphin);
-        //drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
-        drawable->material.properties.set_vec4("color", 1,0,1,1);
-#if 1
+        drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    }
+#if 0
     VertexArrayData vad;
     vad.layout.num_vertices = 3;
     vad.layout.vertices_starting_index = 0;
@@ -76,7 +77,6 @@ void test_world(EntityModel &em, ResourceModel &rm)
 
         drawable->geometric_material = GeometricMaterialInstance(gmat, va);
 #endif
-    }
 }
 
 void CGSandbox::init()
@@ -102,6 +102,8 @@ void CGSandbox::init()
     REGISTER_ASPECT_TYPE(Drawable);
 
     glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     test_world(em, rm);
 }
 void CGSandbox::close()
@@ -122,11 +124,15 @@ void CGSandbox::loop()
         Transform *camera_transform = em.get_sibling<Transform>(camera);
         mat4x4 view_matrix = camera_transform->inverse_matrix();
         mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
+        printf("vp_matrix\n");
+        std::cout << vp_matrix << "\n";
         shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
         for (Drawable *drawable : em.aspects<Drawable>()) {
             Transform *t = em.get_sibling<Transform>(drawable);
             mat4x4 model_matrix = t->matrix();
+            printf("model_matrix\n");
+            std::cout << model_matrix << "\n";
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
             
             Draw draw(rm, drawable->geometric_material, drawable->material, *shading_model_model_test);

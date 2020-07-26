@@ -70,14 +70,14 @@ void OpenGLContext::enter_loop()
         // Clearing: window clear to background color, viewport clear to the foreground color.
         glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
         glDisable(GL_SCISSOR_TEST);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         GLint viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
         glEnable(GL_SCISSOR_TEST);
         glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
         glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_SCISSOR_TEST);
 
 

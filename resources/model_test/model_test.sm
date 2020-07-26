@@ -6,16 +6,14 @@ block properties {
 section geom_post {
     out vec4 gl_Position(in vec4 world_position) {
     GLSL
-        // return vp_matrix * world_position;
-        return world_position;
+        return vp_matrix * world_position;
     END
     }
 }
 section frag_post {
-    out vec4 rt_color(in vec4 diffuse) {
+    out vec4 rt_color(in vec4 diffuse, in vec3 f_normal) {
     GLSL
-        // return diffuse;
-        return vec4(1,0,1,1);
+        return max(0,dot(f_normal, normalize(vec3(1,1,1))))*diffuse;
     END
     }
 }

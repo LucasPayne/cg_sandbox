@@ -35,10 +35,10 @@ void test_world(EntityModel &em, ResourceModel &rm)
     Resource<Material> mat = rm.load_from_file<Material>("resources/model_test/model_test.mat");
     Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
     shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
-    for (int i = 0; i < 35; i++) {
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off");
+    for (int i = 0; i < 100; i++) {
+        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off", true, 0.0003);
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
+        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
         Entity dolphin = em.new_entity();
         Transform *t = em.add_aspect<Transform>(dolphin);

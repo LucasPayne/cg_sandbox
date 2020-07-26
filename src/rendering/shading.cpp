@@ -147,8 +147,6 @@ Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
                                                 Resource<Material> material,
                                                 Resource<ShadingModel> shading_model)
 {
-    //-todo: Caching
-
     GeometricMaterial *g = rm.get_resource<GeometricMaterial>(geometric_material);
     Material *m = rm.get_resource<Material>(material);
     ShadingModel *sm = rm.get_resource<ShadingModel>(shading_model);

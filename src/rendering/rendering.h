@@ -22,9 +22,20 @@ Submodules:
 #include "resource_model/resource_model.h"
 
 #include "rendering/glsl.h"
-
 #include "rendering/shading.h"
 #include "rendering/vertex_arrays.h"
 #include "rendering/drawing.h"
 
+// Rendering state is kept in the "Renderer" class.
+typedef std::tuple<TableEntryID,TableEntryID,TableEntryID> ShadingProgramHash;
+typedef std::unordered_map<ShadingProgramHash, Resource<ShadingProgram>> ShadingProgramCache;
+class Renderer {
+public:
+    ShadingProgram *shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm);
+private:
+    ResourceModel *rm;
+    ShadingProgramCache shading_program_cache;
+};
+
 #endif // RENDERING_H
+

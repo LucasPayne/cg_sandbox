@@ -70,7 +70,7 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
 Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, VertexArrayData &data)
 {
     //-----pointer to resource model stored in all resources.
-    printf("Uploading vertex array.\n");
+    // printf("Uploading vertex array.\n");
     // getchar();
 
     GLuint vao_id;
@@ -92,7 +92,6 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     // The VertexArrayData has separate buffers for each attribute.
     // Interleave these into the single mapped buffer.
     for (int i = 0; i < data.layout.num_vertices; i++) {
-        printf("Interleaving vertex\n");
         size_t interleaved_offset = 0;
         for (int j = 0; j < num_attributes; j++) {
             size_t attribute_size = data.layout.semantics[j].type_size();
@@ -120,7 +119,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
 
     size_t interleaved_offset = 0;
     for (int i = 0; i < num_attributes; i++) {
-        printf("Vertex attribute index binding\n");
+        // printf("Vertex attribute index binding\n");
         VertexSemantic &semantic = data.layout.semantics[i];
         VertexAttributeBindingIndex index = semantic.get_binding_index();
         glVertexAttribPointer(index,
@@ -130,7 +129,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
                               vertex_size, //stride
                               (const void *) interleaved_offset); // start at the first of this attribute in the interleaved buffer.
         glEnableVertexAttribArray(index);
-        interleaved_offset += semantic.size * semantic.type_size(); // shift the interleaving offset so the next attributes have the correct starting position.
+        interleaved_offset += semantic.type_size(); // shift the interleaving offset so the next attributes have the correct starting position.
     }
 
     Resource<VertexArray> vertex_array = rm.new_resource<VertexArray>();
@@ -143,10 +142,11 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     vertex_array->gl_index_buffer_id = index_buffer_id;
 
     // Unbind OpenGL state.
+    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    printf("Uploaded vertex array.\n");
+    // printf("Uploaded vertex array.\n");
     // getchar();
     return vertex_array;
 }

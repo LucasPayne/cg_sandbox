@@ -561,9 +561,9 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // for (auto *va : used_vertex_attributes) {
     //     std::cout << "    " << va->type << " " << va->name << "\n";
     // }
-    print_listing("vertex_shader", vertex_shader);
+    // print_listing("vertex_shader", vertex_shader);
     // getchar();
-    print_listing("fragment_shader", fragment_shader);
+    // print_listing("fragment_shader", fragment_shader);
     // getchar();
 
     // Compile and link OpenGL program object.
@@ -807,7 +807,7 @@ ShadingBlock ShadingFileASTBlock::deastify() const
     ShadingFileASTBlockEntry *entry_node = first_entry;
     while (entry_node != nullptr) {
         ShadingBlockEntry entry = entry_node->deastify();
-        printf("Entry name: %s\n", entry.name);
+        // printf("Entry name: %s\n", entry.name);
         GLSLType entry_type = GLSLType::from_ID(entry.type);
 
         block.entries.push_back(entry);

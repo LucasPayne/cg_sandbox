@@ -44,10 +44,8 @@ struct VertexSemantic {
 struct VertexArrayLayout {
     GLenum index_type; // GL_UNSIGNED_{BYTE,SHORT,INT}
     uint32_t num_vertices;
-    uint32_t vertices_starting_index;
     bool indexed;
     uint32_t num_indices;
-    uint32_t indices_starting_index;
 
     std::vector<VertexSemantic> semantics;
     size_t vertex_size() const;
@@ -57,6 +55,17 @@ struct VertexArrayData {
     VertexArrayLayout layout;
     std::vector<std::vector<uint8_t>> attribute_buffers;
     std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
+
+    // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
+    inline uint32_t index(uint32_t i) {
+        if (layout.index_type == GL_UNSIGNED_BYTE) {
+            return ((uint8_t *) &index_buffer[0])[i];
+        } else if (layout.index_type == GL_UNSIGNED_SHORT) {
+            return ((uint16_t *) &index_buffer[0])[i];
+        } else if (layout.index_type == GL_UNSIGNED_INT) {
+            return ((uint32_t *) &index_buffer[0])[i];
+        }
+    }
 };
 struct VertexArray : public IResourceType<VertexArray> {
     

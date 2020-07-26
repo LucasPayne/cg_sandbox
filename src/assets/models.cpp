@@ -2,7 +2,7 @@
 namespace Models {
 
 // fun fact: OFF was created for geomview, by the Geometry Center (Bill Thurston, John Conway, turning a sphere inside out without creasing...).
-VertexArrayData load_OFF_model(const std::string &path)
+VertexArrayData load_OFF_model(const std::string &path, bool compute_normals, float scale)
 {
     #define load_error(ERROR_STR) {\
         printf("OFF model load error: %s\n", ( ERROR_STR ));\
@@ -31,15 +31,17 @@ VertexArrayData load_OFF_model(const std::string &path)
     if (sscanf(line.c_str(), "%u %u %u", &num_vertices, &num_triangles, &num_edges) != 3) {
         load_error("Invalid num_vertices num_faces num_edges line.");
     }
-    std::vector<uint8_t> vertex_data(3*num_vertices*sizeof(float));
+    // Vertices
+    std::vector<uint8_t> position_data(3*num_vertices*sizeof(float));
     for (uint32_t i = 0; i < num_vertices; i++) {
         next_line(file, line, "Not enough vertex lines.");
         float x, y, z;
         if (sscanf(line.c_str(), "%f %f %f", &x, &y, &z) != 3) load_error("Invalid vertex line.");
-        ((float *) &vertex_data[0])[3*i+0] = x;
-        ((float *) &vertex_data[0])[3*i+1] = y;
-        ((float *) &vertex_data[0])[3*i+2] = z;
+        ((float *) &position_data[0])[3*i+0] = x * scale;
+        ((float *) &position_data[0])[3*i+1] = y * scale;
+        ((float *) &position_data[0])[3*i+2] = z * scale;
     }
+    // Triangle indices
     // Use the most packed index format possible, from 8-bit, 16-bit, and 32-bit unsigned integers.
     int index_bytes;
     if (num_vertices <= std::numeric_limits<uint8_t>::max()) index_bytes = 1;
@@ -72,22 +74,42 @@ VertexArrayData load_OFF_model(const std::string &path)
     VertexArrayData data;
     // Vertex data
     data.layout.num_vertices = num_vertices;
-    data.layout.vertices_starting_index = 0;
-    data.attribute_buffers = std::vector<std::vector<uint8_t>>(1);
+    data.attribute_buffers.push_back(position_data);
     data.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
-    data.attribute_buffers[0] = std::vector<uint8_t>(vertex_data.size());
-        //--copying for debug
-        memcpy(&(data.attribute_buffers[0])[0], &vertex_data[0], vertex_data.size());
     // Indices
     data.layout.indexed = true;
     if (index_bytes == 1) data.layout.index_type = GL_UNSIGNED_BYTE;
     else if (index_bytes == 2) data.layout.index_type = GL_UNSIGNED_SHORT;
     else if (index_bytes == 4) data.layout.index_type = GL_UNSIGNED_INT;
     data.layout.num_indices = 3 * num_triangles;
-    data.layout.indices_starting_index = 0;
-    data.index_buffer = std::vector<uint8_t>(index_data.size());
-        //--copying for debug
-        memcpy(&data.index_buffer[0], &index_data[0], index_data.size());
+    data.index_buffer = index_data;
+
+    vec3 *positions = (vec3 *) &position_data[0];
+    // Optional computed normals.
+    if (compute_normals) {
+
+        std::vector<uint8_t> normal_data(3*num_vertices*sizeof(float));
+        memset(&normal_data[0], 0, 3*num_vertices*sizeof(float));
+        vec3 *normals = (vec3 *) &normal_data[0];
+        for (uint32_t i = 0; i < num_triangles; i++) {
+            uint32_t ai = data.index(3*i + 0);
+            uint32_t bi = data.index(3*i + 1);
+            uint32_t ci = data.index(3*i + 2);
+            const vec3 &a = positions[ai];
+            const vec3 &b = positions[bi];
+            const vec3 &c = positions[ci];
+            vec3 n = vec3::cross(b - a, c - a).normalized();
+            normals[ai] += n;
+            normals[bi] += n;
+            normals[ci] += n;
+        }
+        for (uint32_t i = 0; i < num_vertices; i++) {
+            normals[i] = normals[i].normalized();
+        }
+
+        data.attribute_buffers.push_back(normal_data);
+        data.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_normal"));
+    }
 
     return data;
 }

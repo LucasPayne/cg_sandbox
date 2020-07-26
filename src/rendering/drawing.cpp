@@ -35,10 +35,10 @@ void Draw::draw()
         glDrawElements(primitive_type,
                        (GLsizei) layout.num_indices,
                        layout.index_type,
-                       (const void *) layout.indices_starting_index);
+                       (const void *) 0);
     } else {
         glDrawArrays(primitive_type,
-                     (GLint) layout.vertices_starting_index,
+                     (GLint) 0,
                      (GLsizei) layout.num_vertices);
     }
     // Unbind OpenGL state.

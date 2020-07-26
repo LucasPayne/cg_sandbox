@@ -10,7 +10,10 @@ struct mat4x4 {
            float e01, float e11, float e21, float e31,
            float e02, float e12, float e22, float e32,
            float e03, float e13, float e23, float e33)
-    : entries{e00,e10,e20,e30,e01,e11,e21,e31,e02,e12,e22,e32,e03,e13,e23} {};
+    : entries{e00,e10,e20,e30,
+              e01,e11,e21,e31,
+              e02,e12,e22,e32,
+              e03,e13,e23,e33} {};
     // Constructor with column-major float array.
     mat4x4(float _entries[/*16*/]) {
         memcpy(entries, _entries, sizeof(entries));
@@ -83,5 +86,6 @@ inline mat4x4 operator*(mat4x4 A, mat4x4 B) {
         A.entry(3,0)*B.entry(0, 3) + A.entry(3,1)*B.entry(1, 3) + A.entry(3,2)*B.entry(2, 3) + A.entry(3,3)*B.entry(3, 3)
     );
 }
+std::ostream &operator<<(std::ostream &os, const mat4x4 &M);
 
 #endif // MATHEMATICS_MAT4X4_H

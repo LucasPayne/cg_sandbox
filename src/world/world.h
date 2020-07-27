@@ -7,8 +7,8 @@ such as the entity and resource models.
 This also contains methods for "creating the world" at a higher level than the component subsystems,
 such as the creation of game objects.
 --------------------------------------------------------------------------------*/
-#ifndef CG_SANDBOX_H
-#define CG_SANDBOX_H
+#ifndef WORLD_H
+#define WORLD_H
 #include "core.h"
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
@@ -61,6 +61,7 @@ public:
     EntityModel em;
     ResourceModel rm;
     Graphics graphics; // Graphics state, such as cached compiled shaders.
+    InputState input;
 };
 
-#endif // CG_SANDBOX_H
+#endif // WORLD_H

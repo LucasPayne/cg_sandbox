@@ -100,36 +100,36 @@ void OpenGLContext::glfw_reshape(GLFWwindow *window, int width, int height)
     }
 }
 
-static int glfw_keycode_to_character(int key)
+static int glfw_keycode_to_keycode(int key)
 {
     switch (key) {
         // todo: Possibly GLFW has these correspond to keycodes anyway, and could just check some ranges.
-        case GLFW_KEY_Q: return 'q';
-        case GLFW_KEY_W: return 'w';
-        case GLFW_KEY_E: return 'e';
-        case GLFW_KEY_R: return 'r';
-        case GLFW_KEY_T: return 't';
-        case GLFW_KEY_Y: return 'y';
-        case GLFW_KEY_U: return 'u';
-        case GLFW_KEY_I: return 'i';
-        case GLFW_KEY_O: return 'o';
-        case GLFW_KEY_P: return 'p';
-        case GLFW_KEY_A: return 'a';
-        case GLFW_KEY_S: return 's';
-        case GLFW_KEY_D: return 'd';
-        case GLFW_KEY_F: return 'f';
-        case GLFW_KEY_G: return 'g';
-        case GLFW_KEY_H: return 'h';
-        case GLFW_KEY_J: return 'j';
-        case GLFW_KEY_K: return 'k';
-        case GLFW_KEY_L: return 'l';
-        case GLFW_KEY_Z: return 'z';
-        case GLFW_KEY_X: return 'x';
-        case GLFW_KEY_C: return 'c';
-        case GLFW_KEY_V: return 'v';
-        case GLFW_KEY_B: return 'b';
-        case GLFW_KEY_N: return 'n';
-        case GLFW_KEY_M: return 'm';
+        case GLFW_KEY_Q: return KEY_Q;
+        case GLFW_KEY_W: return KEY_W;
+        case GLFW_KEY_E: return KEY_E;
+        case GLFW_KEY_R: return KEY_R;
+        case GLFW_KEY_T: return KEY_T;
+        case GLFW_KEY_Y: return KEY_Y;
+        case GLFW_KEY_U: return KEY_U;
+        case GLFW_KEY_I: return KEY_I;
+        case GLFW_KEY_O: return KEY_O;
+        case GLFW_KEY_P: return KEY_P;
+        case GLFW_KEY_A: return KEY_A;
+        case GLFW_KEY_S: return KEY_S;
+        case GLFW_KEY_D: return KEY_D;
+        case GLFW_KEY_F: return KEY_F;
+        case GLFW_KEY_G: return KEY_G;
+        case GLFW_KEY_H: return KEY_H;
+        case GLFW_KEY_J: return KEY_J;
+        case GLFW_KEY_K: return KEY_K;
+        case GLFW_KEY_L: return KEY_L;
+        case GLFW_KEY_Z: return KEY_Z;
+        case GLFW_KEY_X: return KEY_X;
+        case GLFW_KEY_C: return KEY_C;
+        case GLFW_KEY_V: return KEY_V;
+        case GLFW_KEY_B: return KEY_B;
+        case GLFW_KEY_N: return KEY_N;
+        case GLFW_KEY_M: return KEY_M;
     }
     return EOF;
 }
@@ -139,10 +139,10 @@ void OpenGLContext::glfw_key_callback(GLFWwindow *window, int key,
                        int mods)
 {
     KeyboardEvent e;
-    e.is_special = false;
     int c;
-    if ((c = glfw_keycode_to_character(key)) == EOF) return; // No character to map to, no-op this event.
-    e.character = c;
+    if ((c = glfw_keycode_to_keycode(key)) == EOF) return;
+    e.key.code = (KeyboardKeyCode) c;
+    
     if (action == GLFW_PRESS) {
         e.action = KEYBOARD_PRESS;
     } else if (action == GLFW_RELEASE) {
@@ -151,7 +151,7 @@ void OpenGLContext::glfw_key_callback(GLFWwindow *window, int key,
         return; // Action not handled, no-op.
     }
     for (InputListener *il : g_opengl_context->m_input_listeners) {
-        if (il->listening) il->keyboard_handler(e);
+        il->keyboard_handler(e);
     }
 }
 
@@ -180,25 +180,30 @@ void OpenGLContext::glfw_cursor_position_callback(GLFWwindow *window, double win
     e.cursor = g_cursor;
 
     for (InputListener *il : g_opengl_context->m_input_listeners) {
-        if (il->listening) {
-            il->mouse_handler(e);
-        }
+        il->mouse_handler(e);
     }
 }
 void OpenGLContext::glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     MouseEvent e;
-    e.action = MOUSE_BUTTON;
+    switch (action) {
+        case GLFW_PRESS: e.action = MOUSE_BUTTON_PRESS; break;
+        case GLFW_RELEASE: e.action = MOUSE_BUTTON_RELEASE; break;
+        default:
+            return; // Action not accounted for, no-op.
+    }
+    if (action == GLFW_PRESS) e.action = MOUSE_BUTTON_PRESS;
+    else if (action == GLFW_PRESS) e.action = MOUSE_BUTTON_PRESS;
     switch (button) {
-        case GLFW_MOUSE_BUTTON_LEFT: e.button = MOUSE_LEFT; break;
-        case GLFW_MOUSE_BUTTON_RIGHT: e.button = MOUSE_RIGHT; break;
-        case GLFW_MOUSE_BUTTON_MIDDLE: e.button = MOUSE_MIDDLE; break;
+        case GLFW_MOUSE_BUTTON_LEFT: e.button.code = MOUSE_LEFT; break;
+        case GLFW_MOUSE_BUTTON_RIGHT: e.button.code = MOUSE_RIGHT; break;
+        case GLFW_MOUSE_BUTTON_MIDDLE: e.button.code = MOUSE_MIDDLE; break;
+        default:
+            return; // Button not accounted for, no-op.
     }
     e.cursor = g_cursor;
 
     for (InputListener *il : g_opengl_context->m_input_listeners) {
-        if (il->listening) {
-            il->mouse_handler(e);
-        }
+        il->mouse_handler(e);
     }
 }

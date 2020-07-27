@@ -805,7 +805,6 @@ ShadingBlock ShadingFileASTBlock::deastify() const
     ShadingFileASTBlockEntry *entry_node = first_entry;
     while (entry_node != nullptr) {
         ShadingBlockEntry entry = entry_node->deastify();
-        // printf("Entry name: %s\n", entry.name);
         GLSLType entry_type = GLSLType::from_ID(entry.type);
 
         block.entries.push_back(entry);
@@ -819,7 +818,6 @@ ShadingBlock ShadingFileASTBlock::deastify() const
         entry_node = entry_node->next_entry;
     }
     block.block_size = current_offset;
-    // printf("block size: %zu\n", block.block_size);getchar();
     
     return block;
 }

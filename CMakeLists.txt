@@ -34,7 +34,7 @@ add_executable(main
     src/main.cpp
     src/data_structures/table.cpp
     src/mathematics/mathematics.cpp
-    src/cg_sandbox.cpp
+    src/world/world.cpp
     src/resource_model/resource_model.cpp
     src/rendering/rendering.cpp
     src/rendering/shading.cpp
@@ -43,9 +43,10 @@ add_executable(main
     src/rendering/glsl.cpp
     src/assets/models.cpp
     src/entity_model/entity_model.cpp
-    src/standard_aspects/Transform.cpp
-    src/standard_aspects/Camera.cpp
-    src/standard_aspects/Drawable.cpp
+    src/world/standard_aspects/Transform.cpp
+    src/world/standard_aspects/Camera.cpp
+    src/world/standard_aspects/Drawable.cpp
+    src/world/standard_aspects/Logic.cpp
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp

@@ -4,8 +4,13 @@ block properties {
     vec4 color;
 }
 section frag {
-    out vec4 diffuse() {
+    out vec4 diffuse(in vec3 f_position) {
     GLSL
+        const float factor = 12;
+        if ((abs(factor*f_position.x - int(factor*f_position.x)) > 0.5)
+          != (abs(factor*f_position.y - int(factor*f_position.y)) > 0.5)) {
+            return color * 0.5;
+        }
         return color;
     END
     }

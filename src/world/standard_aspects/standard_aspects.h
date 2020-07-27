@@ -45,29 +45,22 @@ struct Drawable : public IAspectType<Drawable> {
     MaterialInstance material;
 };
 
-// Specific Logic must be defined in a class which derives from ILogic, or a class which derives from ILogic.
-struct ILogic {
-    bool has_update;
+// Specific Behaviours must be defined in a class which derives from IBehaviour.
+struct World;
+struct IBehaviour {
+    World *world;
+    Entity entity; // Each Behaviour attached to an entity is given a reference to the entity.
+    bool updating;
+
     virtual void update() {
         // After one call, signify that this virtual function has not been overridden,
         // and that it is a no-op.
-        has_update = false;
+        updating = false;
     }
 };
-struct Logic : public IAspectType<Logic> {
-    size_t data_size;
-    ILogic *data;
-    template <typename L>
-    L *init() {
-        if (data != nullptr) {
-            fprintf(stderr, "ERROR: Cannot reinitialize Logic aspect.\n");
-            exit(EXIT_FAILURE);
-        }
-        data_size = sizeof(L);
-        data = new L();
-        data->has_update = true; // The default functions will set this to false after one call.
-        return reinterpret_cast<L *>(data);
-    }
+struct Behaviour : public IAspectType<Behaviour> {
+    size_t object_size;
+    IBehaviour *object;
 };
 
 #endif // STANDARD_ASPECTS_H

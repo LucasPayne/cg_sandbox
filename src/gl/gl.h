@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "core.h"
+#include "input/input.h"
 
 // The active OpenGLContext updates these global values.
 // This is for convenience, so that having things with time-dependence doesn't require
@@ -11,19 +12,25 @@
 extern float total_time;
 extern float dt;
 
-typedef void (*KeyCallback)(int key, int action);
-typedef void (*CursorPositionCallback)(double x, double y);
-typedef void (*MouseButtonCallback)(int button, int action);
+// typedef void (*KeyCallback)(int key, int action);
+// typedef void (*CursorPositionCallback)(double x, double y);
+// typedef void (*MouseButtonCallback)(int button, int action);
+
 typedef void (*ReshapeCallback)(int width, int height);
+typedef void (*KeyboardHandler)(KeyboardEvent);
+typedef void (*MouseHandler)(MouseEvent);
 
 class InputListener {
 private:
 public:
     bool listening;
-    virtual void key_callback(int key, int action) {}
-    virtual void cursor_position_callback(double x, double y) {}
-    virtual void cursor_move_callback(double x, double y) {}
-    virtual void mouse_button_callback(int button, int action) {}
+    virtual void keyboard_handler(KeyboardEvent e) {}
+    virtual void mouse_handler(MouseEvent e) {}
+
+    // virtual void key_callback(int key, int action) {}
+    // virtual void cursor_position_callback(double x, double y) {}
+    // virtual void cursor_move_callback(double x, double y) {}
+    // virtual void mouse_button_callback(int button, int action) {}
 };
 
 // A Looper can encapsulate its own data, so is a sort of parameterized function.
@@ -47,13 +54,12 @@ private:
     static void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 
     // These callbacks are just function pointers, so cannot be associated to objects with data.
-    std::vector<KeyCallback> m_key_callbacks;
-    std::vector<CursorPositionCallback> m_cursor_position_callbacks;
-    std::vector<MouseButtonCallback> m_mouse_button_callbacks;
-    std::vector<ReshapeCallback> m_reshape_callbacks;
+    std::vector<KeyboardHandler> m_keyboard_handlers;
+    std::vector<MouseHandler> m_mouse_handlers;
     // A class derived from InputListener implements callback functions, so can have data, etc.
     std::vector<InputListener *> m_input_listeners;
 
+    std::vector<ReshapeCallback> m_reshape_callbacks;
     std::vector<Looper *> m_loopers;
 
     int m_initial_resolution_x;
@@ -93,18 +99,7 @@ public:
         m_input_listeners.push_back(input_listener);
         return input_listener;
     }
-    KeyCallback add_key_callback(KeyCallback callback) {
-        m_key_callbacks.push_back(callback);
-        return callback;
-    }
-    CursorPositionCallback add_cursor_position_callback(CursorPositionCallback callback) {
-        m_cursor_position_callbacks.push_back(callback);
-        return callback;
-    }
-    MouseButtonCallback add_mouse_button_callback(MouseButtonCallback callback) {
-        m_mouse_button_callbacks.push_back(callback);
-        return callback;
-    }
+
     ReshapeCallback add_reshape_callback(ReshapeCallback callback) {
         m_reshape_callbacks.push_back(callback);
         return callback;

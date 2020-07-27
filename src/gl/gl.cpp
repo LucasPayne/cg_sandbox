@@ -1,4 +1,5 @@
 #include "gl.h"
+#include "input/input.h"
 
 float total_time;
 float dt;
@@ -99,56 +100,105 @@ void OpenGLContext::glfw_reshape(GLFWwindow *window, int width, int height)
     }
 }
 
+static int glfw_keycode_to_character(int key)
+{
+    switch (key) {
+        // todo: Possibly GLFW has these correspond to keycodes anyway, and could just check some ranges.
+        case GLFW_KEY_Q: return 'q';
+        case GLFW_KEY_W: return 'w';
+        case GLFW_KEY_E: return 'e';
+        case GLFW_KEY_R: return 'r';
+        case GLFW_KEY_T: return 't';
+        case GLFW_KEY_Y: return 'y';
+        case GLFW_KEY_U: return 'u';
+        case GLFW_KEY_I: return 'i';
+        case GLFW_KEY_O: return 'o';
+        case GLFW_KEY_P: return 'p';
+        case GLFW_KEY_A: return 'a';
+        case GLFW_KEY_S: return 's';
+        case GLFW_KEY_D: return 'd';
+        case GLFW_KEY_F: return 'f';
+        case GLFW_KEY_G: return 'g';
+        case GLFW_KEY_H: return 'h';
+        case GLFW_KEY_J: return 'j';
+        case GLFW_KEY_K: return 'k';
+        case GLFW_KEY_L: return 'l';
+        case GLFW_KEY_Z: return 'z';
+        case GLFW_KEY_X: return 'x';
+        case GLFW_KEY_C: return 'c';
+        case GLFW_KEY_V: return 'v';
+        case GLFW_KEY_B: return 'b';
+        case GLFW_KEY_N: return 'n';
+        case GLFW_KEY_M: return 'm';
+    }
+    return EOF;
+}
+
 void OpenGLContext::glfw_key_callback(GLFWwindow *window, int key,
                        int scancode, int action,
                        int mods)
 {
-    key_callback_arrows_down(window, key, scancode, action, mods);
-    for (InputListener *il : g_opengl_context->m_input_listeners) {
-        if (il->listening) il->key_callback(key, action);
+    KeyboardEvent e;
+    e.is_special = false;
+    int c;
+    if ((c = glfw_keycode_to_character(key)) == EOF) return; // No character to map to, no-op this event.
+    e.character = c;
+    if (action == GLFW_PRESS) {
+        e.action = KEYBOARD_PRESS;
+    } else if (action == GLFW_RELEASE) {
+        e.action = KEYBOARD_RELEASE;
+    } else {
+        return; // Action not handled, no-op.
     }
-    for (const KeyCallback &cb : g_opengl_context->m_key_callbacks) {
-        cb(key, action);
+    for (InputListener *il : g_opengl_context->m_input_listeners) {
+        if (il->listening) il->keyboard_handler(e);
     }
 }
+
+static CursorState g_cursor = { 0 };
+static bool g_cursor_initialized = false;
 void OpenGLContext::glfw_cursor_position_callback(GLFWwindow *window, double window_x, double window_y)
 {
-
     // Convert to more meaningful coordinates, (0,0) bottom left corner of viewport, (1,1) top right.
     GLint viewport[4]; //x,y,width,height
     glGetIntegerv(GL_VIEWPORT, viewport);
     float x = (window_x - viewport[0]) / (1.0 * viewport[2]);
     float y = 1 - (window_y - viewport[1]) / (1.0 * viewport[3]);
-    // printf("(%.2f,%.2f)\n", x,y);
 
-    static float last_x, last_y;
-    static bool last_set = false;
-    if (!last_set) {
-        last_x = x;
-        last_y = y;
-        last_set = true;
+    if (!g_cursor_initialized) {
+        g_cursor.x = x;
+        g_cursor.x = y;
+        g_cursor_initialized = true;
     }
-    float dx = x - last_x;
-    float dy = y - last_y;
-    last_x = x;
-    last_y = y;
+    g_cursor.dx = x - g_cursor.x;
+    g_cursor.dy = y - g_cursor.y;
+    g_cursor.x = x;
+    g_cursor.y = y;
+
+    MouseEvent e;
+    e.action = MOUSE_MOVE;
+    e.cursor = g_cursor;
 
     for (InputListener *il : g_opengl_context->m_input_listeners) {
         if (il->listening) {
-            il->cursor_position_callback(x, y);
-            il->cursor_move_callback(dx, dy);
+            il->mouse_handler(e);
         }
-    }
-    for (const CursorPositionCallback &cb : g_opengl_context->m_cursor_position_callbacks) {
-        cb(x, y);
     }
 }
 void OpenGLContext::glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    for (InputListener *il : g_opengl_context->m_input_listeners) {
-        if (il->listening) il->mouse_button_callback(button, action);
+    MouseEvent e;
+    e.action = MOUSE_BUTTON;
+    switch (button) {
+        case GLFW_MOUSE_BUTTON_LEFT: e.button = MOUSE_LEFT; break;
+        case GLFW_MOUSE_BUTTON_RIGHT: e.button = MOUSE_RIGHT; break;
+        case GLFW_MOUSE_BUTTON_MIDDLE: e.button = MOUSE_MIDDLE; break;
     }
-    for (const MouseButtonCallback &cb : g_opengl_context->m_mouse_button_callbacks) {
-        cb(button, action);
+    e.cursor = g_cursor;
+
+    for (InputListener *il : g_opengl_context->m_input_listeners) {
+        if (il->listening) {
+            il->mouse_handler(e);
+        }
     }
 }

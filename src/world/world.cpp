@@ -16,87 +16,7 @@ IDEAS/THINGS:
 #include "input/input.h"
 #include <math.h>
 
-//testing global
 ShadingModelInstance *shading_model_model_test;
-
-struct Dolphin : public IBehaviour {
-    vec3 velocity;
-    void update() {
-        Transform *t = world->em.get_aspect<Transform>(entity);
-        // std::cout << t->position << "\n";
-        t->position += dt * velocity;
-    }
-};
-
-void test_world(World &world, EntityModel &em, ResourceModel &rm)
-{
-    // Create a camera man.
-    {
-        Entity cameraman = em.new_entity();
-        Camera *camera = em.add_aspect<Camera>(cameraman);
-        camera->init_projective(0.1, 300, 0.1, 0.566);
-
-        Transform *t = em.add_aspect<Transform>(cameraman);
-        t->init(0,0,0);
-    }
-
-    // Create a dolphin.
-
-    // Resource<GeometricMaterial> gmat = assets.GeometricMaterial("resources/model_test/model_test.gmat");
-    // Resource<Material> gmat = assets.Material("resources/model_test/model_test.mat");
-    // Resource<ShadingModel> gmat = assets.ShadingModel("resources/model_test/model_test.sm");
-
-    Resource<GeometricMaterial> gmat = rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
-    Resource<Material> mat = rm.load_from_file<Material>("resources/model_test/model_test.mat");
-    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
-    for (int i = 0; i < 10; i++) {
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off", true, 0.0003);
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dragon.off", true, 0.3);
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
-        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(rm, dolphin_data);
-        Entity dolphin = em.new_entity();
-        Transform *t = em.add_aspect<Transform>(dolphin);
-        t->init(-0.5 + frand(),-0.5 + frand(),-1);
-        Drawable *drawable = em.add_aspect<Drawable>(dolphin);
-        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
-        drawable->material = MaterialInstance(mat);
-        drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-
-        Dolphin *b = world.add_behaviour<Dolphin>(dolphin);
-        b->velocity = vec3::random(-0.1,0.1);
-    }
-#if 0
-    VertexArrayData vad;
-    vad.layout.num_vertices = 3;
-    vad.layout.vertices_starting_index = 0;
-    vad.layout.indexed = false;
-    vad.attribute_buffers = std::vector<std::vector<uint8_t>>(2);
-    vad.attribute_buffers[0] = std::vector<uint8_t>(3*sizeof(float)*3);
-    vad.attribute_buffers[1] = std::vector<uint8_t>(3*sizeof(float)*3);
-    float *positions = (float *) &(vad.attribute_buffers[0][0]);
-    float *colors = (float *) &(vad.attribute_buffers[1][0]);
-    float _positions[3*3] = {
-        -0.5,-0.5,  0.5,
-        0.5,-0.5,  0.5,
-        0, 1.0/sqrt(2),  0.5
-    };
-    float _colors[3*3] = {
-        1,0,0,
-        0,1,0,
-        0,0,1,
-    };
-    memcpy(positions, _positions, sizeof(_positions));
-    memcpy(colors, _colors, sizeof(_colors));
-    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_position"));
-    vad.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_color"));
-
-    Resource<VertexArray> va = VertexArray::from_vertex_array_data(rm, vad);
-
-        drawable->geometric_material = GeometricMaterialInstance(gmat, va);
-#endif
-}
 
 void World::init()
 {
@@ -126,12 +46,13 @@ void World::init()
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    test_world(*this, em, rm);
+
+    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
+    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 }
 void World::close()
 {
 }
-
 
 void World::loop()
 {
@@ -168,7 +89,7 @@ void World::loop()
 void World::keyboard_handler(KeyboardEvent e)
 {
     if (e.action == KEYBOARD_PRESS) {
-        if (e.character == 'q' && g_context_active) {
+        if (e.key.code == KEY_Q && g_context_active) {
             g_opengl_context->close();
             exit(EXIT_SUCCESS);
         }

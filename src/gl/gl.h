@@ -20,19 +20,6 @@ typedef void (*ReshapeCallback)(int width, int height);
 typedef void (*KeyboardHandler)(KeyboardEvent);
 typedef void (*MouseHandler)(MouseEvent);
 
-class InputListener {
-private:
-public:
-    bool listening;
-    virtual void keyboard_handler(KeyboardEvent e) {}
-    virtual void mouse_handler(MouseEvent e) {}
-
-    // virtual void key_callback(int key, int action) {}
-    // virtual void cursor_position_callback(double x, double y) {}
-    // virtual void cursor_move_callback(double x, double y) {}
-    // virtual void mouse_button_callback(int button, int action) {}
-};
-
 // A Looper can encapsulate its own data, so is a sort of parameterized function.
 // The OpenGLContext holds a list of these.
 struct Looper {
@@ -131,6 +118,6 @@ extern bool g_context_active;
 extern OpenGLContext *g_opengl_context;
 
 #include "gl/gl_shader_program.h"
-#include "gl/gl_input.h"
+#include "gl/glsl.h"
 
 #endif // GL_CORE_H

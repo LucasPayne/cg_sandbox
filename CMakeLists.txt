@@ -30,17 +30,17 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 
 # Executable
 #================================================================================
-add_executable(main
+add_library(cg_sandbox
     src/main.cpp
     src/data_structures/table.cpp
     src/mathematics/mathematics.cpp
+    src/input/input.cpp
     src/world/world.cpp
     src/resource_model/resource_model.cpp
     src/rendering/rendering.cpp
     src/rendering/shading.cpp
     src/rendering/vertex_arrays.cpp
     src/rendering/drawing.cpp
-    src/rendering/glsl.cpp
     src/assets/models.cpp
     src/entity_model/entity_model.cpp
     src/world/standard_aspects/Transform.cpp
@@ -48,17 +48,17 @@ add_executable(main
     src/world/standard_aspects/Drawable.cpp
     src/world/standard_aspects/Behaviour.cpp
     src/gl/gl.cpp
-    src/gl/gl_input.cpp
+    src/gl/glsl.cpp
     src/gl/gl_shader_program.cpp
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
     lib/glad/glad.c
 )
 # set_property(TARGET main PROPERTY CXX_STANDARD 11)
-target_compile_options(main PRIVATE -Wall -g)
+target_compile_options(cg_sandbox PRIVATE -Wall -g)
 
 # External libraries
 #================================================================================
 # GLFW
 add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(main PRIVATE glfw)
+target_link_libraries(cg_sandbox STATIC glfw)

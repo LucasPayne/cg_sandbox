@@ -16,7 +16,6 @@ Provides rendering resources:
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
 #include "rendering/shading.h"
-#include "rendering/glsl.h"
 
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.

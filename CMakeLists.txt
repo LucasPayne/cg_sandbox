@@ -46,7 +46,7 @@ add_executable(main
     src/world/standard_aspects/Transform.cpp
     src/world/standard_aspects/Camera.cpp
     src/world/standard_aspects/Drawable.cpp
-    src/world/standard_aspects/Logic.cpp
+    src/world/standard_aspects/Behaviour.cpp
     src/gl/gl.cpp
     src/gl/gl_input.cpp
     src/gl/gl_shader_program.cpp

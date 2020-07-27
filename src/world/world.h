@@ -14,6 +14,7 @@ such as the creation of game objects.
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
+#include "input/input.h"
 
 class World : public Looper, public InputListener {
 public:
@@ -24,10 +25,8 @@ public:
     void close();
     void loop();
     // InputListener stuff.
-    void key_callback(int key, int action);
-    void cursor_position_callback(double x, double y);
-    void cursor_move_callback(double x, double y);
-    void mouse_button_callback(int button, int action);
+    void keyboard_handler(KeyboardEvent e);
+    void mouse_handler(MouseEvent e);
 
     // Testing and debugging.
     void test_init();
@@ -36,10 +35,10 @@ public:
     // "World creation" functions.
     //----------------------------
     /*--------------------------------------------------------------------------------
-    A "Logic" is a standard aspect which allows an entity to have its own loop and input callbacks.
-    Logic should be added to entities through this function, and in this case, be defined as, for example,
+    A "Behaviour" is a standard aspect which allows an entity to have its own loop and input callbacks.
+    Behaviour should be added to entities through this function, and in this case, be defined as, for example,
     
-    struct Dolphin : ObjectLogic {
+    struct Dolphin : IBehaviour {
         int num_flippers;
         void update() {
             printf("I have %d flippers.\n", num_flippers);
@@ -47,13 +46,15 @@ public:
     };
     --------------------------------------------------------------------------------*/
     template <typename L>
-    L *add_logic(Entity e) {
-        Logic *logic = em.add_aspect<Logic>(e);
-        L *object_logic = logic->init<L>();
-        // Logic aspects in the World should derive from ObjectLogic (which has ILogic base class) rather than ILogic.
-        // This simple wrapper gives the Logic a reference to the World it is in.
-        object_logic->world = *this;
-        return object_logic;
+    L *add_behaviour(Entity e) {
+        Behaviour *behaviour = em.add_aspect<Behaviour>(e);
+        behaviour->object_size = sizeof(L);
+        behaviour->object = new L();
+        behaviour->object->world = this;
+        behaviour->object->entity = e;
+        behaviour->object->updating = true;
+
+        return reinterpret_cast<L *>(behaviour->object);
     }
 
     // Component subsystems.

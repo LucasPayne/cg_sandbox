@@ -91,6 +91,11 @@ struct vec3 {
         float inv_length = 1.0 / length();
         return vec3(inv_length*x(), inv_length*y(), inv_length*z());
     }
+    
+    // Returns a random vector with entries in the range [a,b).
+    static inline vec3 random(float a, float b) {
+        return vec3(a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand());
+    }
 };
 
 // vec3-vec3 operations.
@@ -213,6 +218,11 @@ struct vec4 {
         float inv_length = 1.0 / length();
         return vec4(inv_length*x(), inv_length*y(), inv_length*z(), inv_length*w());
     }
+
+    // Returns a random vector with entries in the range [a,b).
+    static inline vec4 random(float a, float b) {
+        return vec4(a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand());
+    }
 };
 
 // vec4-vec4 operations.
@@ -242,5 +252,10 @@ inline vec4 operator*(const vec4 &v, const float &t) {
 inline vec4 operator/(const vec4 &v, const float &t) {
     return vec4(v[0]/t, v[1]/t, v[2]/t, v[3]/t);
 }
+//--------------------------------------------------------------------------------
+
+// Printing
+std::ostream &operator<<(std::ostream &os, const vec3 &v);
+std::ostream &operator<<(std::ostream &os, const vec4 &v);
 
 #endif // MATHEMATICS_VEC3_VEC4_H

@@ -13,21 +13,22 @@ IDEAS/THINGS:
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
 #include "assets/models.h"
+#include "input/input.h"
 #include <math.h>
 
 //testing global
 ShadingModelInstance *shading_model_model_test;
 
-
-struct Dolphin : public ILogic {
-    int a;
-    int b;
+struct Dolphin : public IBehaviour {
+    vec3 velocity;
     void update() {
-        printf("yo %d %d\n", a, b);
+        Transform *t = world->em.get_aspect<Transform>(entity);
+        // std::cout << t->position << "\n";
+        t->position += dt * velocity;
     }
 };
 
-void test_world(EntityModel &em, ResourceModel &rm)
+void test_world(World &world, EntityModel &em, ResourceModel &rm)
 {
     // Create a camera man.
     {
@@ -63,7 +64,8 @@ void test_world(EntityModel &em, ResourceModel &rm)
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
 
-        Dolphin *logic = em.add_aspect<Logic>(dolphin)->init<Dolphin>();
+        Dolphin *b = world.add_behaviour<Dolphin>(dolphin);
+        b->velocity = vec3::random(-0.1,0.1);
     }
 #if 0
     VertexArrayData vad;
@@ -115,7 +117,7 @@ void World::init()
     REGISTER_ASPECT_TYPE(Transform);
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
-    REGISTER_ASPECT_TYPE(Logic);
+    REGISTER_ASPECT_TYPE(Behaviour);
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     graphics = Graphics();
@@ -124,7 +126,7 @@ void World::init()
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    test_world(em, rm);
+    test_world(*this, em, rm);
 }
 void World::close()
 {
@@ -137,12 +139,10 @@ void World::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
 
-    for (Logic *logic : em.aspects<Logic>()) {
-        printf("%zu\n", logic->data_size);
-        logic->data->update();
-
-        // ILogic *ilogic = (ILogic *) logic->data;
-        // (ilogic->*(logic->update))();
+    for (Behaviour *b : em.aspects<Behaviour>()) {
+        if (b->object->updating) {
+            b->object->update();
+        }
     }
 
     for (Camera *camera : em.aspects<Camera>()) {
@@ -165,21 +165,15 @@ void World::loop()
     }
 }
 
-void World::key_callback(int key, int action)
+void World::keyboard_handler(KeyboardEvent e)
 {
-    if (action == GLFW_PRESS) {
-        if (key == GLFW_KEY_Q && g_context_active) {
+    if (e.action == KEYBOARD_PRESS) {
+        if (e.character == 'q' && g_context_active) {
             g_opengl_context->close();
             exit(EXIT_SUCCESS);
         }
     }
 }
-void World::cursor_position_callback(double x, double y)
-{
-}
-void World::cursor_move_callback(double x, double y)
-{
-}
-void World::mouse_button_callback(int button, int action)
+void World::mouse_handler(MouseEvent e)
 {
 }

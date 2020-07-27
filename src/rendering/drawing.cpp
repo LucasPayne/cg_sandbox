@@ -1,51 +1,5 @@
 #include "rendering/drawing.h"
 
-void Draw::draw()
-{
-    printf("Drawing\n");
-    glUseProgram(shading_program->program_id);
-    glBindVertexArray(g_instance->vertex_array->gl_vao_id);
-
-    GeometricMaterial &geometric_material = *(g_instance->base);
-    Material &material = *(m_instance->base);
-    ShadingModel &shading_model = *(sm_instance->base);
-
-    // Bind property sheets.
-    // First, make sure that the data in graphics memory is up-to-date.
-    // Then, bind the property sheet buffers to the reserved binding points, 0, 1, and 2.
-    //     0: GeometricMaterial properties
-    //     1: Material properties
-    //     2: ShadingModel properties
-    if (geometric_material.has_properties) {
-        g_instance->properties.synchronize();
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, g_instance->properties.buffer_id);
-    }
-    if (material.has_properties) {
-        m_instance->properties.synchronize();
-        glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_instance->properties.buffer_id);
-    }
-    if (shading_model.has_properties) {
-        sm_instance->properties.synchronize();
-        glBindBufferBase(GL_UNIFORM_BUFFER, 2, sm_instance->properties.buffer_id);
-    }
-
-    GLenum primitive_type = g_instance->base->primitive;
-    VertexArrayLayout &layout = g_instance->vertex_array->layout;
-    if (layout.indexed) {
-        glDrawElements(primitive_type,
-                       (GLsizei) layout.num_indices,
-                       layout.index_type,
-                       (const void *) 0);
-    } else {
-        glDrawArrays(primitive_type,
-                     (GLint) 0,
-                     (GLsizei) layout.num_vertices);
-    }
-    // Unbind OpenGL state.
-    glUseProgram(0);
-}
-
-
 PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)
 {
     // Create a property sheet for a specific block. This matches the size of the block.

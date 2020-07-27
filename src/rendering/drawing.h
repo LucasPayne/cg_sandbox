@@ -94,23 +94,4 @@ struct ShadingModelInstance : public GMSMInstance<ShadingModel> {
     {}
 };
 
-struct Draw {
-    Draw() {}//testing
-
-    Draw(ResourceModel &rm, GeometricMaterialInstance &gi, MaterialInstance &mi, ShadingModelInstance &smi) :
-        g_instance{&gi}, m_instance{&mi}, sm_instance{&smi}
-    {
-        resource_model = &rm;
-        shading_program = ShadingProgram::create(rm, gi.base, mi.base, smi.base);
-    }
-    void draw();
-private:
-    GeometricMaterialInstance *g_instance;
-    MaterialInstance *m_instance;
-    ShadingModelInstance *sm_instance;
-
-    Resource<ShadingProgram> shading_program;
-    ResourceModel *resource_model;
-};
-
 #endif // DRAWING_H

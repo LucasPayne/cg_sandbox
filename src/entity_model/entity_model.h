@@ -87,7 +87,8 @@ public: // Usage interface
             TableCollection<AspectBase> *aspect_table;
             inline void operator++() { ++pos; }
             inline TYPE *operator*() { return aspect_table->lookup<TYPE>(*pos); }
-            inline bool operator!=(int throwaway) { return pos != 0; }
+            inline bool operator!=(AspectIteratorPosition throwaway) { return pos != GenericTable::IteratorPosition(); }
+            AspectIteratorPosition() {}
             AspectIteratorPosition(GenericTable::IteratorPosition _pos, TableCollection<AspectBase> *_aspect_table) :
                 pos{_pos}, aspect_table{_aspect_table}
             {}
@@ -95,7 +96,7 @@ public: // Usage interface
         inline AspectIteratorPosition begin() {
             return AspectIteratorPosition(iter.begin(), aspect_table);
         }
-        inline int end() { return 0; }
+        inline AspectIteratorPosition end() { return AspectIteratorPosition(); }
 
         GenericTable::Iterator iter;
         TableCollection<AspectBase> *aspect_table;

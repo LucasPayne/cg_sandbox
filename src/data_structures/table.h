@@ -82,6 +82,7 @@ public:
                 ++handle.index;
             }
         }
+        IteratorPosition() {}
         IteratorPosition(GenericTable *_table) :
             done{false}, table{_table}
         {
@@ -99,7 +100,7 @@ public:
             handle.id = table->get_header(handle.index)->id;
             return handle;
         }
-        inline bool operator!=(int throwaway) {
+        inline bool operator!=(IteratorPosition throwaway) {
             return !done;
         }
     };
@@ -110,7 +111,7 @@ public:
         inline IteratorPosition begin() {
             return IteratorPosition(table);
         }
-        inline int end() { return 0; }
+        inline IteratorPosition end() { return IteratorPosition(); }
     };
     inline Iterator iterator() {
         return Iterator(this);

@@ -71,6 +71,7 @@ struct vec3 {
         entries[2] /= t;
         return *this;
     }
+
     // -u
     inline vec3 operator-() const {
         return vec3(-entries[0],-entries[1],-entries[2]);
@@ -115,6 +116,11 @@ inline vec3 operator*(const vec3 &a, const vec3 &b) {
 inline vec3 operator/(const vec3 &a, const vec3 &b) {
     return vec3(a[0]/b[0],a[1]/b[1],a[2]/b[2]);
 }
+// u == v
+inline bool operator==(const vec3 &a, const vec3 &b) {
+    return (a.x()==b.x()) && (a.y()==b.y()) && (a.z()==b.z());
+}
+
 // scalar-vec3 operations.
 inline vec3 operator*(const float &t, const vec3 &v) {
     return vec3(t*v[0], t*v[1], t*v[2]);
@@ -242,6 +248,11 @@ inline vec4 operator*(const vec4 &a, const vec4 &b) {
 inline vec4 operator/(const vec4 &a, const vec4 &b) {
     return vec4(a[0]/b[0],a[1]/b[1],a[2]/b[2],a[3]/b[3]);
 }
+// u == v
+inline bool operator==(const vec4 &a, const vec4 &b) {
+    return (a.x()==b.x()) && (a.y()==b.y()) && (a.z()==b.z()) && (a.w()==b.w());
+}
+
 // scalar-vec4 operations.
 inline vec4 operator*(const float &t, const vec4 &v) {
     return vec4(t*v[0], t*v[1], t*v[2], t*v[3]);

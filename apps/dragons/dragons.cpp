@@ -1,5 +1,6 @@
 #include "cg_sandbox.h"
 #include "gl/gl.h"
+#include "data_structures/table.h"
 World world;
 
 struct Dolphin : public IBehaviour {
@@ -40,6 +41,8 @@ void App::init()
 
     Resource<GeometricMaterial> gmat = world.rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.rm.load_from_file<Material>("resources/model_test/model_test.mat");
+#if 1
+{
     for (int i = 0; i < 10; i++) {
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off", true, 0.0003);
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
@@ -58,12 +61,31 @@ void App::init()
         b->velocity = vec3::random(-0.1,0.1);
     }
 }
+#endif
+    {
+        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/bunny.off", true, 1);
+        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
+        Entity dolphin = world.em.new_entity();
+        Transform *t = world.em.add_aspect<Transform>(dolphin);
+        t->init(0,0,-1);
+        Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
+        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        drawable->material = MaterialInstance(mat);
+        drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    }
+}
 void App::close()
 {
     printf("see ya\n");
 }
 void App::loop()
 {
+    for (Transform *t : world.em.aspects<Transform>()) {
+        if (t->position == vec3(0,0,-1)) continue;
+        t->lookat(vec3(0,0,-1));
+        // t->lookat(t->position + vec3(cos(total_time),0,sin(total_time)));
+        // t->rotation = Quaternion::from_axis_angle(vec3(0, total_time, 0));
+    }
 }
 
 // Force the application to its constant-aspect-ratio subrectangle of the actual viewport.

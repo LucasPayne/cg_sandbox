@@ -4,6 +4,7 @@
 
 #include "mathematics/vec3_vec4.h"
 #include "mathematics/mat4x4.h"
+#include "mathematics/quaternion.h"
 #include <math.h>
 
 #endif // MATHEMATICS_H

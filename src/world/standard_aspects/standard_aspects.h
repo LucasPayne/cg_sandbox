@@ -8,26 +8,16 @@
 
 struct Transform : public IAspectType<Transform> {
     vec3 position;
-    vec3 rotation;
+    Quaternion rotation;
 
     void init(float x, float y, float z);
     void init(vec3 _position);
-    void init(float x, float y, float z, float theta_x, float theta_y, float theta_z);
-    void init(vec3 _position, vec3 _rotation);
+    void init(vec3 _position, Quaternion _rotation);
+    void init_lookat(vec3 position, vec3 target, vec3 up = {0,1,0});
+    void lookat(vec3 target, vec3 up = {0,1,0});
 
-    inline mat4x4 matrix() const {
-        // note: mat4x4 constructor parameter order is column-major.
-        return mat4x4(1,0,0,0,
-                      0,1,0,0,
-                      0,0,1,0,
-                      position.x(),position.y(),position.z(),1);
-    }
-    inline mat4x4 inverse_matrix() const {
-        return mat4x4(1,0,0,0,
-                      0,1,0,0,
-                      0,0,1,0,
-                      -position.x(),-position.y(),-position.z(),1);
-    }
+    mat4x4 matrix() const;
+    mat4x4 inverse_matrix() const;
 };
 
 struct Camera : public IAspectType<Camera> {

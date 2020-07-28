@@ -1,12 +1,10 @@
-#include "assets/models.h"
-namespace Models {
 
-// fun fact: OFF was created for geomview, by the Geometry Center (Bill Thurston, John Conway, turning a sphere inside out without creasing...).
-VertexArrayData load_OFF_model(const std::string &path, bool compute_normals, float scale)
+
+bool load_OFF_model(const std::istream &stream, Model &model)
 {
     #define load_error(ERROR_STR) {\
         printf("OFF model load error: %s\n", ( ERROR_STR ));\
-        exit(EXIT_FAILURE);\
+        return false;\
     }
     // Macro to get the next line, skipping lines which are just spaces and commented lines.
     #define next_line(STREAM,LINE,ERROR_MESSAGE) {\
@@ -19,27 +17,23 @@ VertexArrayData load_OFF_model(const std::string &path, bool compute_normals, fl
             if (strncmp("#", ( LINE ).c_str(), 1) != 0) break;\
         }\
     }
-    std::ifstream file;
-    file.open(path);
-    if (!file.is_open()) load_error("Failed to open file.");
     std::string line;
-    next_line(file, line, "Empty file");
+    next_line(stream, line, "Empty file");
     if (line != "OFF") load_error("OFF files must start with the magic line, \"OFF\".");
-    next_line(file, line, "No feature count declaration.");
+    next_line(stream, line, "No feature count declaration.");
     // Non-triangle faces are not supported.
     uint32_t num_vertices, num_triangles, num_edges;
     if (sscanf(line.c_str(), "%u %u %u", &num_vertices, &num_triangles, &num_edges) != 3) {
         load_error("Invalid num_vertices num_faces num_edges line.");
     }
     // Vertices
-    std::vector<uint8_t> position_data(3*num_vertices*sizeof(float));
+    std::vector<vec3> position_data(num_vertices);
+
     for (uint32_t i = 0; i < num_vertices; i++) {
         next_line(file, line, "Not enough vertex lines.");
         float x, y, z;
         if (sscanf(line.c_str(), "%f %f %f", &x, &y, &z) != 3) load_error("Invalid vertex line.");
-        ((float *) &position_data[0])[3*i+0] = x * scale;
-        ((float *) &position_data[0])[3*i+1] = y * scale;
-        ((float *) &position_data[0])[3*i+2] = z * scale;
+        position_data[i] = vec3(x,y,z);
     }
     // Triangle indices
     // Use the most packed index format possible, from 8-bit, 16-bit, and 32-bit unsigned integers.
@@ -113,33 +107,3 @@ VertexArrayData load_OFF_model(const std::string &path, bool compute_normals, fl
 
     return data;
 }
-
-enum ModelFileFormats {
-    MODEL_FILE_FORMAT_OFF,
-    MODEL_FILE_FORMAT_OBJ,
-};
-static const ModelFileFormatLoader model_file_format_loaders[] = {
-    load_OFF_model,
-    load_OBJ_model,
-};
-
-Model load(const std::string &path)
-{
-    // Select a format based on the file suffix.
-    const char *c_path = path.c_str();
-    int file_format;
-    #define FORMAT(FORMAT_NAME,DOT_SUFFIX)\
-        if (strncmp(strchr(c_path, '\0')-strlen(FORMAT_NAME), DOT_SUFFIX, strlen(FORMAT_NAME)) == 0) {\
-            file_format = MODEL_FILE_FORMAT_ ## FORMAT_NAME;\
-            goto continue_here_when_format_selected;\
-        }
-    FORMAT(OFF, ".off");
-    FORMAT(OBJ, ".obj");
-    fprintf(stderr, "ERROR: Could not interpret model file format for file \"%s\".\n", path.c_str());
-    exit(EXIT_FAILURE);
-continue_here_when_format_selected:
-    
-}
-
-
-}; // namespace Models

@@ -1,12 +1,13 @@
-#ifndef QUATERNION_H
-#define QUATERNION_H
+#ifndef SPATIAL_ALGEBRA_QUATERNION_H
+#define SPATIAL_ALGEBRA_QUATERNION_H
 /*--------------------------------------------------------------------------------
 some references:
 https://www.gamasutra.com/view/feature/131686/rotating_objects_using_quaternions.php
 https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Using_quaternion_as_rotations
 --------------------------------------------------------------------------------*/
-#include "mathematics/vec3_vec4.h"
+#include "vec3_vec4.h"
 #include <math.h>
+#include <ostream>
 
 struct Quaternion {
     Quaternion(float scalar, float i, float j, float k) :
@@ -62,11 +63,6 @@ struct Quaternion {
                                           axis.y()*sin_half_angle,
                                           axis.z()*sin_half_angle);
     }
-
-    // p' = q * p * q.inverse()
-    vec3 rotate(const vec3 &v) const {
-        
-    }
 };
 
 /*--------------------------------------------------------------------------------
@@ -82,6 +78,6 @@ inline Quaternion operator*(const Quaternion &A, const Quaternion &B) {
                       A.scalar()*B.j() + B.scalar()*A.j() - A.i()*B.k() + B.i()*A.k(),
                       A.scalar()*B.k() + B.scalar()*A.k() + A.i()*B.j() - B.i()*A.j());
 }
+std::ostream &operator<<(std::ostream &os, const Quaternion &q);
 
-
-#endif // QUATERNION_H
+#endif // SPATIAL_ALGEBRA_QUATERNION_H

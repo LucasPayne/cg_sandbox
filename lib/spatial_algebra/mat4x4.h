@@ -1,6 +1,7 @@
-#ifndef MATHEMATICS_MAT4X4_H
-#define MATHEMATICS_MAT4X4_H
-#include "mathematics/mathematics.h"
+#ifndef SPATIAL_ALGEBRA_MAT4X4_H
+#define SPATIAL_ALGEBRA_MAT4X4_H
+#include <string.h>
+#include <ostream>
 
 // mat4x4 is column-major, as default in OpenGL/GLSL.
 struct mat4x4 {
@@ -88,4 +89,4 @@ inline mat4x4 operator*(mat4x4 A, mat4x4 B) {
 }
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M);
 
-#endif // MATHEMATICS_MAT4X4_H
+#endif // SPATIAL_ALGEBRA_MAT4X4_H

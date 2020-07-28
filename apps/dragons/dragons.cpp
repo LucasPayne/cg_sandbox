@@ -4,14 +4,88 @@
 World world;
 
 
+struct CameraController : public IBehaviour {
+    float azimuth;
+    float angle;
+
+    float strafe_speed;
+    float forward_speed;
+    float lift_speed;
+
+    bool view_with_mouse;
+    float key_view_speed_horizontal;
+    float key_view_speed_vertical;
+
+    float min_angle;
+    float max_angle;
+
+    void update() {
+        Transform *t = world->em.get_aspect<Transform>(entity);
+        const KeyboardKeyCode up = KEY_W;
+        const KeyboardKeyCode down = KEY_S;
+        const KeyboardKeyCode left = KEY_A;
+        const KeyboardKeyCode right = KEY_D;
+
+        float forward_movement = 0;
+        float side_movement = 0;
+        float lift = 0;
+        if (world->input.keyboard.down(up)) forward_movement += forward_speed;
+        if (world->input.keyboard.down(down)) forward_movement -= forward_speed;
+        if (world->input.keyboard.down(left)) side_movement -= strafe_speed;
+        if (world->input.keyboard.down(right)) side_movement += strafe_speed;
+
+        if (!view_with_mouse) {
+            if (world->input.keyboard.down(KEY_H)) azimuth += key_view_speed_horizontal * dt;
+            if (world->input.keyboard.down(KEY_L)) azimuth -= key_view_speed_horizontal * dt;
+            if (world->input.keyboard.down(KEY_J)) angle -= key_view_speed_vertical * dt;
+            if (world->input.keyboard.down(KEY_K)) angle += key_view_speed_vertical * dt;
+        }
+
+        if (world->input.keyboard.down(KEY_SPACE)) lift += lift_speed;
+        if (world->input.keyboard.down(KEY_LEFT_SHIFT)) lift -= lift_speed;
+
+        // Lock angle.
+        if (angle < min_angle) angle = min_angle;
+        if (angle > max_angle) angle = max_angle;
+        
+        float cos_azimuth = cos(azimuth);
+        float sin_azimuth = sin(azimuth);
+        vec3 forward = vec3(-sin_azimuth, 0, -cos_azimuth);
+        vec3 side = vec3(cos_azimuth, 0, -sin_azimuth);
+
+        t->position += dt*(side_movement*side + forward_movement*forward);
+        t->position.y() += dt*lift;
+
+        Quaternion q1 = Quaternion::from_axis_angle(vec3(0,1,0), azimuth);
+        Quaternion q2 = Quaternion::from_axis_angle(side, angle);
+        t->rotation = q2 * q1;
+
+        // t->lookat(vec3(0,0,-2));
+    }
+
+    void init() {
+        strafe_speed = 1;
+        forward_speed = 1;
+        lift_speed = 1;
+        key_view_speed_horizontal = 2;
+        key_view_speed_vertical = 1.5;
+        azimuth = 0;
+        angle = 0;
+        min_angle = -M_PI/3.0;
+        max_angle = M_PI/3.0;
+        view_with_mouse = false;
+    }
+};
+
+
 struct Dolphin : public IBehaviour {
     vec3 velocity;
     void update() {
         Transform *t = world->em.get_aspect<Transform>(entity);
-        if (world->input.keyboard.down(KEY_S)) t->position.y() -= dt;
-        if (world->input.keyboard.down(KEY_W)) t->position.y() += dt;
-        if (world->input.keyboard.down(KEY_A)) t->position.x() -= dt;
-        if (world->input.keyboard.down(KEY_D)) t->position.x() += dt;
+        if (world->input.keyboard.down(KEY_DOWN_ARROW)) t->position.y() -= dt;
+        if (world->input.keyboard.down(KEY_UP_ARROW)) t->position.y() += dt;
+        if (world->input.keyboard.down(KEY_LEFT_ARROW)) t->position.x() -= dt;
+        if (world->input.keyboard.down(KEY_RIGHT_ARROW)) t->position.x() += dt;
     }
 };
 struct Bunny : public IBehaviour {
@@ -39,6 +113,9 @@ void App::init()
 
         Transform *t = world.em.add_aspect<Transform>(cameraman);
         t->init(0,0,0);
+
+        CameraController *controller = world.add_behaviour<CameraController>(cameraman);
+        controller->init();
     }
 
     // Create a dolphin.

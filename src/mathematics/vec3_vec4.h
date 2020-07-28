@@ -139,6 +139,7 @@ struct vec4 {
     static inline vec4 zero() { return vec4(0,0,0,0); }
     static inline vec4 origin() { return vec4(0,0,0,1); }
     vec4(float x, float y, float z, float w) : entries{x,y,z,w} {}
+    vec4(vec3 v3, float w) : entries{v3.entries[0], v3.entries[1], v3.entries[2], w} {}
 
     // Entry accessors
     inline float x() const { return entries[0]; }

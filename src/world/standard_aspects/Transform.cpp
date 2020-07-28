@@ -17,10 +17,10 @@ void Transform::init(vec3 _position)
 }
 
 
-void Transform::init_lookat(vec3 position, vec3 target, vec3 up)
+void Transform::init_lookat(vec3 position, vec3 target)
 {
     position = position;
-    lookat(target, up);
+    lookat(target);
 }
 
 vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
@@ -30,7 +30,9 @@ vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
     return vec3::dot(v, axis)*axis + cos(angle)*X + sin(angle)*Z;
 }
 
-void Transform::lookat(vec3 target, vec3 up)
+
+// lookat assumes that the plane of pitch rotation is spanned by the world Y-axis and the direction to the target.
+void Transform::lookat(vec3 target)
 {
     vec3 f = (target - position).normalized();
     vec3 fp = vec3(f.x(), 0, f.z()).normalized();
@@ -48,9 +50,10 @@ void Transform::lookat(vec3 target, vec3 up)
 
 mat4x4 Transform::matrix() const
 {
-    Quaternion q1 = rotation * Quaternion(0,1,0,0) * rotation.inverse();
-    Quaternion q2 = rotation * Quaternion(0,0,1,0) * rotation.inverse();
-    Quaternion q3 = rotation * Quaternion(0,0,0,1) * rotation.inverse();
+    Quaternion inverse_rotation = rotation.inverse();
+    Quaternion q1 = rotation * Quaternion(0,1,0,0) * inverse_rotation;
+    Quaternion q2 = rotation * Quaternion(0,0,1,0) * inverse_rotation;
+    Quaternion q3 = rotation * Quaternion(0,0,0,1) * inverse_rotation;
 
     // note: mat4x4 constructor parameter order is column-major.
     return mat4x4(q1.i(),q1.j(),q1.k(),0,
@@ -60,8 +63,39 @@ mat4x4 Transform::matrix() const
 }
 mat4x4 Transform::inverse_matrix() const
 {
-    return mat4x4(1,0,0,0,
-                  0,1,0,0,
-                  0,0,1,0,
-                  -position.x(),-position.y(),-position.z(),1);
+    Quaternion inverse_rotation = rotation.inverse();
+    Quaternion q1 = rotation * Quaternion(0,1,0,0) * inverse_rotation;
+    Quaternion q2 = rotation * Quaternion(0,0,1,0) * inverse_rotation;
+    Quaternion q3 = rotation * Quaternion(0,0,0,1) * inverse_rotation;
+    mat4x4 M(q1.i(),q2.i(),q3.i(),0,
+             q1.j(),q2.j(),q3.j(),0,
+             q1.k(),q2.k(),q3.k(),0,
+             0,0,0,1);
+    vec4 p = M * vec4(-position, 1);
+    M.entry(0,3) = p.x();
+    M.entry(1,3) = p.y();
+    M.entry(2,3) = p.z();
+    return M;
+
+    // mat4x4 inv_translation = mat4x4(1,0,0,0,
+    //                                 0,1,0,0,
+    //                                 0,0,1,0,
+    //                                 -position.x(),-position.y(),-position.z(),1);
+    // mat4x4 inv_rotation = mat4x4(q1.i(),q2.i(),q3.i(),0,
+    //                              q1.j(),q2.j(),q3.j(),0,
+    //                              q1.k(),q2.k(),q3.k(),0,
+    //                              0,0,0,1);
+
+    // return inv_rotation * inv_translation;
+
+    // mat4x4 M(-q1.i(),-q2.i(),-q3.i(),0,
+    //          -q1.j(),-q2.j(),-q3.j(),0,
+    //          -q1.k(),-q2.k(),-q3.k(),0,
+    //          0,0,0,1);
+    // vec4 p = M * vec4(position, 1);
+
+    // return mat4x4(q1.i(),q2.i(),q3.i(),0,
+    //               q1.j(),q2.j(),q3.j(),0,
+    //               q1.k(),q2.k(),q3.k(),0,
+    //               p.x(),p.y(),p.z(),1);
 }

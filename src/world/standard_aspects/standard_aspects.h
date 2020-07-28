@@ -13,8 +13,8 @@ struct Transform : public IAspectType<Transform> {
     void init(float x, float y, float z);
     void init(vec3 _position);
     void init(vec3 _position, Quaternion _rotation);
-    void init_lookat(vec3 position, vec3 target, vec3 up = {0,1,0});
-    void lookat(vec3 target, vec3 up = {0,1,0});
+    void init_lookat(vec3 position, vec3 target);
+    void lookat(vec3 target);
 
     mat4x4 matrix() const;
     mat4x4 inverse_matrix() const;

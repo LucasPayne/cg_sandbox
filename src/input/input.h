@@ -32,9 +32,13 @@ enum KeyboardKeys {
     KEY_B,
     KEY_N,
     KEY_M,
-    KEY_SPACE,
+    KEY_UP_ARROW,
+    KEY_DOWN_ARROW,
+    KEY_LEFT_ARROW,
+    KEY_RIGHT_ARROW,
     KEY_LEFT_SHIFT,
     KEY_RIGHT_SHIFT,
+    KEY_SPACE,
     KEYBOARD_NUM_KEYS
 };
 typedef uint8_t KeyboardKeyCode;

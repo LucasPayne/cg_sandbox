@@ -130,6 +130,13 @@ static int glfw_keycode_to_keycode(int key)
         case GLFW_KEY_B: return KEY_B;
         case GLFW_KEY_N: return KEY_N;
         case GLFW_KEY_M: return KEY_M;
+        case GLFW_KEY_UP: return KEY_UP_ARROW;
+        case GLFW_KEY_DOWN: return KEY_DOWN_ARROW;
+        case GLFW_KEY_LEFT: return KEY_LEFT_ARROW;
+        case GLFW_KEY_RIGHT: return KEY_RIGHT_ARROW;
+        case GLFW_KEY_LEFT_SHIFT: return KEY_LEFT_SHIFT;
+        case GLFW_KEY_RIGHT_SHIFT: return KEY_RIGHT_SHIFT;
+        case GLFW_KEY_SPACE: return KEY_SPACE;
     }
     return EOF;
 }

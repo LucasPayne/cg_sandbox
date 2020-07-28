@@ -28,7 +28,6 @@ struct CameraController : public IBehaviour {
         if (angle > max_angle) angle = max_angle;
     }
 
-
     void keyboard_handler(KeyboardEvent e) {
         if (e.action == KEYBOARD_PRESS) {
             if (e.key.code == KEY_E) {
@@ -198,6 +197,10 @@ void App::loop()
         // t->lookat(t->position + vec3(cos(total_time),1,sin(total_time)));
         // t->rotation = Quaternion::from_axis_angle(vec3(0, total_time, 0));
     }
+    // for (Dolphin *dolphin : world.behaviours<Dolphin>()) {
+    //     Transform *t = world.em.get_aspect<Transform>(dolphin->entity);
+    //     t->position += dolphin->velocity * dt;
+    // }
 }
 
 // Force the application to its constant-aspect-ratio subrectangle of the actual viewport.

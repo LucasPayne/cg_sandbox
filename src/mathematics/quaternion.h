@@ -50,11 +50,17 @@ struct Quaternion {
     static inline Quaternion from_axis_angle(vec3 axis) {
         float theta = axis.length();
         if (theta == 0) return Quaternion::identity();
-        float inv_theta = 1.0 / theta;
+        float inv_length = 1.0 / theta;
         float sin_half_theta = sin(0.5 * theta);
-        return Quaternion(cos(0.5*theta), axis.x()*sin_half_theta*inv_theta,
-                                          axis.y()*sin_half_theta*inv_theta,
-                                          axis.z()*sin_half_theta*inv_theta);
+        return Quaternion(cos(0.5*theta), axis.x()*sin_half_theta*inv_length,
+                                          axis.y()*sin_half_theta*inv_length,
+                                          axis.z()*sin_half_theta*inv_length);
+    }
+    static inline Quaternion from_axis_angle(vec3 axis, float angle) {
+        float sin_half_angle = sin(0.5 * angle);
+        return Quaternion(cos(0.5*angle), axis.x()*sin_half_angle,
+                                          axis.y()*sin_half_angle,
+                                          axis.z()*sin_half_angle);
     }
 
     // p' = q * p * q.inverse()
@@ -71,7 +77,7 @@ Hamilton product of two quaternions.
                           ad' + a'd + bc' - b'c)
 --------------------------------------------------------------------------------*/
 inline Quaternion operator*(const Quaternion &A, const Quaternion &B) {
-    return Quaternion(A.scalar()*B.scalar() - A.i()*B.i() - A.j()*B.j() - A.k()*B.j(),
+    return Quaternion(A.scalar()*B.scalar() - A.i()*B.i() - A.j()*B.j() - A.k()*B.k(),
                       A.scalar()*B.i() + B.scalar()*A.i() + A.j()*B.k() - B.j()*A.k(),
                       A.scalar()*B.j() + B.scalar()*A.j() - A.i()*B.k() + B.i()*A.k(),
                       A.scalar()*B.k() + B.scalar()*A.k() + A.i()*B.j() - B.i()*A.j());

@@ -22,30 +22,28 @@ void Transform::init_lookat(vec3 position, vec3 target, vec3 up)
     position = position;
     lookat(target, up);
 }
+
+vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
+{
+    vec3 Z = vec3::cross(v, axis);
+    vec3 X = vec3::cross(axis, Z);
+    return vec3::dot(v, axis)*axis + cos(angle)*X + sin(angle)*Z;
+}
+
 void Transform::lookat(vec3 target, vec3 up)
 {
-    // Compute the angle to rotate the plane spanned by Z and forward, to send Z to forward.
-    vec3 forward = (target - position).normalized();
-    vec3 axis = vec3(-forward.y(), forward.x(), 0).normalized();
-    float angle = acos(forward.z());
-    
-    // Transform the given up vector (it is taken along when Z is sent to forward).
-    vec3 new_up;
-    {
-        vec3 X = vec3::cross(up, axis);
-        vec3 Z = vec3::cross(axis, X);
-        //cos(angle) = forward.z(), sin(angle) = sqrt(1 - forward.z()*forward.z())
-        new_up = axis * vec3::dot(up, axis) + cos(angle)*X + sin(angle)*Z;
-    }
-    // Compute the angle new_up makes with its projection onto span{new_up, forward}.
-    vec3 proj_new_up = new_up * (1 - vec3::dot(new_up, vec3::cross(up, forward)));
-    vec3 new_up_rotated_to_plane = proj_new_up.normalized();
-    float angle_to_plane = acos(vec3::dot(new_up, new_up_rotated_to_plane));
-    vec3 axis_to_plane = vec3::cross(new_up, new_up_rotated_to_plane);
+    vec3 f = (target - position).normalized();
+    vec3 fp = vec3(f.x(), 0, f.z()).normalized();
+    float theta = acos(fp.z());
+    if (fp.x() < 0) theta = -theta;
+    // vec3 Xp = vec3::cross(fp, vec3(0,1,0));
+    vec3 Xp = vec3(-fp.z(), 0, fp.x());
+    float psi = acos(vec3::dot(f, fp));
+    if (f.y() < 0) psi = -psi;
 
-    Quaternion q1 = Quaternion::from_axis_angle(angle * axis);
-    Quaternion q2 = Quaternion::from_axis_angle(angle_to_plane * axis_to_plane);
-    rotation = q1 * q2;
+    Quaternion q1 = Quaternion::from_axis_angle(vec3(0,1,0), theta);
+    Quaternion q2 = Quaternion::from_axis_angle(Xp, psi);
+    rotation = q2 * q1;
 }
 
 mat4x4 Transform::matrix() const

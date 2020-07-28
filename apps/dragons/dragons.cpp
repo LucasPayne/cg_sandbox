@@ -3,6 +3,7 @@
 #include "data_structures/table.h"
 World world;
 
+
 struct Dolphin : public IBehaviour {
     vec3 velocity;
     void update() {
@@ -13,6 +14,13 @@ struct Dolphin : public IBehaviour {
         if (world->input.keyboard.down(KEY_D)) t->position.x() += dt;
     }
 };
+struct Bunny : public IBehaviour {
+    void update() {
+        Transform *t = world->em.get_aspect<Transform>(entity);
+        t->rotation = Quaternion::from_axis_angle(total_time * vec3(1,0,0));
+    }
+};
+
 
 class App : public InputListener, public Looper {
     void init();
@@ -51,7 +59,7 @@ void App::init()
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
-        t->init(-0.5 + frand(),-0.5 + frand(),-1);
+        t->init(2*(frand()-0.5),2*(frand()-0.5),-2);
         Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
@@ -67,11 +75,13 @@ void App::init()
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
-        t->init(0,0,-1);
+        t->init(0,0,-3);
         Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+
+        Bunny *b = world.add_behaviour<Bunny>(dolphin);
     }
 }
 void App::close()
@@ -81,9 +91,9 @@ void App::close()
 void App::loop()
 {
     for (Transform *t : world.em.aspects<Transform>()) {
-        if (t->position == vec3(0,0,-1)) continue;
-        t->lookat(vec3(0,0,-1));
-        // t->lookat(t->position + vec3(cos(total_time),0,sin(total_time)));
+        if (t->position == vec3(0,0,-3)) continue;
+        t->lookat(vec3(0,0,-3));
+        // t->lookat(t->position + vec3(cos(total_time),1,sin(total_time)));
         // t->rotation = Quaternion::from_axis_angle(vec3(0, total_time, 0));
     }
 }

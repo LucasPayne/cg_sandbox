@@ -114,4 +114,32 @@ VertexArrayData load_OFF_model(const std::string &path, bool compute_normals, fl
     return data;
 }
 
+enum ModelFileFormats {
+    MODEL_FILE_FORMAT_OFF,
+    MODEL_FILE_FORMAT_OBJ,
+};
+static const ModelFileFormatLoader model_file_format_loaders[] = {
+    load_OFF_model,
+    load_OBJ_model,
+};
+
+Model load(const std::string &path)
+{
+    // Select a format based on the file suffix.
+    const char *c_path = path.c_str();
+    int file_format;
+    #define FORMAT(FORMAT_NAME,DOT_SUFFIX)\
+        if (strncmp(strchr(c_path, '\0')-strlen(FORMAT_NAME), DOT_SUFFIX, strlen(FORMAT_NAME)) == 0) {\
+            file_format = MODEL_FILE_FORMAT_ ## FORMAT_NAME;\
+            goto continue_here_when_format_selected;\
+        }
+    FORMAT(OFF, ".off");
+    FORMAT(OBJ, ".obj");
+    fprintf(stderr, "ERROR: Could not interpret model file format for file \"%s\".\n", path.c_str());
+    exit(EXIT_FAILURE);
+continue_here_when_format_selected:
+    
+}
+
+
 }; // namespace Models

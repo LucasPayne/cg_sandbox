@@ -95,6 +95,7 @@ struct KeyboardState {
     // Each key has bit-flags to signify its state.
     // Starting with the least significant bit:
     //    Bit 0:  0:down    1:up
+    // todo:
     //    Bit 1:  1 signifies the key become pressed one "input-cycle" ago (whatever manages the InputState handles this).
     //    Bit 2:  Same as above but for when the key is released.
     uint8_t key_flags[KEYBOARD_NUM_KEYS];

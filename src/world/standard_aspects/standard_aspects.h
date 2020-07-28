@@ -41,11 +41,18 @@ struct IBehaviour {
     World *world;
     Entity entity; // Each Behaviour attached to an entity is given a reference to the entity.
     bool updating;
-
     virtual void update() {
         // After one call, signify that this virtual function has not been overridden,
         // and that it is a no-op.
         updating = false;
+    }
+    bool handling_mouse;
+    virtual void mouse_handler(MouseEvent e) {
+        handling_mouse = false;
+    }
+    bool handling_keyboard;
+    virtual void keyboard_handler(KeyboardEvent e) {
+        handling_keyboard = false;
     }
 };
 struct Behaviour : public IAspectType<Behaviour> {

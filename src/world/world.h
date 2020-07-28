@@ -43,6 +43,12 @@ public:
         void update() {
             printf("I have %d flippers.\n", num_flippers);
         }
+        void mouse_handler(MouseEvent e) {
+            ...
+        }
+        void keyboard_handler(MouseEvent e) {
+            ...
+        }
     };
     --------------------------------------------------------------------------------*/
     template <typename L>
@@ -53,6 +59,8 @@ public:
         behaviour->object->world = this;
         behaviour->object->entity = e;
         behaviour->object->updating = true;
+        behaviour->object->handling_keyboard = true;
+        behaviour->object->handling_mouse = true;
 
         return reinterpret_cast<L *>(behaviour->object);
     }

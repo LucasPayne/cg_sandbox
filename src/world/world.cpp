@@ -94,7 +94,17 @@ void World::keyboard_handler(KeyboardEvent e)
             exit(EXIT_SUCCESS);
         }
     }
+    for (Behaviour *b : em.aspects<Behaviour>()) {
+        if (b->object->handling_keyboard) {
+            b->object->keyboard_handler(e);
+        }
+    }
 }
 void World::mouse_handler(MouseEvent e)
 {
+    for (Behaviour *b : em.aspects<Behaviour>()) {
+        if (b->object->handling_mouse) {
+            b->object->mouse_handler(e);
+        }
+    }
 }

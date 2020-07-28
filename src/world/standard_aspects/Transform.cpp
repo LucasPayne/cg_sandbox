@@ -30,7 +30,6 @@ vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
     return vec3::dot(v, axis)*axis + cos(angle)*X + sin(angle)*Z;
 }
 
-
 // lookat assumes that the plane of pitch rotation is spanned by the world Y-axis and the direction to the target.
 void Transform::lookat(vec3 target)
 {
@@ -38,7 +37,7 @@ void Transform::lookat(vec3 target)
     vec3 fp = vec3(f.x(), 0, f.z()).normalized();
     float theta = acos(fp.z());
     if (fp.x() < 0) theta = -theta;
-    // vec3 Xp = vec3::cross(fp, vec3(0,1,0));
+    // X' = cross(f', (0,1,0))
     vec3 Xp = vec3(-fp.z(), 0, fp.x());
     float psi = acos(vec3::dot(f, fp));
     if (f.y() < 0) psi = -psi;
@@ -76,26 +75,4 @@ mat4x4 Transform::inverse_matrix() const
     M.entry(1,3) = p.y();
     M.entry(2,3) = p.z();
     return M;
-
-    // mat4x4 inv_translation = mat4x4(1,0,0,0,
-    //                                 0,1,0,0,
-    //                                 0,0,1,0,
-    //                                 -position.x(),-position.y(),-position.z(),1);
-    // mat4x4 inv_rotation = mat4x4(q1.i(),q2.i(),q3.i(),0,
-    //                              q1.j(),q2.j(),q3.j(),0,
-    //                              q1.k(),q2.k(),q3.k(),0,
-    //                              0,0,0,1);
-
-    // return inv_rotation * inv_translation;
-
-    // mat4x4 M(-q1.i(),-q2.i(),-q3.i(),0,
-    //          -q1.j(),-q2.j(),-q3.j(),0,
-    //          -q1.k(),-q2.k(),-q3.k(),0,
-    //          0,0,0,1);
-    // vec4 p = M * vec4(position, 1);
-
-    // return mat4x4(q1.i(),q2.i(),q3.i(),0,
-    //               q1.j(),q2.j(),q3.j(),0,
-    //               q1.k(),q2.k(),q3.k(),0,
-    //               p.x(),p.y(),p.z(),1);
 }

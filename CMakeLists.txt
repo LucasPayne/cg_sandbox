@@ -54,11 +54,16 @@ add_library(cg_sandbox
     ${FLEX_shading_file_lexer_OUTPUTS}
     lib/glad/glad.c
 )
-# set_property(TARGET main PROPERTY CXX_STANDARD 11)
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 
-# External libraries
+# Internal libraries
+# These provide some functionality the core uses, but are separated from the core code.
+#======================================================================================
+add_subdirectory(lib/model_loader)
+target_link_libraries(cg_sandbox STATIC model_loader)
+
+# External dependencies
 #================================================================================
 # GLFW
-add_subdirectory(lib/glfw EXCLUDE_FROM_ALL)
+add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
 target_link_libraries(cg_sandbox STATIC glfw)

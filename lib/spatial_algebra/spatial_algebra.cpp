@@ -1,4 +1,5 @@
-#include "mathematics/mathematics.h"
+#include "spatial_algebra.h"
+#include <iostream>
 
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M)
 {
@@ -29,5 +30,10 @@ std::ostream &operator<<(std::ostream &os, const vec3 &v)
 std::ostream &operator<<(std::ostream &os, const vec4 &v)
 {
     os << "(" << v.x() << ", " << v.y() << ", " << v.z() << ", " << v.w() << ")";
+    return os;
+}
+std::ostream &operator<<(std::ostream &os, const Quaternion &q)
+{
+    os << "Quaternion[" << q.scalar() << ", " << q.i() << ", " << q.j() << ", " << q.k() << "]";
     return os;
 }

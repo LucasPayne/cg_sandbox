@@ -1,7 +1,9 @@
-#ifndef MATHEMATICS_VEC3_VEC4_H
-#define MATHEMATICS_VEC3_VEC4_H
-#include "mathematics/mathematics.h"
+#ifndef SPATIAL_ALGEBRA_VEC3_VEC4_H
+#define SPATIAL_ALGEBRA_VEC3_VEC4_H
 #include <math.h>
+#include <ostream>
+#include <stdlib.h>
+#define frand() (rand() / (RAND_MAX * 1.0))
 
 // vec3 and vec4 classes.
 // references:
@@ -270,4 +272,4 @@ inline vec4 operator/(const vec4 &v, const float &t) {
 std::ostream &operator<<(std::ostream &os, const vec3 &v);
 std::ostream &operator<<(std::ostream &os, const vec4 &v);
 
-#endif // MATHEMATICS_VEC3_VEC4_H
+#endif // SPATIAL_ALGEBRA_VEC3_VEC4_H

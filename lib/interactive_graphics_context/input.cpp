@@ -1,6 +1,6 @@
-#include "gl/gl.h"
-#include "input/input.h"
+#include "input.h"
 #include <ctype.h>//tolower
+#include <stdio.h>//EOF
 
 int KeyboardKey::to_char(KeyboardKey key)
 {

@@ -6,7 +6,7 @@ Drawing submodule of the rendering module.
 #include "rendering/shading.h"
 #include "rendering/vertex_arrays.h"
 #include "resource_model/resource_model.h"
-#include "mathematics/mathematics.h"
+#include "spatial_algebra/spatial_algebra.h"
 
 struct PropertySheet {
     ShadingBlock *block;

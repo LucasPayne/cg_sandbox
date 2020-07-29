@@ -3,7 +3,6 @@
 #include "data_structures/table.h"
 World world;
 
-
 struct CameraController : public IBehaviour {
     float azimuth;
     float angle;
@@ -129,6 +128,8 @@ class App : public InputListener, public Looper {
 };
 void App::init()
 {
+    world.assets.models.load("resources/models/dragon.off");
+
     // Create a camera man.
     {
         Entity cameraman = world.em.new_entity();
@@ -148,6 +149,7 @@ void App::init()
     // Resource<Material> gmat = assets.Material("resources/model_test/model_test.mat");
     // Resource<ShadingModel> gmat = assets.ShadingModel("resources/model_test/model_test.sm");
 
+#if 0
     Resource<GeometricMaterial> gmat = world.rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.rm.load_from_file<Material>("resources/model_test/model_test.mat");
 #if 1
@@ -155,7 +157,8 @@ void App::init()
     for (int i = 0; i < 25; i++) {
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off", true, 0.0003);
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dragon.off", true, 0.3);
+        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dragon.off", true, 0.3);
+        VertexArrayData dolphin_data;
         // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
         Entity dolphin = world.em.new_entity();
@@ -172,7 +175,8 @@ void App::init()
 }
 #endif
     {
-        VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/bunny.off", true, 1);
+        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/bunny.off", true, 1);
+        VertexArrayData dolphin_data;
         Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
@@ -184,6 +188,7 @@ void App::init()
 
         Bunny *b = world.add_behaviour<Bunny>(dolphin);
     }
+#endif
 }
 void App::close()
 {
@@ -222,9 +227,14 @@ void reshape(int width, int height)
 
 int main(int argc, char *argv[])
 {
-    world = World();
-    App app = App();
+    CGS_World world = CGS::create_world();
+    CGS_Context context = CGS::create_context("Dragons", world);
+
+    context.loop();
+    context.close();
     
+    world. 
+
     int window_width = 512;
     int window_height = 512;
     OpenGLContext context("Dragons", window_width, window_height);
@@ -239,6 +249,7 @@ int main(int argc, char *argv[])
     world.input = InputState();
     context.add_input_listener(&world.input);
 
+    App app = App();
     context.add_looper(&app);
     context.add_input_listener(&app);
 

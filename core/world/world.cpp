@@ -9,21 +9,20 @@ IDEAS/THINGS:
 #include "core.h"
 #include "gl/gl.h"
 #include "world/world.h"
-#include "mathematics/mathematics.h"
+#include "spatial_algebra/spatial_algebra.h"
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
-#include "assets/models.h"
 #include "input/input.h"
 #include <math.h>
 
 ShadingModelInstance *shading_model_model_test;
 
-void World::init()
+World::World()
 {
     // Initialize the resource model.
     rm = ResourceModel();
     // Register resource types. Remember to do this!
-    #define REGISTER_RESOURCE_TYPE(NAME) rm.register_resource_type<NAME>(#NAME, NAME ::load, NAME ::unload)
+    #define REGISTER_RESOURCE_TYPE(NAME) rm.register_resource_type<NAME>(#NAME)
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
@@ -39,6 +38,10 @@ void World::init()
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
 
+    // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
+    assets = Assets();
+    assets.rm = &rm;
+
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     graphics = Graphics();
     graphics.rm = &rm; // The Graphics component relies on the resource model.
@@ -47,8 +50,8 @@ void World::init()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
+    // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
+    // shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 }
 void World::close()
 {

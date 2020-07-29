@@ -1,7 +1,7 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
 #include "core.h"
-#include "mathematics/mathematics.h"
+#include "spatial_algebra/spatial_algebra.h"
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"

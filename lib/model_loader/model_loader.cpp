@@ -1,13 +1,11 @@
 #include "model_loader.h"
 
-#include "model_file_format_OFF.cpp"
-#include "model_file_format_OBJ.cpp"
 static ModelFileFormatLoader model_file_format_loaders[] = {
     load_OFF_model,
-    load_OBJ_model,
+    load_Obj_model,
 };
 
-Model Model::load(const std::string &path)
+MLModel MLModel::load(const std::string &path)
 {
     // Select a format based on the file suffix.
     const char *c_path = path.c_str();
@@ -24,7 +22,7 @@ Model Model::load(const std::string &path)
     fprintf(stderr, "ERROR: Could not interpret model file format for file \"%s\".\n", path.c_str());
     exit(EXIT_FAILURE);
 continue_here_when_format_selected:
-    Model model;
+    MLModel model;
     ModelFileFormatLoader loader = model_file_format_loaders[file_format];
 
     std::ifstream file;
@@ -42,7 +40,7 @@ continue_here_when_format_selected:
     return model;
 }
 
-void Model::print() const
+void MLModel::print() const
 {
     #define YESNO(BOOLEAN) ( ( BOOLEAN ) ? "Yes" : "No" )
     std::cout << "Model metadata\n";

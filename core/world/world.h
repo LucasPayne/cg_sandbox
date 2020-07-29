@@ -11,6 +11,7 @@ such as the creation of game objects.
 #define WORLD_H
 #include "core.h"
 #include "resource_model/resource_model.h"
+#include "assets/assets.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
@@ -18,10 +19,7 @@ such as the creation of game objects.
 
 class World : public Looper, public InputListener {
 public:
-    World() {}
-
     // Looper stuff.
-    void init();
     void close();
     void loop();
     // InputListener stuff.
@@ -31,6 +29,8 @@ public:
     // Testing and debugging.
     void test_init();
     void test_loop();
+
+    World();
 
     // "World creation" functions.
     //----------------------------
@@ -70,6 +70,7 @@ public:
     ResourceModel rm;
     Graphics graphics; // Graphics state, such as cached compiled shaders.
     InputState input;
+    Assets assets;
 };
 
 #endif // WORLD_H

@@ -21,9 +21,9 @@ static void print_listing(const std::string &title, const std::string &text)
 
 Resource loading and unloading functions.
 --------------------------------------------------------------------------------*/
-bool GeometricMaterial::load(void *data, std::istream &stream)
+bool GeometricMaterial::load(std::istream &stream)
 {
-    GeometricMaterial *geometric_material = reinterpret_cast<GeometricMaterial *>(data);
+    GeometricMaterial *geometric_material = this;
     // printf("Parsing geometric material file.\n");
     #define parse_error(ERROR_STR) {\
         printf("GEOMETRIC MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
@@ -60,13 +60,10 @@ bool GeometricMaterial::load(void *data, std::istream &stream)
     return true;
     #undef parse_error
 }
-bool GeometricMaterial::unload(void *data)
-{
-}
 
-bool Material::load(void *data, std::istream &stream)
+bool Material::load(std::istream &stream)
 {
-    Material *material = reinterpret_cast<Material *>(data);
+    Material *material = this;
     // printf("Parsing material file.\n");
     #define parse_error(ERROR_STR) {\
         printf("MATERIAL PARSE ERROR: %s\n", ( ERROR_STR ));\
@@ -96,13 +93,10 @@ bool Material::load(void *data, std::istream &stream)
     return true;
     #undef parse_error
 }
-bool Material::unload(void *data)
-{
-}
 
-bool ShadingModel::load(void *data, std::istream &stream)
+bool ShadingModel::load(std::istream &stream)
 {
-    ShadingModel *shading_model = reinterpret_cast<ShadingModel *>(data);
+    ShadingModel *shading_model = this;
 
     // printf("Parsing shading model file.\n");
     #define parse_error(ERROR_STR) {\
@@ -138,9 +132,6 @@ bool ShadingModel::load(void *data, std::istream &stream)
     return true;
     #undef parse_error
 }
-bool ShadingModel::unload(void *data)
-{
-}
 
 Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
                                                 Resource<GeometricMaterial> geometric_material,
@@ -155,9 +146,6 @@ Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
     ShadingProgram *program = rm.get_resource<ShadingProgram>(program_handle);
     *program = new_shading_program(*g, *m, *sm);
     return program_handle;
-}
-bool ShadingProgram::unload(void *data)
-{
 }
 
 /*================================================================================

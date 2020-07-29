@@ -1,5 +1,4 @@
-#include "core.h"
-#include "assets/models/models.h"
+#include "../../lib/model_loader/model_loader.h"
 
 void test_load(std::string path)
 {

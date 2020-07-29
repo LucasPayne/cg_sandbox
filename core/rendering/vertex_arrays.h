@@ -69,8 +69,6 @@ struct VertexArrayData {
 };
 struct VertexArray : public IResourceType<VertexArray> {
     
-    static bool load(void *data, std::istream &stream);
-    static bool unload(void *data);
     static Resource<VertexArray> from_vertex_array_data(ResourceModel &rm, VertexArrayData &data);
 
     VertexArrayLayout layout;

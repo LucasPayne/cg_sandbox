@@ -113,8 +113,7 @@ struct ShadingBlock {
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
 struct GeometricMaterial : public IResourceType<GeometricMaterial> {
-    static bool load(void *data, std::istream &stream);
-    static bool unload(void *data);
+    bool load(std::istream &stream);
     //-Vertex shader only.
     ShadingDataflow dataflow;
     // The dataflow is dependent on the primitives it processes, so that information is here.
@@ -125,16 +124,14 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     ShadingBlock properties;
 };
 struct Material : public IResourceType<Material> {
-    static bool load(void *data, std::istream &stream);
-    static bool unload(void *data);
+    bool load(std::istream &stream);
     ShadingDataflow dataflow;
 
     bool has_properties;
     ShadingBlock properties;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
-    static bool load(void *data, std::istream &stream);
-    static bool unload(void *data);
+    bool load(std::istream &stream);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 
@@ -152,11 +149,6 @@ struct ShadingProgram : public IResourceType<ShadingProgram> {
                                            Resource<GeometricMaterial> geometric_material,
                                            Resource<Material> material,
                                            Resource<ShadingModel> shading_model);
-    static bool load(void *data, std::istream &stream) {
-        fprintf(stderr, "ERROR: ShadingProgram cannot be loaded from a stream.\n");
-        exit(EXIT_FAILURE);
-    }
-    static bool unload(void *data);
 
     GLuint program_id;
 };

@@ -1,7 +1,6 @@
 #include "cg_sandbox.h"
 #include "gl/gl.h"
 #include "data_structures/table.h"
-World world;
 
 struct CameraController : public IBehaviour {
     float azimuth;
@@ -118,15 +117,13 @@ struct Bunny : public IBehaviour {
     }
 };
 
-
-class App : public InputListener, public Looper {
-    void init();
+class App : public IGC::Callbacks {
     void close();
     void loop();
     void keyboard_handler(KeyboardEvent e) {}
     void mouse_handler(MouseEvent e) {}
 };
-void App::init()
+App::App(CGS_World &world)
 {
     world.assets.models.load("resources/models/dragon.off");
 
@@ -227,33 +224,13 @@ void reshape(int width, int height)
 
 int main(int argc, char *argv[])
 {
-    CGS_World world = CGS::create_world();
-    CGS_Context context = CGS::create_context("Dragons", world);
+    IGC::Context context("Dragons");
+    CGS::World world;
+    context.add_callbacks(world);
+
+    App app(world);
+    context.add_callbacks(app);
 
     context.loop();
     context.close();
-    
-    world. 
-
-    int window_width = 512;
-    int window_height = 512;
-    OpenGLContext context("Dragons", window_width, window_height);
-    context.set_bg_color(0,0,0.3,1);
-    context.set_fg_color(1,0.9,0.96,1);
-    context.open();
-
-    world = World();
-    context.add_looper(&world);
-    context.add_input_listener(&world);
-    context.add_reshape_callback(reshape);
-    world.input = InputState();
-    context.add_input_listener(&world.input);
-
-    App app = App();
-    context.add_looper(&app);
-    context.add_input_listener(&app);
-
-    context.enter_loop();
-    context.close();
 }
-

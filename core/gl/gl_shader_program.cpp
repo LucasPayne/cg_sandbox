@@ -1,9 +1,9 @@
 #include "gl.h"
+#include <stdio.h>
+#include <iostream>
 
 GLShader GLShader::from_string(GLenum shader_type, const char *source)
 {
-    
-
     GLShader shader_object;
     shader_object.m_gl_shader_type = shader_type;
     shader_object.m_gl_shader_id = glCreateShader(shader_type);

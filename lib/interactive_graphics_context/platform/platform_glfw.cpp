@@ -9,70 +9,35 @@
 namespace IGC {
 namespace Platform {
 
-bool g_context_active = false;
-GLFWwindow *glfw_window = nullptr;
-
-void close()
+void close(WindowReference window)
 {
-    if (!g_context_active) {
-        //- This check does not guarantee that the closed context is the currently open context.
-        std::cerr <<  "ERROR: Tried to close OpenGLContext, none is open!\n";
-        exit(EXIT_FAILURE);
-    }
     glfwTerminate();
-    glfwDestroyWindow(glfw_window);
-    g_context_active = false;
+    glfwDestroyWindow((GLFWwindow *) window);
 }
-void enter_loop()
+
+bool poll(WindowReference window)
 {
-    #if 0
-    while (!glfwWindowShouldClose(m_glfw_window))
-    {
-        glfwPollEvents();
-
-        m_last_time = m_time;
-        m_time = glfwGetTime();
-        m_dt = m_time - m_last_time;
-
-        // Set the globals for convenience (there is only ever one context anyway).
-        dt = m_dt;
-        total_time = m_time;
-
-        // Clearing: window clear to background color, viewport clear to the foreground color.
-        glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
-        glDisable(GL_SCISSOR_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        glEnable(GL_SCISSOR_TEST);
-        glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-        glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_SCISSOR_TEST);
-
-
-        glFlush();
-        glfwSwapBuffers(m_glfw_window);
-    }
-    #endif
+    if (glfwWindowShouldClose((GLFWwindow *) window)) return false;
+    glfwPollEvents();
+    return true;
 }
-
-static void force_aspect_ratio(int width, int height, double wanted_aspect_ratio)
+void present(WindowReference window)
 {
-    double aspect_ratio = ((double) height) / width;
-    if (aspect_ratio > wanted_aspect_ratio) {
-        glViewport(0, (height - wanted_aspect_ratio * width)/2.0, width, wanted_aspect_ratio * width);
-    }
-    else {
-        glViewport((width - height / wanted_aspect_ratio)/2.0, 0, height / wanted_aspect_ratio,  height);
-    }
+    glFlush();
+    glfwSwapBuffers((GLFWwindow *) window);
 }
+float time()
+{
+    return (float) glfwGetTime();
+}
+
 static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-    // todo: Remove this functionality from here.
-    float aspect_ratio = 0.566;
-    force_aspect_ratio(width, height, aspect_ratio);
+    WindowEvent e;
+    e.type = WINDOW_EVENT_FRAMEBUFFER_SIZE;
+    e.framebuffer.width = width;
+    e.framebuffer.height = height;
+    Context::window_event(e);
 }
 
 static int glfw_keycode_to_keycode(int key)
@@ -185,10 +150,6 @@ void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int 
 
 WindowReference create_window(const std::string &name)
 {
-    if (g_context_active) {
-        std::cerr <<  "ERROR: Only one OpenGL context can be open at a time!\n";
-        exit(EXIT_FAILURE);
-    }
     if (!glfwInit()) {
         std::cerr <<  "GLFW error: Something went wrong initializing GLFW.\n";
         exit(EXIT_FAILURE);
@@ -197,7 +158,7 @@ WindowReference create_window(const std::string &name)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    glfw_window = glfwCreateWindow(800, 600, name.c_str(), NULL, NULL);
+    GLFWwindow *glfw_window = glfwCreateWindow(800, 600, name.c_str(), NULL, NULL);
     if (glfw_window == nullptr) {
         std::cerr << "GLFW error: Failed to create a window properly.\n";
         glfwTerminate();
@@ -213,7 +174,7 @@ WindowReference create_window(const std::string &name)
     glfwSetCursorPosCallback(glfw_window, glfw_cursor_position_callback);
     glfwSetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback);
 
-    return glfw_window;
+    return (WindowReference) glfw_window;
 }
 
 } // end namespace Platform

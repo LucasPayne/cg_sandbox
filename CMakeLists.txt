@@ -34,7 +34,6 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 add_library(cg_sandbox
     core/main.cpp
     core/data_structures/table.cpp
-    core/input/input.cpp
     core/world/world.cpp
     core/resource_model/resource_model.cpp
     core/assets/assets.cpp
@@ -48,7 +47,6 @@ add_library(cg_sandbox
     core/world/standard_aspects/Camera.cpp
     core/world/standard_aspects/Drawable.cpp
     core/world/standard_aspects/Behaviour.cpp
-    core/gl/gl.cpp
     core/gl/glsl.cpp
     core/gl/gl_shader_program.cpp
     ${BISON_shading_file_parser_OUTPUTS}
@@ -56,13 +54,6 @@ add_library(cg_sandbox
     dependencies/glad/glad.c
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
-
-# External dependencies
-#================================================================================
-# GLFW
-add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(cg_sandbox glfw)
-
 
 # Internal libraries
 # These provide some functionality the core uses, but are separated from the core code.
@@ -83,3 +74,12 @@ target_link_libraries(cg_sandbox spatial_algebra)
 add_subdirectory(lib/model_loader)
 target_link_libraries(cg_sandbox model_loader)
 # target_link_libraries(cg_sandbox STATIC libmodel_loader.a)
+
+add_subdirectory(lib/interactive_graphics_context)
+target_link_libraries(cg_sandbox interactive_graphics_context)
+
+# External dependencies
+#--------------------------------------------------------------------------------
+add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
+target_link_libraries(cg_sandbox glfw)
+

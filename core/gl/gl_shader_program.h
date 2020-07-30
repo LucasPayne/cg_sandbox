@@ -1,5 +1,7 @@
 #ifndef GL_GL_SHADER_PROGRAM_H
 #define GL_GL_SHADER_PROGRAM_H
+#include "gl.h"
+#include <string>
 
 class GLShader {
 private:

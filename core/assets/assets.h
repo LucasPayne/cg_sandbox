@@ -2,13 +2,15 @@
 #define ASSETS_H
 #include "core.h"
 
-#include "assets/models.h"
+#include "assets/model_assets.h"
+#include "assets/shading_assets.h"
 
 class Assets {
 public:
-    ModelAssets models;
-
     Assets() {}
+
+    ModelAssets models;
+    ShadingAssets shading;
 
     ResourceModel *rm;
 private:

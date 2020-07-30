@@ -196,9 +196,9 @@ NAME    [_A-Za-z]+[_A-Za-z0-9]*
 %%
     /* Code */
 std::istream *g_istream = nullptr;
-void shading_file_lexer_set_istream(std::istream &stream)
+void shading_file_lexer_set_istream(const std::istream &stream)
 {
-    g_istream = &stream;
+    g_istream = const_cast<std::istream *>(&stream);
 }
 void yyerror(ShadingFileASTNode **ast_root_out, char *str)
 {

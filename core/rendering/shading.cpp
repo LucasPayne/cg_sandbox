@@ -21,7 +21,7 @@ static void print_listing(const std::string &title, const std::string &text)
 
 Resource loading and unloading functions.
 --------------------------------------------------------------------------------*/
-bool GeometricMaterial::load(std::istream &stream)
+bool GeometricMaterial::load(const std::istream &stream)
 {
     GeometricMaterial *geometric_material = this;
     // printf("Parsing geometric material file.\n");
@@ -61,7 +61,7 @@ bool GeometricMaterial::load(std::istream &stream)
     #undef parse_error
 }
 
-bool Material::load(std::istream &stream)
+bool Material::load(const std::istream &stream)
 {
     Material *material = this;
     // printf("Parsing material file.\n");
@@ -94,7 +94,7 @@ bool Material::load(std::istream &stream)
     #undef parse_error
 }
 
-bool ShadingModel::load(std::istream &stream)
+bool ShadingModel::load(const std::istream &stream)
 {
     ShadingModel *shading_model = this;
 
@@ -622,7 +622,7 @@ std::string generate_glsl_property_block_declaration(ShadingBlock block, const s
 }
 
 
-ShadingFileASTNode *ShadingFileDetails::parse_shading_file(std::istream &stream)
+ShadingFileASTNode *ShadingFileDetails::parse_shading_file(const std::istream &stream)
 {
     shading_file_lexer_set_istream(stream);
     ShadingFileASTNode *root = nullptr;

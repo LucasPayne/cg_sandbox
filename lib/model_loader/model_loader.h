@@ -18,7 +18,20 @@ struct MLModelTriangle {
     uint32_t c;
     MLModelTriangle() {}
     MLModelTriangle(uint32_t a, uint32_t b, uint32_t c) : a{a}, b{b}, c{c} {}
+    uint32_t operator[](int index) {
+        if (index == 0) return a;
+        else if (index == 1) return b;
+        else if (index == 2) return c;
+        return -1;
+    }
 };
+
+// Model post-processing flags, specified in an optional bitmask when the model is loaded.
+typedef uint32_t MLLoadFlags;
+#define ML_LOAD_FLAG(FLAG_BITS,FLAG) ((( FLAG_BITS ) & ( FLAG )) != 0)
+#define ML_COMPUTE_PHONG_NORMALS (1 << 0)
+#define ML_INVERT_WINDING_ORDER (1 << 1)
+
 struct MLModel {
     std::string name; // The name is usually the path the model was loaded from.
 
@@ -42,8 +55,11 @@ struct MLModel {
         has_triangles{false},
         num_triangles{0}
     {}
+    // Model post-processing.
+    void compute_phong_normals();
+    void invert_winding_order();
 
-    static MLModel load(const std::string &path);
+    static MLModel load(const std::string &path, MLLoadFlags flags = 0);
 };
 
 typedef bool (*ModelFileFormatLoader)(std::istream &, MLModel &);
@@ -53,5 +69,6 @@ enum ModelFileFormats {
 };
 bool load_Obj_model(std::istream &stream, MLModel &model);
 bool load_OFF_model(std::istream &stream, MLModel &model);
+
 
 #endif // MODEL_LOADER_H

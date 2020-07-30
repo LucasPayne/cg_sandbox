@@ -57,7 +57,7 @@ struct VertexArrayData {
     std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
 
     // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
-    inline uint32_t index(uint32_t i) {
+    inline uint32_t index(uint32_t i) const {
         if (layout.index_type == GL_UNSIGNED_BYTE) {
             return ((uint8_t *) &index_buffer[0])[i];
         } else if (layout.index_type == GL_UNSIGNED_SHORT) {

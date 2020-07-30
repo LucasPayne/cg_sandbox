@@ -37,7 +37,8 @@ add_library(cg_sandbox
     core/world/world.cpp
     core/resource_model/resource_model.cpp
     core/assets/assets.cpp
-    core/assets/models.cpp
+    core/assets/model_assets.cpp
+    core/assets/shading_assets.cpp
     core/rendering/rendering.cpp
     core/rendering/shading.cpp
     core/rendering/vertex_arrays.cpp

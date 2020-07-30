@@ -25,7 +25,7 @@ struct Bunny : public IBehaviour {
 
 class App : public IGC::Callbacks {
 public:
-    World world;
+    World &world;
     App(World &world);
 
     void close();
@@ -34,10 +34,8 @@ public:
     void mouse_handler(MouseEvent e);
     void window_handler(WindowEvent e);
 };
-App::App(World &world) : world{world}
+App::App(World &_world) : world{_world}
 {
-    world.assets.models.load("resources/models/dragon.off");
-
     // Create a camera man.
     {
         Entity cameraman = world.em.new_entity();
@@ -57,18 +55,13 @@ App::App(World &world) : world{world}
     // Resource<Material> gmat = assets.Material("resources/model_test/model_test.mat");
     // Resource<ShadingModel> gmat = assets.ShadingModel("resources/model_test/model_test.sm");
 
-#if 0
-    Resource<GeometricMaterial> gmat = world.rm.load_from_file<GeometricMaterial>("resources/model_test/model_test.gmat");
-    Resource<Material> mat = world.rm.load_from_file<Material>("resources/model_test/model_test.mat");
+#if 1
+    Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
+    Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
 #if 1
 {
     for (int i = 0; i < 25; i++) {
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dolphins.off", true, 0.0003);
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/stanford_bunny_low.off");
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/dragon.off", true, 0.3);
-        VertexArrayData dolphin_data;
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/icosahedron.off", true, -0.00025);
-        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
         t->init(2*(frand()-0.5),2*(frand()-0.5),-2);
@@ -83,9 +76,7 @@ App::App(World &world) : world{world}
 }
 #endif
     {
-        // VertexArrayData dolphin_data = Models::load_OFF_model("resources/models/bunny.off", true, 1);
-        VertexArrayData dolphin_data;
-        Resource<VertexArray> dolphin_model = VertexArray::from_vertex_array_data(world.rm, dolphin_data);
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/bunny.off");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
         t->init(0,0,-3);
@@ -106,14 +97,13 @@ void App::loop()
 {
     for (Transform *t : world.em.aspects<Transform>()) {
         if (t->position == vec3(0,0,-3)) continue;
-        t->lookat(vec3(0,0,-3));
-        // t->lookat(t->position + vec3(cos(total_time),1,sin(total_time)));
-        // t->rotation = Quaternion::from_axis_angle(vec3(0, total_time, 0));
+        // t->lookat(vec3(0,0,-3));
+        t->rotation = Quaternion::from_axis_angle(t->position.x()*0.2*t->position.y()*sin(total_time*0.2)*vec3(total_time, total_time, 0));
     }
-    // for (Dolphin *dolphin : world.behaviours<Dolphin>()) {
-    //     Transform *t = world.em.get_aspect<Transform>(dolphin->entity);
-    //     t->position += dolphin->velocity * dt;
-    // }
+    /* for (Dolphin *dolphin : world.behaviours<Dolphin>()) { */
+    /*     Transform *t = world.em.get_aspect<Transform>(dolphin->entity); */
+    /*     t->position += dolphin->velocity * dt; */
+    /* } */
 }
 
 void App::window_handler(WindowEvent e)
@@ -133,6 +123,7 @@ int main(int argc, char *argv[])
     IGC::Context context("Dragons");
     World world;
     context.add_callbacks(world);
+    context.add_callbacks(world.input);
 
     App app(world);
     context.add_callbacks(app);

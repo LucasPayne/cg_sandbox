@@ -113,7 +113,7 @@ struct ShadingBlock {
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
 struct GeometricMaterial : public IResourceType<GeometricMaterial> {
-    bool load(std::istream &stream);
+    bool load(const std::istream &stream);
     //-Vertex shader only.
     ShadingDataflow dataflow;
     // The dataflow is dependent on the primitives it processes, so that information is here.
@@ -124,14 +124,14 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     ShadingBlock properties;
 };
 struct Material : public IResourceType<Material> {
-    bool load(std::istream &stream);
+    bool load(const std::istream &stream);
     ShadingDataflow dataflow;
 
     bool has_properties;
     ShadingBlock properties;
 };
 struct ShadingModel : public IResourceType<ShadingModel> {
-    bool load(std::istream &stream);
+    bool load(const std::istream &stream);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 
@@ -282,7 +282,7 @@ struct ShadingFileASTBlock : ShadingFileASTNode {
     Using the parser.
 --------------------------------------------------------------------------------*/
 // Given an input stream, parse this into a shading file AST and return the root. 
-ShadingFileASTNode *parse_shading_file(std::istream &stream);
+ShadingFileASTNode *parse_shading_file(const std::istream &stream);
 
 /*--------------------------------------------------------------------------------
     Traversing and interpreting the parsed AST.
@@ -310,7 +310,7 @@ void yyerror(ShadingFileASTNode **ast_root_out, char *str);
 int SHADING_FILE_BISON_PARSE_FUNCTION(ShadingFileASTNode **ast_root_out);
 #define SHADING_FILE_FLEX_LEX_FUNCTION yylex
 int SHADING_FILE_FLEX_LEX_FUNCTION(void);
-void shading_file_lexer_set_istream(std::istream &stream);
+void shading_file_lexer_set_istream(const std::istream &stream);
 //================================================================================
 
 /*================================================================================

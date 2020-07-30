@@ -41,6 +41,8 @@ World::World()
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
     assets = Assets();
     assets.rm = &rm;
+    assets.models.rm = &rm;
+    assets.shading.rm = &rm;
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     graphics = Graphics();
@@ -51,7 +53,14 @@ World::World()
     glDepthFunc(GL_LESS);
 
     // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    // shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
+    Resource<ShadingModel> sm = rm.new_resource<ShadingModel>();
+    std::fstream sm_file;
+    sm_file.open("resources/model_test/model_test.sm");
+    sm->load(sm_file);
+    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
+
+    // Input.
+    input = InputState();
 }
 void World::close()
 {
@@ -70,7 +79,6 @@ void World::loop()
     glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
     glDisable(GL_SCISSOR_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     glEnable(GL_SCISSOR_TEST);
@@ -79,32 +87,27 @@ void World::loop()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_SCISSOR_TEST);
 
+    // Update entity behaviours.
     for (Behaviour *b : em.aspects<Behaviour>()) {
         if (b->object->updating) {
             b->object->update();
         }
     }
-
-#if 0
+    // Render.
     for (Camera *camera : em.aspects<Camera>()) {
         Transform *camera_transform = em.get_sibling<Transform>(camera);
         mat4x4 view_matrix = camera_transform->inverse_matrix();
         mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
-        // printf("vp_matrix\n");
-        // std::cout << vp_matrix << "\n";
         shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
         for (Drawable *drawable : em.aspects<Drawable>()) {
             Transform *t = em.get_sibling<Transform>(drawable);
             mat4x4 model_matrix = t->matrix();
-            // printf("model_matrix\n");
-            // std::cout << model_matrix << "\n";
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
 
             graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
         }
     }
-#endif
 }
 
 void World::keyboard_handler(KeyboardEvent e)

@@ -53,7 +53,7 @@ void Context::enter_loop()
 
     while (Platform::poll(window)) {
         float time_now = Platform::time();
-        m_delta_time = m_time - time_now;
+        m_delta_time = time_now - m_time;
         m_time = time_now;
         // Make time information globally available.
         total_time = time();

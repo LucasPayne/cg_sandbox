@@ -11,5 +11,5 @@ add_library(interactive_graphics_context
 )
 target_compile_options(interactive_graphics_context PRIVATE -Wall -g)
 
-add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(interactive_graphics_context glfw)
+# add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
+# target_link_libraries(interactive_graphics_context glfw)

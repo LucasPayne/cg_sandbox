@@ -4,7 +4,9 @@ Global GLSL type information is defined in glsl.cpp.
 --------------------------------------------------------------------------------*/
 #ifndef GL_GLSL_H
 #define GL_GLSL_H
-#include "core.h"
+#include "gl.h"
+#include <string>
+#include <string.h>
 
 //todo: Figure out a better way to declare global GLSL type information.
 #define MAX_GLSL_TYPE_NAME_LENGTH 31

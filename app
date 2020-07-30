@@ -10,8 +10,8 @@ else
     ./create
     app_name=$1
     shift
-    g++ -Icore -Ilib -o "apps_build/$app_name" "apps/$app_name/$app_name.cpp" -lcg_sandbox -lm -ldl -lglfw -Lbuild -Lbuild/lib/model_loader -Lbuild/lib/spatial_algebra\
-        -lmodel_loader -lspatial_algebra
+    g++ -Icore -Ilib -Iapps_shared -o "apps_build/$app_name" "apps/$app_name/$app_name.cpp" -Lbuild -Lbuild/lib/interactive_graphics_context -Lbuild/lib/model_loader -Lbuild/lib/spatial_algebra\
+        -lmodel_loader -lspatial_algebra -linteractive_graphics_context -lcg_sandbox -lm -ldl -lglfw
     if [ "$?" -eq 0 ] ; then
         "apps_build/$app_name" $@
     fi

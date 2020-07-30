@@ -5,6 +5,7 @@
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
+#include "interactive_graphics_context/input.h"
 
 struct Transform : public IAspectType<Transform> {
     vec3 position;

@@ -15,9 +15,9 @@ such as the creation of game objects.
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
-#include "input/input.h"
+#include "interactive_graphics_context/interactive_graphics_context.h"
 
-class World : public Looper, public InputListener {
+class World : public IGC::Callbacks {
 public:
     // Looper stuff.
     void close();

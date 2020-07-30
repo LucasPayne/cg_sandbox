@@ -12,7 +12,7 @@ IDEAS/THINGS:
 #include "spatial_algebra/spatial_algebra.h"
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
-#include "input/input.h"
+#include "interactive_graphics_context/interactive_graphics_context.h"
 #include <math.h>
 
 ShadingModelInstance *shading_model_model_test;
@@ -63,12 +63,29 @@ void World::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
 
+    float bg_color[4] = {0,0,0,0};
+    float fg_color[4] = {1,1,1,1};
+
+    // Clearing: window clear to background color, viewport clear to the foreground color.
+    glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
+    glDisable(GL_SCISSOR_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_SCISSOR_TEST);
+
     for (Behaviour *b : em.aspects<Behaviour>()) {
         if (b->object->updating) {
             b->object->update();
         }
     }
 
+#if 0
     for (Camera *camera : em.aspects<Camera>()) {
         Transform *camera_transform = em.get_sibling<Transform>(camera);
         mat4x4 view_matrix = camera_transform->inverse_matrix();
@@ -87,16 +104,11 @@ void World::loop()
             graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
         }
     }
+#endif
 }
 
 void World::keyboard_handler(KeyboardEvent e)
 {
-    if (e.action == KEYBOARD_PRESS) {
-        if (e.key.code == KEY_Q && g_context_active) {
-            g_opengl_context->close();
-            exit(EXIT_SUCCESS);
-        }
-    }
     for (Behaviour *b : em.aspects<Behaviour>()) {
         if (b->object->handling_keyboard) {
             b->object->keyboard_handler(e);

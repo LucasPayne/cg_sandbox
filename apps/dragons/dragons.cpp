@@ -19,7 +19,8 @@ struct Dolphin : public IBehaviour {
 struct Bunny : public IBehaviour {
     void update() {
         Transform *t = world->em.get_aspect<Transform>(entity);
-        t->rotation = Quaternion::from_axis_angle(total_time * vec3(1,0,0));
+        // t->rotation = Quaternion::from_axis_angle(total_time * vec3(1,0,0));
+        t->rotation = Quaternion::from_axis_angle(0.2*total_time * vec3(0,1,0));
     }
 };
 
@@ -64,7 +65,8 @@ App::App(World &_world) : world{_world}
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
-        t->init(2*(frand()-0.5),2*(frand()-0.5),-2);
+        vec3 base(3,3,0);
+        t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
         Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
@@ -76,7 +78,7 @@ App::App(World &_world) : world{_world}
 }
 #endif
     {
-        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/bunny.off");
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/nefertiti.obj");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
         t->init(0,0,-3);
@@ -84,7 +86,16 @@ App::App(World &_world) : world{_world}
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-
+    }
+    {
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/buddha.obj");
+        Entity dolphin = world.em.new_entity();
+        Transform *t = world.em.add_aspect<Transform>(dolphin);
+        t->init(1,0,-3);
+        Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
+        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        drawable->material = MaterialInstance(mat);
+        drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
         Bunny *b = world.add_behaviour<Bunny>(dolphin);
     }
 #endif

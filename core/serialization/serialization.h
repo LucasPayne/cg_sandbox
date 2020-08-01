@@ -25,4 +25,46 @@ typedef std::vector<TypeEntry> TypeTree;
 
 void print_type_tree(TypeTree &tree);
 
+#define FUNDAMENTAL_TYPE(TYPENAME)\
+    static const struct TYPE_ ## TYPENAME ## _s : TYPE_INFO {\
+        const char *name() const { return #TYPENAME; }\
+        size_t size() const { return sizeof(TYPENAME); }\
+        void pack(const char *data, std::ostream &stream) const {\
+            stream.write(data, size());\
+        }\
+        void unpack(std::istream &stream, char *data) const {\
+            stream.read(data, size());\
+        }\
+    } TYPE_ ## TYPENAME;\
+    void type_tree(const char *root, TYPENAME &obj, TypeTree &type_tree)\
+    {\
+        TYPE_TREE_ADD(obj, TYPE_ ## TYPENAME);\
+    }
+
+template <typename T>
+void pack(T &obj, std::ostream &stream)
+{
+    TypeTree tree(0);
+    type_tree((const char *)&obj, obj, tree);
+    printf("packing\n");
+    print_type_tree(tree);
+    for (TypeEntry entry : tree) {
+        if (entry.is_struct) continue;
+        entry.type_info->pack(((char*)&obj) + entry.offset_in_struct, stream);
+    }
+}
+template <typename T>
+void unpack(std::istream &stream, T &obj)
+{
+    TypeTree tree(0);
+    type_tree((const char *)&obj, obj, tree);
+    printf("unpacking\n");
+    print_type_tree(tree);
+    for (TypeEntry entry : tree) {
+        if (entry.is_struct) continue;
+        printf("Unpacking to offset %zu\n", entry.offset_in_struct);
+        entry.type_info->unpack(stream, ((char*)&obj) + entry.offset_in_struct);
+    }
+}
+
 #endif // SERIALIZATION_H

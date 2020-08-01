@@ -1,35 +1,15 @@
 #include "core.h"
 #include "serialization/serialization.h"
 
-static const struct TYPE_int_s : TYPE_INFO {
-    const char *name() const { return "int"; }
-    size_t size() const { return sizeof(int); }
-    void pack(const char *data, std::ostream &stream) const {
-        stream.write(data, size());
-    }
-    void unpack(std::istream &stream, char *data) const {
-        stream.read(data, size());
-    }
-} TYPE_int;
-void type_tree(const char *root, int &obj, TypeTree &type_tree)
-{
-    TYPE_TREE_ADD(obj, TYPE_int);
-}
-
-static const struct TYPE_float_s : TYPE_INFO {
-    const char *name() const { return "float"; }
-    size_t size() const { return sizeof(float); }
-    void pack(const char *data, std::ostream &stream) const {
-        stream.write(data, size());
-    }
-    void unpack(std::istream &stream, char *data) const {
-        stream.read(data, size());
-    }
-} TYPE_float;
-void type_tree(const char *root, float &obj, TypeTree &type_tree)
-{
-    TYPE_TREE_ADD(obj, TYPE_float);
-}
+FUNDAMENTAL_TYPE(int);
+FUNDAMENTAL_TYPE(float);
+FUNDAMENTAL_TYPE(double);
+FUNDAMENTAL_TYPE(bool);
+FUNDAMENTAL_TYPE(char);
+FUNDAMENTAL_TYPE(uint8_t);
+FUNDAMENTAL_TYPE(uint16_t);
+FUNDAMENTAL_TYPE(uint32_t);
+FUNDAMENTAL_TYPE(uint64_t);
 
 struct TestStruct {
     int x;
@@ -93,7 +73,9 @@ static const struct TYPE_Bytes_s : TYPE_INFO {
         stream.write((char *)&bytes->buffer[0], bytes->buffer.size());
     }
     void unpack(std::istream &stream, char *data) const {
-        size_t buffer_size = *((size_t*)data);
+        char size_buf[sizeof(Bytes)];
+        stream.read(size_buf, size());
+        size_t buffer_size = *((size_t*)size_buf);
         Bytes *bytes = (Bytes *) data;
         bytes->buffer = std::vector<uint8_t>(buffer_size);
         stream.read((char *)&bytes->buffer[0], buffer_size);
@@ -104,31 +86,6 @@ void type_tree(const char *root, Bytes &obj, TypeTree &type_tree)
     TYPE_TREE_ADD(obj, TYPE_Bytes);
 }
 
-template <typename T>
-void pack(T &obj, std::ostream &stream)
-{
-    TypeTree tree(0);
-    type_tree((const char *)&obj, obj, tree);
-    printf("packing\n");
-    print_type_tree(tree);
-    for (TypeEntry entry : tree) {
-        if (entry.is_struct) continue;
-        entry.type_info->pack(((char*)&obj) + entry.offset_in_struct, stream);
-    }
-}
-template <typename T>
-void unpack(std::istream &stream, T &obj)
-{
-    TypeTree tree(0);
-    type_tree((const char *)&obj, obj, tree);
-    printf("unpacking\n");
-    print_type_tree(tree);
-    for (TypeEntry entry : tree) {
-        if (entry.is_struct) continue;
-        printf("Unpacking to offset %zu\n", entry.offset_in_struct);
-        entry.type_info->unpack(stream, ((char*)&obj) + entry.offset_in_struct);
-    }
-}
 
 int main(void)
 {
@@ -169,5 +126,38 @@ int main(void)
         unpack<TestStruct2>(file, r);
         printf("%.2f %.2f\n", r.a, r.b);
         file.close();
+    }
+
+    // Test byte vector.
+    int n = 123;
+    {
+        Bytes bytes;
+        bytes.buffer = std::vector<uint8_t>(n);
+        for (int i = 0; i < n; i++) {
+            bytes.buffer[i] = i+1;
+        }
+
+        std::ofstream file;
+        file.open("test2.binary");
+        if (!file.is_open()) {
+            printf("hmm.\n");
+            exit(1);
+        }
+        pack<Bytes>(bytes, file);
+        file.close();
+    }
+    {
+        std::ifstream file;
+        file.open("test2.binary");
+        if (!file.is_open()) {
+            printf("hmm.\n");
+            exit(1);
+        }
+        Bytes bytes;
+        unpack<Bytes>(file, bytes);
+        for (int i = 0; i < n; i++) {
+            printf("%u ", bytes.buffer[i]);
+        }
+        printf("\n");
     }
 }

@@ -41,6 +41,34 @@ void print_type_tree(TypeTree &tree);
         TYPE_TREE_ADD(obj, TYPE_ ## TYPENAME);\
     }
 
+#define STRUCT_TYPE(TYPENAME)\
+    static const struct TYPE_ ## TYPENAME ## _s : TYPE_INFO {\
+        const char *name() const { return #TYPENAME; }\
+        size_t size() const { return sizeof(TYPENAME); }\
+        void pack(const char *data, std::ostream &stream) const {\
+            stream.write(data, size());\
+        }\
+        void unpack(std::istream &stream, char *data) const {\
+            stream.read(data, size());\
+        }\
+    } TYPE_ ## TYPENAME;\
+    void type_tree(const char *root, TYPENAME &obj, TypeTree &type_tree)
+
+#define CUSTOM_TYPE(TYPENAME)\
+    static const struct TYPE_ ## TYPENAME ## _s : TYPE_INFO {\
+        const char *name() const { return #TYPENAME; }\
+        size_t size() const { return sizeof(TYPENAME); }\
+        void pack(const char *data, std::ostream &stream) const;\
+        void unpack(std::istream &stream, char *data) const;\
+    } TYPE_ ## TYPENAME;\
+    void type_tree(const char *root, TYPENAME &obj, TypeTree &type_tree)
+#define CUSTOM_TYPE_PACK(TYPENAME,DATANAME,STREAMNAME)\
+    void TYPE_ ## TYPENAME ## _s ::pack(const char *data, std::ostream &stream) const
+#define CUSTOM_TYPE_UNPACK(TYPENAME,STREAMNAME,DATANAME)\
+    void TYPE_ ## TYPENAME ## _s ::unpack(std::istream &stream, char *data) const
+
+
+
 template <typename T>
 void pack(T &obj, std::ostream &stream)
 {

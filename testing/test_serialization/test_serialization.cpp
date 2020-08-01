@@ -16,42 +16,19 @@ struct TestStruct {
     int y;
     int z;
 };
-static const struct TYPE_TestStruct_s : TYPE_INFO {
-    const char *name() const { return "TestStruct"; }
-    size_t size() const { return sizeof(TestStruct); }
-    void pack(const char *data, std::ostream &stream) const {
-        stream.write(data, size());
-    }
-    void unpack(std::istream &stream, char *data) const {
-        stream.read(data, size());
-    }
-} TYPE_TestStruct;
-void type_tree(const char *root, TestStruct &obj, TypeTree &type_tree)
-{
+STRUCT_TYPE(TestStruct) {
     TYPE_TREE_STRUCT(obj, TYPE_TestStruct);
     TYPE_TREE_ADD(obj.x, TYPE_int);
     TYPE_TREE_ADD(obj.y, TYPE_int);
     TYPE_TREE_ADD(obj.z, TYPE_int);
 }
 
-
 struct TestStruct2 {
     float a;
     TestStruct test;
     float b;
 };
-static const struct TYPE_TestStruct2_s : TYPE_INFO {
-    const char *name() const { return "TestStruct2"; }
-    size_t size() const { return sizeof(TestStruct2); }
-    void pack(const char *data, std::ostream &stream) const {
-        stream.write(data, size());
-    }
-    void unpack(std::istream &stream, char *data) const {
-        stream.read(data, size());
-    }
-} TYPE_TestStruct2;
-void type_tree(const char *root, TestStruct2 &obj, TypeTree &type_tree)
-{
+STRUCT_TYPE(TestStruct2) {
     TYPE_TREE_STRUCT(obj, TYPE_TestStruct2);
     TYPE_TREE_ADD(obj.a, TYPE_float);
     TYPE_TREE_ADD(obj.test, TYPE_TestStruct);
@@ -62,30 +39,42 @@ void type_tree(const char *root, TestStruct2 &obj, TypeTree &type_tree)
 struct Bytes {
     std::vector<uint8_t> buffer;
 };
-static const struct TYPE_Bytes_s : TYPE_INFO {
-    const char *name() const { return "Bytes"; }
-    size_t size() const { return sizeof(Bytes); }
-    void pack(const char *data, std::ostream &stream) const {
-        Bytes *bytes = (Bytes *)data;
-        char size_buf[sizeof(Bytes)];
-        ((size_t *)size_buf)[0] = bytes->buffer.size();
-        stream.write(size_buf, size());
-        stream.write((char *)&bytes->buffer[0], bytes->buffer.size());
-    }
-    void unpack(std::istream &stream, char *data) const {
-        char size_buf[sizeof(Bytes)];
-        stream.read(size_buf, size());
-        size_t buffer_size = *((size_t*)size_buf);
-        Bytes *bytes = (Bytes *) data;
-        bytes->buffer = std::vector<uint8_t>(buffer_size);
-        stream.read((char *)&bytes->buffer[0], buffer_size);
-    }
-} TYPE_Bytes;
-void type_tree(const char *root, Bytes &obj, TypeTree &type_tree)
-{
+
+
+CUSTOM_TYPE(Bytes) {
     TYPE_TREE_ADD(obj, TYPE_Bytes);
 }
+CUSTOM_TYPE_PACK(Bytes, data, stream) {
+    Bytes *bytes = (Bytes *)data;
+    char size_buf[sizeof(Bytes)];
+    ((size_t *)size_buf)[0] = bytes->buffer.size();
+    stream.write(size_buf, size());
+    stream.write((char *)&bytes->buffer[0], bytes->buffer.size());
+}
+CUSTOM_TYPE_UNPACK(Bytes, stream, data) {
+    char size_buf[sizeof(Bytes)];
+    stream.read(size_buf, size());
+    size_t buffer_size = *((size_t*)size_buf);
+    Bytes *bytes = (Bytes *) data;
+    bytes->buffer = std::vector<uint8_t>(buffer_size);
+    stream.read((char *)&bytes->buffer[0], buffer_size);
+}
 
+struct TestStruct3 {
+    uint64_t u;
+    float x;
+    float y;
+    Bytes bytes;
+    float z;
+};
+STRUCT_TYPE(TestStruct3) {
+    TYPE_TREE_STRUCT(obj, TYPE_TestStruct2);
+    TYPE_TREE_ADD(obj.u, TYPE_uint64_t);
+    TYPE_TREE_ADD(obj.x, TYPE_float);
+    TYPE_TREE_ADD(obj.y, TYPE_float);
+    TYPE_TREE_ADD(obj.bytes, TYPE_Bytes);
+    TYPE_TREE_ADD(obj.z, TYPE_float);
+}
 
 int main(void)
 {
@@ -159,5 +148,44 @@ int main(void)
             printf("%u ", bytes.buffer[i]);
         }
         printf("\n");
+    }
+    // Test struct with Bytes.
+    {
+        TestStruct3 t3;
+        t3.u = 93102;
+        t3.x = 0.1;
+        t3.y = 0.1;
+        t3.z = 0.1;
+        t3.bytes.buffer = std::vector<uint8_t>(n);
+        for (int i = 0; i < n; i++) {
+            t3.bytes.buffer[i] = 2*(i+1);
+        }
+
+        std::ofstream file;
+        file.open("test3.binary");
+        if (!file.is_open()) {
+            printf("hmm.\n");
+            exit(1);
+        }
+        pack<TestStruct3>(t3, file);
+        file.close();
+    }
+    {
+        std::ifstream file;
+        file.open("test3.binary");
+        if (!file.is_open()) {
+            printf("hmm.\n");
+            exit(1);
+        }
+        TestStruct3 t3;
+        unpack<TestStruct3>(file, t3);
+        printf("u: %zu\n", t3.u);
+        for (int i = 0; i < n; i++) {
+            printf("%u ", t3.bytes.buffer[i]);
+        }
+        printf("\n");
+        printf("x: %.2f\n", t3.x);
+        printf("y: %.2f\n", t3.y);
+        printf("z: %.2f\n", t3.z);
     }
 }

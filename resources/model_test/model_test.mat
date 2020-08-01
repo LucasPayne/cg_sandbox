@@ -6,6 +6,7 @@ block properties {
 section frag {
     out vec4 diffuse(in vec3 f_position) {
     GLSL
+<<<<<<< HEAD
         vec4 ambient = vec4(0.2,0.2,0.2,0);
         const float factor = 12;
         if ((abs(factor*f_position.x - int(factor*f_position.x)) > 0.5)
@@ -13,6 +14,14 @@ section frag {
             return ambient + color * 0.5;
         }
         return ambient + color;
+=======
+        const float factor = 12;
+        if ((abs(factor*f_position.x - int(factor*f_position.x)) > 0.5)
+          != (abs(factor*f_position.y - int(factor*f_position.y)) > 0.5)) {
+            return color * 0.5;
+        }
+        return color;
+>>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
     END
     }
     out vec3 f_position(in vec3 f_position) {

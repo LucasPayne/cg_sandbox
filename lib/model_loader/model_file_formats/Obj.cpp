@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // references:
 //    http://www.martinreddy.net/gfx/3d/OBJ.spec
 //
@@ -399,5 +400,11 @@ bool load_Obj_model(std::istream &stream, MLModel &model)
     if (!ObjState_to_model(state, model)) {
         FAIL("Parsed Obj file but failed to convert into an MLModel.");
     }
+=======
+#include "model_loader/model_loader.h"
+
+bool load_Obj_model(std::istream &stream, MLModel &model)
+{
+>>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
     return true;
 }

@@ -1,33 +1,7 @@
 #include <limits>//numeric_limits
 #include "assets/model_assets.h"
 #include "gl/gl.h"
-#include <sys/stat.h>
-
-typedef std::vector<uint8_t> ByteArray;
-
-size_t file_size(const std::string &path)
-{
-    //reference: https://stackoverflow.com/questions/5840148/how-can-i-get-a-files-size-in-c
-    struct stat stat_buffer;
-    int return_code = stat(path.c_str(), &stat_buffer);
-    if (return_code != 0) {
-        fprintf(stderr, "ERROR: Failed to stat file size for file \"%s\".\n", path.c_str());
-        exit(EXIT_FAILURE);
-    }
-    return stat_buffer.st_size;
-}
-
-bool load_bytes_from_file(const std::string &path, ByteArray &bytes)
-{
-    size_t size = file_size(path);
-    bytes = ByteArray(size);
-    std::ifstream file;
-    file.open(path, std::ios::binary | std::ios::in);
-    if (!file.is_open()) return false;
-    file.read((char *) &bytes[0], size);
-    file.close();
-    return true;
-}
+#include "utils/file_utils.h"
 
 bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
 {
@@ -209,12 +183,19 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
 
     VertexArrayData va;
     std::string compiled_path = path + ".compiled";
-    ByteArray compiled_bytes;
-    if (load_bytes_from_file(compiled_path, compiled_bytes)) {
-        // Model is compiled, load it.
+    std::ifstream compiled_file(compiled_path, std::ios::binary | std::ios::in);
+    if (compiled_file.is_open() && file_last_modification_time(compiled_path) > file_last_modification_time(path)) {
+        // The source asset has not changed since the last time it was compiled.
+        ByteArray compiled_bytes;
+        if (!load_bytes_from_file(compiled_path, compiled_bytes)) {
+            fprintf(stderr, "ERROR: Failed to load bytes from file \"%s\".\n", compiled_path);
+            exit(EXIT_FAILURE);
+        }
         VertexArrayData_decompile(compiled_bytes, va);
     } else {
+        // Either a compiled asset does not exist, or the source asset has changed since the last time it was compiled.
         // Compile the asset.
+        printf("Compiling\n");getchar();
         std::ofstream new_compiled_file(compiled_path, std::ios::binary | std::ios::out);
         MLModel model = MLModel::load(path, ML_COMPUTE_PHONG_NORMALS);
         MLModel_to_VertexArrayData(model, va);

@@ -1,3 +1,7 @@
+/*--------------------------------------------------------------------------------
+notes:
+    Messy serialization stuff here.
+--------------------------------------------------------------------------------*/
 #include <limits>//numeric_limits
 #include "assets/model_assets.h"
 #include "gl/gl.h"
@@ -99,6 +103,9 @@ struct PODS {
         // for (int i = 0; i < vec.size(); i++) {
         //     vec[i] = ((VECTOR_OF *) &buffer[array_ptr.offset])[i];
         // }
+
+        //---If packed_offset is not nullptr, then the caller is using that offset to fill the buffer.
+        //---This is done for non PODS types such as std::vector that seem to just cause a segfault when memcpy'd over.
         if (packed_offset == nullptr) memcpy(&vec[0], &buffer[array_ptr.offset], array_ptr.size);
         return vec;
     }
@@ -156,25 +163,9 @@ bool VertexArrayData_decompile(ByteArray &bytes, VertexArrayData &vertex_array)
     return true;
 }
 
-/*
-struct VertexArrayLayout {
-    GLenum index_type; // GL_UNSIGNED_{BYTE,SHORT,INT}
-    uint32_t num_vertices;
-    bool indexed;
-    uint32_t num_indices;
-
-    std::vector<VertexSemantic> semantics;
-    size_t vertex_size() const;
-    size_t index_type_size() const;
-};
-struct VertexArrayData {
-    VertexArrayLayout layout;
-    std::vector<std::vector<uint8_t>> attribute_buffers;
-    std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
-*/
-
 Resource<VertexArray> ModelAssets::load(const std::string &path)
 {
+    // Look up the compiled model in the cache.
     std::unordered_map<std::string, Resource<VertexArray>>::iterator found = vertex_array_cache.find(path);
     if (found != vertex_array_cache.end()) {
         // The model is already loaded. Return the already-compiled vertex array.
@@ -186,6 +177,7 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
     std::ifstream compiled_file(compiled_path, std::ios::binary | std::ios::in);
     if (compiled_file.is_open() && file_last_modification_time(compiled_path) > file_last_modification_time(path)) {
         // The source asset has not changed since the last time it was compiled.
+        // Read in the compiled file.
         ByteArray compiled_bytes;
         if (!load_bytes_from_file(compiled_path, compiled_bytes)) {
             fprintf(stderr, "ERROR: Failed to load bytes from file \"%s\".\n", compiled_path);
@@ -194,8 +186,7 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         VertexArrayData_decompile(compiled_bytes, va);
     } else {
         // Either a compiled asset does not exist, or the source asset has changed since the last time it was compiled.
-        // Compile the asset.
-        printf("Compiling\n");getchar();
+        // Compile the asset, and save it on disk.
         std::ofstream new_compiled_file(compiled_path, std::ios::binary | std::ios::out);
         MLModel model = MLModel::load(path, ML_COMPUTE_PHONG_NORMALS);
         MLModel_to_VertexArrayData(model, va);

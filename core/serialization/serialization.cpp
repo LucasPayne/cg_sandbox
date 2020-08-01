@@ -6,7 +6,7 @@ void print_type_tree(TypeTree &tree)
     #define YESNO(BOOLEAN) (( BOOLEAN ) ? "Yes" : "No")
     printf("TypeTree {\n");
     for (TypeEntry entry : tree) {
-        printf("    %s, %zu, Struct: %s\n", entry.type_info->name(), entry.type_info->size(), YESNO(entry.is_struct));
+        printf("    %s, %zu, Struct: %s\n", entry.type_functions->name(), entry.type_functions->size(), YESNO(entry.is_struct));
     }
     printf("}\n");
 }

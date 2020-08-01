@@ -12,7 +12,7 @@ public:
     ResourceModel *rm;
 private:
     // Models are shared after complete processing, as vertex arrays in graphics memory.
-    std::unordered_map<std::string, VertexArray> vertex_array_cache;
+    std::unordered_map<std::string, Resource<VertexArray>> vertex_array_cache;
 };
 
 #endif // MODEL_ASSETS_H

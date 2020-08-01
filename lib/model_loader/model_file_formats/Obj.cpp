@@ -272,10 +272,7 @@ bool face_command(ObjCommand &command, ObjState &state)
                 group.normal_elements.push_back(state.absolute_normal_index(vn));
                 break;
             case 1:
-                int X;
-                if ((X = sscanf(command.token(i+1), "%d//%d", &v, &vn)) != 2) {
-                    FAIL(badly_formed_entry_error);
-                }
+                if (sscanf(command.token(i+1), "%d//%d", &v, &vn) != 2) FAIL(badly_formed_entry_error);
                 if (v == 0 || vn == 0) FAIL(zero_index_error);
                 group.vertex_elements.push_back(state.absolute_vertex_index(v));
                 group.normal_elements.push_back(state.absolute_normal_index(vn));
@@ -372,7 +369,6 @@ bool load_Obj_model(std::istream &stream, MLModel &model)
     state.mode = OBJ_READING;
     state.groups.push_back(ObjGroup("root"));
 
-    printf("Loading Obj model.\n");
     ObjCommand command;
 
     g_obj_line_number = 0; // Reset this. It is updated while parsing commands, so that the line number can be printed if there is an error.
@@ -395,10 +391,9 @@ bool load_Obj_model(std::istream &stream, MLModel &model)
         COMMAND("mtllib", ignore_command);
         COMMAND("usemtl", ignore_command);
     }
-    printf("Done.\n");
 
     // printf("%d\n", state.vertices.size());
-    state.print();
+    // state.print();
 
     // Interpret the ObjState structure and attempt to turn it into a model.
     if (!ObjState_to_model(state, model)) {

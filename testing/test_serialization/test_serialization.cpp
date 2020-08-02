@@ -1,6 +1,10 @@
 #include "core.h"
 #include "serialization/serialization.h"
 
+// Macro parsing messes up when encountering commas in template parameters.
+// Use macro COMMA instead. This is terrible, but is a solution.
+#define COMMA ,
+
 FUNDAMENTAL_TYPE(int);
 FUNDAMENTAL_TYPE(float);
 FUNDAMENTAL_TYPE(double);
@@ -17,10 +21,10 @@ struct TestStruct {
     int z;
 };
 STRUCT_TYPE(TestStruct) {
-    TYPE_TREE_STRUCT(obj, TYPE_TestStruct);
-    TYPE_TREE_ADD(obj.x, TYPE_int);
-    TYPE_TREE_ADD(obj.y, TYPE_int);
-    TYPE_TREE_ADD(obj.z, TYPE_int);
+    TYPE_TREE_STRUCT(obj, TestStruct);
+    TYPE_TREE_ADD(obj.x, int);
+    TYPE_TREE_ADD(obj.y, int);
+    TYPE_TREE_ADD(obj.z, int);
 }
 std::ostream &operator<<(std::ostream &os, const TestStruct &obj) {
     os << "(x: "<<obj.x<<", y: "<<obj.y<<", z: "<<obj.z<<")";
@@ -33,10 +37,10 @@ struct TestStruct2 {
     float b;
 };
 STRUCT_TYPE(TestStruct2) {
-    TYPE_TREE_STRUCT(obj, TYPE_TestStruct2);
-    TYPE_TREE_ADD(obj.a, TYPE_float);
-    TYPE_TREE_ADD(obj.test, TYPE_TestStruct);
-    TYPE_TREE_ADD(obj.b, TYPE_float);
+    TYPE_TREE_STRUCT(obj, TestStruct2);
+    TYPE_TREE_ADD(obj.a, float);
+    TYPE_TREE_ADD(obj.test, TestStruct);
+    TYPE_TREE_ADD(obj.b, float);
 }
 
 
@@ -45,7 +49,7 @@ struct Bytes {
 };
 
 CUSTOM_TYPE(Bytes) {
-    TYPE_TREE_ADD(obj, TYPE_Bytes);
+    TYPE_TREE_ADD(obj, Bytes);
 }
 CUSTOM_TYPE_PACK(Bytes, data, stream) {
     Bytes *bytes = (Bytes *)data;
@@ -63,49 +67,68 @@ CUSTOM_TYPE_UNPACK(Bytes, stream, data) {
     stream.read((char *)&bytes->buffer[0], buffer_size);
 }
 
-template <typename T>
-struct TYPE_vector : TYPE_INFO<TYPE_vector<T>> {
+template <typename T, typename TYPE_T>
+struct TYPE_vector : TYPE_INFO<TYPE_vector<T, TYPE_T>> {
     const char *name() const { return "vector"; }
     size_t size() const { return sizeof(std::vector<T>); }
     void pack(const char *data, std::ostream &stream) const;
     void unpack(std::istream &stream, char *data) const;
     static TYPE_vector<T> instance;
 };
-template <typename T>
+template <typename T, typename TYPE_T>
 TYPE_vector<T> TYPE_vector<T>::instance;
-template <typename T>
+template <typename T, typename TYPE_T>
 void type_tree(const char *root, std::vector<T> &obj, TypeTree &type_tree)
 {
-    TYPE_TREE_ADD(obj, TYPE_vector<T>);
+    TYPE_TREE_ADD_TEMPLATED(obj, vector, T);
 }
-template <typename T>
+template <typename T, typename TYPE_T>
 void TYPE_vector<T>::pack(const char *data, std::ostream &stream) const
 {
     std::vector<T> *vec = (std::vector<T> *)data;
-    for (int i = 0; i < vec->size(); i++) {
-        std::cout << "writing: " << (*vec)[i] << "\n";
+    size_t vec_length = vec->size();
+    stream.write((char *)&vec_length, sizeof(size_t));
+    for (int i = 0; i < vec_length; i++) {
+        TYPE_T::pack((const char *)&(*vec)[i], stream);
     }
-    char size_buf[sizeof(std::vector<T>)];
-    ((size_t *)size_buf)[0] = vec->size();
-    stream.write(size_buf, size());
-    size_t buffer_size = sizeof(T)*vec->size();
-    stream.write((char *)&(*vec)[0], buffer_size);
-    printf("%zu, %zu\n", vec->size(), buffer_size);
+    // stream.write((char *)&(*vec)[0], sizeof(T)*vec_length);
+
+    // std::vector<T> *vec = (std::vector<T> *)data;
+    // for (int i = 0; i < vec->size(); i++) {
+    //     std::cout << "writing: " << (*vec)[i] << "\n";
+    // }
+    // char size_buf[sizeof(std::vector<T>)];
+    // ((size_t *)size_buf)[0] = vec->size();
+    // stream.write(size_buf, size());
+    // size_t buffer_size = sizeof(T)*vec->size();
+    // stream.write((char *)&(*vec)[0], buffer_size);
+    // printf("%zu, %zu\n", vec->size(), buffer_size);
 }
-template <typename T>
+template <typename T, typename TYPE_T>
 void TYPE_vector<T>::unpack(std::istream &stream, char *data) const
 {
-    char size_buf[sizeof(std::vector<T>)];
-    stream.read(size_buf, size());
-    size_t vec_length = *((size_t *)size_buf);
-    size_t buffer_size = sizeof(T) * vec_length;
-    printf("Found buffer size: %zu\n", buffer_size);
+    size_t vec_length;
+    stream.read((char *)&vec_length, sizeof(size_t));
     std::vector<T> *vec = (std::vector<T> *) data;
+    size_t buffer_size = sizeof(T) * vec_length;
     *vec = std::vector<T>(buffer_size);
-    stream.read((char *)&(*vec)[0], buffer_size);
     for (int i = 0; i < vec_length; i++) {
-        std::cout << "got: " << (*vec)[i] << "\n";
+        TYPE_T::unpack(stream, (char *)&(*vec)[i]);
     }
+
+    // stream.read((char *)&(*vec)[0], buffer_size);
+
+ //   char size_buf[sizeof(std::vector<T>)];
+ //   stream.read(size_buf, size());
+ //   size_t vec_length = *((size_t *)size_buf);
+ //   size_t buffer_size = sizeof(T) * vec_length;
+ //   printf("Found buffer size: %zu\n", buffer_size);
+ //   std::vector<T> *vec = (std::vector<T> *) data;
+ //   *vec = std::vector<T>(buffer_size);
+ //   stream.read((char *)&(*vec)[0], buffer_size);
+ //   for (int i = 0; i < vec_length; i++) {
+ //       std::cout << "got: " << (*vec)[i] << "\n";
+ //   }
 }
 
 struct TestStruct3 {
@@ -117,13 +140,14 @@ struct TestStruct3 {
     float z;
 };
 STRUCT_TYPE(TestStruct3) {
-    TYPE_TREE_STRUCT(obj, TYPE_TestStruct2);
-    TYPE_TREE_ADD(obj.u, TYPE_uint64_t);
-    TYPE_TREE_ADD(obj.x, TYPE_float);
-    TYPE_TREE_ADD(obj.y, TYPE_float);
+    TYPE_TREE_STRUCT(obj, TestStruct2);
+    TYPE_TREE_ADD(obj.u, uint64_t);
+    TYPE_TREE_ADD(obj.x, float);
+    TYPE_TREE_ADD(obj.y, float);
     // TYPE_TREE_ADD(obj.bytes, TYPE_Bytes);
-    TYPE_TREE_ADD(obj.vec, TYPE_vector<uint16_t>);
-    TYPE_TREE_ADD(obj.z, TYPE_float);
+    // TYPE_TREE_ADD(obj.vec, TYPE_vector<uint16_t COMMA TYPE_uint16_t>);
+    TYPE_TREE_ADD_TEMPLATED(obj.vec, TYPE_vector, uint16_t);
+    TYPE_TREE_ADD(obj.z, float);
 }
 std::ostream &operator<<(std::ostream &os, const TestStruct3 &obj) {
     os << "(u: "<<obj.u<<", x: "<<obj.x<<", y: "<<obj.y<<", z: "<<obj.z<<", bytes: ";

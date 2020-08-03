@@ -9,6 +9,39 @@ import subprocess
 import sys
 import os
 
+def generate_pack(name, entry_names, serialized_base_names):
+    code = "void pack({name} &obj, std::ostream &out) {{\n".format(name=name)
+    for base_name in serialized_base_names:
+        code += "    pack(({base_name} &)obj, out);\n".format(base_name=base_name)
+    for entry_name in entry_names:
+        code += "    pack(obj.{entry_name}, out);\n".format(entry_name=entry_name)
+    code += "}\n"
+    return code
+
+def generate_unpack(name, entry_names, serialized_base_names):
+    code = "void unpack(std::ostream &in, {name} &obj) {{\n".format(name=name)
+    for base_name in serialized_base_names:
+        code += "    unpack(in, ({base_name} &)obj);\n".format(base_name=base_name)
+    for entry_name in entry_names:
+        code += "    unpack(in, obj.{entry_name});\n".format(entry_name=entry_name)
+    code += "}\n"
+    return code
+
+def generate_print(name, entry_names, serialized_base_names):
+    code = "void print({name} &obj) {{\n".format(name=name)
+    code += "    std::cout << \"{name} {{\\n\"\n".format(name=name)
+    for base_name in serialized_base_names:
+        code += "    std::cout << \"    base {base_name} {{\\n\"\n".format(base_name=base_name)
+        code += "    print(({base_name} &)obj);\n".format(base_name=base_name)
+        code += "    std::cout << \"    }}\\n\"\n"
+    for entry_name in entry_names:
+        code += "    std::cout << \"    {entry_name}: \"\n".format(entry_name=entry_name)
+        code += "    print(obj.{entry_name});\n".format(entry_name=entry_name)
+        code += "    std::cout << \"    \\n\"\n"
+    code += "}\n"
+    return code
+
+
 if len(sys.argv) != 2:
     print("give good args")
     sys.exit()
@@ -55,8 +88,6 @@ while True:
         break # note: This could be done with :=.
 
     (is_declaration, name) = is_named_struct(line)
-    if is_declaration:
-        print(name)
     if is_declaration and name in struct_names:
         starting_brace = line.find("{")
         num_braces = 1
@@ -87,7 +118,7 @@ def fail(string):
     print("ERROR:", string)
     sys.exit()
 
-def generate_code(declaration):
+def generate_code(name, declaration):
     code = ""
     lines = [line for line in declaration.split("\n")]
 
@@ -97,28 +128,34 @@ def generate_code(declaration):
     first_brace_pos = declaration.find("{")
     bases = [base.strip() for base in declaration[colon_pos+1:first_brace_pos].split(",")]
 
+    # Collect names of the serializable base classes. Code will be generated to call the serialization functions of these.
     if "SERIALIZE" not in bases:
         fail("SERIALIZE must be a base class.")
     serialized_base_names = []
     for base in bases:
         words = base.split(" ")
-        if len(words) == 2 and words[0] == "public":
+        if len(words) == 2 and words[0] == "public" and words[1] != "SERIALIZE":
             # Derives from public class. This must be serializable by the rules of this tool.
             #--What about protected?
             serialized_base_names.append(words[1])
-    for name in serialized_base_names:
-        print("serialized base class:", name)
 
+    entry_names = []
+    # Collect the entries of the struct/class.
+    for line in lines[1:]:
+        if line.endswith(";") and line.find("(") < 0:
+            words = line[:-1].strip().split(" ")
+            entry_names.append(words[1])
 
+    code += generate_pack(name, entry_names, serialized_base_names)
+    code += generate_unpack(name, entry_names, serialized_base_names)
+    code += generate_print(name, entry_names, serialized_base_names)
     return code
 	
 
 gen_code = ""
-for declaration in struct_declarations:
-    print(declaration)
-    input()
+for i,declaration in enumerate(struct_declarations):
     # Run the declaration through the parser.
     # gen_code = subprocess.check_output(["./reflector_parser", "temp", filename])
     # gen_code_lines = [line.decode("utf-8") for line in gen_code.split(b"\n")]
-    gen_code += generate_code(declaration)
+    gen_code += generate_code(struct_names[i], declaration)
 print(gen_code)

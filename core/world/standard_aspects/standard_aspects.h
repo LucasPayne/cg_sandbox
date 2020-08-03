@@ -7,9 +7,11 @@
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 
-SERIALIZABLE struct Transform : public IAspectType<Transform> {
-    ENTRY vec3 position;
-    ENTRY Quaternion rotation;
+#include "SERIALIZE.h"
+
+struct Transform : public IAspectType<Transform>, SERIALIZE {
+    vec3 position;
+    Quaternion rotation;
 
     void init(float x, float y, float z);
     void init(vec3 _position);
@@ -20,21 +22,6 @@ SERIALIZABLE struct Transform : public IAspectType<Transform> {
     mat4x4 matrix() const;
     mat4x4 inverse_matrix() const;
 };
-void pack(Transform &obj, std::ostream &out) {
-    pack((IAspectType<Transform> &)obj, out);
-    pack(obj.position, out);
-    pack(obj.rotation, out);
-}
-void unpack(std::istream &in, Transform &obj) {
-    unpack(in, (IAspectType<Transform> &)obj);
-    unpack(in, obj.position);
-    unpack(in, obj.rotation);
-}
-void print(Transform &obj) {
-    print((IAspectType<Transform> &)obj);
-    print(obj.position);
-    print(obj.rotation);
-}
 
 struct Camera : public IAspectType<Camera> {
     // Viewport extents (in terms of the application subrectangle).

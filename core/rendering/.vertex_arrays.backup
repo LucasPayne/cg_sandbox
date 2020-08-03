@@ -14,7 +14,7 @@ Provides rendering resources:
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
-struct VertexSemantic : SERIALIZE {
+/*REFLECTED*/struct VertexSemantic {
     /*ENTRY*/ char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
     /*ENTRY*/ GLenum type;
     /*ENTRY*/ GLint size;
@@ -43,7 +43,7 @@ struct VertexSemantic : SERIALIZE {
     VertexSemantic() {}//testing
 };
 
-struct VertexArrayLayout : SERIALIZE {
+/*REFLECTED*/ struct VertexArrayLayout {
     /*ENTRY*/ GLenum index_type;
         // GL_UNSIGNED_{BYTE,SHORT,INT}
     /*ENTRY*/ uint32_t num_vertices;
@@ -54,7 +54,7 @@ struct VertexArrayLayout : SERIALIZE {
     size_t vertex_size() const;
     size_t index_type_size() const;
 };
-struct VertexArrayData : SERIALIZE {
+/*REFLECTED*/ struct VertexArrayData {
     /*ENTRY*/ VertexArrayLayout layout;
     /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
     /*ENTRY*/ std::vector<uint8_t> index_buffer;

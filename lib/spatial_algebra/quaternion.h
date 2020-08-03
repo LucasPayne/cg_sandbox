@@ -10,7 +10,7 @@ https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Using_quaternion_
 #include <ostream>
 #include "reflector/serialization.h"
 
-struct Quaternion : SERIALIZE {
+/*REFLECTED*/ struct Quaternion {
     Quaternion(float scalar, float i, float j, float k) :
         entries{scalar,i,j,k}
     {}

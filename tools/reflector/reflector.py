@@ -108,19 +108,17 @@ def generate_code(name, declaration, template_params, generate_definitions):
     code = ""
     lines = [line for line in declaration.split("\n")]
 
+    bases = []
     colon_pos = declaration.find(":")
-    if colon_pos < 0:
-        fail("Must derive from at least base class SERIALIZE.")
-    first_brace_pos = declaration.find("{")
-    bases = [base.strip() for base in declaration[colon_pos+1:first_brace_pos].split(",")]
+    if colon_pos >= 0:
+        first_brace_pos = declaration.find("{")
+        bases = [base.strip() for base in declaration[colon_pos+1:first_brace_pos].split(",")]
 
     # Collect names of the serializable base classes. Code will be generated to call the serialization functions of these.
-    if "SERIALIZE" not in bases:
-        fail("SERIALIZE must be a base class.")
     serialized_base_names = []
     for base in bases:
         words = base.split(" ")
-        if len(words) == 2 and words[0] == "public" and words[1] != "SERIALIZE":
+        if len(words) == 2 and words[0] == "public":
             # Derives from public class. This must be serializable by the rules of this tool.
             #--What about protected?
             serialized_base_names.append(words[1])
@@ -192,11 +190,10 @@ def main():
     
     # Helper function that tests if a line is the start of a SERIALIZE struct/class declaration.
     def is_named_struct(line):
-        if line.startswith("struct") or line.startswith("class"):
-            if line.find("SERIALIZE") >= 0:
-                words = line.split(" ")
-                if (len(words) >= 2):
-                    return (True, words[1])
+        if line.startswith("/*REFLECTED*/ struct") or line.startswith("/*REFLECTED*/ class"):
+            words = line.split(" ")
+            if (len(words) >= 3):
+                return (True, words[2])
         return (False, "")
     
     # In the non-preprocessed file, find each SERIALIZE struct or class declaration,

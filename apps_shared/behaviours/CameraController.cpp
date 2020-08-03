@@ -89,8 +89,8 @@ struct CameraController : public IBehaviour {
         key_view_speed_vertical = 1.5;
         azimuth = 0;
         angle = 0;
-        min_angle = -M_PI/3.0;
-        max_angle = M_PI/3.0;
+        min_angle = -M_PI/2.0 + 0.15;
+        max_angle = M_PI/2.0 - 0.15;
         view_with_mouse = false;
         mouse_sensitivity = 1;
     }

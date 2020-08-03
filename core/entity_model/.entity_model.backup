@@ -46,18 +46,20 @@ template <typename T>
 struct AspectTypeStaticData {
     static AspectType type_id;
 };
-template <typename T> AspectType AspectTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+template <typename T> AspectType AspectTypeStaticData<T>::type_id
+    (NULL_TABLE_COLLECTION_TYPE_ID);
 // The base class of aspects in an aspect table.
 // The AspectBase:: namespace also serves as the location of static type data -- the type_id,
 // which templated methods need so they can get the relevant table from their type template-parameter.
-struct AspectBase : SERIALIZE {
+
+/*REFLECTED*/ struct AspectBase {
     /*ENTRY*/ Entity entity;
     /*ENTRY*/ TypedAspect next_aspect;
 };
 // When defining an aspect type T, inherit from IAspectType<T>. In this way, static data for the aspect type is initialized,
 // and the actual aspect-instance data struct is defined in the body.
 template <typename T>
-struct IAspectType : /*NOSERIALIZE*/ AspectTypeStaticData<T>, public AspectBase, SERIALIZE {};
+/*REFLECTED*/ struct IAspectType : AspectTypeStaticData<T>, public AspectBase {};
 
 
 class EntityModel {

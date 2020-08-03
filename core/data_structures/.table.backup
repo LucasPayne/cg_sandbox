@@ -51,7 +51,7 @@ can be constructed from arbitrary types at runtime.
 The table stores the correct size entries, for the given type size, but lookups
 return a byte pointer which must be interpreted by the caller.
 --------------------------------------------------------------------------------*/
-struct TableHandle : SERIALIZE {
+/*REFLECTED*/ struct TableHandle {
     /*ENTRY*/ TableEntryID id;
     /*ENTRY*/ uint32_t index;
 };
@@ -157,10 +157,10 @@ typedef uint8_t TableCollectionType;
     declare things such as TableCollectionHandle<Thing>.
 --------------------------------------------------------------------------------*/
 template <typename TYPE>
-struct TableCollectionHandle : public TableHandle, SERIALIZE {};
+/*REFLECTED*/ struct TableCollectionHandle : public TableHandle {};
 // A "typed" handle is not templated, and instead stores the type ID. When it is used with the TableCollection interface,
 // the type ID is used for dispatching to the relevant table.
-struct TypedTableCollectionHandle : public TableHandle, SERIALIZE {
+/*REFLECTED*/ struct TypedTableCollectionHandle : public TableHandle {
     /*ENTRY*/ TableCollectionType type;
 };
 

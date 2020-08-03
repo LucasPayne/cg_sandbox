@@ -1,6 +1,3 @@
-void pack(VertexSemantic &obj, std::ostream &out);
-void unpack(std::istream &in, VertexSemantic &obj);
-void print(VertexSemantic &obj);
 void pack(VertexArrayLayout &obj, std::ostream &out);
 void unpack(std::istream &in, VertexArrayLayout &obj);
 void print(VertexArrayLayout &obj);

@@ -9,7 +9,7 @@
 // vec3 and vec4 classes.
 // references:
 //    Peter Shirley, Ray Tracing in One Weekend, intro on vector classes
-struct vec3 : SERIALIZE {
+/*REFLECTED*/ struct vec3 {
     /*ENTRY*/ float entries[3];
     vec3() {}
     static inline vec3 zero() { return vec3(0,0,0); }
@@ -136,7 +136,7 @@ inline vec3 operator/(const vec3 &v, const float &t) {
 }
 
 
-struct vec4 : SERIALIZE {
+/*REFLECTED*/ struct vec4 {
     /*ENTRY*/ float entries[4];
     vec4() {}
     static inline vec4 zero() { return vec4(0,0,0,0); }

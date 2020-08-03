@@ -1,33 +1,3 @@
-void pack(VertexSemantic &obj, std::ostream &out) {
-    pack(obj.type, out);
-    pack(obj.size, out);
-    for (int i = 0; i < ( MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1 ); i++) {
-        pack(obj.name[i], out);
-    }
-}
-void unpack(std::istream &in, VertexSemantic &obj) {
-    unpack(in, obj.type);
-    unpack(in, obj.size);
-    for (int i = 0; i < ( MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1 ); i++) {
-        unpack(in, obj.name[i]);
-    }
-}
-void print(VertexSemantic &obj) {
-    std::cout << "VertexSemantic {\n";
-    std::cout << "    type: ";
-    print(obj.type);
-    std::cout << "\n";
-    std::cout << "    size: ";
-    print(obj.size);
-    std::cout << "\n";
-    std::cout << "    array name [";
-    for (int i = 0; i < ( MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1 ); i++) {
-        std::cout << "    ";
-        print(obj.name[i]);
-        std::cout << ",\n";
-    }
-    std::cout << "}\n";
-}
 void pack(VertexArrayLayout &obj, std::ostream &out) {
     pack(obj.index_type, out);
     pack(obj.num_vertices, out);

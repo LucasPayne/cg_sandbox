@@ -8,7 +8,7 @@
 #include "interactive_graphics_context/input.h"
 #include "reflector/serialization.h"
 
-struct Transform : public IAspectType<Transform>, SERIALIZE {
+/*REFLECTED*/struct Transform : public IAspectType<Transform> {
     /*ENTRY*/ vec3 position;
     /*ENTRY*/ Quaternion rotation;
 

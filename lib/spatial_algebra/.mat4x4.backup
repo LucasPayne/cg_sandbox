@@ -5,7 +5,7 @@
 #include "reflector/serialization.h"
 
 // mat4x4 is column-major, as default in OpenGL/GLSL.
-struct mat4x4 : SERIALIZE {
+/*REFLECTED*/ struct mat4x4 {
     /*ENTRY*/ float entries[16];
     // Constructor with column-major parameter order.
     mat4x4(float e00, float e10, float e20, float e30,

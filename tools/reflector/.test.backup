@@ -10,7 +10,7 @@ Provides rendering resources:
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
 #include "reflector/serialization.h"
-#include "/home/lucas/computer_graphics/cg_sandbox/core/rendering/vertex_arrays.serialize.h" /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/tools/reflector/test.serialize.h" /*SERIALIZE*/
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31

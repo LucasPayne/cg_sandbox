@@ -2,7 +2,7 @@ void pack(AspectBase &obj, std::ostream &out) {
     pack(obj.entity, out);
     pack(obj.next_aspect, out);
 }
-void unpack(std::ostream &in, AspectBase &obj) {
+void unpack(std::istream &in, AspectBase &obj) {
     unpack(in, obj.entity);
     unpack(in, obj.next_aspect);
 }
@@ -16,12 +16,15 @@ void print(AspectBase &obj) {
     std::cout << "\n";
     std::cout << "}\n";
 }
-void pack(IAspectType &obj, std::ostream &out) {
+template <typename T>
+void pack(IAspectType<T> &obj, std::ostream &out) {
     pack((AspectBase &)obj, out);
 }
-void unpack(std::ostream &in, IAspectType &obj) {
+template <typename T>
+void unpack(std::istream &in, IAspectType &obj) {
     unpack(in, (AspectBase &)obj);
 }
+template <typename T>
 void print(IAspectType &obj) {
     std::cout << "IAspectType {\n";
     std::cout << "    base AspectBase {\n";

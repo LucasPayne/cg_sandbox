@@ -53,7 +53,6 @@ add_library(cg_sandbox
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
     dependencies/glad/glad.c
-    tools/reflector/serialization.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 

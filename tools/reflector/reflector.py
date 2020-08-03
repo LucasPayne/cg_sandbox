@@ -9,8 +9,25 @@ import subprocess
 import sys
 import os
 
-def generate_pack(name, entry_names, array_entries, serialized_base_names):
-    code = "void pack({name} &obj, std::ostream &out) {{\n".format(name=name)
+
+# Generate templating code, if the serializable struct/class is templated.
+def generate_templated_name(name, template_params):
+    if len(template_params) == 0:
+        return name
+    return name + "<" + ", ".join([p[1] for p in template_params]) + ">"
+
+def generate_template_declaration(template_params):
+    if len(template_params) == 0:
+        return ""
+    return "template <" + ", ".join([p[0]+" "+p[1] for p in template_params]) + ">\n"
+
+
+def generate_pack(name, entry_names, array_entries, serialized_base_names, template_params):
+    code = ""
+    templated_name = generate_templated_name(name, template_params)
+    code += generate_template_declaration(template_params)
+
+    code += "void pack({name} &obj, std::ostream &out) {{\n".format(name=templated_name)
     for base_name in serialized_base_names:
         code += "    pack(({base_name} &)obj, out);\n".format(base_name=base_name)
     for entry_name in entry_names:
@@ -22,8 +39,12 @@ def generate_pack(name, entry_names, array_entries, serialized_base_names):
     code += "}\n"
     return code
 
-def generate_unpack(name, entry_names, array_entries, serialized_base_names):
-    code = "void unpack(std::ostream &in, {name} &obj) {{\n".format(name=name)
+def generate_unpack(name, entry_names, array_entries, serialized_base_names, template_params):
+    code = ""
+    templated_name = generate_templated_name(name, template_params)
+    code += generate_template_declaration(template_params)
+
+    code += "void unpack(std::istream &in, {name} &obj) {{\n".format(name=name)
     for base_name in serialized_base_names:
         code += "    unpack(in, ({base_name} &)obj);\n".format(base_name=base_name)
     for entry_name in entry_names:
@@ -35,8 +56,12 @@ def generate_unpack(name, entry_names, array_entries, serialized_base_names):
     code += "}\n"
     return code
 
-def generate_print(name, entry_names, array_entries, serialized_base_names):
-    code = "void print({name} &obj) {{\n".format(name=name)
+def generate_print(name, entry_names, array_entries, serialized_base_names, template_params):
+    code = ""
+    templated_name = generate_templated_name(name, template_params)
+    code += generate_template_declaration(template_params)
+
+    code += "void print({name} &obj) {{\n".format(name=name)
     code += "    std::cout << \"{name} {{\\n\";\n".format(name=name)
     for base_name in serialized_base_names:
         code += "    std::cout << \"    base {base_name} {{\\n\";\n".format(base_name=base_name)
@@ -62,7 +87,7 @@ def fail(string):
     print("ERROR:", string)
     sys.exit()
 
-def generate_code(name, declaration):
+def generate_code(name, declaration, template_params):
     code = ""
     lines = [line for line in declaration.split("\n")]
 
@@ -100,9 +125,9 @@ def generate_code(name, declaration):
             else:
                 entry_names.append(inner_line.split(" ")[-1])
 
-    code += generate_pack(name, entry_names, array_entries, serialized_base_names)
-    code += generate_unpack(name, entry_names, array_entries, serialized_base_names)
-    code += generate_print(name, entry_names, array_entries, serialized_base_names)
+    code += generate_pack(name, entry_names, array_entries, serialized_base_names, template_params)
+    code += generate_unpack(name, entry_names, array_entries, serialized_base_names, template_params)
+    code += generate_print(name, entry_names, array_entries, serialized_base_names, template_params)
     return code
 	
 
@@ -149,13 +174,30 @@ def main():
     pp_lines = [line.decode("utf-8") for line in pp.split(b"\n")] # Convert from bytes to string.
     line_iter = iter(pp_lines)
     struct_declarations = []
+    struct_template_params = []
+    line = ""
     while True:
+        prev = line #need one line lookback.
         line = next(line_iter, 0)
         if line == 0:
             break # note: This could be done with :=.
     
         (is_declaration, name) = is_named_struct(line)
         if is_declaration and name in struct_names:
+            # Look back one line to see if this struct/class is templated.
+            # The struct/class must be declared with the templating on the line above.
+            template_params = []
+            if prev.strip().startswith("template"):
+                # print(prev)
+                langle_pos = prev.find("<")
+                rangle_pos = prev.find(">")
+                params = prev[langle_pos+1:rangle_pos]
+                # print(params)
+                template_params += [param.split(" ") for param in params.split(",")]
+            # print(template_params)
+            if any(len(param) != 2 for param in template_params):
+                fail("Malformed template parameter.")
+
             starting_brace = line.find("{")
             num_braces = 1
     
@@ -179,11 +221,12 @@ def main():
                     break
                 struct_declaration += line + "\n"
             struct_declarations.append(str(struct_declaration))
+            struct_template_params.append(template_params)
     
     gen_code = ""
     for i,declaration in enumerate(struct_declarations):
         # Run the declaration through the parser.
-        gen_code += generate_code(struct_names[i], declaration)
+        gen_code += generate_code(struct_names[i], declaration, struct_template_params[i])
     print(gen_code)
 
 main()

@@ -7,7 +7,6 @@
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 #include "reflector/serialization.h"
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 
 struct Transform : public IAspectType<Transform>, SERIALIZE {
     /*ENTRY*/ vec3 position;
@@ -63,4 +62,5 @@ struct Behaviour : public IAspectType<Behaviour> {
     IBehaviour *object;
 };
 
+#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 #endif // STANDARD_ASPECTS_H

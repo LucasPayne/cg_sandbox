@@ -3,7 +3,7 @@ void pack(Transform &obj, std::ostream &out) {
     pack(obj.position, out);
     pack(obj.rotation, out);
 }
-void unpack(std::ostream &in, Transform &obj) {
+void unpack(std::istream &in, Transform &obj) {
     unpack(in, (IAspectType<Transform> &)obj);
     unpack(in, obj.position);
     unpack(in, obj.rotation);

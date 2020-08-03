@@ -16,7 +16,6 @@ IDEAS/THINGS:
 #include "data_structures/table.h"
 #include "core.h"
 #include "reflector/serialization.h"
-#include "/home/lucas/computer_graphics/cg_sandbox/core/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 
 /*================================================================================
     Table data
@@ -58,7 +57,7 @@ struct AspectBase : SERIALIZE {
 // When defining an aspect type T, inherit from IAspectType<T>. In this way, static data for the aspect type is initialized,
 // and the actual aspect-instance data struct is defined in the body.
 template <typename T>
-struct IAspectType : public /*NOSERIALIZE*/ AspectTypeStaticData<T>, public AspectBase, SERIALIZE {};
+struct IAspectType : /*NOSERIALIZE*/ AspectTypeStaticData<T>, public AspectBase, SERIALIZE {};
 
 
 class EntityModel {
@@ -232,4 +231,5 @@ private:
 };
 
 
+#include "/home/lucas/computer_graphics/cg_sandbox/core/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 #endif // ENTITY_MODEL_H

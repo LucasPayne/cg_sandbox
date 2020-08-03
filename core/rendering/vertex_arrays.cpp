@@ -2,6 +2,7 @@
 Implementations for the vertex arrays submodule of the rendering module.
 --------------------------------------------------------------------------------*/
 #include "rendering/vertex_arrays.h"
+#include "rendering/vertex_arrays.serialize.cpp"
 
 size_t VertexSemantic::type_size() const
 {

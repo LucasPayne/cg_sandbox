@@ -44,6 +44,7 @@ add_library(cg_sandbox
     core/rendering/vertex_arrays.cpp
     core/rendering/drawing.cpp
     core/entity_model/entity_model.cpp
+    core/world/standard_aspects/standard_aspects.cpp
     core/world/standard_aspects/Transform.cpp
     core/world/standard_aspects/Camera.cpp
     core/world/standard_aspects/Drawable.cpp
@@ -53,6 +54,7 @@ add_library(cg_sandbox
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
     dependencies/glad/glad.c
+    tools/reflector/serialization.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 

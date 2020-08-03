@@ -23,6 +23,21 @@ def generate_template_declaration(template_params):
 
 
 # Code generators.
+#================================================================================
+# Declarations
+#--------------------------------------------------------------------------------
+def generate_pack_declaration(name):
+    code = "void pack({name} &obj, std::ostream &out);\n".format(name=name);
+    return code
+def generate_unpack_declaration(name):
+    code = "void unpack(std::istream &in, {name} &obj);\n".format(name=name)
+    return code
+def generate_print_declaration(name):
+    code = "void print({name} &obj);\n".format(name=name)
+    return code
+
+# Definitions
+#--------------------------------------------------------------------------------
 def generate_pack(name, entry_names, array_entries, serialized_base_names, template_params):
     code = ""
     templated_name = generate_templated_name(name, template_params)
@@ -89,7 +104,7 @@ def fail(string):
     sys.exit()
 
 # Parse the struct declaration and call the code generators for each serialization function of this struct.
-def generate_code(name, declaration, template_params):
+def generate_code(name, declaration, template_params, generate_definitions):
     code = ""
     lines = [line for line in declaration.split("\n")]
 
@@ -123,21 +138,50 @@ def generate_code(name, declaration, template_params):
             else:
                 entry_names.append(inner_line.split(" ")[-1])
 
-    code += generate_pack(name, entry_names, array_entries, serialized_base_names, template_params)
-    code += generate_unpack(name, entry_names, array_entries, serialized_base_names, template_params)
-    code += generate_print(name, entry_names, array_entries, serialized_base_names, template_params)
+    # Templated definitions are put in the header file.
+    if len(template_params) > 0:
+        if not generate_definitions:
+            code += generate_pack(name, entry_names, array_entries, serialized_base_names, template_params)
+            code += generate_unpack(name, entry_names, array_entries, serialized_base_names, template_params)
+            code += generate_print(name, entry_names, array_entries, serialized_base_names, template_params)
+    else:
+        if generate_definitions:
+            code += generate_pack(name, entry_names, array_entries, serialized_base_names, template_params)
+            code += generate_unpack(name, entry_names, array_entries, serialized_base_names, template_params)
+            code += generate_print(name, entry_names, array_entries, serialized_base_names, template_params)
+        else:
+            code += generate_pack_declaration(name)
+            code += generate_unpack_declaration(name)
+            code += generate_print_declaration(name)
     return code
 	
+
+def usage():
+    print("Generate serialization header:")
+    print("    python3 reflector.py -h [header_file.h]")
+    print("Generate serialization definitions:")
+    print("    python3 reflector.py -c [header_file.h]")
+    
 
 # This program takes one file as input, and searches for SERIALIZE structs/classes defined
 # in the file (not #includes). The declarations are extracted and passed on to the code generator.
 # Information such as serializable base classes and templating is also extracted here, to be passed for code generation.
 def main():
-    if len(sys.argv) != 2:
-        print("give good args")
+    if len(sys.argv) != 3:
+        usage()
         sys.exit()
     
-    filename = sys.argv[1]
+    if sys.argv[1] == "-h":
+        # Generating header file.
+        generate_definitions = False
+    elif sys.argv[1] == "-c":
+        # Generating definitions file.
+        generate_definitions = True
+    else:
+        usage()
+        sys.exit()
+    
+    filename = sys.argv[2]
     if not os.path.exists(filename):
         print("File \"{}\" does not exist.".format(filename))
         sys.exit()
@@ -227,7 +271,7 @@ def main():
     gen_code = ""
     for i,declaration in enumerate(struct_declarations):
         # Run the declaration through the parser.
-        gen_code += generate_code(struct_names[i], declaration, struct_template_params[i])
+        gen_code += generate_code(struct_names[i], declaration, struct_template_params[i], generate_definitions)
     print(gen_code)
 
 main()

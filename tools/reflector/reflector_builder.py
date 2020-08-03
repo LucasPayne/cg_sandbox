@@ -7,7 +7,6 @@ import pathlib #Path.touch
 def generate_serialize_header(root, filename):
     path = root + os.sep + filename
     print("Generating serialize header for {}".format(path))
-    gen_code = subprocess.check_output(["python3", "reflector.py", path]).decode("utf-8")
     try:
         f = open(path, "r")
     except:
@@ -22,6 +21,7 @@ def generate_serialize_header(root, filename):
             break
         changed_header_lines.append(line)
     serialize_header_path = os.path.abspath(root + os.sep + filename[:-2] + ".serialize.h")
+    serialize_cpp_path = os.path.abspath(root + os.sep + filename[:-2] + ".serialize.cpp")
     changed_header_lines.append("#include \"{}\" /*SERIALIZE*/\n".format(serialize_header_path))
     for line in lines[serialize_begin+1:]:
         changed_header_lines.append(line)
@@ -33,7 +33,19 @@ def generate_serialize_header(root, filename):
     except:
         print("Failed to create or open serialization header file \"{}\".".format(serialize_header_path))
         sys.exit()
+    gen_code = subprocess.check_output(["python3", "reflector.py", "-h", path]).decode("utf-8")
     serialize_header_file.write(gen_code)
+
+    # Create the generated cpp file.
+    try:
+        serialize_cpp_file = open(serialize_cpp_path, "w")
+    except:
+        print("Failed to create or open serialization cpp file \"{}\".".format(serialize_cpp_path))
+        sys.exit()
+    gen_code = subprocess.check_output(["python3", "reflector.py", "-c", path]).decode("utf-8")
+    serialize_cpp_file.write(gen_code)
+
+    
 
     # Now back up the regular header file, as something can and will go wrong.
     backup_path = os.path.abspath(root + os.sep + "." + filename[:-2] + ".backup")

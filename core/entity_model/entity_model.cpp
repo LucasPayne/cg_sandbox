@@ -3,6 +3,7 @@
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "entity_model/entity_model.h"
+#include "entity_model/entity_model.serialize.cpp"
 
 EntityModel::EntityModel()
 {

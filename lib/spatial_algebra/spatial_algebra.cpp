@@ -1,5 +1,8 @@
 #include "spatial_algebra.h"
 #include <iostream>
+#include "vec3_vec4.serialize.cpp"
+#include "quaternion.serialize.cpp"
+#include "mat4x4.serialize.cpp"
 
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M)
 {

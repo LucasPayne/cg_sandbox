@@ -62,6 +62,7 @@ while True:
         num_braces = 1
 
         struct_declaration = line + "\n"
+        # Track brace stack to capture the declaration. Incomplete braces in comments will mess with this.
         while True:
             line = next(line_iter, 0)
             if line == 0:
@@ -80,11 +81,44 @@ while True:
                 break
             struct_declaration += line + "\n"
         struct_declarations.append(str(struct_declaration))
+
+
+def fail(string):
+    print("ERROR:", string)
+    sys.exit()
+
+def generate_code(declaration):
+    code = ""
+    lines = [line for line in declaration.split("\n")]
+
+    colon_pos = declaration.find(":")
+    if colon_pos < 0:
+        fail("Must derive from at least base class SERIALIZE.")
+    first_brace_pos = declaration.find("{")
+    bases = [base.strip() for base in declaration[colon_pos+1:first_brace_pos].split(",")]
+
+    if "SERIALIZE" not in bases:
+        fail("SERIALIZE must be a base class.")
+    serialized_base_names = []
+    for base in bases:
+        words = base.split(" ")
+        if len(words) == 2 and words[0] == "public":
+            # Derives from public class. This must be serializable by the rules of this tool.
+            #--What about protected?
+            serialized_base_names.append(words[1])
+    for name in serialized_base_names:
+        print("serialized base class:", name)
+
+
+    return code
 	
-for d in struct_declarations:
-    print(d)
+
+gen_code = ""
+for declaration in struct_declarations:
+    print(declaration)
     input()
-
-temp = open("temp.preprocessed.h", "wb")
-temp.write(pp)
-
+    # Run the declaration through the parser.
+    # gen_code = subprocess.check_output(["./reflector_parser", "temp", filename])
+    # gen_code_lines = [line.decode("utf-8") for line in gen_code.split(b"\n")]
+    gen_code += generate_code(declaration)
+print(gen_code)

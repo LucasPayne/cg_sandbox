@@ -7,6 +7,7 @@
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h"/*SERIALIZE*/
 
 struct Transform : public IAspectType<Transform>, SERIALIZE {
     vec3 position;

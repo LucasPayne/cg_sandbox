@@ -29,15 +29,16 @@ def generate_unpack(name, entry_names, serialized_base_names):
 
 def generate_print(name, entry_names, serialized_base_names):
     code = "void print({name} &obj) {{\n".format(name=name)
-    code += "    std::cout << \"{name} {{\\n\"\n".format(name=name)
+    code += "    std::cout << \"{name} {{\\n\";\n".format(name=name)
     for base_name in serialized_base_names:
-        code += "    std::cout << \"    base {base_name} {{\\n\"\n".format(base_name=base_name)
+        code += "    std::cout << \"    base {base_name} {{\\n\";\n".format(base_name=base_name)
         code += "    print(({base_name} &)obj);\n".format(base_name=base_name)
-        code += "    std::cout << \"    }}\\n\"\n"
+        code += "    std::cout << \"    }}\\n\";\n"
     for entry_name in entry_names:
-        code += "    std::cout << \"    {entry_name}: \"\n".format(entry_name=entry_name)
+        code += "    std::cout << \"    {entry_name}: \";\n".format(entry_name=entry_name)
         code += "    print(obj.{entry_name});\n".format(entry_name=entry_name)
-        code += "    std::cout << \"    \\n\"\n"
+        code += "    std::cout << \"    \\n\";\n"
+    code += "    std::cout << \"}\";\n"
     code += "}\n"
     return code
 
@@ -144,7 +145,8 @@ def generate_code(name, declaration):
     for line in lines[1:]:
         if line.endswith(";") and line.find("(") < 0:
             words = line[:-1].strip().split(" ")
-            entry_names.append(words[1])
+            if len(words) >= 2:
+                entry_names.append(words[1])
 
     code += generate_pack(name, entry_names, serialized_base_names)
     code += generate_unpack(name, entry_names, serialized_base_names)

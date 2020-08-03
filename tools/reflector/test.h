@@ -7,9 +7,11 @@
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 
-SERIALIZABLE struct Transform : public IAspectType<Transform> {
-    ENTRY vec3 position;
-    ENTRY Quaternion rotation;
+#include "serialization/serialization.h"
+
+struct Transform : public IAspectType<Transform>, SERIALIZE {
+    vec3 position;
+    Quaternion rotation;
 
     void init(float x, float y, float z);
     void init(vec3 _position);
@@ -36,7 +38,7 @@ void print(Transform &obj) {
     print(obj.rotation);
 }
 
-struct Camera : public IAspectType<Camera> {
+struct Camera : public IAspectType<Camera>, SERIALIZE {
     // Viewport extents (in terms of the application subrectangle).
     float bottom_left[2];
     float top_right[2];
@@ -46,7 +48,7 @@ struct Camera : public IAspectType<Camera> {
     void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
 };
 
-struct Drawable : public IAspectType<Drawable> {
+struct Drawable : public IAspectType<Drawable>, SERIALIZE {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
 };

@@ -10,10 +10,7 @@
 struct TexCoord {
     float u;
     float v;
-<<<<<<< HEAD
     TexCoord() {}
-=======
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
     TexCoord(float u, float v) : u{u}, v{v} {}
 };
 struct MLModelTriangle {
@@ -74,8 +71,4 @@ enum ModelFileFormats {
 bool load_Obj_model(std::istream &stream, MLModel &model);
 bool load_OFF_model(std::istream &stream, MLModel &model);
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
 #endif // MODEL_LOADER_H

@@ -6,6 +6,7 @@
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
+#include "reflector/serialization.h"
 /*SERIALIZE*/
 
 struct Transform : public IAspectType<Transform>, SERIALIZE {

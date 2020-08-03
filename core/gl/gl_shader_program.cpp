@@ -17,6 +17,7 @@ GLShader GLShader::from_string(GLenum shader_type, const char *source)
     GLint success;
     glGetShaderiv(shader_object.m_gl_shader_id, GL_COMPILE_STATUS, &success);
     if (success != GL_TRUE) {
+        puts(source);
         std::cerr << "ERROR: Failed to compile shader.\n";
         GLint info_length;
         glGetShaderiv(shader_object.m_gl_shader_id, GL_INFO_LOG_LENGTH, &info_length);

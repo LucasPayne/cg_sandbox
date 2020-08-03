@@ -11,7 +11,7 @@ set(BUILD_SHARED_LIBS FALSE)
 project(cg_sandbox)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
-include_directories(core lib dependencies ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(core lib tools dependencies ${CMAKE_CURRENT_BINARY_DIR})
 
 # flex and bison, generated lexers and parsers.
 flex_target(
@@ -53,6 +53,7 @@ add_library(cg_sandbox
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
     dependencies/glad/glad.c
+    tools/reflector/serialization.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 

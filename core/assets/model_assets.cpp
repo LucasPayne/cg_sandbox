@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*--------------------------------------------------------------------------------
 notes:
     Messy serialization stuff here.
@@ -11,19 +10,7 @@ notes:
 bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
 {
     // Convert the MLModel into VertexArrayData.
-=======
-#include <limits>//numeric_limits
-#include "assets/model_assets.h"
-#include "gl/gl.h"
 
-Resource<VertexArray> ModelAssets::load(const std::string &path)
-{
-    //todo: caching
-    MLModel model = MLModel::load(path, ML_COMPUTE_PHONG_NORMALS);
-
-    // Convert the MLModel into VertexArrayData.
-    VertexArrayData va;
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
     va.layout.num_vertices = model.num_vertices;
     std::vector<uint8_t> positions_buffer(sizeof(float)*3*va.layout.num_vertices);
     for (int i = 0; i < va.layout.num_vertices; i++) {
@@ -72,7 +59,6 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         va.attribute_buffers.push_back(normals_buffer);
         va.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_normal"));
     }
-<<<<<<< HEAD
 }
 
 struct PODSArrayPtr {
@@ -211,8 +197,5 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
     // Cache this.
     vertex_array_cache[path] = vertex_array_resource;
     return vertex_array_resource;
-=======
-    return VertexArray::from_vertex_array_data(*rm, va);
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
 }
 

@@ -19,12 +19,7 @@ struct Dolphin : public IBehaviour {
 struct Bunny : public IBehaviour {
     void update() {
         Transform *t = world->em.get_aspect<Transform>(entity);
-<<<<<<< HEAD
-        // t->rotation = Quaternion::from_axis_angle(total_time * vec3(1,0,0));
-        t->rotation = Quaternion::from_axis_angle(0.2*total_time * vec3(0,1,0));
-=======
         t->rotation = Quaternion::from_axis_angle(total_time * vec3(1,0,0));
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
     }
 };
 
@@ -60,7 +55,6 @@ App::App(World &_world) : world{_world}
     // Resource<Material> gmat = assets.Material("resources/model_test/model_test.mat");
     // Resource<ShadingModel> gmat = assets.ShadingModel("resources/model_test/model_test.sm");
 
-#if 1
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
 #if 1
@@ -69,12 +63,8 @@ App::App(World &_world) : world{_world}
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
-<<<<<<< HEAD
         vec3 base(3,3,0);
         t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
-=======
-        t->init(2*(frand()-0.5),2*(frand()-0.5),-2);
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
         Drawable *drawable = world.em.add_aspect<Drawable>(dolphin);
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
@@ -85,12 +75,9 @@ App::App(World &_world) : world{_world}
     }
 }
 #endif
+#if 0
     {
-<<<<<<< HEAD
-        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/nefertiti.obj");
-=======
-        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/bunny.off");
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/nefertiti.obj");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
         t->init(0,0,-3);
@@ -98,10 +85,9 @@ App::App(World &_world) : world{_world}
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-<<<<<<< HEAD
     }
     {
-        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/buddha.obj");
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/buddha.obj");
         Entity dolphin = world.em.new_entity();
         Transform *t = world.em.add_aspect<Transform>(dolphin);
         t->init(1,0,-3);
@@ -109,9 +95,6 @@ App::App(World &_world) : world{_world}
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-=======
-
->>>>>>> 408ed837dda892930c013f01098f3fd5e3442225
         Bunny *b = world.add_behaviour<Bunny>(dolphin);
     }
 #endif

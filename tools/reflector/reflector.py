@@ -76,7 +76,7 @@ for line in f_lines:
         struct_names.append(name)
 
 # Run the file through "g++ -E", which is the C preprocessor with C++ standard include directories.
-pp = subprocess.check_output(["g++", "-E", "-I", "../../core", "-I", "../../lib", filename])
+pp = subprocess.check_output(["g++", "-E", "-I", "../../core", "-I", "../../lib", "-I", "../../tools", filename])
 
 # Look for the named structs (included SERIALIZE structs aren't considered),
 # and output the whole declaration. This filters out everything the code generator doesn't need to look at.

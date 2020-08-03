@@ -22,6 +22,7 @@ def generate_template_declaration(template_params):
     return "template <" + ", ".join([p[0]+" "+p[1] for p in template_params]) + ">\n"
 
 
+# Code generators.
 def generate_pack(name, entry_names, array_entries, serialized_base_names, template_params):
     code = ""
     templated_name = generate_templated_name(name, template_params)
@@ -44,7 +45,7 @@ def generate_unpack(name, entry_names, array_entries, serialized_base_names, tem
     templated_name = generate_templated_name(name, template_params)
     code += generate_template_declaration(template_params)
 
-    code += "void unpack(std::istream &in, {name} &obj) {{\n".format(name=name)
+    code += "void unpack(std::istream &in, {name} &obj) {{\n".format(name=templated_name)
     for base_name in serialized_base_names:
         code += "    unpack(in, ({base_name} &)obj);\n".format(base_name=base_name)
     for entry_name in entry_names:
@@ -61,8 +62,8 @@ def generate_print(name, entry_names, array_entries, serialized_base_names, temp
     templated_name = generate_templated_name(name, template_params)
     code += generate_template_declaration(template_params)
 
-    code += "void print({name} &obj) {{\n".format(name=name)
-    code += "    std::cout << \"{name} {{\\n\";\n".format(name=name)
+    code += "void print({name} &obj) {{\n".format(name=templated_name)
+    code += "    std::cout << \"{name} {{\\n\";\n".format(name=templated_name)
     for base_name in serialized_base_names:
         code += "    std::cout << \"    base {base_name} {{\\n\";\n".format(base_name=base_name)
         code += "    print(({base_name} &)obj);\n".format(base_name=base_name)
@@ -87,6 +88,7 @@ def fail(string):
     print("ERROR:", string)
     sys.exit()
 
+# Parse the struct declaration and call the code generators for each serialization function of this struct.
 def generate_code(name, declaration, template_params):
     code = ""
     lines = [line for line in declaration.split("\n")]
@@ -112,10 +114,6 @@ def generate_code(name, declaration, template_params):
     array_entries = []
     # Collect the entries of the struct/class.
     for line in lines[1:]:
-        # if line.endswith(";") and line.find("(") < 0:
-        #     words = line[:-1].strip().split(" ")
-        #     if len(words) >= 2:
-        #         entry_names.append(words[1])
         if line.strip().startswith("/*ENTRY*/"):
             inner_line = line[len("/*ENTRY*/"):-1]
             if inner_line.endswith("]"):
@@ -131,6 +129,9 @@ def generate_code(name, declaration, template_params):
     return code
 	
 
+# This program takes one file as input, and searches for SERIALIZE structs/classes defined
+# in the file (not #includes). The declarations are extracted and passed on to the code generator.
+# Information such as serializable base classes and templating is also extracted here, to be passed for code generation.
 def main():
     if len(sys.argv) != 2:
         print("give good args")

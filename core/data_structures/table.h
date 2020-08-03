@@ -42,6 +42,7 @@ reasons for extensions:
 #include <stdlib.h>//exit
 typedef uint32_t TableEntryID;
 
+#include "reflector/serialization.h"
 
 /*--------------------------------------------------------------------------------
 A GenericTable is initialized with a type size. This means that tables
@@ -50,9 +51,9 @@ can be constructed from arbitrary types at runtime.
 The table stores the correct size entries, for the given type size, but lookups
 return a byte pointer which must be interpreted by the caller.
 --------------------------------------------------------------------------------*/
-struct TableHandle {
-    TableEntryID id;
-    uint32_t index;
+struct TableHandle : SERIALIZE {
+    /*ENTRY*/ TableEntryID id;
+    /*ENTRY*/ uint32_t index;
 };
 class GenericTable {
 public:
@@ -156,11 +157,11 @@ typedef uint8_t TableCollectionType;
     declare things such as TableCollectionHandle<Thing>.
 --------------------------------------------------------------------------------*/
 template <typename TYPE>
-struct TableCollectionHandle : public TableHandle {};
+struct TableCollectionHandle : public TableHandle, SERIALIZE {};
 // A "typed" handle is not templated, and instead stores the type ID. When it is used with the TableCollection interface,
 // the type ID is used for dispatching to the relevant table.
-struct TypedTableCollectionHandle : public TableHandle {
-    TableCollectionType type;
+struct TypedTableCollectionHandle : public TableHandle, SERIALIZE {
+    /*ENTRY*/ TableCollectionType type;
 };
 
 // this class should only be usable by TableCollection. ---
@@ -313,5 +314,5 @@ private:
     GenericTable m_table;
 };
 
-
+#include "/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.serialize.h" /*SERIALIZE*/
 #endif // TABLE_H

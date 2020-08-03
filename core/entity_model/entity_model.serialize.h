@@ -21,12 +21,12 @@ void pack(IAspectType<T> &obj, std::ostream &out) {
     pack((AspectBase &)obj, out);
 }
 template <typename T>
-void unpack(std::istream &in, IAspectType &obj) {
+void unpack(std::istream &in, IAspectType<T> &obj) {
     unpack(in, (AspectBase &)obj);
 }
 template <typename T>
-void print(IAspectType &obj) {
-    std::cout << "IAspectType {\n";
+void print(IAspectType<T> &obj) {
+    std::cout << "IAspectType<T> {\n";
     std::cout << "    base AspectBase {\n";
     print((AspectBase &)obj);
     std::cout << "    }}\n";

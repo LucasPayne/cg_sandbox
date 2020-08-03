@@ -57,7 +57,8 @@ struct VertexArrayLayout : SERIALIZE {
 struct VertexArrayData : SERIALIZE {
     /*ENTRY*/ VertexArrayLayout layout;
     /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
-    /*ENTRY*/ std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
+    /*ENTRY*/ std::vector<uint8_t> index_buffer;
+        //note: uint8_t just signifies this is a byte-buffer.
 
     // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
     inline uint32_t index(uint32_t i) const {

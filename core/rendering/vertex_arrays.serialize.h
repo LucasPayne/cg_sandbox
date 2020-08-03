@@ -59,12 +59,12 @@ void print(VertexArrayLayout &obj) {
 void pack(VertexArrayData &obj, std::ostream &out) {
     pack(obj.layout, out);
     pack(obj.attribute_buffers, out);
-    pack(obj.byte-buffer, out);
+    pack(obj.index_buffer, out);
 }
 void unpack(std::istream &in, VertexArrayData &obj) {
     unpack(in, obj.layout);
     unpack(in, obj.attribute_buffers);
-    unpack(in, obj.byte-buffer);
+    unpack(in, obj.index_buffer);
 }
 void print(VertexArrayData &obj) {
     std::cout << "VertexArrayData {\n";
@@ -74,8 +74,8 @@ void print(VertexArrayData &obj) {
     std::cout << "    attribute_buffers: ";
     print(obj.attribute_buffers);
     std::cout << "\n";
-    std::cout << "    byte-buffer: ";
-    print(obj.byte-buffer);
+    std::cout << "    index_buffer: ";
+    print(obj.index_buffer);
     std::cout << "\n";
     std::cout << "}\n";
 }

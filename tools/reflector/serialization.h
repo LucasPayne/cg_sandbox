@@ -66,5 +66,7 @@ void print(std::vector<T> &obj) {
 // Dummy struct used to flag struct/class declarations for the code generator.
 // Serialized structs/classes must derive from this.
 struct SERIALIZE {};
+// Marker so that it is easy for the tool to find entries.
+#define ENTRY
 
 #endif // SERIALIZATION_H

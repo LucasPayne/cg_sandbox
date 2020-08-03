@@ -29,21 +29,21 @@ void print(VertexSemantic &obj) {
     std::cout << "}\n";
 }
 void pack(VertexArrayLayout &obj, std::ostream &out) {
-    pack(obj.GL_UNSIGNED_{BYTE,SHORT,INT, out);
+    pack(obj.index_type, out);
     pack(obj.num_vertices, out);
     pack(obj.indexed, out);
     pack(obj.num_indices, out);
 }
 void unpack(std::ostream &in, VertexArrayLayout &obj) {
-    unpack(in, obj.GL_UNSIGNED_{BYTE,SHORT,INT);
+    unpack(in, obj.index_type);
     unpack(in, obj.num_vertices);
     unpack(in, obj.indexed);
     unpack(in, obj.num_indices);
 }
 void print(VertexArrayLayout &obj) {
     std::cout << "VertexArrayLayout {\n";
-    std::cout << "    GL_UNSIGNED_{BYTE,SHORT,INT: ";
-    print(obj.GL_UNSIGNED_{BYTE,SHORT,INT);
+    std::cout << "    index_type: ";
+    print(obj.index_type);
     std::cout << "\n";
     std::cout << "    num_vertices: ";
     print(obj.num_vertices);

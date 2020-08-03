@@ -10,14 +10,14 @@ Provides rendering resources:
 #include "gl/gl.h"
 #include "resource_model/resource_model.h"
 #include "reflector/serialization.h"
-/*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/rendering/vertex_arrays.serialize.h" /*SERIALIZE*/
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
 struct VertexSemantic : SERIALIZE {
-    char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
-    GLenum type;
-    GLint size;
+    /*ENTRY*/ char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
+    /*ENTRY*/ GLenum type;
+    /*ENTRY*/ GLint size;
     
     VertexAttributeBindingIndex get_binding_index();
 
@@ -43,20 +43,20 @@ struct VertexSemantic : SERIALIZE {
     VertexSemantic() {}//testing
 };
 
-struct VertexArrayLayout {
-    GLenum index_type; // GL_UNSIGNED_{BYTE,SHORT,INT}
-    uint32_t num_vertices;
-    bool indexed;
-    uint32_t num_indices;
+struct VertexArrayLayout : SERIALIZE {
+    /*ENTRY*/ GLenum index_type; // GL_UNSIGNED_{BYTE,SHORT,INT}
+    /*ENTRY*/ uint32_t num_vertices;
+    /*ENTRY*/ bool indexed;
+    /*ENTRY*/ uint32_t num_indices;
 
     std::vector<VertexSemantic> semantics;
     size_t vertex_size() const;
     size_t index_type_size() const;
 };
 struct VertexArrayData : SERIALIZE {
-    VertexArrayLayout layout;
-    std::vector<std::vector<uint8_t>> attribute_buffers;
-    std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
+    /*ENTRY*/ VertexArrayLayout layout;
+    /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
+    /*ENTRY*/ std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
 
     // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
     inline uint32_t index(uint32_t i) const {

@@ -15,10 +15,10 @@ void print(Transform &obj) {
     std::cout << "    }}\n";
     std::cout << "    position: ";
     print(obj.position);
-    std::cout << "    \n";
+    std::cout << "\n";
     std::cout << "    rotation: ";
     print(obj.rotation);
-    std::cout << "    \n";
-    std::cout << "}";
+    std::cout << "\n";
+    std::cout << "}\n";
 }
 

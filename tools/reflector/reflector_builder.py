@@ -17,13 +17,13 @@ def generate_serialize_header(root, filename):
     serialize_begin = -1
     changed_header_lines = []
     for i,line in enumerate(lines):
-        changed_header_lines.append(line)
-        if line.strip() == "/*SERIALIZE*/":
+        if line.strip().endswith("/*SERIALIZE*/"):
             serialize_begin = i
             break
+        changed_header_lines.append(line)
     serialize_header_path = os.path.abspath(root + os.sep + filename[:-2] + ".serialize.h")
-    changed_header_lines.append("#include \"{}\"".format(serialize_header_path))
-    for line in lines[serialize_begin:]:
+    changed_header_lines.append("#include \"{}\" /*SERIALIZE*/\n".format(serialize_header_path))
+    for line in lines[serialize_begin+1:]:
         changed_header_lines.append(line)
     f.close()
 
@@ -49,7 +49,7 @@ def generate_serialize_header(root, filename):
     # (This is so that all you need to do is add /*SERIALIZE*/ to a header file. If a #include signified that instead,
     #  then it would need to exist before running the tool, since the preprocessor is invoked.)
     try:
-        f = open(path + ".edited", "w")
+        f = open(path, "w")
     except:
         print("Failed to open header file \"{}\" for editing.")
         sys.exit()
@@ -69,7 +69,7 @@ def process_header(root, filename):
     except:
         print("Failed to open header file \"{}\".".format(path))
         sys.exit()
-    if any(line.strip() == "/*SERIALIZE*/" for line in f.readlines()):
+    if any(line.strip().endswith("/*SERIALIZE*/") for line in f.readlines()):
         # Generate a SERIALIZE.h for this header to include.
         generate_serialize_header(root, filename)
 

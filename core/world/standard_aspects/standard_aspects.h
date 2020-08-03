@@ -7,11 +7,11 @@
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 #include "reflector/serialization.h"
-/*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 
 struct Transform : public IAspectType<Transform>, SERIALIZE {
-    vec3 position;
-    Quaternion rotation;
+    /*ENTRY*/ vec3 position;
+    /*ENTRY*/ Quaternion rotation;
 
     void init(float x, float y, float z);
     void init(vec3 _position);

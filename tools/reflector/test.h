@@ -1,81 +1,87 @@
-#ifndef STANDARD_ASPECTS_H
-#define STANDARD_ASPECTS_H
+#ifndef VERTEX_ARRAYS_H
+#define VERTEX_ARRAYS_H
+/*--------------------------------------------------------------------------------
+Vertex arrays submodule of the rendering module.
+
+Provides rendering resources:
+    VertexArray
+--------------------------------------------------------------------------------*/
 #include "core.h"
-#include "spatial_algebra/spatial_algebra.h"
+#include "gl/gl.h"
 #include "resource_model/resource_model.h"
-#include "entity_model/entity_model.h"
-#include "rendering/rendering.h"
-#include "interactive_graphics_context/input.h"
+#include "reflector/serialization.h"
+#include "/home/lucas/computer_graphics/cg_sandbox/tools/reflector/test.serialize.h" /*SERIALIZE*/
 
-#include "serialization/serialization.h"
+typedef uint16_t VertexAttributeBindingIndex;
+#define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
+struct VertexSemantic : SERIALIZE {
+    /*ENTRY*/ char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
+    /*ENTRY*/ GLenum type;
+    /*ENTRY*/ GLint size;
+    
+    VertexAttributeBindingIndex get_binding_index();
 
-struct Transform : public IAspectType<Transform>, SERIALIZE {
-    vec3 position;
-    Quaternion rotation;
-
-    void init(float x, float y, float z);
-    void init(vec3 _position);
-    void init(vec3 _position, Quaternion _rotation);
-    void init_lookat(vec3 position, vec3 target);
-    void lookat(vec3 target);
-
-    mat4x4 matrix() const;
-    mat4x4 inverse_matrix() const;
-};
-void pack(Transform &obj, std::ostream &out) {
-    pack((IAspectType<Transform> &)obj, out);
-    pack(obj.position, out);
-    pack(obj.rotation, out);
-}
-void unpack(std::istream &in, Transform &obj) {
-    unpack(in, (IAspectType<Transform> &)obj);
-    unpack(in, obj.position);
-    unpack(in, obj.rotation);
-}
-void print(Transform &obj) {
-    print((IAspectType<Transform> &)obj);
-    print(obj.position);
-    print(obj.rotation);
-}
-
-struct Camera : public IAspectType<Camera>, SERIALIZE {
-    // Viewport extents (in terms of the application subrectangle).
-    float bottom_left[2];
-    float top_right[2];
-    mat4x4 projection_matrix;
-
-    // Initialize this to a projective camera, with the default full viewport.
-    void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
-};
-
-struct Drawable : public IAspectType<Drawable>, SERIALIZE {
-    GeometricMaterialInstance geometric_material;
-    MaterialInstance material;
-};
-
-// Specific Behaviours must be defined in a class which derives from IBehaviour.
-struct World;
-struct IBehaviour {
-    World *world;
-    Entity entity; // Each Behaviour attached to an entity is given a reference to the entity.
-    bool updating;
-    virtual void update() {
-        // After one call, signify that this virtual function has not been overridden,
-        // and that it is a no-op.
-        updating = false;
+    // Equality operator for searching lists to match semantics.
+    inline bool operator==(VertexSemantic other) {
+        return (type == other.type)
+                && (size == other.size)
+                && (strncmp(name, other.name, MAX_VERTEX_SEMANTIC_NAME_LENGTH) == 0);
     }
-    bool handling_mouse;
-    virtual void mouse_handler(MouseEvent e) {
-        handling_mouse = false;
+    // Returns the byte-length of a single attribute of this semantic.
+    size_t type_size() const;
+
+    VertexSemantic(GLenum _type, GLint _size, const std::string &_name) :
+        type{_type}, size{_size}
+    {
+        if (_name.length() > MAX_VERTEX_SEMANTIC_NAME_LENGTH) {
+            fprintf(stderr, "ERROR: Vertex semantic name too long.\n");
+            exit(EXIT_FAILURE);
+        }
+        snprintf(name, MAX_VERTEX_SEMANTIC_NAME_LENGTH+1, "%s", _name.c_str());
     }
-    bool handling_keyboard;
-    virtual void keyboard_handler(KeyboardEvent e) {
-        handling_keyboard = false;
+
+    VertexSemantic() {}//testing
+};
+
+struct VertexArrayLayout : SERIALIZE {
+    /*ENTRY*/ GLenum index_type;
+        // GL_UNSIGNED_{BYTE,SHORT,INT}
+    /*ENTRY*/ uint32_t num_vertices;
+    /*ENTRY*/ bool indexed;
+    /*ENTRY*/ uint32_t num_indices;
+
+    std::vector<VertexSemantic> semantics;
+    size_t vertex_size() const;
+    size_t index_type_size() const;
+};
+struct VertexArrayData : SERIALIZE {
+    /*ENTRY*/ VertexArrayLayout layout;
+    /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
+    /*ENTRY*/ std::vector<uint8_t> index_buffer; //note: uint8_t just signifies this is a byte-buffer.
+
+    // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
+    inline uint32_t index(uint32_t i) const {
+        if (layout.index_type == GL_UNSIGNED_BYTE) {
+            return ((uint8_t *) &index_buffer[0])[i];
+        } else if (layout.index_type == GL_UNSIGNED_SHORT) {
+            return ((uint16_t *) &index_buffer[0])[i];
+        } else if (layout.index_type == GL_UNSIGNED_INT) {
+            return ((uint32_t *) &index_buffer[0])[i];
+        }
     }
 };
-struct Behaviour : public IAspectType<Behaviour> {
-    size_t object_size;
-    IBehaviour *object;
+struct VertexArray : public IResourceType<VertexArray> {
+    
+    static Resource<VertexArray> from_vertex_array_data(ResourceModel &rm, VertexArrayData &data);
+
+    VertexArrayLayout layout;
+    // The OpenGL vertex array object must conform to the vertex concrete layout, determined by the semantics.
+    GLuint gl_vao_id;
+    // The vertices are stored in a single buffer, only containing these vertices.
+    GLuint gl_buffer_id;
+    // If the vertices are indexed, the index buffer is a separate buffer whose handle is stored here.
+    GLuint gl_index_buffer_id;
 };
 
-#endif // STANDARD_ASPECTS_H
+
+#endif // VERTEX_ARRAYS_H

@@ -44,7 +44,8 @@ struct VertexSemantic : SERIALIZE {
 };
 
 struct VertexArrayLayout : SERIALIZE {
-    /*ENTRY*/ GLenum index_type; // GL_UNSIGNED_{BYTE,SHORT,INT}
+    /*ENTRY*/ GLenum index_type;
+        // GL_UNSIGNED_{BYTE,SHORT,INT}
     /*ENTRY*/ uint32_t num_vertices;
     /*ENTRY*/ bool indexed;
     /*ENTRY*/ uint32_t num_indices;

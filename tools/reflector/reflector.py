@@ -83,15 +83,15 @@ def generate_print(name, entry_names, array_entries, serialized_base_names, temp
     for base_name in serialized_base_names:
         code += "    std::cout << \"    base {base_name} {{\\n\";\n".format(base_name=base_name)
         code += "    print(({base_name} &)obj);\n".format(base_name=base_name)
-        code += "    std::cout << \"    }}\\n\";\n"
+        code += "    std::cout << \"    }\\n\";\n"
     for entry_name in entry_names:
         code += "    std::cout << \"    {entry_name}: \";\n".format(entry_name=entry_name)
         code += "    print(obj.{entry_name});\n".format(entry_name=entry_name)
         code += "    std::cout << \"\\n\";\n"
     for (array_name, array_length) in array_entries:
-        code += "    std::cout << \"    array {array_name} [\";\n".format(array_name=array_name)
+        code += "    std::cout << \"    array {array_name} [\\n\";\n".format(array_name=array_name)
         code += "    for (int i = 0; i < ( {array_length} ); i++) {{\n".format(array_length=array_length)
-        code += "        std::cout << \"    \";\n";
+        code += "        std::cout << \"        \";\n";
         code += "        print(obj.{array_name}[i]);\n".format(array_name=array_name)
         code += "        std::cout << \",\\n\";\n"
         code += "    }\n"

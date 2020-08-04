@@ -27,6 +27,7 @@
         memcpy(entries+2*sizeof(vec4), &c2, sizeof(vec4));
         memcpy(entries+3*sizeof(vec4), &c3, sizeof(vec4));
     }
+    mat4x4() {}
     // Index with i+1'th row, j+1'th column, e.g.
     //     M.entry(2,3) is the entry at the third row, fourth column.
     inline float entry(int i, int j) const {

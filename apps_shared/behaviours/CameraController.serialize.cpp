@@ -30,7 +30,7 @@ void print(CameraController &obj) {
     std::cout << "CameraController {\n";
     std::cout << "    base IBehaviour {\n";
     print((IBehaviour &)obj);
-    std::cout << "    }}\n";
+    std::cout << "    }\n";
     std::cout << "    azimuth: ";
     print(obj.azimuth);
     std::cout << "\n";

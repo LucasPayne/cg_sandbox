@@ -10,9 +10,9 @@ void unpack(std::istream &in, Quaternion &obj) {
 }
 void print(Quaternion &obj) {
     std::cout << "Quaternion {\n";
-    std::cout << "    array entries [";
+    std::cout << "    array entries [\n";
     for (int i = 0; i < ( 4 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.entries[i]);
         std::cout << ",\n";
     }

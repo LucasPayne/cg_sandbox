@@ -6,6 +6,9 @@
 #include "model_loader/model_loader.h"
 #include <string.h>
 
+// Header for debug logging.
+#define HEADER "[model_loader Obj] "
+
 static int g_obj_line_number = 0; // For printing the line number in the file where a parsing failure occurs.
 
 #define MAX_NUM_OBJCOMMAND_PARAMETERS 64
@@ -368,6 +371,8 @@ bool load_Obj_model(std::istream &stream, MLModel &model)
     memset(&state, 0, sizeof(state));
     state.mode = OBJ_READING;
     state.groups.push_back(ObjGroup("root"));
+    
+    printf(HEADER "Loading Obj model.\n");
 
     ObjCommand command;
 
@@ -399,4 +404,6 @@ bool load_Obj_model(std::istream &stream, MLModel &model)
     if (!ObjState_to_model(state, model)) {
         FAIL("Parsed Obj file but failed to convert into an MLModel.");
     }
+    printf(HEADER "Loaded Obj model.\n");
+    return true;
 }

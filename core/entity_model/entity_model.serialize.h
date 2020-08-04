@@ -14,7 +14,7 @@ void print(IAspectType<T> &obj) {
     std::cout << "IAspectType<T> {\n";
     std::cout << "    base AspectBase {\n";
     print((AspectBase &)obj);
-    std::cout << "    }}\n";
+    std::cout << "    }\n";
     std::cout << "}\n";
 }
 

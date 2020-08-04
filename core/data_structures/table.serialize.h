@@ -16,7 +16,7 @@ void print(TableCollectionHandle<TYPE> &obj) {
     std::cout << "TableCollectionHandle<TYPE> {\n";
     std::cout << "    base TableHandle {\n";
     print((TableHandle &)obj);
-    std::cout << "    }}\n";
+    std::cout << "    }\n";
     std::cout << "    type: ";
     print(obj.type);
     std::cout << "\n";

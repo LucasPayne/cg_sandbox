@@ -7,6 +7,36 @@
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 
+// Transporter for testing serialization.
+template <typename T>
+T transporter(T &obj) {
+    std::ofstream outfile;
+    outfile.open("test.binary", std::ios::trunc);
+    pack(obj, outfile);
+    outfile.close();
+    
+    std::ifstream infile;
+    T transportered_obj;
+    infile.open("test.binary");
+    unpack(infile, transportered_obj);
+    infile.close();
+    return transportered_obj;
+}
+template <typename T>
+void transporter_test(T &obj) {
+    printf("Testing transporter...\n");
+    printf("--------------------------------------------------------------------------------\n");
+    printf(" PRE-TRANSPORTED\n");
+    printf("--------------------------------------------------------------------------------\n");
+    print(obj);
+    T obj_t = transporter(obj);
+    printf("--------------------------------------------------------------------------------\n");
+    printf(" TRANSPORTED\n");
+    printf("--------------------------------------------------------------------------------\n");
+    print(obj_t);
+    getchar();
+}
+
 struct Dolphin : public IBehaviour {
     vec3 velocity;
     void update() {
@@ -46,8 +76,10 @@ App::App(World &_world) : world{_world}
 
         Transform *t = world.em.add_aspect<Transform>(cameraman);
         //-test serialization
-        // t->init(vec3(2,1,8.3232), Quaternion(1,2,3,-4.5));
+        t->init(vec3(2,1,8.3232), Quaternion(1,2,3,-4.5));
         // print(*t);getchar();
+        transporter_test(*t);
+
         t->init(0,0,0);
 
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
@@ -81,7 +113,7 @@ App::App(World &_world) : world{_world}
     }
 }
 #endif
-#if 0
+#if 1
     {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/nefertiti.obj");
         Entity dolphin = world.em.new_entity();
@@ -92,6 +124,8 @@ App::App(World &_world) : world{_world}
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
+#endif
+#if 1
     {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/buddha.obj");
         Entity dolphin = world.em.new_entity();

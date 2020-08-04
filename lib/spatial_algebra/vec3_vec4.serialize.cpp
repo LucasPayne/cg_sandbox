@@ -10,9 +10,9 @@ void unpack(std::istream &in, vec3 &obj) {
 }
 void print(vec3 &obj) {
     std::cout << "vec3 {\n";
-    std::cout << "    array entries [";
+    std::cout << "    array entries [\n";
     for (int i = 0; i < ( 3 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.entries[i]);
         std::cout << ",\n";
     }
@@ -30,9 +30,9 @@ void unpack(std::istream &in, vec4 &obj) {
 }
 void print(vec4 &obj) {
     std::cout << "vec4 {\n";
-    std::cout << "    array entries [";
+    std::cout << "    array entries [\n";
     for (int i = 0; i < ( 4 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.entries[i]);
         std::cout << ",\n";
     }

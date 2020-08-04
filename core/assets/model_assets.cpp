@@ -7,6 +7,16 @@ notes:
 #include "gl/gl.h"
 #include "utils/file_utils.h"
 
+// Logging for this module.
+static void log(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf("[Assets/ModelAssets]: ");
+    vprintf(format, args);
+    va_end(args);
+}
+
 bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
 {
     // Convert the MLModel into VertexArrayData.
@@ -166,12 +176,15 @@ bool VertexArrayData_decompile(ByteArray &bytes, VertexArrayData &vertex_array)
 
 Resource<VertexArray> ModelAssets::load(const std::string &path)
 {
+    log("Getting model from path \"%s\"...\n", path.c_str());
     // Look up the compiled model in the cache.
     std::unordered_map<std::string, Resource<VertexArray>>::iterator found = vertex_array_cache.find(path);
     if (found != vertex_array_cache.end()) {
         // The model is already loaded. Return the already-compiled vertex array.
+        log("Model is already loaded.\n");
         return found->second;
     }
+    log("Model is not loaded, loading model...\n");
 
     VertexArrayData va;
     std::string compiled_path = path + ".compiled";
@@ -179,15 +192,17 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
     if (compiled_file.is_open() && file_last_modification_time(compiled_path) > file_last_modification_time(path)) {
         // The source asset has not changed since the last time it was compiled.
         // Read in the compiled file.
+        log("Model has an up-to-date compiled version, loading that...\n");
         ByteArray compiled_bytes;
         if (!load_bytes_from_file(compiled_path, compiled_bytes)) {
-            fprintf(stderr, "ERROR: Failed to load bytes from file \"%s\".\n", compiled_path);
+            fprintf(stderr, "ERROR: Failed to load bytes from file \"%s\".\n", compiled_path.c_str());
             exit(EXIT_FAILURE);
         }
         VertexArrayData_decompile(compiled_bytes, va);
     } else {
         // Either a compiled asset does not exist, or the source asset has changed since the last time it was compiled.
         // Compile the asset, and save it on disk.
+        log("Model has no compiled version, compiling model and saving to disk...\n");
         std::ofstream new_compiled_file(compiled_path, std::ios::binary | std::ios::out);
         MLModel model = MLModel::load(path, ML_COMPUTE_PHONG_NORMALS);
         MLModel_to_VertexArrayData(model, va);
@@ -196,6 +211,7 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
     Resource<VertexArray> vertex_array_resource = VertexArray::from_vertex_array_data(*rm, va);
     // Cache this.
     vertex_array_cache[path] = vertex_array_resource;
+    log("Model found successfully.\n");
     return vertex_array_resource;
 }
 

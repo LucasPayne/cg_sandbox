@@ -14,6 +14,7 @@ https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Using_quaternion_
     Quaternion(float scalar, float i, float j, float k) :
         entries{scalar,i,j,k}
     {}
+    Quaternion() {}
     static inline Quaternion identity() { return Quaternion(1,0,0,0); }
 
     /*ENTRY*/ float entries[4];

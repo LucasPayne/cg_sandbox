@@ -12,7 +12,7 @@ void print(Transform &obj) {
     std::cout << "Transform {\n";
     std::cout << "    base IAspectType<Transform> {\n";
     print((IAspectType<Transform> &)obj);
-    std::cout << "    }}\n";
+    std::cout << "    }\n";
     std::cout << "    position: ";
     print(obj.position);
     std::cout << "\n";
@@ -45,19 +45,19 @@ void print(Camera &obj) {
     std::cout << "Camera {\n";
     std::cout << "    base IAspectType<Camera> {\n";
     print((IAspectType<Camera> &)obj);
-    std::cout << "    }}\n";
+    std::cout << "    }\n";
     std::cout << "    projection_matrix: ";
     print(obj.projection_matrix);
     std::cout << "\n";
-    std::cout << "    array bottom_left [";
+    std::cout << "    array bottom_left [\n";
     for (int i = 0; i < ( 2 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.bottom_left[i]);
         std::cout << ",\n";
     }
-    std::cout << "    array top_right [";
+    std::cout << "    array top_right [\n";
     for (int i = 0; i < ( 2 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.top_right[i]);
         std::cout << ",\n";
     }

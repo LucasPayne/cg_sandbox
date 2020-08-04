@@ -10,9 +10,9 @@ void unpack(std::istream &in, mat4x4 &obj) {
 }
 void print(mat4x4 &obj) {
     std::cout << "mat4x4 {\n";
-    std::cout << "    array entries [";
+    std::cout << "    array entries [\n";
     for (int i = 0; i < ( 16 ); i++) {
-        std::cout << "    ";
+        std::cout << "        ";
         print(obj.entries[i]);
         std::cout << ",\n";
     }

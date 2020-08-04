@@ -1,6 +1,7 @@
 #
 # Extract the struct/class declarations declared in the header file which derive from dummy class SERIALIZE.
-# This is done after pre-processing. Only structs/classes defined in the file, not through #includes, are considered.
+# [removed pre-processing, maybe temporarily] --- This is done after pre-processing.
+# Only structs/classes defined in the file, not through #includes, are considered.
 #
 
 # C++ syntax understanding here is minimal, so SERIALIZE struct declarations

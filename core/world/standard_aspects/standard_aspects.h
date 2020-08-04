@@ -1,6 +1,7 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
 #include "core.h"
+#include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
@@ -8,7 +9,7 @@
 #include "interactive_graphics_context/input.h"
 #include "reflector/serialization.h"
 
-/*REFLECTED*/struct Transform : public IAspectType<Transform> {
+/*REFLECTED*/ struct Transform : public IAspectType<Transform> {
     /*ENTRY*/ vec3 position;
     /*ENTRY*/ Quaternion rotation;
 
@@ -22,11 +23,11 @@
     mat4x4 inverse_matrix() const;
 };
 
-struct Camera : public IAspectType<Camera> {
+/*REFLECTED*/ struct Camera : public IAspectType<Camera> {
     // Viewport extents (in terms of the application subrectangle).
-    float bottom_left[2];
-    float top_right[2];
-    mat4x4 projection_matrix;
+    /*ENTRY*/ float bottom_left[2];
+    /*ENTRY*/ float top_right[2];
+    /*ENTRY*/ mat4x4 projection_matrix;
 
     // Initialize this to a projective camera, with the default full viewport.
     void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
@@ -38,11 +39,11 @@ struct Drawable : public IAspectType<Drawable> {
 };
 
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
-struct World;
-struct IBehaviour {
-    World *world;
-    Entity entity; // Each Behaviour attached to an entity is given a reference to the entity.
-    bool updating;
+/*REFLECTED*/ struct IBehaviour {
+    /*ENTRY*/ WorldHandle world;
+    /*ENTRY*/ Entity entity;
+        // Each Behaviour attached to an entity is given a reference to the entity.
+    /*ENTRY*/ bool updating;
     virtual void update() {
         // After one call, signify that this virtual function has not been overridden,
         // and that it is a no-op.

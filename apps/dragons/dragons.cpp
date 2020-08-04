@@ -2,7 +2,7 @@
 #include "gl/gl.h"
 #include "data_structures/table.h"
 
-#include "behaviours/CameraController.cpp"
+#include "behaviours/CameraController.h"
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 
@@ -43,6 +43,8 @@ App::App(World &_world) : world{_world}
         camera->init_projective(0.1, 300, 0.1, 0.566);
 
         Transform *t = world.em.add_aspect<Transform>(cameraman);
+        t->init(vec3(2,1,8.3232), Quaternion(1,2,3,-4.5));
+        print(*t);getchar();
         t->init(0,0,0);
 
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
@@ -131,11 +133,11 @@ void App::mouse_handler(MouseEvent e)
 int main(int argc, char *argv[])
 {
     IGC::Context context("Dragons");
-    World world;
-    context.add_callbacks(world);
-    context.add_callbacks(world.input);
+    WorldHandle world = World::new_world();
+    context.add_callbacks(*World::table.lookup(world));
+    context.add_callbacks(world->input);
 
-    App app(world);
+    App app(**world);
     context.add_callbacks(app);
 
     context.enter_loop();

@@ -15,14 +15,32 @@ IDEAS/THINGS:
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include <math.h>
 
+Table<GenericTable> g_table_registry(Table<GenericTable>(1)); // Static initialization, prepare global table registry.
+
+static TableHandle init_world_table() {
+    TableHandle world_table_handle = g_table_registry.add();
+    GenericTable *world_table = g_table_registry.lookup(world_table_handle);
+    *world_table = GenericTable(sizeof(World), 1);
+    return world_table_handle;
+}
+TableHandle World::table(init_world_table()); // Statically initialize the global World table in the global table registry.
+
 ShadingModelInstance *shading_model_model_test;
 
-World::World()
+Reference<World> World::new_world()
 {
+    TableHandle table_handle = g_table_registry.lookup(table).add();
+    World &world = *reinterpret_cast<World *>(g_table_registry.lookup(table).lookup(table_handle));
+    world.ref = Reference<World>(table, table_handle, 
+
+    WorldHandle world_handle = table.add();
+    World &world = *table.lookup(world_handle);
+    world.handle = world_handle;
+
     // Initialize the resource model.
-    rm = ResourceModel();
+    world.rm = ResourceModel();
     // Register resource types. Remember to do this!
-    #define REGISTER_RESOURCE_TYPE(NAME) rm.register_resource_type<NAME>(#NAME)
+    #define REGISTER_RESOURCE_TYPE(NAME) world.rm.register_resource_type<NAME>(#NAME)
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
@@ -30,37 +48,37 @@ World::World()
     REGISTER_RESOURCE_TYPE(VertexArray);
 
     // Initialize the entity model, with no entities.
-    em = EntityModel(); 
+    world.em = EntityModel(); 
     // Register aspect types. Remember to do this!
-    #define REGISTER_ASPECT_TYPE(NAME) em.register_aspect_type<NAME>(#NAME)
+    #define REGISTER_ASPECT_TYPE(NAME) world.em.register_aspect_type<NAME>(#NAME)
     REGISTER_ASPECT_TYPE(Transform);
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
-    assets = Assets();
-    assets.rm = &rm;
-    assets.models.rm = &rm;
-    assets.shading.rm = &rm;
+    world.assets = Assets();
+    world.assets.rm = &world.rm;
+    world.assets.models.rm = &world.rm;
+    world.assets.shading.rm = &world.rm;
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
-    graphics = Graphics();
-    graphics.rm = &rm; // The Graphics component relies on the resource model.
+    world.graphics = Graphics();
+    world.graphics.rm = &world.rm; // The Graphics component relies on the resource model.
 
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    glDisable(GL_CULL_FACE); //
+    glEnable(GL_DEPTH_TEST); // todo: Remove this.
+    glDepthFunc(GL_LESS);    //
 
     // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    Resource<ShadingModel> sm = rm.new_resource<ShadingModel>();
+    Resource<ShadingModel> sm = world.rm.new_resource<ShadingModel>();
     std::fstream sm_file;
     sm_file.open("resources/model_test/model_test.sm");
     sm->load(sm_file);
     shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
     // Input.
-    input = InputState();
+    world.input = InputState();
 }
 void World::close()
 {

@@ -54,6 +54,12 @@ return a byte pointer which must be interpreted by the caller.
 /*REFLECTED*/ struct TableHandle {
     /*ENTRY*/ TableEntryID id;
     /*ENTRY*/ uint32_t index;
+    static const TableHandle null() {
+        TableHandle handle;
+        handle.index = 0;
+        handle.id = 0; // id of zero signifies this is a null handle.
+        return handle;
+    }
 };
 class GenericTable {
 public:

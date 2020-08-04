@@ -38,15 +38,16 @@ public:
 App::App(World &_world) : world{_world}
 {
     // Create a camera man.
-#if 0
+#if 1
     {
         Entity cameraman = world.em.new_entity();
         Camera *camera = world.em.add_aspect<Camera>(cameraman);
         camera->init_projective(0.1, 300, 0.1, 0.566);
 
         Transform *t = world.em.add_aspect<Transform>(cameraman);
-        t->init(vec3(2,1,8.3232), Quaternion(1,2,3,-4.5));
-        print(*t);getchar();
+        //-test serialization
+        // t->init(vec3(2,1,8.3232), Quaternion(1,2,3,-4.5));
+        // print(*t);getchar();
         t->init(0,0,0);
 
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
@@ -62,7 +63,7 @@ App::App(World &_world) : world{_world}
 
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
-#if 0
+#if 1
 {
     for (int i = 0; i < 25; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");

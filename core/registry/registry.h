@@ -41,6 +41,8 @@ public:
 
     T &operator*();
     T *operator->();
+
+    Reference() : handle{TableHandle::null()} {} // Empty constructor gives a null reference, signified by a null handle.
 private:
     // Constructor used only by TableReference<T> for returning Reference<T>s to entries in its underlying table.
     Reference(TableReference<T> _table, TableHandle _handle) :

@@ -29,19 +29,18 @@ Reference<World> World::new_world()
         created_table = true;
         printf("[world] World table initialized.\n");
     }
-
-    printf("[world] Creating new world reference...\n");
+    printf("[world] Creating world reference...\n");
     Reference<World> world_reference = table.add();
-    World &world = *world_reference;
-    world.reference = world_reference;
+    World *world = new(&(*world_reference)) World;
+    world->reference = world_reference;
     printf("[world] Created new world reference.\n");
 
     // Initialize the resource model.
     printf("[world] Initializing resource model...\n");
-    world.rm = ResourceModel();
+    world->rm = ResourceModel();
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
-        world.rm.register_resource_type<NAME>(#NAME);\
+        world->rm.register_resource_type<NAME>(#NAME);\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering resource types...\n");
@@ -54,10 +53,10 @@ Reference<World> World::new_world()
 
     // Initialize the entity model, with no entities.
     printf("[world] Initializing entity model...\n");
-    world.em = EntityModel(); 
+    world->em = EntityModel(); 
     // Register aspect types. Remember to do this!
     #define REGISTER_ASPECT_TYPE(NAME) {\
-        world.em.register_aspect_type<NAME>(#NAME);\
+        world->em.register_aspect_type<NAME>(#NAME);\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering aspect types...\n");
@@ -69,16 +68,16 @@ Reference<World> World::new_world()
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
     printf("[world] Initializing Assets...\n");
-    world.assets = Assets();
-    world.assets.rm = &world.rm;
-    world.assets.models.rm = &world.rm;
-    world.assets.shading.rm = &world.rm;
+    world->assets = Assets();
+    world->assets.rm = &world->rm;
+    world->assets.models.rm = &world->rm;
+    world->assets.shading.rm = &world->rm;
     printf("[world] Assets initialized.\n");
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     printf("[world] Initializing Graphics...\n");
-    world.graphics = Graphics();
-    world.graphics.rm = &world.rm; // The Graphics component relies on the resource model.
+    world->graphics = Graphics();
+    world->graphics.rm = &world->rm; // The Graphics component relies on the resource model.
     printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //
@@ -86,7 +85,7 @@ Reference<World> World::new_world()
     glDepthFunc(GL_LESS);    //
 
     // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    Resource<ShadingModel> sm = world.rm.new_resource<ShadingModel>();
+    Resource<ShadingModel> sm = world->rm.new_resource<ShadingModel>();
     std::fstream sm_file;
     sm_file.open("resources/model_test/model_test.sm");
     sm->load(sm_file);
@@ -94,7 +93,7 @@ Reference<World> World::new_world()
 
     // Input.
     printf("[world] Initializing InputState...\n");
-    world.input = InputState();
+    world->input = InputState();
     printf("[world] InputState initialized.\n");
 
     return world_reference;

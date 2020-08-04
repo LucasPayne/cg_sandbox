@@ -2,6 +2,9 @@
 //    http://amesgames.net/2017/06/27/c-rendering-engine-i-abstracting-the-render-device/3/
 #include "interactive_graphics_context.h"
 
+// Banner for logging messages.
+#define BANNER "[interactive_graphics_context] "
+
 float total_time = 0;
 float dt = 0;
 
@@ -48,10 +51,13 @@ void Context::add_callbacks(Callbacks &callbacks)
 
 void Context::enter_loop()
 {
+    printf(BANNER "Entering loop...\n");
     m_delta_time = 0;
     m_time = Platform::time();
 
+    uint64_t frame_number = 0;
     while (Platform::poll(window)) {
+        printf(BANNER "Begin frame %zu.\n", frame_number);
         float time_now = Platform::time();
         m_delta_time = time_now - m_time;
         m_time = time_now;
@@ -62,6 +68,8 @@ void Context::enter_loop()
             callbacks->loop();
         }
         Platform::present(window);
+
+        frame_number++;
     }
     close();
 }

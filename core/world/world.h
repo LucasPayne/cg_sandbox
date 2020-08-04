@@ -21,6 +21,7 @@ such as the creation of game objects.
 
 class World : public IGC::Callbacks {
 public:
+    World() {}
     static Reference<World> new_world();
 
     // Callbacks.
@@ -52,7 +53,8 @@ public:
     B *add_behaviour(Entity e) {
         Behaviour *behaviour = em.add_aspect<Behaviour>(e);
         behaviour->object_size = sizeof(B);
-        behaviour->object = reinterpret_cast<IBehaviour *>(calloc(1, sizeof(B)));
+        behaviour->object = new B();
+
         behaviour->object->world = reference;
         behaviour->object->entity = e;
         behaviour->object->updating = true;
@@ -68,6 +70,9 @@ public:
     Graphics graphics; // Graphics state, such as cached compiled shaders.
     InputState input;
     Assets assets;
+
+    //testing
+    std::string test_message;
 private:
     Reference<World> reference;
 

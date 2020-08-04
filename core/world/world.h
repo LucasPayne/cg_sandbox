@@ -11,9 +11,7 @@ such as the creation of game objects.
 #define WORLD_H
 #include "core.h"
 #include "data_structures/table.h"
-
-typedef TableHandle WorldHandle;
-
+#include "registry/registry.h"
 #include "resource_model/resource_model.h"
 #include "assets/assets.h"
 #include "entity_model/entity_model.h"
@@ -21,48 +19,13 @@ typedef TableHandle WorldHandle;
 #include "world/standard_aspects/standard_aspects.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
 
-
-static Table<GenericTable> g_table_registry;
-
-template <typename T>
-struct Reference : public TableHandle {
-    TableHandle table; // Handle into the global table-registry table.
-    
-    //!-IMPORTANT-! If the table is for the wrong type, then something will go very wrong.
-
-    inline T &operator*() {
-        GenericTable *table_ptr = g_table_registry.lookup(table);
-        if (table_ptr == nullptr) {
-            fprintf(stderr, "ERROR: Attempted to dereference Reference into table not found in the global registry.\n");
-            exit(EXIT_FAILURE);
-        }
-        T *ptr = reinterpret_cast<T *>(table_ptr->lookup(*this));
-        if (ptr == nullptr) {
-            fprintf(stderr, "ERROR: Attempted to dereference invalid Reference.\n");
-            exit(EXIT_FAILURE);
-        }
-        return *ptr;
-    }
-    inline T *operator->() {
-        return &(*this);
-    }
-    Reference(TableHandle &_table, TableHandle &_handle) :
-        table{_table}
-    {
-        (TableHandle &) *this = _handle;
-    }
-};
-
 class World : public IGC::Callbacks {
 public:
-    static TableHandle table; // Table in the global registry which contains Worlds.
     static Reference<World> new_world();
-    Reference<World> ref;
 
-    // Looper stuff.
+    // Callbacks.
     void close();
     void loop();
-    // InputListener stuff.
     void keyboard_handler(KeyboardEvent e);
     void mouse_handler(MouseEvent e);
 
@@ -89,8 +52,8 @@ public:
     B *add_behaviour(Entity e) {
         Behaviour *behaviour = em.add_aspect<Behaviour>(e);
         behaviour->object_size = sizeof(B);
-        behaviour->object = new B();
-        behaviour->object->world = handle;
+        behaviour->object = reinterpret_cast<IBehaviour *>(calloc(1, sizeof(B)));
+        behaviour->object->world = reference;
         behaviour->object->entity = e;
         behaviour->object->updating = true;
         behaviour->object->handling_keyboard = true;
@@ -105,6 +68,11 @@ public:
     Graphics graphics; // Graphics state, such as cached compiled shaders.
     InputState input;
     Assets assets;
+private:
+    Reference<World> reference;
+
+    static bool created_table;
+    static TableReference<World> table; // Table in the global registry which contains Worlds.
 };
 
 #endif // WORLD_H

@@ -24,10 +24,9 @@ template <typename T>
     friend Reference<T>; // Reference<T>s want access to the underlying table for dereferencing.
 public:
     /*ENTRY*/ TableHandle handle;
-    TableReference(TableHandle &_handle) :
-        handle{_handle}
-    {}
-    TableReference() {}
+    TableReference(TableHandle &table_handle) {
+        *this = table_handle;
+    }
     Reference<T> add();
     void remove(Reference<T> ref);
 };
@@ -36,8 +35,8 @@ template <typename T>
 /*REFLECTED*/ struct Reference {
     friend TableReference<T>; // The TableReference constructs References and needs access to the private data.
 public:
-    /*ENTRY*/ TableReference<T> table;
     /*ENTRY*/ TableHandle handle;
+    /*ENTRY*/ TableReference<T> table;
 
     T &operator*();
     T *operator->();
@@ -55,12 +54,10 @@ public:
     //     TableReference<World> worlds = Registry::add<World>();
     template <typename T>
     static TableReference<T> add() {
-        printf("[registry] Adding new table to registry...\n");
         TableHandle new_table_handle = registry.add();
         GenericTable &new_table = *registry.lookup(new_table_handle);
         const size_t new_table_start_length = 1;
         new_table = GenericTable(sizeof(T), new_table_start_length);
-        printf("[registry] Added new table.\n");
         return TableReference<T>(new_table_handle);
     }
 
@@ -68,8 +65,8 @@ public:
     template <typename T>
     static Table<T> *get_table(TableReference<T> table_ref) {
         GenericTable *generic_table = registry.lookup(table_ref.handle);
-        if (generic_table == nullptr) {
-            fprintf(stderr, "[registry] ERROR: Attempted to get get unknown table in the registry.\n");
+        if (generic_table = nullptr) {
+            fprintf(stderr, "ERROR: Attempted to get get unknown table in the registry.\n");
             exit(EXIT_FAILURE);
         }
         // Table<T> does not add any data or virtual methods to GenericTable, which it derives from,
@@ -92,7 +89,7 @@ Reference<T> TableReference<T>::add() {
     // Get a handle to the underlying table, then combine it with a handle to this table to create a Reference<T>.
     Table<T> *table_t = Registry::get_table<T>(handle);
     if (table_t == nullptr) {
-        fprintf(stderr, "[registry] ERROR: Attempted to add to table not found in the registry.\n");
+        fprintf(stderr, "ERROR: Attempted to add to table not found in the registry.\n");
         exit(EXIT_FAILURE);
     }
     TableHandle entry_handle = table_t->add();
@@ -104,12 +101,12 @@ void TableReference<T>::remove(Reference<T> ref) {
         // There can be multiple tables in the registry for the same type.
         // This means the type system allows Reference<T>s to be passed to the wrong TableReference<T>,
         // so this error is handled here.
-        fprintf(stderr, "[registry] ERROR: Attempted to remove underlying object of Reference<T> from the wrong TableReference<T> table.\n");
+        fprintf(stderr, "ERROR: Attempted to remove underlying object of Reference<T> from the wrong TableReference<T> table.\n");
         exit(EXIT_FAILURE);
     }
     Table<T> *table_t = Registry::get_table<T>(handle);
     if (table_t == nullptr) {
-        fprintf(stderr, "[registry] ERROR: Attempted to remove from table not found in the registry.\n");
+        fprintf(stderr, "ERROR: Attempted to remove from table not found in the registry.\n");
         exit(EXIT_FAILURE);
     }
     table_t->remove(ref.handle);
@@ -122,7 +119,7 @@ T &Reference<T>::operator*() {
     Table<T> *table_t = Registry::get_table<T>(table);
     T *t = table_t->lookup(handle);
     if (t == nullptr) {
-        fprintf(stderr, "[registry] ERROR: Attempted to dereference invalid Reference.\n");
+        fprintf(stderr, "ERROR: Attempted to dereference invalid Reference.\n");
         exit(EXIT_FAILURE);
     }
     return *t;
@@ -132,7 +129,7 @@ T *Reference<T>::operator->() {
     Table<T> *table_t = Registry::get_table<T>(table);
     T *t = table_t->lookup(handle);
     if (t == nullptr) {
-        fprintf(stderr, "[registry] ERROR: Attempted to dereference invalid Reference.\n");
+        fprintf(stderr, "ERROR: Attempted to dereference invalid Reference.\n");
         exit(EXIT_FAILURE);
     }
     return t;

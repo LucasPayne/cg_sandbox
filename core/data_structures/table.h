@@ -310,7 +310,8 @@ public:
     inline GenericTable::Iterator iterator() {
         return m_table.iterator();
     }
-private:
+//-debugging
+// private:
     GenericTable m_table;
 };
 

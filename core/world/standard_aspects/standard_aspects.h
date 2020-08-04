@@ -1,13 +1,15 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
 #include "core.h"
-#include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
 #include "resource_model/resource_model.h"
 #include "entity_model/entity_model.h"
 #include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
 #include "reflector/serialization.h"
+
+#include "registry/registry.h"
+class World;
 
 /*REFLECTED*/ struct Transform : public IAspectType<Transform> {
     /*ENTRY*/ vec3 position;
@@ -40,7 +42,7 @@ struct Drawable : public IAspectType<Drawable> {
 
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
 /*REFLECTED*/ struct IBehaviour {
-    /*ENTRY*/ WorldHandle world;
+    /*ENTRY*/ Reference<World> world;
     /*ENTRY*/ Entity entity;
         // Each Behaviour attached to an entity is given a reference to the entity.
     /*ENTRY*/ bool updating;
@@ -49,11 +51,11 @@ struct Drawable : public IAspectType<Drawable> {
         // and that it is a no-op.
         updating = false;
     }
-    bool handling_mouse;
+    /*ENTRY*/ bool handling_mouse;
     virtual void mouse_handler(MouseEvent e) {
         handling_mouse = false;
     }
-    bool handling_keyboard;
+    /*ENTRY*/ bool handling_keyboard;
     virtual void keyboard_handler(KeyboardEvent e) {
         handling_keyboard = false;
     }

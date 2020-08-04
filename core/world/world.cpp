@@ -15,56 +15,71 @@ IDEAS/THINGS:
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include <math.h>
 
-Table<GenericTable> g_table_registry(Table<GenericTable>(1)); // Static initialization, prepare global table registry.
-
-static TableHandle init_world_table() {
-    TableHandle world_table_handle = g_table_registry.add();
-    GenericTable *world_table = g_table_registry.lookup(world_table_handle);
-    *world_table = GenericTable(sizeof(World), 1);
-    return world_table_handle;
-}
-TableHandle World::table(init_world_table()); // Statically initialize the global World table in the global table registry.
-
 ShadingModelInstance *shading_model_model_test;
 
+bool World::created_table = false;
+TableReference<World> World::table;
 Reference<World> World::new_world()
 {
-    TableHandle table_handle = g_table_registry.lookup(table).add();
-    World &world = *reinterpret_cast<World *>(g_table_registry.lookup(table).lookup(table_handle));
-    world.ref = Reference<World>(table, table_handle, 
+    if (!created_table) {
+        // Static initialization is unorderable, so do this when the first world is created, as it is known that by
+        // then the registry will be initialized.
+        printf("[world] Initializing World table in registry...\n");
+        table = Registry::add<World>();
+        created_table = true;
+        printf("[world] World table initialized.\n");
+    }
 
-    WorldHandle world_handle = table.add();
-    World &world = *table.lookup(world_handle);
-    world.handle = world_handle;
+    printf("[world] Creating new world reference...\n");
+    Reference<World> world_reference = table.add();
+    World &world = *world_reference;
+    world.reference = world_reference;
+    printf("[world] Created new world reference.\n");
 
     // Initialize the resource model.
+    printf("[world] Initializing resource model...\n");
     world.rm = ResourceModel();
     // Register resource types. Remember to do this!
-    #define REGISTER_RESOURCE_TYPE(NAME) world.rm.register_resource_type<NAME>(#NAME)
+    #define REGISTER_RESOURCE_TYPE(NAME) {\
+        world.rm.register_resource_type<NAME>(#NAME);\
+        printf("[world]   Registered \"%s\".\n", #NAME);\
+    }
+    printf("[world]  Registering resource types...\n");
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
     REGISTER_RESOURCE_TYPE(ShadingProgram);
     REGISTER_RESOURCE_TYPE(VertexArray);
+    printf("[world] Resource model initialized.\n");
 
     // Initialize the entity model, with no entities.
+    printf("[world] Initializing entity model...\n");
     world.em = EntityModel(); 
     // Register aspect types. Remember to do this!
-    #define REGISTER_ASPECT_TYPE(NAME) world.em.register_aspect_type<NAME>(#NAME)
+    #define REGISTER_ASPECT_TYPE(NAME) {\
+        world.em.register_aspect_type<NAME>(#NAME);\
+        printf("[world]   Registered \"%s\".\n", #NAME);\
+    }
+    printf("[world]  Registering aspect types...\n");
     REGISTER_ASPECT_TYPE(Transform);
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
+    printf("[world] Entity model initialized.\n");
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
+    printf("[world] Initializing Assets...\n");
     world.assets = Assets();
     world.assets.rm = &world.rm;
     world.assets.models.rm = &world.rm;
     world.assets.shading.rm = &world.rm;
+    printf("[world] Assets initialized.\n");
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
+    printf("[world] Initializing Graphics...\n");
     world.graphics = Graphics();
     world.graphics.rm = &world.rm; // The Graphics component relies on the resource model.
+    printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //
     glEnable(GL_DEPTH_TEST); // todo: Remove this.
@@ -78,7 +93,11 @@ Reference<World> World::new_world()
     shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
     // Input.
+    printf("[world] Initializing InputState...\n");
     world.input = InputState();
+    printf("[world] InputState initialized.\n");
+
+    return world_reference;
 }
 void World::close()
 {

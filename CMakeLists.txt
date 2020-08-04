@@ -34,6 +34,7 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 add_library(cg_sandbox
     core/main.cpp
     core/data_structures/table.cpp
+    core/registry/registry.cpp
     core/world/world.cpp
     core/resource_model/resource_model.cpp
     core/assets/assets.cpp

@@ -205,9 +205,9 @@ struct ShadingFileASTSection : ShadingFileASTNode {
     {}
 };
 struct ShadingFileASTParameter {
-    uint8_t kind; // uniform, in, out
     const char *type;
     const char *name;
+    uint8_t kind; // uniform, in, out
     ShadingFileASTParameter *next;
     ShadingFileASTParameter(const char *_type, const char *_name, uint8_t _kind) :
         type{_type}, name{_name}, kind{_kind}, next{nullptr}
@@ -221,8 +221,8 @@ struct ShadingFileASTOutput : ShadingFileASTNode {
     int kind() const { return SHADING_FILE_NODE_OUTPUT; }
     const char *type;
     const char *name;
-    const char *snippet;
     ShadingFileASTParameter *parameter_list;
+    const char *snippet;
     ShadingFileASTOutput(const char *_type, const char *_name, ShadingFileASTParameter *_parameter_list, const char *_snippet) :
         type{_type}, name{_name}, parameter_list{_parameter_list}, snippet{_snippet}
     {}

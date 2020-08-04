@@ -44,7 +44,7 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
     // todo: Think of a better implementation for this.
     static std::vector<VertexSemantic> encountered_semantics(0);
     
-    for (int i = 0; i < encountered_semantics.size(); i++) {
+    for (unsigned int i = 0; i < encountered_semantics.size(); i++) {
         if (*this == encountered_semantics[i]) {
             // Semantic has already been encountered, return the index (which is the binding index).
             return i;
@@ -82,7 +82,7 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
     uint8_t *mapped_buffer = reinterpret_cast<uint8_t *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
     // The VertexArrayData has separate buffers for each attribute.
     // Interleave these into the single mapped buffer.
-    for (int i = 0; i < data.layout.num_vertices; i++) {
+    for (unsigned int i = 0; i < data.layout.num_vertices; i++) {
         size_t interleaved_offset = 0;
         for (int j = 0; j < num_attributes; j++) {
             size_t attribute_size = data.layout.semantics[j].type_size();

@@ -1,6 +1,7 @@
 #include "cg_sandbox.h"
 #include "gl/gl.h"
 #include "data_structures/table.h"
+#include "registry/registry.h"
 
 #include "behaviours/CameraController.h"
 #include "utils/force_aspect_ratio.cpp"
@@ -37,6 +38,7 @@ public:
 App::App(World &_world) : world{_world}
 {
     // Create a camera man.
+#if 0
     {
         Entity cameraman = world.em.new_entity();
         Camera *camera = world.em.add_aspect<Camera>(cameraman);
@@ -50,6 +52,7 @@ App::App(World &_world) : world{_world}
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
         controller->init();
     }
+#endif 
 
     // Create a dolphin.
 
@@ -59,7 +62,7 @@ App::App(World &_world) : world{_world}
 
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
-#if 1
+#if 0
 {
     for (int i = 0; i < 25; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
@@ -132,14 +135,20 @@ void App::mouse_handler(MouseEvent e)
 
 int main(int argc, char *argv[])
 {
+    printf("[main] Creating context...\n");
     IGC::Context context("Dragons");
-    WorldHandle world = World::new_world();
-    context.add_callbacks(*World::table.lookup(world));
+    printf("[main] Creating world...\n");
+    Reference<World> world = World::new_world();
+    printf("[main] Adding world callbacks...\n");
+    context.add_callbacks(*world);
     context.add_callbacks(world->input);
 
-    App app(**world);
+    printf("[main] Creating app...\n");
+    App app(*world);
+    printf("[main] Adding app callbacks...\n");
     context.add_callbacks(app);
 
+    printf("[main] Entering loop...\n");
     context.enter_loop();
     context.close();
 }

@@ -16,4 +16,22 @@ void print(TableHandle &obj) {
     std::cout << "\n";
     std::cout << "}\n";
 }
+void pack(TypedTableCollectionHandle &obj, std::ostream &out) {
+    pack((TableHandle &)obj, out);
+    pack(obj.type, out);
+}
+void unpack(std::istream &in, TypedTableCollectionHandle &obj) {
+    unpack(in, (TableHandle &)obj);
+    unpack(in, obj.type);
+}
+void print(TypedTableCollectionHandle &obj) {
+    std::cout << "TypedTableCollectionHandle {\n";
+    std::cout << "    base TableHandle {\n";
+    print((TableHandle &)obj);
+    std::cout << "    }\n";
+    std::cout << "    type: ";
+    print(obj.type);
+    std::cout << "\n";
+    std::cout << "}\n";
+}
 

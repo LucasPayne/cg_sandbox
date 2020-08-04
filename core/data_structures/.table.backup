@@ -63,7 +63,7 @@ return a byte pointer which must be interpreted by the caller.
 };
 class GenericTable {
 public:
-    GenericTable() {} //empty constructor, appears to be needed for std::vector.
+    GenericTable() {}
     GenericTable(size_t entry_type_size, int length = 1);
     // Turn the next available slot in the table into an active entry,
     // then return a handle to it.
@@ -143,6 +143,7 @@ public:
 };
 
 
+
 /*--------------------------------------------------------------------------------
     TableCollection data structure.
 
@@ -163,9 +164,11 @@ typedef uint8_t TableCollectionType;
     declare things such as TableCollectionHandle<Thing>.
 --------------------------------------------------------------------------------*/
 template <typename TYPE>
-/*REFLECTED*/ struct TableCollectionHandle : public TableHandle {};
+/*REFLECTED*/ struct TableCollectionHandle : public TableHandle {
+};
 // A "typed" handle is not templated, and instead stores the type ID. When it is used with the TableCollection interface,
 // the type ID is used for dispatching to the relevant table.
+
 /*REFLECTED*/ struct TypedTableCollectionHandle : public TableHandle {
     /*ENTRY*/ TableCollectionType type;
 };
@@ -320,6 +323,109 @@ public:
 // private:
     GenericTable m_table;
 };
+
+
+// Table serialization functions.
+// These are not auto-generated since a table is a container which needs its own custom serialization.
+template <typename T>
+void pack(Table<T> &obj, std::ostream &out) {
+    const bool debug = false;
+    // Pack the metadata first.
+    if (debug){ printf("%u\n", obj.m_table.m_first_free_index);getchar();}
+    pack(obj.m_table.m_first_free_index, out);
+    if (debug){ printf("%u\n", obj.m_table.m_length);getchar();}
+
+    pack(obj.m_table.m_length, out);
+    if (debug){ printf("%u\n", obj.m_table.m_next_id);getchar();}
+    pack(obj.m_table.m_next_id, out);
+
+    // Pack the number of active entries in the table, since the unpacker will need to know when to stop.
+    int num_entries = 0;
+    {
+        GenericTable::Iterator iter = obj.iterator();
+        for (TableHandle handle : iter) {
+            num_entries++;
+        }
+        pack(num_entries, out);
+    }
+    if (debug){ printf("num_entries: %d\n", num_entries);getchar();}
+
+    // Densely pack the entries.
+    GenericTable::Iterator iter = obj.iterator();
+    for (TableHandle handle : iter) {
+        if (debug){ printf("Packing entry\n");}
+        // For each entry, store its index, so this can be unpacked into the sparse array.
+        if (debug){ printf("index: %u\n", handle.index);getchar();}
+        pack(handle.index, out);
+        // Pack the entry header metadata, which is needed for the table to make sense.
+        pack(obj.m_table.get_header(handle.index)->id, out);
+        pack(obj.m_table.get_header(handle.index)->next_free_index, out);
+        // Pack the actual entry object.
+        T *entry_pointer = obj.lookup(handle);
+        if (entry_pointer == nullptr) {
+            printf("WHAT!\n");getchar();
+        }
+        pack(*entry_pointer, out);
+    }
+}
+template <typename T>
+void unpack(std::istream &in, Table<T> &obj) {
+    const bool debug = false;
+    // Unpack the metadata.
+    unpack(in, obj.m_table.m_first_free_index);
+    if (debug){ printf("%u\n", obj.m_table.m_first_free_index);getchar();}
+    unpack(in, obj.m_table.m_length);
+    if (debug){ printf("%u\n", obj.m_table.m_length);getchar();}
+    unpack(in, obj.m_table.m_next_id);
+    if (debug){ printf("%u\n", obj.m_table.m_next_id);getchar();}
+    obj.m_table.m_entry_size = sizeof(T); // This didn't need to be packed, since it is known here.
+    
+    // Retrieve the number of active entries in the table.
+    int num_entries;
+    unpack(in, num_entries);
+    if (debug){ printf("num_entries: %d\n", num_entries);getchar();}
+    // Prepare the table buffer.
+    obj.m_table.m_buffer = std::vector<uint8_t>(sizeof(T) * obj.m_table.m_length);
+        //note: It is required for this to be zero-initialized, so that unused table IDs are null.
+    // Unpack the densely packed entries into the sparse table.
+    for (int i = 0; i < num_entries; i++) {
+        if (debug){ printf("Unpacking entry\n");}
+        // Retrieve the index of this entry.
+        uint32_t index;
+        unpack(in, index);
+        if (debug){ printf("index: %u\n", index);getchar();}
+        // Unpack the entry header metadata at this index.
+        unpack(in, obj.m_table.get_header(index)->id);
+        unpack(in, obj.m_table.get_header(index)->next_free_index);
+        // Unpack the entry at this index.
+        // The lookup works since the header metadata has been set up.
+        TableHandle handle;
+        handle.index = index;
+        handle.id = obj.m_table.get_header(index)->id;
+        T *entry_pointer = obj.lookup(handle);
+        if (entry_pointer == nullptr) {
+            printf("WHAT!\n");getchar();
+        }
+        unpack(in, *entry_pointer);
+    }
+}
+template <typename T>
+void print(Table<T> &obj) {
+    std::cout << "Table<T> {\n";
+    std::cout << "    m_first_free_index: " << obj.m_table.m_first_free_index << "\n";
+    std::cout << "    m_length: " << obj.m_table.m_length << "\n";
+    std::cout << "    m_next_id: " << obj.m_table.m_next_id << "\n";
+    std::cout << "    table: [\n";
+    GenericTable::Iterator iter = obj.iterator();
+    for (TableHandle handle : iter) {
+        std::cout << "        ";
+        print(*obj.lookup(handle));
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
+    std::cout << "}\n";
+}
+
 
 #include "/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.serialize.h" /*SERIALIZE*/
 #endif // TABLE_H

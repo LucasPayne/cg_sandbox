@@ -85,6 +85,8 @@ App::App(World &_world) : world{_world}
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
         controller->init();
     }
+
+
 #endif 
 
     // Create a dolphin.
@@ -112,6 +114,8 @@ App::App(World &_world) : world{_world}
         b->velocity = vec3::random(-0.1,0.1);
     }
 }
+    transporter_test(world.em.m_entity_table);
+    world.em.m_entity_table = transporter(world.em.m_entity_table);
 #endif
 #if 1
     {

@@ -35,11 +35,11 @@ typedef TypedTableCollectionHandle TypedAspect;
     Entity and aspect table entries.
 --------------------------------------------------------------------------------*/
 // An entry in the entity table.
-struct EntityEntry {
+/*REFLECTED*/ struct EntityEntry {
     // The entity has a linked list of its aspects,
     // which can be traversed from an aspect by using its entity handle to look up
     // its first aspect, and then following the next aspects.
-    TypedAspect first_aspect;
+    /*ENTRY*/ TypedAspect first_aspect;
 };
 
 template <typename T>
@@ -213,7 +213,8 @@ public: // Usage interface
         return sibling;
     }
 
-private:
+//-debugging
+//private:
     EntityEntry *try_get_entity(Entity entity_handle) {
         // This is private, since only the implementation will know what an "EntityEntry" is.
         return m_entity_table.lookup(entity_handle);

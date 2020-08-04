@@ -1,3 +1,6 @@
+void pack(EntityEntry &obj, std::ostream &out);
+void unpack(std::istream &in, EntityEntry &obj);
+void print(EntityEntry &obj);
 void pack(AspectBase &obj, std::ostream &out);
 void unpack(std::istream &in, AspectBase &obj);
 void print(AspectBase &obj);

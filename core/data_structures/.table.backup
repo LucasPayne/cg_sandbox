@@ -154,7 +154,7 @@ reasons for extensions:
     in the common BASE_TYPE.
 ----------------------------------------------------------------------------------
 --------------------------------------------------------------------------------*/
-typedef uint8_t TableCollectionType;
+typedef uint16_t TableCollectionType;
 #define TABLE_COLLECTION_MAX_NUM_TYPES ( std::numeric_limits<TableCollectionType>::max() )
 #define NULL_TABLE_COLLECTION_TYPE_ID ( std::numeric_limits<TableCollectionType>::max() )
 

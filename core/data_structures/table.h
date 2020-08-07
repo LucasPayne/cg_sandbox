@@ -325,6 +325,122 @@ public:
 };
 
 
+// Table serialization functions.
+// These are not auto-generated since a table is a container which needs its own custom serialization.
+template <typename T>
+void pack(Table<T> &obj, std::ostream &out) {
+    // length : uint32_t
+    // next ID : TableEntryID
+    // computed first_free_index : uint32_t
+    // number of active entries : uint32_t
+    // for each active entry:
+    //    entry index : uint32_t
+    //    entry ID : TableEntryID
+    //    entry object : T
+
+    // Pack the metadata first.
+    // Recomputing the first free index, since the free list will be different on reconstruction.
+    pack(obj.m_table.m_length, out);
+    pack(obj.m_table.m_next_id, out);
+
+    // Pack the first free index, which is recomputed to be the least such index, so that a free list can be constructed
+    // on unpack.
+    uint32_t first_free_index; // A table always has at least one free slot, so find the free slot with least index.
+    for (int i = 0; i < obj.m_table.m_length; i++) {
+        if (obj.m_table.get_header(i)->id == 0) {
+            first_free_index = i;
+            break;
+        }
+    }
+    pack(first_free_index, out);
+
+    // Pack the number of active entries in the table, since the unpacker will need to know when to stop.
+    uint32_t num_active_entries = 0;
+    {
+        GenericTable::Iterator iter = obj.iterator();
+        for (TableHandle handle : iter) {
+            num_active_entries++;
+        }
+    }
+    pack(num_active_entries, out);
+
+    // Densely pack the entries.
+    GenericTable::Iterator iter = obj.iterator();
+    for (TableHandle handle : iter) {
+        // pack index, id, object entry.
+
+        // For each entry, store its index, so this can be unpacked into the sparse array.
+        pack(handle.index, out);
+
+        // Pack the entry ID.
+        pack(handle.id, out);
+
+        // Pack the actual entry object.
+        T *entry_pointer = obj.lookup(handle);
+        pack(*entry_pointer, out);
+    }
+}
+template <typename T>
+void unpack(std::istream &in, Table<T> &obj) {
+    // length : uint32_t
+    // next ID : TableEntryID
+    // computed first_free_index : uint32_t
+    // number of active entries : uint32_t
+    // for each active entry:
+    //    entry index : uint32_t
+    //    entry ID : TableEntryID
+    //    entry object : T
+
+    uint32_t table_length;
+    unpack(in, table_length);
+    obj = Table<T>(table_length);
+
+    unpack(in, obj.m_table.m_next_id);
+    unpack(in, obj.m_table.m_first_free_index);
+
+    uint32_t num_active_entries;
+    unpack(in, num_active_entries);
+    for (int i = 0; i < num_active_entries; i++) {
+        // Unpack index, ID, object entry.
+        TableHandle handle;
+        unpack(in, handle.index);
+        unpack(in, handle.id);
+        // Set the ID in the header of this slot to flag that this slot is active.
+        GenericTable::Header *header = obj.m_table.get_header(handle.index);
+        header->id = handle.id;
+        // Unpack the object.
+        T *entry_pointer = obj.lookup(handle);
+        unpack(in, *entry_pointer);
+    }
+    
+    // Construct the free list.
+    uint32_t connecting_index = obj.m_table.m_first_free_index;
+    for (uint32_t i = connecting_index+1; i < obj.m_table.m_length; i++) {
+        if (obj.m_table.get_header(i)->id == 0) {
+            // Connect the free list to this index.
+            obj.m_table.get_header(connecting_index)->next_free_index = i;
+            // Proceed to connect this index further into the free list.
+            connecting_index = i;
+        }
+    }
+    obj.m_table.get_header(connecting_index)->next_free_index = 0; // Signify that this empty slot is at the end of the free list.
+}
+template <typename T>
+void print(Table<T> &obj) {
+    std::cout << "Table<T> {\n";
+    std::cout << "    m_first_free_index: " << obj.m_table.m_first_free_index << "\n";
+    std::cout << "    m_length: " << obj.m_table.m_length << "\n";
+    std::cout << "    m_next_id: " << obj.m_table.m_next_id << "\n";
+    std::cout << "    table: [\n";
+    GenericTable::Iterator iter = obj.iterator();
+    for (TableHandle handle : iter) {
+        std::cout << "        ";
+        print(*obj.lookup(handle));
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
+    std::cout << "}\n";
+}
 
 #include "/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.serialize.h" /*SERIALIZE*/
 #endif // TABLE_H

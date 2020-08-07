@@ -23,6 +23,8 @@ class World : public IGC::Callbacks {
 public:
     World() {}
     static Reference<World> new_world();
+    static void save_world(std::string &path);
+    static Reference<World> load_world(std::string &path);
 
     // Callbacks.
     void close();
@@ -44,7 +46,7 @@ public:
         void mouse_handler(MouseEvent e) {
             ...
         }
-        void keyboard_handler(MouseEvent e) {
+        void keyboard_handler(KeyboardEvent e) {
             ...
         }
     };
@@ -71,8 +73,6 @@ public:
     InputState input;
     Assets assets;
 
-    //testing
-    std::string test_message;
 private:
     Reference<World> reference;
 

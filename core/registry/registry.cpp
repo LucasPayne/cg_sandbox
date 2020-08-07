@@ -10,3 +10,12 @@ static Table<GenericTable> init_registry() {
     return registry;
 }
 Table<GenericTable> Registry::registry(init_registry());
+
+// void Registry::pack(std::ostream &out)
+// {
+//     pack(registry,
+// }
+// void Registry::unpack(std::istream &in)
+// {
+// 
+// }

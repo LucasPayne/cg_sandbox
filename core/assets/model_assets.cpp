@@ -23,7 +23,7 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
 
     va.layout.num_vertices = model.num_vertices;
     std::vector<uint8_t> positions_buffer(sizeof(float)*3*va.layout.num_vertices);
-    for (int i = 0; i < va.layout.num_vertices; i++) {
+    for (unsigned int i = 0; i < va.layout.num_vertices; i++) {
         ((vec3 *) &positions_buffer[0])[i] = model.positions[i];
     }
     va.attribute_buffers.push_back(positions_buffer);
@@ -46,7 +46,7 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
             va.layout.index_type = GL_UNSIGNED_INT;
         }
         std::vector<uint8_t> index_buffer(index_num_bytes * 3*model.num_triangles);
-        for (int i = 0; i < model.num_triangles; i++) {
+        for (unsigned int i = 0; i < model.num_triangles; i++) {
             MLModelTriangle &triangle = model.triangles[i];
             for (int j = 0; j < 3; j++) {
                 if (index_num_bytes == 1) {
@@ -63,7 +63,7 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
     // Normals.
     if (model.has_normals) {
         std::vector<uint8_t> normals_buffer(sizeof(float)*3*va.layout.num_vertices);
-        for (int i = 0; i < va.layout.num_vertices; i++) {
+        for (unsigned int i = 0; i < va.layout.num_vertices; i++) {
             ((vec3 *) &normals_buffer[0])[i] = model.normals[i];
         }
         va.attribute_buffers.push_back(normals_buffer);
@@ -135,7 +135,7 @@ bool VertexArrayData_compile(const VertexArrayData &vertex_array, std::ofstream 
 
     // Deeper array references (e.g. arrays of arrays) are laid out in breadth first order.
     // First, array references in the flat struct, then in the members of those arrays, etc.
-    for (int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
+    for (unsigned int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
         pods.pack_vector<uint8_t>(attribute_buffers_offset + i*sizeof(std::vector<uint8_t>), vertex_array.attribute_buffers[i]);
     }
     file.write((char *)&pods.buffer[0], pods.buffer.size());
@@ -162,7 +162,7 @@ bool VertexArrayData_decompile(ByteArray &bytes, VertexArrayData &vertex_array)
     vertex_array.index_buffer = pods.unpack_vector<uint8_t>
         ((uint8_t *)&vertex_array.index_buffer - (uint8_t *)&vertex_array);
 
-    for (int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
+    for (unsigned int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
         vertex_array.attribute_buffers[i] = pods.unpack_vector<uint8_t>(attribute_buffers_offset + i*sizeof(std::vector<uint8_t>));
     }
 

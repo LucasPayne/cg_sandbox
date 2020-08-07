@@ -98,6 +98,31 @@ Reference<World> World::new_world()
 
     return world_reference;
 }
+
+/*
+void World::save_world(std::string &path)
+{
+    std::ofstream file;
+    file.open(path, std::ios::trunc | std::ios::write);
+    if (!file.is_open()) {
+        printf("![world]! Error saving world, could not open file at path \"%s\".\n", path.c_str());
+        exit(EXIT_FAILURE);
+    }
+    pack(reference, out); // Pack the Reference<World>, a reference into the registry.
+    pack(em, out);
+    pack(rm, out);
+}
+
+    // // Component subsystems.
+    // EntityModel em;
+    // ResourceModel rm;
+    // Graphics graphics; // Graphics state, such as cached compiled shaders.
+    // InputState input;
+    // Assets assets;
+    // Reference<World> reference;
+*/
+
+
 void World::close()
 {
 }

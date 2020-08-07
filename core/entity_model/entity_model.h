@@ -59,10 +59,11 @@ template <typename T> AspectType AspectTypeStaticData<T>::type_id
 // When defining an aspect type T, inherit from IAspectType<T>. In this way, static data for the aspect type is initialized,
 // and the actual aspect-instance data struct is defined in the body.
 template <typename T>
-/*REFLECTED*/ struct IAspectType : AspectTypeStaticData<T>, public AspectBase {};
+/*REFLECTED*/ struct IAspectType : AspectTypeStaticData<T>, public AspectBase {
+};
 
 
-class EntityModel {
+/*REFLECTED*/ class EntityModel {
 public: // Usage interface
     EntityModel();
 
@@ -229,8 +230,8 @@ public: // Usage interface
         return entity;
     }
 
-    Table<EntityEntry> m_entity_table;
-    TableCollection<AspectBase> m_aspect_tables;
+    /*ENTRY*/ Table<EntityEntry> m_entity_table;
+    /*ENTRY*/ TableCollection<AspectBase> m_aspect_tables;
 };
 
 

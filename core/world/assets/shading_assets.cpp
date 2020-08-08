@@ -1,4 +1,4 @@
-#include "assets/shading_assets.h"
+#include "world/assets/shading_assets.h"
 #include <fstream>
 
 Resource<GeometricMaterial> ShadingAssets::load_geometric_material(const std::string &path)

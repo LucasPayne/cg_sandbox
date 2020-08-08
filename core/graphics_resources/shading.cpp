@@ -1,8 +1,7 @@
 /*--------------------------------------------------------------------------------
     Implementations for the shading submodule of the rendering module.
 --------------------------------------------------------------------------------*/
-#include "rendering/shading.h"
-#include "rendering/vertex_arrays.h"
+#include "graphics_resources/graphics_resources.h"
 using namespace ShadingFileDetails;
 #include <algorithm> //find
 #include <sstream> //istringstream
@@ -135,6 +134,12 @@ bool ShadingModel::load(const std::istream &stream)
     // shading_model->geom_post_dataflow.print();
     return true;
     #undef parse_error
+}
+ShadingProgram ShadingProgram::create(GeometricMaterial &geometric_material,
+                                      Material &material,
+                                      ShadingModel &shading_model)
+{
+    return new_shading_program(geometric_material, material, shading_model);
 }
 
 

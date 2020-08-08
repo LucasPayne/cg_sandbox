@@ -2,7 +2,7 @@
 #define SHADING_ASSETS_H
 #include "core.h"
 #include "world/resource_model/resource_model.h"
-#include "rendering/shading.h"
+#include "graphics_resources/shading.h"
 
 class ShadingAssets {
 public:

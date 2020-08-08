@@ -2,8 +2,7 @@
 #define DRAWING_H
 #include "spatial_algebra/spatial_algebra.h"
 
-#include "graphics_resources/shading.h"
-#include "graphics_resources/vertex_arrays.h"
+#include "graphics_resources/graphics_resources.h"
 
 #include "world/resource_model/resource_model.h"
 

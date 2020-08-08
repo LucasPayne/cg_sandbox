@@ -35,6 +35,11 @@ Graphics
 --------------------------------------------------------------------------------*/
 class Graphics {
 public:
+    Graphics(ResourceModel *_rm) :
+        rm{_rm}
+    {}
+    Graphics() {}
+
     ShadingProgram *get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm);
 
     void draw(GeometricMaterialInstance &gmat_instance,

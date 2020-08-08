@@ -8,9 +8,8 @@ Provides rendering resources:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
-#include "world/resource_model/resource_model.h"
-
 #include "reflector/serialization.h"
+
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
@@ -43,6 +42,7 @@ typedef uint16_t VertexAttributeBindingIndex;
     VertexSemantic() {}//testing
 };
 
+
 /*REFLECTED*/ struct VertexArrayLayout {
     /*ENTRY*/ GLenum index_type;
         // GL_UNSIGNED_{BYTE,SHORT,INT}
@@ -54,6 +54,8 @@ typedef uint16_t VertexAttributeBindingIndex;
     size_t vertex_size() const;
     size_t index_type_size() const;
 };
+
+
 /*REFLECTED*/ struct VertexArrayData {
     /*ENTRY*/ VertexArrayLayout layout;
     /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
@@ -71,9 +73,10 @@ typedef uint16_t VertexAttributeBindingIndex;
         }
     }
 };
-struct VertexArray : public IResourceType<VertexArray> {
-    
-    static Resource<VertexArray> from_vertex_array_data(ResourceModel &rm, VertexArrayData &data);
+
+
+struct VertexArray {
+    VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;
     // The OpenGL vertex array object must conform to the vertex concrete layout, determined by the semantics.
@@ -83,6 +86,7 @@ struct VertexArray : public IResourceType<VertexArray> {
     // If the vertices are indexed, the index buffer is a separate buffer whose handle is stored here.
     GLuint gl_index_buffer_id;
 };
+
 
 #include "/home/lucas/computer_graphics/cg_sandbox/core/rendering/vertex_arrays.serialize.h" /*SERIALIZE*/
 #endif // VERTEX_ARRAYS_H

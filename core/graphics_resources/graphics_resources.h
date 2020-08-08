@@ -1,5 +1,5 @@
-#ifndef RENDERING_H
-#define RENDERING_H
+#ifndef GRAPHICS_RESOURCES_H
+#define GRAPHICS_RESOURCES_H
 /*--------------------------------------------------------------------------------
 Rendering module.
 Submodules:
@@ -15,15 +15,12 @@ Submodules:
     Vertex arrays:
         Provides rendering resources:
             VertexArray
-    Drawing:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
 
-
-#include "rendering/shading.h"
-#include "rendering/vertex_arrays.h"
-#include "rendering/drawing.h"
+#include "graphics_resources/shading.h"
+#include "graphics_resources/vertex_arrays.h"
 
 
-#endif // RENDERING_H
+#endif // GRAPHICS_RESOURCES_H

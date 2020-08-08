@@ -5,7 +5,7 @@
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "world/world.h"
-#include "rendering/rendering.h"
+#include "graphics_resources/graphics_resources.h"
 #include "world/standard_aspects/standard_aspects.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include "spatial_algebra/spatial_algebra.h"

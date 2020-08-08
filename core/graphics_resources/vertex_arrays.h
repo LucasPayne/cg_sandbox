@@ -76,7 +76,7 @@ typedef uint16_t VertexAttributeBindingIndex;
 
 
 struct VertexArray {
-    VertexArray from_vertex_array_data(VertexArrayData &data);
+    static VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;
     // The OpenGL vertex array object must conform to the vertex concrete layout, determined by the semantics.
@@ -88,5 +88,5 @@ struct VertexArray {
 };
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/rendering/vertex_arrays.serialize.h" /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/vertex_arrays.serialize.h" /*SERIALIZE*/
 #endif // VERTEX_ARRAYS_H

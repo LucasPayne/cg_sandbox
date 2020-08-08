@@ -1,4 +1,4 @@
-#include "reflector/serialization.h"
+// #include "reflector/serialization.h"
 
 /*REFLECTED*/ struct CameraController : public IBehaviour {
     /*ENTRY*/ float azimuth;
@@ -41,7 +41,7 @@
         }
     }
     void update() {
-        Transform *t = world->em.get_aspect<Transform>(entity);
+        auto t = entity.get<Transform>();
         const KeyboardKeyCode up = KEY_W;
         const KeyboardKeyCode down = KEY_S;
         const KeyboardKeyCode left = KEY_A;
@@ -97,5 +97,5 @@
     }
 };
 
-#include "/home/lucas/computer_graphics/cg_sandbox/apps_shared/behaviours/CameraController.serialize.h" /*SERIALIZE*/
-#include "behaviours/CameraController.serialize.cpp" // Include definitions, this is a header-only module.
+// #include "/home/lucas/computer_graphics/cg_sandbox/apps_shared/behaviours/CameraController.serialize.h" /*SERIALIZE*/
+// #include "behaviours/CameraController.serialize.cpp" // Include definitions, this is a header-only module.

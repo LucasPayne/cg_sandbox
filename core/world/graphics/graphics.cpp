@@ -12,7 +12,8 @@ ShadingProgram *Graphics::get_shading_program(Resource<GeometricMaterial> gmat, 
     // If this doesn't work, the program might still be compiled, just with G/M/SM under a different ID (if they have been unloaded then reloaded).
     //    -todo
     // It is not cached, so compile the program and cache it.
-    Resource<ShadingProgram> new_program = ShadingProgram::create(*rm, gmat, mat, sm);
+    auto new_program = rm->new_resource<ShadingProgram>();
+    *new_program = ShadingProgram::create(*gmat, *mat, *sm);
     shading_program_cache[key] = new_program;
     return &(*new_program);
 }

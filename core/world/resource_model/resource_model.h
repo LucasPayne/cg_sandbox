@@ -11,7 +11,9 @@ typedef TableCollectionType ResourceType;
 
 
 /*--------------------------------------------------------------------------------
+Resource
 --------------------------------------------------------------------------------*/
+class ResourceModel;
 template <typename TYPE>
 struct Resource {
     friend class ResourceModel;
@@ -23,7 +25,9 @@ public:
 
     TableEntryID ID() const;
 private:
-    Resource(ResourceModel *rm, TableHandle _handle);
+    Resource(ResourceModel *_rm, TableHandle _handle) :
+        rm{_rm}, handle{_handle}
+    {}
 
     ResourceModel *rm;
     TableHandle handle;
@@ -31,11 +35,12 @@ private:
 
 
 /*--------------------------------------------------------------------------------
+ResourceModel
 --------------------------------------------------------------------------------*/
 class ResourceModel {
     template <typename TYPE> friend class Resource;
 public:
-    ResourceModel() {}
+    ResourceModel();
 
     template <typename TYPE>
     void register_resource_type(const std::string &name);
@@ -43,7 +48,7 @@ public:
     template <typename TYPE>
     Resource<TYPE> new_resource();
 private:
-    TableCollection<ResourceBase> resource_tables;
+    TableCollection<> resource_tables;
 };
 
 
@@ -85,12 +90,6 @@ template <typename TYPE>
 TYPE *Resource<TYPE>::operator->() {
     return &(*(*this));
 }
-
-
-template <typename TYPE>
-Resource<TYPE>::Resource(ResourceModel *_rm, TableHandle _handle) :
-    rm{_rm}, handle{_handle}
-{}
 
 
 template <typename TYPE>

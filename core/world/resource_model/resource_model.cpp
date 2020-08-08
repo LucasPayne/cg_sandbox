@@ -4,5 +4,5 @@
 // Initialize the resource model.
 ResourceModel::ResourceModel()
 {
-    resource_tables = TableCollection();
+    resource_tables = TableCollection<>();
 }

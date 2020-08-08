@@ -92,6 +92,12 @@ struct ObjGroup {
     }
 };
 struct ObjState {
+    ObjState() {
+        mode = OBJ_READING;
+        has_texture_coordinates = false;
+        has_normals = false;
+    }
+
     uint8_t mode;
     std::vector<vec3> vertices;
 
@@ -216,6 +222,7 @@ bool group_command(ObjCommand &command, ObjState &state)
 {
     if (command.num_tokens != 2) FAIL("Invalid group command (g {name}).");
     state.groups.push_back(ObjGroup(command.token(1)));
+    return true;
 }
 bool face_command(ObjCommand &command, ObjState &state)
 {
@@ -307,7 +314,7 @@ bool ObjState_to_model(const ObjState &obj, MLModel &model)
 
     model.num_vertices = obj.num_vertices();
     model.positions = std::vector<vec3>(obj.vertices.size());
-    for (int i = 0; i < obj.num_vertices(); i++) {
+    for (unsigned int i = 0; i < obj.num_vertices(); i++) {
         model.positions[i] = obj.vertices[i];
     }
     model.has_normals = obj.has_normals;
@@ -321,7 +328,7 @@ bool ObjState_to_model(const ObjState &obj, MLModel &model)
             FAIL("Only two-dimensional texture coordinates are currently supported.");
         }
         model.uvs = std::vector<TexCoord>(obj.num_texture_coordinates());
-        for (int i = 0; i < obj.num_texture_coordinates(); i++) {
+        for (unsigned int i = 0; i < obj.num_texture_coordinates(); i++) {
             model.uvs[i] = TexCoord(obj.texture_coordinates[2*i+0], obj.texture_coordinates[2*i+1]);
         }
     }
@@ -331,17 +338,10 @@ bool ObjState_to_model(const ObjState &obj, MLModel &model)
         //     FAIL("Currently, there must be the same number of vertex positions/texture coordinates/normals.");
         // }
         model.normals = std::vector<vec3>(obj.num_normals());
-        for (int i = 0; i < obj.num_normals(); i++) {
+        for (unsigned int i = 0; i < obj.num_normals(); i++) {
             model.normals[i] = obj.normals[i];
         }
     }
-
-    bool set_format; // false until one line is encountered. The group face entries must be defined with a consistent format, e.g. 1//1.
-    std::vector<uint32_t> vertex_elements;
-    bool has_normal_index;
-    std::vector<uint32_t> normal_elements;
-    bool has_texture_index;
-    std::vector<uint32_t> texture_elements;
 
     // Currently, groups don't really mean anything.
     model.num_triangles = 0;
@@ -354,7 +354,7 @@ bool ObjState_to_model(const ObjState &obj, MLModel &model)
         model.has_triangles = true;
         // Add this group's triangles.
         model.num_triangles += group.num_faces();
-        for (int i = 0; i < group.num_faces(); i++) {
+        for (unsigned int i = 0; i < group.num_faces(); i++) {
             // Still assuming that Obj vertex attributes are defined in packets with the same index ...
             uint32_t index_a = group.vertex_elements[3*i + 0];
             uint32_t index_b = group.vertex_elements[3*i + 1];
@@ -368,7 +368,6 @@ bool ObjState_to_model(const ObjState &obj, MLModel &model)
 bool load_Obj_model(std::istream &stream, MLModel &model)
 {
     ObjState state;
-    memset(&state, 0, sizeof(state));
     state.mode = OBJ_READING;
     state.groups.push_back(ObjGroup("root"));
     

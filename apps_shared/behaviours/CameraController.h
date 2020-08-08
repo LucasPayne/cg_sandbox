@@ -97,5 +97,5 @@
     }
 };
 
-// #include "/home/lucas/computer_graphics/cg_sandbox/apps_shared/behaviours/CameraController.serialize.h" /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/apps_shared/behaviours/CameraController.serialize.h" /*SERIALIZE*/
 // #include "behaviours/CameraController.serialize.cpp" // Include definitions, this is a header-only module.

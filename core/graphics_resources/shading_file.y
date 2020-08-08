@@ -12,7 +12,7 @@ NOTES:
 --------------------------------------------------------------------------------*/
 %{
     /* Code included at top. */
-    #include "rendering/rendering.h"
+    #include "graphics_resources/graphics_resources.h"
     using namespace ShadingFileDetails;
     #include "shading_file.yy.hh"
 %}

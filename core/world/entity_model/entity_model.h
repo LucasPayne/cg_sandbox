@@ -13,6 +13,7 @@ Aspect<TYPE>
     Aspects are a parameterized type, meaning that 
 --------------------------------------------------------------------------------*/
 struct Entity;
+class EntityModel;
 struct TypedAspect;
 template <typename TYPE>
 struct Aspect {
@@ -150,7 +151,7 @@ class EntityModel {
     friend class TypedAspect;
     friend class Entity;
 public:
-    EntityModel() {}
+    EntityModel();
 
     template <typename TYPE>
     void register_aspect_type(const std::string &name);
@@ -176,8 +177,8 @@ private:
 template <typename TYPE>
 Aspect<TYPE> Entity::add()
 {
-    TableCollectionHandle<TYPE> handle = world->em.aspect_tables.add<TYPE>();
-    return Aspect<TYPE>(world, handle);
+    TableCollectionHandle<TYPE> handle = em->aspect_tables.add<TYPE>();
+    return Aspect<TYPE>(em, handle);
 }
 
 
@@ -185,7 +186,7 @@ template <typename TYPE>
 Aspect<TYPE> Entity::get()
 {
     AspectType aspect_type = TYPE::type_id;
-    EntityEntry *entry = world->em.entity_table.lookup(handle);
+    EntityEntry *entry = em->entity_table.lookup(handle);
 
     // Search this entity's aspects.
     TypedAspect cur = entry->first_aspect;
@@ -230,7 +231,7 @@ Aspect<TYPE>::Aspect(TypedAspect typed_aspect) :
 template <typename TYPE>
 TYPE &Aspect<TYPE>::operator*()
 {
-    TYPE *asp = world->em.aspect_tables.lookup<TYPE>(handle);
+    TYPE *asp = em->aspect_tables.lookup<TYPE>(handle);
     if (asp == nullptr) {
         fprintf(stderr, "[entity_model] ERROR: Attempted to dereference an invalid aspect handle.\n");
         exit(EXIT_FAILURE);
@@ -291,7 +292,7 @@ GenericTable::Iterator<Aspect<TYPE>> EntityModel::aspects()
 {
     return aspect_tables.iterator<TYPE, Aspect<TYPE>>(
         [this](TableHandle handle)->Aspect<TYPE> {
-            return Aspect<TYPE>(world, handle);
+            return Aspect<TYPE>(this, handle);
         }
     );
 }

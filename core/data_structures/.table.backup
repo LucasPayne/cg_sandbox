@@ -35,6 +35,7 @@ reasons for extensions:
     This was done for the resource system, since each handle needs a reference to the resource model it is a part of.
 --------------------------------------------------------------------------------*/
 #include <vector>
+#include <functional>
 #include <limits>//numeric_limits
 #include <string>//std::string
 #include <stdint.h>
@@ -43,6 +44,7 @@ reasons for extensions:
 typedef uint32_t TableEntryID;
 
 #include "reflector/serialization.h"
+
 
 /*--------------------------------------------------------------------------------
 A GenericTable is initialized with a type size. This means that tables
@@ -62,6 +64,16 @@ return a byte pointer which must be interpreted by the caller.
     }
     TableHandle() {}
 };
+
+
+// An IterateeFunction transforms a TableHandle into another type.
+// This allows custom table iterators to be defined easily, such as
+// an iterator over raw pointers to table entries, or an iterator
+// which adjoins more data to the handles.
+template <typename ITERATED>
+using IterateeFunction = std::function<ITERATED(TableHandle)>;
+
+
 class GenericTable {
 public:
     GenericTable() {}
@@ -79,6 +91,8 @@ public:
     //-begin iterator hack------------------------------------------------------------
     // This iterator is implemented _only_ so that range-based-for works.
     //    https://en.cppreference.com/w/cpp/language/range-for
+
+    template <typename ITERATED>
     struct IteratorPosition {
         inline void seek_to_next() {
             while (true) {
@@ -91,39 +105,60 @@ public:
             }
         }
         IteratorPosition() {}
-        IteratorPosition(GenericTable *_table) :
-            done{false}, table{_table}
+        IteratorPosition(GenericTable *_table, IterateeFunction<ITERATED> _iteratee_function) :
+            done{false}, table{_table}, iteratee_function{_iteratee_function}
         {
             handle.index = 0;
             seek_to_next();
         }
         bool done;
         TableHandle handle;
+
         GenericTable *table;
+        IterateeFunction<ITERATED> iteratee_function;
+
         inline void operator++() {
             ++handle.index;
             seek_to_next();
         }
-        inline TableHandle operator*() {
+        inline ITERATED operator*() {
             handle.id = table->get_header(handle.index)->id;
-            return handle;
+            return iteratee_function(handle);
         }
-        inline bool operator!=(IteratorPosition throwaway) {
+        inline bool operator!=(IteratorPosition<ITERATED> throwaway) {
             return !done;
         }
     };
-    friend IteratorPosition;
+
+    template <typename ITERATED>
     struct Iterator {
         GenericTable *table;
-        Iterator(GenericTable *_table) : table{_table} {}
-        inline IteratorPosition begin() {
-            return IteratorPosition(table);
+        IterateeFunction<ITERATED> iteratee_function;
+        Iterator(GenericTable *_table, IterateeFunction<ITERATED> _iteratee_function) :
+            table{_table}, iteratee_function{_iteratee_function}
+        {}
+        inline IteratorPosition<ITERATED> begin() {
+            return IteratorPosition<ITERATED>(table, iteratee_function);
         }
-        inline IteratorPosition end() { return IteratorPosition(); }
+        inline IteratorPosition<ITERATED> end() {
+            return IteratorPosition<ITERATED>();
+        }
     };
-    inline Iterator iterator() {
-        return Iterator(this);
+
+    template <typename ITERATED>
+    Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
+        return Iterator<ITERATED>(this, iteratee_function);
     }
+
+    // Default iterator has identity IterateeFunction, so it just iterates TableHandles.
+    Iterator<TableHandle> iterator() {
+        return Iterator<TableHandle>(this,
+            [](TableHandle handle)->TableHandle {
+                return handle;
+            }
+        );
+    }
+
     //-end iterator hack--------------------------------------------------------------
 
 //private:
@@ -190,10 +225,20 @@ private:
     std::string m_name;
 };
 
+
+// When a type is registered to a table collection, in code, this static data is instantiated,
+// which will contain the type ID.
+template <typename TYPE>
+struct TableCollectionTypeData {
+    static TableCollectionType type_id;
+};
+// Statically initialize all of these IDs to null.
+template <typename TYPE>
+TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+
 // BASE_TYPE: All types in the collection, at least logically, inherit from this.
-// HANDLE_TYPE: Must inherit from TableCollectionHandle. Optionally overridden to allow extra data in handles, to be initialized by
-//              something which wraps the underlying table.
-template<typename BASE_TYPE, template<typename> typename HANDLE_TYPE = TableCollectionHandle>
+struct TableCollectionEmptyBaseType {};
+template<typename BASE_TYPE = TableCollectionEmptyBaseType>
 class TableCollection {
 public:
     std::vector<MemberTable> m_tables;
@@ -210,14 +255,14 @@ public:
         }
         TableCollectionType next_type_id = num_types;
         // Set the type ID so that templated methods can access it.
-        TYPE::type_id = next_type_id;
+        TableCollectionTypeData<TYPE>::type_id = next_type_id;
         m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
     // Unregistered types are statically initialized to -1. This macro is used by the templated methods, so that
     // the probably common bug of forgetting to register a type is easily discovered. However, this is a slight overhead
     // every call to a templated method.
     #define CHECK_IF_REGISTERED(TYPE) {\
-        if (TYPE::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
+        if (TableCollectionTypeData<TYPE>::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
             fprintf(stderr, "ERROR: Forgot to register a type in a TableCollection!\n");\
             exit(EXIT_FAILURE);\
         }\
@@ -228,13 +273,13 @@ public:
     //
     // Interface taking a templated handle.
     template <typename TYPE>
-    HANDLE_TYPE<TYPE> add() {
+    TableCollectionHandle<TYPE> add() {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle handle = get_table<TYPE>()->add();
-        return *reinterpret_cast<HANDLE_TYPE<TYPE> *>(&handle);
+        return *reinterpret_cast<TableCollectionHandle<TYPE> *>(&handle);
     }
     template <typename TYPE>
-    void remove(HANDLE_TYPE<TYPE> handle) {
+    void remove(TableCollectionHandle<TYPE> handle) {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         get_table<TYPE>()->remove(table_handle);
@@ -248,12 +293,12 @@ public:
 
     // Convert a templated handle into a "typed" handle, which contains the type ID.
     template <typename TYPE>
-    TypedTableCollectionHandle typed_handle(HANDLE_TYPE<TYPE> handle) const {
+    TypedTableCollectionHandle typed_handle(TableCollectionHandle<TYPE> handle) const {
         CHECK_IF_REGISTERED(TYPE);
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;
         typed_handle.index = handle.index;
-        typed_handle.type = TYPE::type_id;
+        typed_handle.type = TableCollectionTypeData<TYPE>::type_id;
         return typed_handle;
     }
     // A typed handle can be used for lookup. The relevant table is searched,
@@ -274,17 +319,18 @@ public:
     }
 
     // Templated iterator. Iterate over a certain type.
-    template <typename TYPE>
-    inline GenericTable::Iterator iterator() {
+    template <typename TYPE, typename ITERATED>
+    inline GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
         CHECK_IF_REGISTERED(TYPE);
-        return get_table<TYPE>()->iterator();
+        MemberTable *table = get_table<TYPE>();
+        // iterator<ITERATED>(iteratee_function);
     }
 
 private:
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
     template <typename TYPE>
     inline MemberTable *get_table() {
-        return &m_tables[TYPE::type_id];
+        return &m_tables[TableCollectionTypeData<TYPE>::type_id];
     }
     inline MemberTable *get_table(TableCollectionType type) {
         return &m_tables[type];
@@ -305,9 +351,6 @@ public:
     // into a generic handle and passes it to the corresponding GenericTable method.
     // The lookup also casts to a pointer to the actual type.
     inline TableHandle add() {
-        // note: This could be faster if it is known that HANDLE_TYPE inherits from TableHandle.
-        //           HANDLE_TYPE handle;
-        //           *((TableHandle *) &handle) = m_table.add();
         return m_table.add();
     }
     void remove(TableHandle handle) {
@@ -317,7 +360,12 @@ public:
         return reinterpret_cast<T *>(m_table.lookup(handle));
     }
 
-    inline GenericTable::Iterator iterator() {
+    template <typename ITERATED>
+    inline GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
+        return m_table.iterator<ITERATED>(iteratee_function);
+    }
+
+    inline GenericTable::Iterator<TableHandle> iterator() {
         return m_table.iterator();
     }
 //-debugging
@@ -358,16 +406,14 @@ void pack(Table<T> &obj, std::ostream &out) {
     // Pack the number of active entries in the table, since the unpacker will need to know when to stop.
     uint32_t num_active_entries = 0;
     {
-        GenericTable::Iterator iter = obj.iterator();
-        for (TableHandle handle : iter) {
+        for (TableHandle handle : obj.iterator()) {
             num_active_entries++;
         }
     }
     pack(num_active_entries, out);
 
     // Densely pack the entries.
-    GenericTable::Iterator iter = obj.iterator();
-    for (TableHandle handle : iter) {
+    for (TableHandle handle : obj.iterator()) {
         // pack index, id, object entry.
 
         // For each entry, store its index, so this can be unpacked into the sparse array.
@@ -433,8 +479,7 @@ void print(Table<T> &obj) {
     std::cout << "    m_length: " << obj.m_table.m_length << "\n";
     std::cout << "    m_next_id: " << obj.m_table.m_next_id << "\n";
     std::cout << "    table: [\n";
-    GenericTable::Iterator iter = obj.iterator();
-    for (TableHandle handle : iter) {
+    for (TableHandle handle : obj.iterator()) {
         std::cout << "        ";
         print(*obj.lookup(handle));
         std::cout << "\n";

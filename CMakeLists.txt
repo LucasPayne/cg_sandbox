@@ -32,7 +32,6 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 # Executable
 #================================================================================
 add_library(cg_sandbox
-    core/main.cpp
     core/data_structures/table.cpp
 
     core/gl/glsl.cpp

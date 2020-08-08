@@ -237,7 +237,7 @@ template <typename TYPE>
 TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
 
 // BASE_TYPE: All types in the collection, at least logically, inherit from this.
-struct TableCollectionEmptyBaseType {}
+struct TableCollectionEmptyBaseType {};
 template<typename BASE_TYPE = TableCollectionEmptyBaseType>
 class TableCollection {
 public:
@@ -273,13 +273,13 @@ public:
     //
     // Interface taking a templated handle.
     template <typename TYPE>
-    HANDLE_TYPE<TYPE> add() {
+    TableCollectionHandle<TYPE> add() {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle handle = get_table<TYPE>()->add();
-        return *reinterpret_cast<HANDLE_TYPE<TYPE> *>(&handle);
+        return *reinterpret_cast<TableCollectionHandle<TYPE> *>(&handle);
     }
     template <typename TYPE>
-    void remove(HANDLE_TYPE<TYPE> handle) {
+    void remove(TableCollectionHandle<TYPE> handle) {
         CHECK_IF_REGISTERED(TYPE);
         TableHandle table_handle = *reinterpret_cast<TableHandle *>(&handle);
         get_table<TYPE>()->remove(table_handle);
@@ -293,7 +293,7 @@ public:
 
     // Convert a templated handle into a "typed" handle, which contains the type ID.
     template <typename TYPE>
-    TypedTableCollectionHandle typed_handle(HANDLE_TYPE<TYPE> handle) const {
+    TypedTableCollectionHandle typed_handle(TableCollectionHandle<TYPE> handle) const {
         CHECK_IF_REGISTERED(TYPE);
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;
@@ -351,9 +351,6 @@ public:
     // into a generic handle and passes it to the corresponding GenericTable method.
     // The lookup also casts to a pointer to the actual type.
     inline TableHandle add() {
-        // note: This could be faster if it is known that HANDLE_TYPE inherits from TableHandle.
-        //           HANDLE_TYPE handle;
-        //           *((TableHandle *) &handle) = m_table.add();
         return m_table.add();
     }
     void remove(TableHandle handle) {

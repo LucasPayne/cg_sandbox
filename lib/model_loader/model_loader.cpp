@@ -94,7 +94,7 @@ void MLModel::compute_phong_normals()
     if (has_normals) normals.clear();
     normals = std::vector<vec3>(num_vertices);
 
-    for (int i = 0; i < num_triangles; i++) {
+    for (unsigned int i = 0; i < num_triangles; i++) {
         // Assuming the model is consistently counter-clockwise winding.
         uint32_t index_a = triangles[i].a;
         uint32_t index_b = triangles[i].b;
@@ -107,7 +107,7 @@ void MLModel::compute_phong_normals()
         normals[index_b] += n;
         normals[index_c] += n;
     }
-    for (int i = 0; i < num_vertices; i++) {
+    for (unsigned int i = 0; i < num_vertices; i++) {
         normals[i] = normals[i].normalized();
     }
     has_normals = true;
@@ -116,7 +116,7 @@ void MLModel::compute_phong_normals()
 void MLModel::invert_winding_order()
 {
     if (!has_triangles) return;
-    for (int i = 0; i < num_triangles; i++) {
+    for (unsigned int i = 0; i < num_triangles; i++) {
         uint32_t a = triangles[i].a;
         triangles[i].a = triangles[i].c;
         triangles[i].c = a;

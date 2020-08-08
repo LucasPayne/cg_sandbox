@@ -27,7 +27,7 @@ references:
 %{
     /* Code included at top */
     // Container for lexer data (https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/enum.l)
-    #include "rendering/rendering.h"
+    #include "graphics_resources/graphics_resources.h"
     using namespace ShadingFileDetails;
     #include "shading_file.tab.hh"
     #include <assert.h>//assertions are used to verify lexing of integer literals was correct.

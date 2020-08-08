@@ -10,11 +10,9 @@ IDEAS/THINGS:
 #include "gl/gl.h"
 #include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
-#include "rendering/rendering.h"
-#include "world/standard_aspects/standard_aspects.h"
-#include "interactive_graphics_context/interactive_graphics_context.h"
 #include <math.h>
 
+#include "world/standard_aspects/standard_aspects.h"
 
 ShadingModelInstance *shading_model_model_test;
 
@@ -79,8 +77,7 @@ WorldReference World::new_world()
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     printf("[world] Initializing Graphics...\n");
-    world->graphics = Graphics();
-    world->graphics.rm = &world->rm; // The Graphics component relies on the resource model.
+    world->graphics = Graphics(&world->rm); // The Graphics component relies on the resource model.
     printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //

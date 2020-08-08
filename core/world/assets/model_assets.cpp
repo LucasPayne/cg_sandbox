@@ -3,7 +3,7 @@ notes:
     Messy serialization stuff here.
 --------------------------------------------------------------------------------*/
 #include <limits>//numeric_limits
-#include "assets/model_assets.h"
+#include "world/assets/model_assets.h"
 #include "gl/gl.h"
 #include "utils/file_utils.h"
 
@@ -208,7 +208,8 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         MLModel_to_VertexArrayData(model, va);
         VertexArrayData_compile(va, new_compiled_file);
     }
-    Resource<VertexArray> vertex_array_resource = VertexArray::from_vertex_array_data(*rm, va);
+    auto vertex_array_resource = rm->new_resource<VertexArray>();
+    *vertex_array_resource = VertexArray::from_vertex_array_data(va);
     // Cache this.
     vertex_array_cache[path] = vertex_array_resource;
     log("Model found successfully.\n");

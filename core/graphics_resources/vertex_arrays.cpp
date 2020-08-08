@@ -1,8 +1,8 @@
 /*--------------------------------------------------------------------------------
 Implementations for the vertex arrays submodule of the rendering module.
 --------------------------------------------------------------------------------*/
-#include "rendering/vertex_arrays.h"
-#include "rendering/vertex_arrays.serialize.cpp"
+#include "graphics_resources/vertex_arrays.h"
+#include "graphics_resources/vertex_arrays.serialize.cpp"
 
 
 size_t VertexSemantic::type_size() const
@@ -128,7 +128,7 @@ VertexArray VertexArray::from_vertex_array_data(VertexArrayData &data)
     vertex_array.layout = data.layout; //---copy?
     vertex_array.layout.semantics = std::vector<VertexSemantic>(0);
             //----- doing this to copy
-            for (VertexSemantic semantic : data.layout.semantics) vertex_array->layout.semantics.push_back(semantic);
+            for (VertexSemantic semantic : data.layout.semantics) vertex_array.layout.semantics.push_back(semantic);
     vertex_array.gl_vao_id = vao_id;
     vertex_array.gl_buffer_id = buffer_id;
     vertex_array.gl_index_buffer_id = index_buffer_id;

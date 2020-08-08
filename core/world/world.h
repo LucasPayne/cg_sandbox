@@ -12,13 +12,13 @@ such as the creation of game objects with Behaviours.
 #include "core.h"
 #include "data_structures/table.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
-#include "rendering/rendering.h"
+#include "graphics_resources/graphics_resources.h"
 
 #include "world/world_reference.h"
 #include "world/entity_model/entity_model.h"
 #include "world/resource_model/resource_model.h"
-#include "world/standard_aspects/standard_aspects.h"
 #include "world/assets/assets.h"
+#include "world/graphics/graphics.h"
 
 
 class World : public IGC::Callbacks {
@@ -53,20 +53,20 @@ public:
         }
     };
     --------------------------------------------------------------------------------*/
-    template <typename B>
-    B *add_behaviour(Entity e) {
-        auto behaviour = e.add<Behaviour>();
-        behaviour->object_size = sizeof(B);
-        behaviour->object = new B();
+    // template <typename B>
+    // B *add_behaviour(Entity e) {
+    //     auto behaviour = e.add<Behaviour>();
+    //     behaviour->object_size = sizeof(B);
+    //     behaviour->object = new B();
 
-        behaviour->object->world = reference;
-        behaviour->object->entity = e;
-        behaviour->object->updating = true;
-        behaviour->object->handling_keyboard = true;
-        behaviour->object->handling_mouse = true;
+    //     behaviour->object->world = reference;
+    //     behaviour->object->entity = e;
+    //     behaviour->object->updating = true;
+    //     behaviour->object->handling_keyboard = true;
+    //     behaviour->object->handling_mouse = true;
 
-        return reinterpret_cast<B *>(behaviour->object);
-    }
+    //     return reinterpret_cast<B *>(behaviour->object);
+    // }
     // Component subsystems.
     EntityModel em;
     ResourceModel rm;

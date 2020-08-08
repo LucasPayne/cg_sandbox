@@ -3,7 +3,7 @@
 #include "core.h"
 #include "world/resource_model/resource_model.h"
 #include "model_loader/model_loader.h"
-#include "rendering/vertex_arrays.h"
+#include "graphics_resources/vertex_arrays.h"
 
 class ModelAssets {
 public:

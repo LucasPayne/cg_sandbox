@@ -16,13 +16,13 @@ include_directories(core lib tools dependencies ${CMAKE_CURRENT_BINARY_DIR})
 # flex and bison, generated lexers and parsers.
 flex_target(
     shading_file_lexer
-    core/rendering/shading_file.l
+    core/graphics_resources/shading_file.l
     ${CMAKE_CURRENT_BINARY_DIR}/shading_file.yy.cc
     COMPILE_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/shading_file.yy.hh"
 )
 bison_target(
     shading_file_parser
-    core/rendering/shading_file.y
+    core/graphics_resources/shading_file.y
     ${CMAKE_CURRENT_BINARY_DIR}/shading_file.tab.cc
 )
 # The lexer needs the tokens file generated when the parser is generated. This means tokens need only be defined
@@ -38,10 +38,8 @@ add_library(cg_sandbox
     core/gl/glsl.cpp
     core/gl/gl_shader_program.cpp
 
-    core/rendering/rendering.cpp
-    core/rendering/shading.cpp
-    core/rendering/vertex_arrays.cpp
-    core/rendering/drawing.cpp
+    core/graphics_resources/shading.cpp
+    core/graphics_resources/vertex_arrays.cpp
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
 
@@ -56,6 +54,8 @@ add_library(cg_sandbox
     core/world/assets/assets.cpp
     core/world/assets/model_assets.cpp
     core/world/assets/shading_assets.cpp
+    core/world/graphics/graphics.cpp
+    core/world/graphics/drawing.cpp
 
     dependencies/glad/glad.c
     tools/reflector/serialization.cpp

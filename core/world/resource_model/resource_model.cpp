@@ -1,9 +1,8 @@
-#include "world/world.h"
+#include "world/resource_model/resource_model.h"
 
 
 // Initialize the resource model.
-ResourceModel::ResourceModel(WorldReference _world) :
-    world{_world}
+ResourceModel::ResourceModel()
 {
-    resource_tables = TableCollection<ResourceBase>();
+    resource_tables = TableCollection();
 }

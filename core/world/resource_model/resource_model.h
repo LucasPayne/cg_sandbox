@@ -5,34 +5,9 @@
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "data_structures/table.h"
-#include "world/world_reference.h"
 
 
 typedef TableCollectionType ResourceType;
-template <typename T>
-struct ResourceTypeStaticData {
-    static ResourceType type_id;
-};
-// Statically initialize the global variable containing the type ID.
-template <typename T>
-ResourceType ResourceTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
-
-
-/*--------------------------------------------------------------------------------
-ResourceBase
-    Shared data every resource entry has.
-    Currently this is nothing.
---------------------------------------------------------------------------------*/
-struct ResourceBase {};
-
-
-/*--------------------------------------------------------------------------------
-IResourceType<T>
-    When defining a resource type T, inherit from IResourceType<T>. In this way, static data for the resource type
-    is initialized, and further non-shared struct data is defined in the body.
---------------------------------------------------------------------------------*/
-template <typename T>
-struct IResourceType : public ResourceTypeStaticData<T>, public ResourceBase {};
 
 
 /*--------------------------------------------------------------------------------
@@ -48,9 +23,9 @@ public:
 
     TableEntryID ID() const;
 private:
-    Resource(WorldReference _world, TableHandle _handle);
+    Resource(ResourceModel *rm, TableHandle _handle);
 
-    WorldReference world;
+    ResourceModel *rm;
     TableHandle handle;
 };
 
@@ -60,7 +35,6 @@ private:
 class ResourceModel {
     template <typename TYPE> friend class Resource;
 public:
-    ResourceModel(WorldReference _world);
     ResourceModel() {}
 
     template <typename TYPE>
@@ -69,8 +43,61 @@ public:
     template <typename TYPE>
     Resource<TYPE> new_resource();
 private:
-    WorldReference world;
     TableCollection<ResourceBase> resource_tables;
 };
+
+
+
+
+// Template implementations
+//--------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------
+    ResourceModel
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+void ResourceModel::register_resource_type(const std::string &name) {
+    resource_tables.add_type<TYPE>(name);
+}
+
+
+template <typename TYPE>
+Resource<TYPE> ResourceModel::new_resource() {
+    TableHandle handle = resource_tables.add<TYPE>();
+    return Resource<TYPE>(this, handle);
+}
+
+
+/*--------------------------------------------------------------------------------
+    Resource<TYPE>
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+TYPE &Resource<TYPE>::operator*() {
+    TYPE *res =  rm->resource_tables.lookup<TYPE>(handle);
+    if (res == nullptr) {
+        fprintf(stderr, "[resource_model] ERROR, dereferenced invalid resource.\n");
+        exit(EXIT_FAILURE);
+    }
+    return *res;
+}
+
+
+template <typename TYPE>
+TYPE *Resource<TYPE>::operator->() {
+    return &(*(*this));
+}
+
+
+template <typename TYPE>
+Resource<TYPE>::Resource(ResourceModel *_rm, TableHandle _handle) :
+    rm{_rm}, handle{_handle}
+{}
+
+
+template <typename TYPE>
+TableEntryID Resource<TYPE>::ID() const
+{
+    return handle.id;
+}
+
 
 #endif // RESOURCE_MODEL_H

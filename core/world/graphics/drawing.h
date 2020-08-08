@@ -1,12 +1,12 @@
 #ifndef DRAWING_H
 #define DRAWING_H
-/*--------------------------------------------------------------------------------
-Drawing submodule of the rendering module.
---------------------------------------------------------------------------------*/
-#include "rendering/shading.h"
-#include "rendering/vertex_arrays.h"
-#include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
+
+#include "graphics_resources/shading.h"
+#include "graphics_resources/vertex_arrays.h"
+
+#include "world/resource_model/resource_model.h"
+
 
 struct PropertySheet {
     ShadingBlock *block;
@@ -61,6 +61,7 @@ struct PropertySheet {
     }
 };
 
+
 template <typename T>
 struct GMSMInstance {
     Resource<T> base;
@@ -76,6 +77,8 @@ struct GMSMInstance {
         }
     }
 };
+
+
 struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
     Resource<VertexArray> vertex_array;
 
@@ -83,15 +86,20 @@ struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
         GMSMInstance<GeometricMaterial>(_base), vertex_array{_vertex_array}
     {}
 };
+
+
 struct MaterialInstance : public GMSMInstance<Material> {
     MaterialInstance(Resource<Material> _base) :
         GMSMInstance<Material>(_base)
     {}
 };
+
+
 struct ShadingModelInstance : public GMSMInstance<ShadingModel> {
     ShadingModelInstance(Resource<ShadingModel> _base) :
         GMSMInstance<ShadingModel>(_base)
     {}
 };
+
 
 #endif // DRAWING_H

@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
-
+/*--------------------------------------------------------------------------------
+    Standard set of includes for all modules.
+--------------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

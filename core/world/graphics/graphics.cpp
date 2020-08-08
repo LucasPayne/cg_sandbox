@@ -1,7 +1,5 @@
-/*--------------------------------------------------------------------------------
-    Rendering module implementations.
---------------------------------------------------------------------------------*/
-#include "rendering/rendering.h"
+#include "world/graphics/graphics.h"
+
 
 ShadingProgram *Graphics::get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm) {
     // First, try to find the program based on the IDs of the resource handles.
@@ -18,6 +16,7 @@ ShadingProgram *Graphics::get_shading_program(Resource<GeometricMaterial> gmat, 
     shading_program_cache[key] = new_program;
     return &(*new_program);
 }
+
 
 void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
                     MaterialInstance &material_instance,
@@ -66,5 +65,4 @@ void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
     }
     // Unbind OpenGL state.
     glUseProgram(0);
-    
 }

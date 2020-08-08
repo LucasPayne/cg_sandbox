@@ -83,7 +83,5 @@ private:
     World() {}
 };
 
-#include "world/entity_model/entity_model_template_definitions.h"
-#include "world/resource_model/resource_model_template_definitions.h"
 
 #endif // WORLD_H

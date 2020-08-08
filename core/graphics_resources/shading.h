@@ -14,8 +14,7 @@ Provides rendering resources:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
-#include "world/world.h"
-#include "rendering/shading.h"
+
 
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
@@ -112,7 +111,7 @@ struct ShadingBlock {
 /*--------------------------------------------------------------------------------
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
-struct GeometricMaterial : public IResourceType<GeometricMaterial> {
+struct GeometricMaterial {
     bool load(const std::istream &stream);
     //-Vertex shader only.
     ShadingDataflow dataflow;
@@ -123,14 +122,14 @@ struct GeometricMaterial : public IResourceType<GeometricMaterial> {
     bool has_properties;
     ShadingBlock properties;
 };
-struct Material : public IResourceType<Material> {
+struct Material {
     bool load(const std::istream &stream);
     ShadingDataflow dataflow;
 
     bool has_properties;
     ShadingBlock properties;
 };
-struct ShadingModel : public IResourceType<ShadingModel> {
+struct ShadingModel {
     bool load(const std::istream &stream);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
@@ -142,14 +141,12 @@ struct ShadingModel : public IResourceType<ShadingModel> {
 /*--------------------------------------------------------------------------------
     ShadingProgram, outcome of GeometricMaterial+Material+ShadingModel.
 --------------------------------------------------------------------------------*/
-struct ShadingProgram : public IResourceType<ShadingProgram> {
+struct ShadingProgram {
     // There is no loading from a stream. ShadingPrograms are rather created with create(),
     // constructed from a G+M+SM triple.
-    static Resource<ShadingProgram> create(ResourceModel &rm,
-                                           Resource<GeometricMaterial> geometric_material,
-                                           Resource<Material> material,
-                                           Resource<ShadingModel> shading_model);
-
+    static ShadingProgram create(GeometricMaterial &geometric_material,
+                                 Material &material,
+                                 ShadingModel &shading_model);
     GLuint program_id;
 };
 

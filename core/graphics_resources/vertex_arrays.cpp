@@ -4,6 +4,7 @@ Implementations for the vertex arrays submodule of the rendering module.
 #include "rendering/vertex_arrays.h"
 #include "rendering/vertex_arrays.serialize.cpp"
 
+
 size_t VertexSemantic::type_size() const
 {
     #define CASE(TYPE,SIZE) if (type == ( TYPE )) return size * ( SIZE );
@@ -21,6 +22,7 @@ size_t VertexSemantic::type_size() const
     #undef CASE
 }
 
+
 size_t VertexArrayLayout::vertex_size() const
 {
     size_t total = 0;
@@ -29,6 +31,8 @@ size_t VertexArrayLayout::vertex_size() const
     }
     return total;
 }
+
+
 size_t VertexArrayLayout::index_type_size() const
 {
     #define CASE(TYPE,SIZE) if (index_type == ( TYPE )) return ( SIZE )
@@ -39,6 +43,7 @@ size_t VertexArrayLayout::index_type_size() const
     exit(EXIT_FAILURE);
     #undef CASE
 }
+
 
 VertexAttributeBindingIndex VertexSemantic::get_binding_index()
 {
@@ -55,17 +60,12 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
     // This semantic has not been encountered yet. Add it to the list and return this newly used binding index.
     encountered_semantics.push_back(*this);
     VertexAttributeBindingIndex new_binding_index = encountered_semantics.size() - 1;
-    // printf("Adding new vertex semantic, %s, binding index %u, type: %u, size: %u\n", name, new_binding_index, type, size);
-    // getchar();
     return new_binding_index;
 }
 
-Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, VertexArrayData &data)
-{
-    //-----pointer to resource model stored in all resources.
-    // printf("Uploading vertex array.\n");
-    // getchar();
 
+VertexArray VertexArray::from_vertex_array_data(VertexArrayData &data)
+{
     GLuint vao_id;
     glCreateVertexArrays(1, &vao_id);
     glBindVertexArray(vao_id);
@@ -112,7 +112,6 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
 
     size_t interleaved_offset = 0;
     for (int i = 0; i < num_attributes; i++) {
-        // printf("Vertex attribute index binding\n");
         VertexSemantic &semantic = data.layout.semantics[i];
         VertexAttributeBindingIndex index = semantic.get_binding_index();
         glVertexAttribPointer(index,
@@ -125,21 +124,19 @@ Resource<VertexArray> VertexArray::from_vertex_array_data(ResourceModel &rm, Ver
         interleaved_offset += semantic.type_size(); // shift the interleaving offset so the next attributes have the correct starting position.
     }
 
-    Resource<VertexArray> vertex_array = rm.new_resource<VertexArray>();
-    vertex_array->layout = data.layout; //---copy?
-    vertex_array->layout.semantics = std::vector<VertexSemantic>(0);
+    VertexArray vertex_array;
+    vertex_array.layout = data.layout; //---copy?
+    vertex_array.layout.semantics = std::vector<VertexSemantic>(0);
             //----- doing this to copy
             for (VertexSemantic semantic : data.layout.semantics) vertex_array->layout.semantics.push_back(semantic);
-    vertex_array->gl_vao_id = vao_id;
-    vertex_array->gl_buffer_id = buffer_id;
-    vertex_array->gl_index_buffer_id = index_buffer_id;
+    vertex_array.gl_vao_id = vao_id;
+    vertex_array.gl_buffer_id = buffer_id;
+    vertex_array.gl_index_buffer_id = index_buffer_id;
 
     // Unbind OpenGL state.
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    // printf("Uploaded vertex array.\n");
-    // getchar();
     return vertex_array;
 }

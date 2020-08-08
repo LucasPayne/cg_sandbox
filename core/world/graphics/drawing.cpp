@@ -1,4 +1,5 @@
-#include "rendering/drawing.h"
+#include "world/graphics/drawing.h"
+
 
 PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)
 {
@@ -22,6 +23,7 @@ PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)
 
     return sheet;
 }
+
 
 // Synchronize application data with graphics data. This only uploads if a property changes.
 void PropertySheet::synchronize()

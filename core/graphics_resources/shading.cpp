@@ -7,6 +7,7 @@ using namespace ShadingFileDetails;
 #include <algorithm> //find
 #include <sstream> //istringstream
 
+
 static void print_listing(const std::string &title, const std::string &text)
 {
     printf("================================================================================\n");
@@ -16,10 +17,11 @@ static void print_listing(const std::string &title, const std::string &text)
     printf("--------------------------------------------------------------------------------\n");
 }
 
+
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
 
-Resource loading and unloading functions.
+Loading and unloading functions.
 --------------------------------------------------------------------------------*/
 bool GeometricMaterial::load(const std::istream &stream)
 {
@@ -61,6 +63,7 @@ bool GeometricMaterial::load(const std::istream &stream)
     #undef parse_error
 }
 
+
 bool Material::load(const std::istream &stream)
 {
     Material *material = this;
@@ -93,6 +96,7 @@ bool Material::load(const std::istream &stream)
     return true;
     #undef parse_error
 }
+
 
 bool ShadingModel::load(const std::istream &stream)
 {
@@ -133,15 +137,6 @@ bool ShadingModel::load(const std::istream &stream)
     #undef parse_error
 }
 
-Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
-                                                Resource<GeometricMaterial> geometric_material,
-                                                Resource<Material> material,
-                                                Resource<ShadingModel> shading_model)
-{
-    auto program = rm.new_resource<ShadingProgram>();
-    *program = new_shading_program(*geometric_material, *material, *shading_model);
-    return program;
-}
 
 /*================================================================================
     BEGIN private implementation details.

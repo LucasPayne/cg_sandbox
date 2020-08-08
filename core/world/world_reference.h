@@ -12,4 +12,5 @@ struct WorldReference {
     World *operator->();
 };
 
+
 #endif // WORLD_REFERENCE_H

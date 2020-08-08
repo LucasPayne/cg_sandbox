@@ -225,10 +225,20 @@ private:
     std::string m_name;
 };
 
+
+// When a type is registered to a table collection, in code, this static data is instantiated,
+// which will contain the type ID.
+template <typename TYPE>
+struct TableCollectionTypeData {
+    static TableCollectionType type_id;
+};
+// Statically initialize all of these IDs to null.
+template <typename TYPE>
+TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+
 // BASE_TYPE: All types in the collection, at least logically, inherit from this.
-// HANDLE_TYPE: Must inherit from TableCollectionHandle. Optionally overridden to allow extra data in handles, to be initialized by
-//              something which wraps the underlying table.
-template<typename BASE_TYPE, template<typename> typename HANDLE_TYPE = TableCollectionHandle>
+struct TableCollectionEmptyBaseType {}
+template<typename BASE_TYPE = TableCollectionEmptyBaseType>
 class TableCollection {
 public:
     std::vector<MemberTable> m_tables;
@@ -245,14 +255,14 @@ public:
         }
         TableCollectionType next_type_id = num_types;
         // Set the type ID so that templated methods can access it.
-        TYPE::type_id = next_type_id;
+        TableCollectionTypeData<TYPE>::type_id = next_type_id;
         m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
     // Unregistered types are statically initialized to -1. This macro is used by the templated methods, so that
     // the probably common bug of forgetting to register a type is easily discovered. However, this is a slight overhead
     // every call to a templated method.
     #define CHECK_IF_REGISTERED(TYPE) {\
-        if (TYPE::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
+        if (TableCollectionTypeData<TYPE>::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
             fprintf(stderr, "ERROR: Forgot to register a type in a TableCollection!\n");\
             exit(EXIT_FAILURE);\
         }\
@@ -288,7 +298,7 @@ public:
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;
         typed_handle.index = handle.index;
-        typed_handle.type = TYPE::type_id;
+        typed_handle.type = TableCollectionTypeData<TYPE>::type_id;
         return typed_handle;
     }
     // A typed handle can be used for lookup. The relevant table is searched,
@@ -320,7 +330,7 @@ private:
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
     template <typename TYPE>
     inline MemberTable *get_table() {
-        return &m_tables[TYPE::type_id];
+        return &m_tables[TableCollectionTypeData<TYPE>::type_id];
     }
     inline MemberTable *get_table(TableCollectionType type) {
         return &m_tables[type];

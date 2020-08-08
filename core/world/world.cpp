@@ -15,10 +15,14 @@ IDEAS/THINGS:
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include <math.h>
 
+
 ShadingModelInstance *shading_model_model_test;
+
 
 Table<World> World::table;
 bool World::created_table = false;
+
+
 WorldReference World::new_world()
 {
     if (!created_table) {
@@ -36,7 +40,7 @@ WorldReference World::new_world()
 
     // Initialize the resource model.
     printf("[world] Initializing resource model...\n");
-    world->rm = ResourceModel(world_reference);
+    world->rm = ResourceModel();
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
         world->rm.register_resource_type<NAME>(#NAME);\
@@ -52,7 +56,7 @@ WorldReference World::new_world()
 
     // Initialize the entity model, with no entities.
     printf("[world] Initializing entity model...\n");
-    world->em = EntityModel(world_reference); 
+    world->em = EntityModel();
     // Register aspect types. Remember to do this!
     #define REGISTER_ASPECT_TYPE(NAME) {\
         world->em.register_aspect_type<NAME>(#NAME);\
@@ -111,16 +115,7 @@ void World::save_world(std::string &path)
     pack(em, out);
     pack(rm, out);
 }
-
-    // // Component subsystems.
-    // EntityModel em;
-    // ResourceModel rm;
-    // Graphics graphics; // Graphics state, such as cached compiled shaders.
-    // InputState input;
-    // Assets assets;
-    // Reference<World> reference;
 */
-
 
 void World::close()
 {

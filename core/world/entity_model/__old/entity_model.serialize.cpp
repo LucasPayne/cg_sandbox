@@ -29,4 +29,22 @@ void print(AspectBase &obj) {
     std::cout << "\n";
     std::cout << "}\n";
 }
+void pack(EntityModel &obj, std::ostream &out) {
+    pack(obj.m_entity_table, out);
+    pack(obj.m_aspect_tables, out);
+}
+void unpack(std::istream &in, EntityModel &obj) {
+    unpack(in, obj.m_entity_table);
+    unpack(in, obj.m_aspect_tables);
+}
+void print(EntityModel &obj) {
+    std::cout << "EntityModel {\n";
+    std::cout << "    m_entity_table: ";
+    print(obj.m_entity_table);
+    std::cout << "\n";
+    std::cout << "    m_aspect_tables: ";
+    print(obj.m_aspect_tables);
+    std::cout << "\n";
+    std::cout << "}\n";
+}
 

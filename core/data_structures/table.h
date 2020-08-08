@@ -35,6 +35,7 @@ reasons for extensions:
     This was done for the resource system, since each handle needs a reference to the resource model it is a part of.
 --------------------------------------------------------------------------------*/
 #include <vector>
+#include <functional>
 #include <limits>//numeric_limits
 #include <string>//std::string
 #include <stdint.h>
@@ -43,6 +44,7 @@ reasons for extensions:
 typedef uint32_t TableEntryID;
 
 #include "reflector/serialization.h"
+
 
 /*--------------------------------------------------------------------------------
 A GenericTable is initialized with a type size. This means that tables
@@ -62,6 +64,16 @@ return a byte pointer which must be interpreted by the caller.
     }
     TableHandle() {}
 };
+
+
+// An IterateeFunction transforms a TableHandle into another type.
+// This allows custom table iterators to be defined easily, such as
+// an iterator over raw pointers to table entries, or an iterator
+// which adjoins more data to the handles.
+template <typename ITERATED>
+using IterateeFunction = std::function<ITERATED(TableHandle)>;
+
+
 class GenericTable {
 public:
     GenericTable() {}
@@ -79,6 +91,8 @@ public:
     //-begin iterator hack------------------------------------------------------------
     // This iterator is implemented _only_ so that range-based-for works.
     //    https://en.cppreference.com/w/cpp/language/range-for
+
+    template <typename ITERATED>
     struct IteratorPosition {
         inline void seek_to_next() {
             while (true) {
@@ -91,39 +105,60 @@ public:
             }
         }
         IteratorPosition() {}
-        IteratorPosition(GenericTable *_table) :
-            done{false}, table{_table}
+        IteratorPosition(GenericTable *_table, IterateeFunction<ITERATED> _iteratee_function) :
+            done{false}, table{_table}, iteratee_function{_iteratee_function}
         {
             handle.index = 0;
             seek_to_next();
         }
         bool done;
         TableHandle handle;
+
         GenericTable *table;
+        IterateeFunction<ITERATED> iteratee_function;
+
         inline void operator++() {
             ++handle.index;
             seek_to_next();
         }
-        inline TableHandle operator*() {
+        inline ITERATED operator*() {
             handle.id = table->get_header(handle.index)->id;
-            return handle;
+            return iteratee_function(handle);
         }
-        inline bool operator!=(IteratorPosition throwaway) {
+        inline bool operator!=(IteratorPosition<ITERATED> throwaway) {
             return !done;
         }
     };
-    friend IteratorPosition;
+
+    template <typename ITERATED>
     struct Iterator {
         GenericTable *table;
-        Iterator(GenericTable *_table) : table{_table} {}
-        inline IteratorPosition begin() {
-            return IteratorPosition(table);
+        IterateeFunction<ITERATED> iteratee_function;
+        Iterator(GenericTable *_table, IterateeFunction<ITERATED> _iteratee_function) :
+            table{_table}, iteratee_function{_iteratee_function}
+        {}
+        inline IteratorPosition<ITERATED> begin() {
+            return IteratorPosition<ITERATED>(table, iteratee_function);
         }
-        inline IteratorPosition end() { return IteratorPosition(); }
+        inline IteratorPosition<ITERATED> end() {
+            return IteratorPosition<ITERATED>();
+        }
     };
-    inline Iterator iterator() {
-        return Iterator(this);
+
+    template <typename ITERATED>
+    Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
+        return Iterator<ITERATED>(this, iteratee_function);
     }
+
+    // Default iterator has identity IterateeFunction, so it just iterates TableHandles.
+    Iterator<TableHandle> iterator() {
+        return Iterator<TableHandle>(this,
+            [](TableHandle handle)->TableHandle {
+                return handle;
+            }
+        );
+    }
+
     //-end iterator hack--------------------------------------------------------------
 
 //private:
@@ -274,10 +309,11 @@ public:
     }
 
     // Templated iterator. Iterate over a certain type.
-    template <typename TYPE>
-    inline GenericTable::Iterator iterator() {
+    template <typename TYPE, typename ITERATED>
+    inline GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
         CHECK_IF_REGISTERED(TYPE);
-        return get_table<TYPE>()->iterator();
+        MemberTable *table = get_table<TYPE>();
+        // iterator<ITERATED>(iteratee_function);
     }
 
 private:
@@ -317,7 +353,12 @@ public:
         return reinterpret_cast<T *>(m_table.lookup(handle));
     }
 
-    inline GenericTable::Iterator iterator() {
+    template <typename ITERATED>
+    inline GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
+        return m_table.iterator<ITERATED>(iteratee_function);
+    }
+
+    inline GenericTable::Iterator<TableHandle> iterator() {
         return m_table.iterator();
     }
 //-debugging
@@ -358,16 +399,14 @@ void pack(Table<T> &obj, std::ostream &out) {
     // Pack the number of active entries in the table, since the unpacker will need to know when to stop.
     uint32_t num_active_entries = 0;
     {
-        GenericTable::Iterator iter = obj.iterator();
-        for (TableHandle handle : iter) {
+        for (TableHandle handle : obj.iterator()) {
             num_active_entries++;
         }
     }
     pack(num_active_entries, out);
 
     // Densely pack the entries.
-    GenericTable::Iterator iter = obj.iterator();
-    for (TableHandle handle : iter) {
+    for (TableHandle handle : obj.iterator()) {
         // pack index, id, object entry.
 
         // For each entry, store its index, so this can be unpacked into the sparse array.
@@ -433,8 +472,7 @@ void print(Table<T> &obj) {
     std::cout << "    m_length: " << obj.m_table.m_length << "\n";
     std::cout << "    m_next_id: " << obj.m_table.m_next_id << "\n";
     std::cout << "    table: [\n";
-    GenericTable::Iterator iter = obj.iterator();
-    for (TableHandle handle : iter) {
+    for (TableHandle handle : obj.iterator()) {
         std::cout << "        ";
         print(*obj.lookup(handle));
         std::cout << "\n";

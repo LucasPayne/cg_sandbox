@@ -5,22 +5,24 @@ The World consists of components which contain some part of the state of the wor
 such as the entity and resource models.
 
 This also contains methods for "creating the world" at a higher level than the component subsystems,
-such as the creation of game objects.
+such as the creation of game objects with Behaviours.
 --------------------------------------------------------------------------------*/
 #ifndef WORLD_H
 #define WORLD_H
 #include "core.h"
 #include "data_structures/table.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
-#include "assets/assets.h"
 #include "rendering/rendering.h"
 
 #include "world/world_reference.h"
 #include "world/entity_model/entity_model.h"
 #include "world/resource_model/resource_model.h"
 #include "world/standard_aspects/standard_aspects.h"
+#include "world/assets/assets.h"
+
 
 class World : public IGC::Callbacks {
+    friend class WorldReference;
 public:
     static WorldReference new_world();
     static void save_world(std::string &path);
@@ -81,6 +83,7 @@ private:
     World() {}
 };
 
-#include "world/entity_model/entity_model_template_implementations.h"
+#include "world/entity_model/entity_model_template_definitions.h"
+#include "world/resource_model/resource_model_template_definitions.h"
 
 #endif // WORLD_H

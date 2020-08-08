@@ -6,6 +6,7 @@ class World;
 
 struct WorldReference {
     WorldReference(TableHandle _handle) : handle{_handle} {}
+    WorldReference() {}
     TableHandle handle;
     World &operator*();
     World *operator->();

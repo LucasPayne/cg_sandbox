@@ -11,11 +11,13 @@ Aspect<TYPE> Entity::add()
     TableCollectionHandle<TYPE> handle = world->em.aspect_tables.add<TYPE>();
     return Aspect<TYPE>(world, handle);
 }
+
+
 template <typename TYPE>
 Aspect<TYPE> Entity::get()
 {
     AspectType aspect_type = TYPE::type_id;
-    EntityEntry *entry = get_entry();
+    EntityEntry *entry = world->em.entity_table.lookup(handle);
 
     // Search this entity's aspects.
     TypedAspect cur = entry->first_aspect;
@@ -33,13 +35,17 @@ Aspect<TYPE> Entity::get()
 // Aspect<TYPE>
 //--------------------------------------------------------------------------------
 template <typename TYPE>
-Aspect<TYPE>::Aspect<TYPE>(WorldReference _world, TableCollectionHandle<TYPE> _handle) :
+Aspect<TYPE>::Aspect(WorldReference _world, TableCollectionHandle<TYPE> _handle) :
+    world{_world}, handle{_handle}
+{}
+template <typename TYPE>
+Aspect<TYPE>::Aspect(WorldReference _world, TableHandle _handle) :
     world{_world}, handle{_handle}
 {}
 
 
 template <typename TYPE>
-Aspect<TYPE>::Aspect<TYPE>(TypedAspect typed_aspect) :
+Aspect<TYPE>::Aspect(TypedAspect typed_aspect) :
     world{typed_aspect.world}
 {
     // Assert that this conversion is valid.
@@ -56,7 +62,7 @@ Aspect<TYPE>::Aspect<TYPE>(TypedAspect typed_aspect) :
 template <typename TYPE>
 TYPE &Aspect<TYPE>::operator*()
 {
-    TYPE *asp = world->em.aspects.lookup<TYPE>(handle);
+    TYPE *asp = world->em.aspect_tables.lookup<TYPE>(handle);
     if (asp == nullptr) {
         fprintf(stderr, "[entity_model] ERROR: Attempted to dereference an invalid aspect handle.\n");
         exit(EXIT_FAILURE);
@@ -72,18 +78,20 @@ TYPE *Aspect<TYPE>::operator->()
 }
 
 
-template <typename TYPE, typename SIBLING_TYPE>
-Aspect<SIBLING_TYPE> Aspect<TYPE>::sibling()
-{
-    return entity()->get<SIBLING_TYPE>();
-}
-
-
 template <typename TYPE>
 Entity Aspect<TYPE>::entity()
 {
     // The entity reference is not stored in the handle, but in the table.
     return (*this)->entity;
+}
+
+
+template <typename TYPE>
+template <typename SIBLING_TYPE>
+Aspect<SIBLING_TYPE> Aspect<TYPE>::sibling()
+{
+    // return entity().get<SIBLING_TYPE>();
+    
 }
 
 
@@ -94,18 +102,31 @@ void Aspect<TYPE>::destroy()
 }
 
 
+template <typename TYPE>
+TableEntryID Aspect<TYPE>::ID() const
+{
+    return handle.id;
+}
+
+
 // EntityModel
 //--------------------------------------------------------------------------------
 template <typename TYPE>
-void register_aspect_type(const std::string &name)
+void EntityModel::register_aspect_type(const std::string &name)
 {
     aspect_tables.add_type<TYPE>(name);
 }
 
 
 template <typename TYPE>
-GenericTable::Iterator EntityModel::aspects()
+GenericTable::Iterator<Aspect<TYPE>> EntityModel::aspects()
 {
-    return aspect_tables.iterator<TYPE>();
+    return aspect_tables.iterator<TYPE, Aspect<TYPE>>(
+        [this](TableHandle handle)->Aspect<TYPE> {
+            return Aspect<TYPE>(world, handle);
+        }
+    );
 }
+
+
 #endif // ENTITY_MODEL_TEMPLATE_IMPLEMENTATIONS_H

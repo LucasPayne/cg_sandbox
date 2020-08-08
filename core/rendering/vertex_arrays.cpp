@@ -18,6 +18,7 @@ size_t VertexSemantic::type_size() const
     CASE(GL_DOUBLE, 8);
     fprintf(stderr, "ERROR: Vertex attribute type size unaccounted for.\n");
     exit(EXIT_FAILURE);
+    #undef CASE
 }
 
 size_t VertexArrayLayout::vertex_size() const
@@ -36,6 +37,7 @@ size_t VertexArrayLayout::index_type_size() const
     CASE(GL_UNSIGNED_INT, 4);
     fprintf(stderr, "ERROR: Index type size not accounted for.\n");
     exit(EXIT_FAILURE);
+    #undef CASE
 }
 
 VertexAttributeBindingIndex VertexSemantic::get_binding_index()

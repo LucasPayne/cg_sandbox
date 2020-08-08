@@ -30,13 +30,13 @@ WorldReference World::new_world()
     }
     printf("[world] Creating world reference...\n");
     WorldReference world_reference = table.add();
-    World *world = table.lookup(world_reference);
+    World *world = table.lookup(world_reference.handle);
     world->reference = world_reference;
     printf("[world] Created new world reference.\n");
 
     // Initialize the resource model.
     printf("[world] Initializing resource model...\n");
-    world->rm = ResourceModel();
+    world->rm = ResourceModel(world_reference);
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
         world->rm.register_resource_type<NAME>(#NAME);\
@@ -172,7 +172,7 @@ void World::loop()
 
 void World::keyboard_handler(KeyboardEvent e)
 {
-    for (Behaviour *b : em.aspects<Behaviour>()) {
+    for (auto b : em.aspects<Behaviour>()) {
         if (b->object->handling_keyboard) {
             b->object->keyboard_handler(e);
         }
@@ -180,7 +180,7 @@ void World::keyboard_handler(KeyboardEvent e)
 }
 void World::mouse_handler(MouseEvent e)
 {
-    for (Behaviour *b : em.aspects<Behaviour>()) {
+    for (auto b : em.aspects<Behaviour>()) {
         if (b->object->handling_mouse) {
             b->object->mouse_handler(e);
         }

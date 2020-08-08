@@ -9,76 +9,68 @@
 
 
 typedef TableCollectionType ResourceType;
-
-
-template <typename TYPE>
-struct Resource; // Fully declared after ResourceModel.
-
 template <typename T>
 struct ResourceTypeStaticData {
     static ResourceType type_id;
 };
-// Static initialization of type information. Defaults to null values.
-template <typename T> ResourceType ResourceTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
-// ResourceBase: Shared data every resource entry has.
+// Statically initialize the global variable containing the type ID.
+template <typename T>
+ResourceType ResourceTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+
+
+/*--------------------------------------------------------------------------------
+ResourceBase
+    Shared data every resource entry has.
+    Currently this is nothing.
+--------------------------------------------------------------------------------*/
 struct ResourceBase {};
-// When defining a resource type T, inherit from IResourceType<T>. In this way, static data for the resource type
-// is initialized, and further non-shared struct data is defined in the body.
+
+
+/*--------------------------------------------------------------------------------
+IResourceType<T>
+    When defining a resource type T, inherit from IResourceType<T>. In this way, static data for the resource type
+    is initialized, and further non-shared struct data is defined in the body.
+--------------------------------------------------------------------------------*/
 template <typename T>
 struct IResourceType : public ResourceTypeStaticData<T>, public ResourceBase {};
 
 
-class ResourceModel {
+/*--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+struct Resource {
+    friend class ResourceModel;
 public:
-    ResourceModel();
+    Resource() {}
+
+    TYPE &operator*();
+    TYPE *operator->();
+
+    TableEntryID ID() const;
+private:
+    Resource(WorldReference _world, TableHandle _handle);
+
+    WorldReference world;
+    TableHandle handle;
+};
+
+
+/*--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------*/
+class ResourceModel {
+    template <typename TYPE> friend class Resource;
+public:
+    ResourceModel(WorldReference _world);
+    ResourceModel() {}
 
     template <typename TYPE>
     void register_resource_type(const std::string &name);
     
     template <typename TYPE>
-    inline Resource<TYPE> new_resource();
-
+    Resource<TYPE> new_resource();
 private:
-    TableCollection<ResourceBase, Resource> m_resource_tables;
-};
-
-
-template <typename TYPE>
-struct Resource {
     WorldReference world;
-    TableHandle handle;
-    inline TYPE &operator*() {
-        TYPE *res =  world->rm.m_resource_tables.lookup<TYPE>(handle);
-        if (res == nullptr) {
-            fprintf(stderr, "[resource_model] ERROR, dereferenced invalid resource.\n");
-            exit(EXIT_FAILURE);
-        }
-        return *res;
-    }
-    inline TYPE *operator->() {
-        return &(*(*this));
-    }
+    TableCollection<ResourceBase> resource_tables;
 };
-
-// Template implementations
-//--------------------------------------------------------------------------------
-/*--------------------------------------------------------------------------------
-    ResourceModel
---------------------------------------------------------------------------------*/
-template <typename TYPE>
-void ResourceModel::register_resource_type(const std::string &name) {
-    m_resource_tables.add_type<TYPE>(name);
-}
-
-
-template <typename TYPE>
-inline Resource<TYPE> new_resource() {
-    // The handle type has been extended, using the HANDLE_TYPE TableCollection template parameter.
-    // This is uninitialized by the TableCollection, so make sure to initialize that extra data here.
-    Resource<TYPE> handle = m_resource_tables.add<TYPE>();
-    // Give the handle a pointer to the resource model.
-    handle.rm = this;
-    return handle;
-}
 
 #endif // RESOURCE_MODEL_H

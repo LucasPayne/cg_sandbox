@@ -13,9 +13,11 @@ Aspect<TYPE>
     Aspects are a parameterized type, meaning that 
 --------------------------------------------------------------------------------*/
 struct Entity;
+struct TypedAspect;
 template <typename TYPE>
 struct Aspect {
-    friend Entity;
+    friend class Entity;
+    friend class EntityModel;
 public:
     TYPE &operator*();
     TYPE *operator->();
@@ -26,9 +28,14 @@ public:
     Aspect<SIBLING_TYPE> sibling();
 
     void destroy();
-private:
+
+    TableEntryID ID() const;
+
+    Aspect(WorldReference _world, TableHandle _handle);
     Aspect(WorldReference _world, TableCollectionHandle<TYPE> _handle);
+    Aspect(TypedAspect typed_aspect);
     Aspect();
+private:
 
     TableCollectionHandle<TYPE> handle;
     WorldReference world;
@@ -41,18 +48,24 @@ Entity
     The data in an Entity is the minimal data necessary for finding its aspects.
 --------------------------------------------------------------------------------*/
 struct EntityEntry;
+class EntityModel;
 struct Entity {
+    friend class EntityModel;
+    template <typename TYPE> friend class Aspect;
 public:
-    Entity(WorldReference _world, TableHandle _handle) :
-        world{_world}, handle{_handle}
-    {}
+    Entity() {}
+
     void destroy();
     template <typename TYPE>
     Aspect<TYPE> add();
     template <typename TYPE>
     Aspect<TYPE> get();
+
+    TableEntryID ID() const;
 private:
-    EntityEntry *get_entry();
+    Entity(WorldReference _world, TableHandle _handle) :
+        world{_world}, handle{_handle}
+    {}
 
     WorldReference world;
     TableHandle handle;
@@ -135,20 +148,23 @@ struct IAspectType : AspectTypeStaticData<T>, public AspectBase {
 ================================================================================*/
 class EntityModel {
     template <typename T> friend class Aspect;
+    friend class TypedAspect;
     friend class Entity;
 public:
+    EntityModel(WorldReference _world);
+    EntityModel() {}
+
     template <typename TYPE>
     void register_aspect_type(const std::string &name);
 
     Entity new_entity();
-    EntityModel(WorldReference _world);
 
-    GenericTable::Iterator entities();
+    GenericTable::Iterator<Entity> entities();
     template <typename TYPE>
-    GenericTable::Iterator aspects();
+    GenericTable::Iterator<Aspect<TYPE>> aspects();
 private:
     WorldReference world;
-    Table<Entity> entity_table;
+    Table<EntityEntry> entity_table;
     TableCollection<AspectBase> aspect_tables;
 };
 

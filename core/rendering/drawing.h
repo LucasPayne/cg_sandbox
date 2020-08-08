@@ -5,7 +5,7 @@ Drawing submodule of the rendering module.
 --------------------------------------------------------------------------------*/
 #include "rendering/shading.h"
 #include "rendering/vertex_arrays.h"
-#include "world/resource_model/resource_model.h"
+#include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
 
 struct PropertySheet {

@@ -30,6 +30,10 @@ App::App(World &_world) : world{_world}
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
         controller->init();
     }
+
+    Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
+    Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
+
     // Create some objects.
     for (int i = 0; i < 3; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/nefertiti.obj");
@@ -41,9 +45,6 @@ App::App(World &_world) : world{_world}
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-
-        Dolphin *b = world.add_behaviour<Dolphin>(dolphin);
-        b->velocity = vec3::random(-0.1,0.1);
     }
 }
 void App::close()

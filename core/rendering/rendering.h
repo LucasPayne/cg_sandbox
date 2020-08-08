@@ -19,11 +19,12 @@ Submodules:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
-#include "resource_model/resource_model.h"
+
 
 #include "rendering/shading.h"
 #include "rendering/vertex_arrays.h"
 #include "rendering/drawing.h"
+
 
 // Graphics state is kept in the "Graphics" class, which uses the resource model.
 //--------------------------------------------------------------------------------
@@ -33,7 +34,7 @@ struct ShadingProgramKey {
     TableEntryID mat_id;
     TableEntryID sm_id;
     ShadingProgramKey(const Resource<GeometricMaterial> &gmat, const Resource<Material> &mat, const Resource<ShadingModel> &sm) :
-        gmat_id{gmat.id}, mat_id{mat.id}, sm_id{sm.id}
+        gmat_id{gmat.ID()}, mat_id{mat.ID()}, sm_id{sm.ID()}
     {}
     bool operator==(const ShadingProgramKey &other) const {
         return (gmat_id == other.gmat_id) && (mat_id == other.mat_id) && (sm_id == other.sm_id);

@@ -13,7 +13,7 @@ GenericTable::GenericTable(size_t entry_type_size, int length)
     m_entry_size = sizeof(Header) + entry_type_size; // The size of per-entry metadata in the table must be accounted for.
     m_buffer = std::vector<uint8_t>(m_length * m_entry_size); // Allocate the buffer for the table. This must account for metadata size.
     // Initialize the free list.
-    for (int index = 0; index < m_length-1; index++) {
+    for (unsigned int index = 0; index < m_length-1; index++) {
         get_header(index)->next_free_index = index + 1;
     }
     if (m_length >= 1) {
@@ -35,7 +35,7 @@ TableHandle GenericTable::add()
         header = get_header(index);
         // Link the new slots into the free list.
         header->next_free_index = old_length;
-        for (int i = old_length; i < m_length-1; i++) {
+        for (unsigned int i = old_length; i < m_length-1; i++) {
             get_header(i)->next_free_index = i + 1; // the next slot is also free.
         }
         get_header(m_length-1)->next_free_index = 0; // no free slots past here.

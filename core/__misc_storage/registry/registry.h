@@ -157,5 +157,5 @@ T *Reference<T>::operator->() {
     return t;
 }
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/registry/registry.serialize.h" /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/__misc_storage/registry/registry.serialize.h" /*SERIALIZE*/
 #endif // REGISTRY_H

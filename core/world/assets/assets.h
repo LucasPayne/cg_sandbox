@@ -2,8 +2,8 @@
 #define ASSETS_H
 #include "core.h"
 
-#include "assets/model_assets.h"
-#include "assets/shading_assets.h"
+#include "world/assets/model_assets.h"
+#include "world/assets/shading_assets.h"
 
 class Assets {
 public:

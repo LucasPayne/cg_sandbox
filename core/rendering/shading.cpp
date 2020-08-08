@@ -138,14 +138,9 @@ Resource<ShadingProgram> ShadingProgram::create(ResourceModel &rm,
                                                 Resource<Material> material,
                                                 Resource<ShadingModel> shading_model)
 {
-    GeometricMaterial *g = rm.get_resource<GeometricMaterial>(geometric_material);
-    Material *m = rm.get_resource<Material>(material);
-    ShadingModel *sm = rm.get_resource<ShadingModel>(shading_model);
-    
-    Resource<ShadingProgram> program_handle = rm.new_resource<ShadingProgram>();
-    ShadingProgram *program = rm.get_resource<ShadingProgram>(program_handle);
-    *program = new_shading_program(*g, *m, *sm);
-    return program_handle;
+    auto program = rm.new_resource<ShadingProgram>();
+    *program = new_shading_program(*geometric_material, *material, *shading_model);
+    return program;
 }
 
 /*================================================================================

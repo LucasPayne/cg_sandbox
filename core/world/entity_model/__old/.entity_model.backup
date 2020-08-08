@@ -235,5 +235,5 @@ public: // Usage interface
 };
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/entity_model/__old/entity_model.serialize.h" /*SERIALIZE*/
+#include "/home/lucas/computer_graphics/cg_sandbox/core/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 #endif // ENTITY_MODEL_H

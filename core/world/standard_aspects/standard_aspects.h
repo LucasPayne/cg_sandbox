@@ -8,8 +8,6 @@
 #include "world/resource_model/resource_model.h"
 #include "world/entity_model/entity_model.h"
 
-#include "reflector/serialization.h"
-
 class World;
 
 /*REFLECTED*/ struct Transform : public IAspectType<Transform> {
@@ -66,5 +64,4 @@ struct Behaviour : public IAspectType<Behaviour> {
     IBehaviour *object;
 };
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 #endif // STANDARD_ASPECTS_H

@@ -14,6 +14,7 @@ notes:
 #define REGISTRY_H
 #include "stdio.h"
 #include "stdlib.h"
+#include <iostream>
 #include "data_structures/table.h"
 
 // TableReference<T> is a wrapper of TableHandle which gives it a type. The underlying generic table
@@ -51,6 +52,13 @@ private:
 };
 
 //--------------------------------------------------------------------------------
+
+// struct RegistryTable {
+//     ITable *table_pointer;
+//     GenericTable table;
+// }
+
+
 class Registry {
 public:
     // e.g.
@@ -79,9 +87,18 @@ public:
         return reinterpret_cast<Table<T> *>(generic_table);
     }
 
+    // // The Registry is not serializable like a regular object, as it is not an object type, just global a global table.
+    // // Serialization functions are namespaced in Registry:: and do not take an object argument.
+    // void pack(std::ostream &out);
+    // void unpack(std::istream &in);
+
 private:
     static Table<GenericTable> registry;
+
+    // static Table<RegistryTable> registry;
+    // static Table<ITable *> table_pointers;
 };
+
 //--------------------------------------------------------------------------------
 
 // Implementations for TableReference<T> and Reference<T>.

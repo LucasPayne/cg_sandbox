@@ -20,4 +20,7 @@ void print(IAspectType<T> &obj) {
     std::cout << "    }\n";
     std::cout << "}\n";
 }
+void pack(EntityModel &obj, std::ostream &out);
+void unpack(std::istream &in, EntityModel &obj);
+void print(EntityModel &obj);
 

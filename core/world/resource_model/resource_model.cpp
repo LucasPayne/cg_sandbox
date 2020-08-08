@@ -2,7 +2,8 @@
 
 
 // Initialize the resource model.
-ResourceModel::ResourceModel()
+ResourceModel::ResourceModel(WorldReference _world) :
+    world{_world}
 {
-    m_resource_tables = TableCollection<ResourceBase, Resource>();
+    resource_tables = TableCollection<ResourceBase>();
 }

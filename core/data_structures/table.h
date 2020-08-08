@@ -194,6 +194,18 @@ typedef uint16_t TableCollectionType;
 #define TABLE_COLLECTION_MAX_NUM_TYPES ( std::numeric_limits<TableCollectionType>::max() )
 #define NULL_TABLE_COLLECTION_TYPE_ID ( std::numeric_limits<TableCollectionType>::max() )
 
+
+// When a type is registered to a table collection, in code, this static data is instantiated,
+// which will contain the type ID.
+template <typename TYPE>
+struct TableCollectionTypeData {
+    static TableCollectionType type_id;
+};
+// Statically initialize all of these IDs to null.
+template <typename TYPE>
+TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+
+
 /*--------------------------------------------------------------------------------
     Handles into the TableCollection are templated. This is purely a type variant,
     and adds no extra data. This means the user of the TableCollection will
@@ -207,6 +219,16 @@ template <typename TYPE>
 
 /*REFLECTED*/ struct TypedTableCollectionHandle : public TableHandle {
     /*ENTRY*/ TableCollectionType type;
+
+    // Create a typed handle from handle for a certain type. This puts the type ID in the handle.
+    template <typename TYPE>
+    static TypedTableCollectionHandle create(TableCollectionHandle<TYPE> &handle) {
+        TypedTableCollectionHandle typed_handle;
+        typed_handle.index = handle.index;
+        typed_handle.id = handle.id;
+        typed_handle.type = TableCollectionTypeData<TYPE>::type_id;
+        return typed_handle;
+    }
 };
 
 // this class should only be usable by TableCollection. ---
@@ -225,16 +247,6 @@ private:
     std::string m_name;
 };
 
-
-// When a type is registered to a table collection, in code, this static data is instantiated,
-// which will contain the type ID.
-template <typename TYPE>
-struct TableCollectionTypeData {
-    static TableCollectionType type_id;
-};
-// Statically initialize all of these IDs to null.
-template <typename TYPE>
-TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
 
 // BASE_TYPE: All types in the collection, at least logically, inherit from this.
 struct TableCollectionEmptyBaseType {};
@@ -320,10 +332,10 @@ public:
 
     // Templated iterator. Iterate over a certain type.
     template <typename TYPE, typename ITERATED>
-    inline GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
+    GenericTable::Iterator<ITERATED> iterator(IterateeFunction<ITERATED> iteratee_function) {
         CHECK_IF_REGISTERED(TYPE);
         MemberTable *table = get_table<TYPE>();
-        // iterator<ITERATED>(iteratee_function);
+        return table->iterator<ITERATED>(iteratee_function);
     }
 
 private:

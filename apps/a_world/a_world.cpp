@@ -19,6 +19,7 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
+#if 1
     // Create a camera man.
     {
         Entity cameraman = world.em.new_entity();
@@ -27,10 +28,11 @@ App::App(World &_world) : world{_world}
 
         auto t = cameraman.add<Transform>();
         t->init(0,0,0);
-        CameraController *controller = world.add_behaviour<CameraController>(cameraman);
+        CameraController *controller = world.add<CameraController>(cameraman);
         controller->init();
     }
-
+#endif
+#if 0
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
 
@@ -46,6 +48,7 @@ App::App(World &_world) : world{_world}
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
+#endif
 }
 void App::close()
 {
@@ -72,15 +75,15 @@ int main(int argc, char *argv[])
     printf("[main] Creating context...\n");
     IGC::Context context("Dragons");
     printf("[main] Creating world...\n");
-    WorldReference world = World::new_world();
+    World world;
     printf("[main] Adding world callbacks...\n");
-    context.add_callbacks(*world);
-    context.add_callbacks(world->input);
+    context.add_callbacks(&world);
+    context.add_callbacks(&world.input);
 
     printf("[main] Creating app...\n");
-    App app(*world);
+    App app(world);
     printf("[main] Adding app callbacks...\n");
-    context.add_callbacks(app);
+    context.add_callbacks(&app);
 
     printf("[main] Entering loop...\n");
     context.enter_loop();

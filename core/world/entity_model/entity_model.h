@@ -85,6 +85,10 @@ struct TypedAspect {
     TypedTableCollectionHandle handle;
     AspectBase &operator*();
     AspectBase *operator->();
+
+    TypedAspect(EntityModel *_em, TypedTableCollectionHandle _handle) :
+        em{_em}, handle{_handle}
+    {}
 };
 
 
@@ -177,8 +181,28 @@ private:
 template <typename TYPE>
 Aspect<TYPE> Entity::add()
 {
-    TableCollectionHandle<TYPE> handle = em->aspect_tables.add<TYPE>();
-    return Aspect<TYPE>(em, handle);
+    EntityEntry *entry = em->entity_table.lookup(handle);
+
+    TableCollectionHandle<TYPE> aspect_handle = em->aspect_tables.add<TYPE>();
+    Aspect<TYPE> aspect(em, aspect_handle);
+    TypedAspect typed_aspect(em, TypedTableCollectionHandle::create(aspect_handle));
+
+    // Add this aspect to the end of the linked list.
+    if (entry->first_aspect.handle.id == 0) {
+        // Put this aspect at the head of the linked list.
+        entry->first_aspect = typed_aspect;
+        return aspect;
+    }
+    TypedAspect prev = entry->first_aspect;
+    TypedAspect cur = prev->next_aspect;
+
+    while (cur.handle.id != 0) {
+        prev = cur;
+        cur = prev->next_aspect;
+    }
+    // Put this aspect in the middle or at the end of the linked list.
+    prev->next_aspect = TypedAspect(em, TypedTableCollectionHandle::create(aspect_handle));
+    return aspect;
 }
 
 
@@ -259,8 +283,8 @@ template <typename TYPE>
 template <typename SIBLING_TYPE>
 Aspect<SIBLING_TYPE> Aspect<TYPE>::sibling()
 {
-    // return entity().get<SIBLING_TYPE>();
-    
+    Entity e = entity();
+    return e.get<SIBLING_TYPE>();
 }
 
 

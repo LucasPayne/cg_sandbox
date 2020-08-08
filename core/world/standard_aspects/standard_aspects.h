@@ -6,8 +6,10 @@
 
 #include "world/world.h"
 
-class World;
 
+/*--------------------------------------------------------------------------------
+Transform aspect
+--------------------------------------------------------------------------------*/
 /*REFLECTED*/ struct Transform : public IAspectType<Transform> {
     /*ENTRY*/ vec3 position;
     /*ENTRY*/ Quaternion rotation;
@@ -22,6 +24,10 @@ class World;
     mat4x4 inverse_matrix() const;
 };
 
+
+/*--------------------------------------------------------------------------------
+Camera aspect
+--------------------------------------------------------------------------------*/
 /*REFLECTED*/ struct Camera : public IAspectType<Camera> {
     // Viewport extents (in terms of the application subrectangle).
     /*ENTRY*/ float bottom_left[2];
@@ -32,34 +38,14 @@ class World;
     void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
 };
 
+
+/*--------------------------------------------------------------------------------
+Drawable aspect
+--------------------------------------------------------------------------------*/
 struct Drawable : public IAspectType<Drawable> {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
 };
 
-// Specific Behaviours must be defined in a class which derives from IBehaviour.
-/*REFLECTED*/ struct IBehaviour {
-    /*ENTRY*/ WorldReference world;
-    /*ENTRY*/ Entity entity;
-        // Each Behaviour attached to an entity is given a reference to the entity.
-    /*ENTRY*/ bool updating;
-    virtual void update() {
-        // After one call, signify that this virtual function has not been overridden,
-        // and that it is a no-op.
-        updating = false;
-    }
-    /*ENTRY*/ bool handling_mouse;
-    virtual void mouse_handler(MouseEvent e) {
-        handling_mouse = false;
-    }
-    /*ENTRY*/ bool handling_keyboard;
-    virtual void keyboard_handler(KeyboardEvent e) {
-        handling_keyboard = false;
-    }
-};
-struct Behaviour : public IAspectType<Behaviour> {
-    size_t object_size;
-    IBehaviour *object;
-};
 
 #endif // STANDARD_ASPECTS_H

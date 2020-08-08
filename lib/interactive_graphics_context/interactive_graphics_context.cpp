@@ -17,9 +17,9 @@ Context *active_context = nullptr;
 
 void Context::keyboard_event(KeyboardEvent e)
 {
-   for (Callbacks *callbacks : active_context->m_callbacks) {
-       callbacks->keyboard_handler(e);
-   }
+    for (Callbacks *callbacks : active_context->m_callbacks) {
+        callbacks->keyboard_handler(e);
+    }
 }
 void Context::mouse_event(MouseEvent e)
 {
@@ -44,9 +44,9 @@ Context::Context(const std::string &name)
     window = Platform::create_window(name);
 }
 
-void Context::add_callbacks(Callbacks &callbacks)
+void Context::add_callbacks(Callbacks *callbacks)
 {
-    m_callbacks.push_back(&callbacks);
+    m_callbacks.push_back(callbacks);
 }
 
 void Context::enter_loop()

@@ -17,31 +17,16 @@ IDEAS/THINGS:
 ShadingModelInstance *shading_model_model_test;
 
 
-Table<World> World::table;
-bool World::created_table = false;
-
-
-WorldReference World::new_world()
+World::World()
 {
-    if (!created_table) {
-        // Static initialization is unorderable, so do this when the first world is created, to make sure.
-        printf("[world] Initializing World table ...\n");
-        table = Table<World>(1);
-        created_table = true;
-        printf("[world] World table initialized.\n");
-    }
-    printf("[world] Creating world reference...\n");
-    WorldReference world_reference = table.add();
-    World *world = table.lookup(world_reference.handle);
-    world->reference = world_reference;
-    printf("[world] Created new world reference.\n");
+    printf("[world] Creating world...\n");
 
     // Initialize the resource model.
     printf("[world] Initializing resource model...\n");
-    world->rm = ResourceModel();
+    rm = ResourceModel();
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
-        world->rm.register_resource_type<NAME>(#NAME);\
+        rm.register_resource_type<NAME>(#NAME);\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering resource types...\n");
@@ -54,10 +39,10 @@ WorldReference World::new_world()
 
     // Initialize the entity model, with no entities.
     printf("[world] Initializing entity model...\n");
-    world->em = EntityModel();
+    em = EntityModel();
     // Register aspect types. Remember to do this!
     #define REGISTER_ASPECT_TYPE(NAME) {\
-        world->em.register_aspect_type<NAME>(#NAME);\
+        em.register_aspect_type<NAME>(#NAME);\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering aspect types...\n");
@@ -69,15 +54,15 @@ WorldReference World::new_world()
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
     printf("[world] Initializing Assets...\n");
-    world->assets = Assets();
-    world->assets.rm = &world->rm;
-    world->assets.models.rm = &world->rm;
-    world->assets.shading.rm = &world->rm;
+    assets = Assets();
+    assets.rm = &rm;
+    assets.models.rm = &rm;
+    assets.shading.rm = &rm;
     printf("[world] Assets initialized.\n");
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     printf("[world] Initializing Graphics...\n");
-    world->graphics = Graphics(&world->rm); // The Graphics component relies on the resource model.
+    graphics = Graphics(&rm); // The Graphics component relies on the resource model.
     printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //
@@ -85,7 +70,7 @@ WorldReference World::new_world()
     glDepthFunc(GL_LESS);    //
 
     // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    Resource<ShadingModel> sm = world->rm.new_resource<ShadingModel>();
+    Resource<ShadingModel> sm = rm.new_resource<ShadingModel>();
     std::fstream sm_file;
     sm_file.open("resources/model_test/model_test.sm");
     sm->load(sm_file);
@@ -93,10 +78,17 @@ WorldReference World::new_world()
 
     // Input.
     printf("[world] Initializing InputState...\n");
-    world->input = InputState();
+    input = InputState();
     printf("[world] InputState initialized.\n");
+}
 
-    return world_reference;
+void World::save_world(std::string &path)
+{
+
+}
+World World::load_world(std::string &path)
+{
+    return World();
 }
 
 /*
@@ -179,11 +171,3 @@ void World::mouse_handler(MouseEvent e)
     }
 }
 
-// WorldReference
-//--------------------------------------------------------------------------------
-World &WorldReference::operator*() {
-    return *World::table.lookup(handle);
-}
-World *WorldReference::operator->() {
-    return World::table.lookup(handle);
-}

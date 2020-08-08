@@ -47,7 +47,7 @@ class Context
 public:
     Context(const std::string &name);
 
-    void add_callbacks(Callbacks &callbacks);
+    void add_callbacks(Callbacks *callbacks);
     void enter_loop();
     void close();
 

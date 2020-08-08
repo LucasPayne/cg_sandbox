@@ -1,7 +1,7 @@
 #ifndef SHADING_ASSETS_H
 #define SHADING_ASSETS_H
 #include "core.h"
-#include "resource_model/resource_model.h"
+#include "world/resource_model/resource_model.h"
 #include "rendering/shading.h"
 
 class ShadingAssets {

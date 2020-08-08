@@ -1,7 +1,6 @@
 #include "cg_sandbox.h"
 #include "gl/gl.h"
 #include "data_structures/table.h"
-#include "registry/registry.h"
 
 #include "behaviours/CameraController.h"
 #include "utils/force_aspect_ratio.cpp"
@@ -23,10 +22,10 @@ App::App(World &_world) : world{_world}
     // Create a camera man.
     {
         Entity cameraman = world.em.new_entity();
-        Camera *camera = world.em.add_aspect<Camera>(cameraman);
+        auto camera = cameraman.add<Camera>();
         camera->init_projective(0.1, 300, 0.1, 0.566);
 
-        Aspect<Transform> t = cameraman.add<Transform>();
+        auto t = cameraman.add<Transform>();
         t->init(0,0,0);
         CameraController *controller = world.add_behaviour<CameraController>(cameraman);
         controller->init();
@@ -35,10 +34,10 @@ App::App(World &_world) : world{_world}
     for (int i = 0; i < 3; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/nefertiti.obj");
         Entity dolphin = world.em.new_entity();
-        Aspect<Transform> t = dolphin.add<Transform>();
+        auto t = dolphin.add<Transform>();
         vec3 base(0,0,0);
         t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
-        Aspect<Drawable> drawable = dolphin.add<Drawable>();
+        auto drawable = dolphin.add<Drawable>();
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
@@ -72,7 +71,7 @@ int main(int argc, char *argv[])
     printf("[main] Creating context...\n");
     IGC::Context context("Dragons");
     printf("[main] Creating world...\n");
-    Reference<World> world = World::new_world();
+    WorldReference world = World::new_world();
     printf("[main] Adding world callbacks...\n");
     context.add_callbacks(*world);
     context.add_callbacks(world->input);

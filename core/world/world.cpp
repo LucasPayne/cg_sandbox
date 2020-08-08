@@ -18,7 +18,7 @@ IDEAS/THINGS:
 ShadingModelInstance *shading_model_model_test;
 
 Table<World> World::table;
-
+bool World::created_table = false;
 WorldReference World::new_world()
 {
     if (!created_table) {
@@ -52,7 +52,7 @@ WorldReference World::new_world()
 
     // Initialize the entity model, with no entities.
     printf("[world] Initializing entity model...\n");
-    world->em = EntityModel(); 
+    world->em = EntityModel(world_reference); 
     // Register aspect types. Remember to do this!
     #define REGISTER_ASPECT_TYPE(NAME) {\
         world->em.register_aspect_type<NAME>(#NAME);\
@@ -148,20 +148,20 @@ void World::loop()
     glDisable(GL_SCISSOR_TEST);
 
     // Update entity behaviours.
-    for (Behaviour *b : em.aspects<Behaviour>()) {
+    for (auto b : em.aspects<Behaviour>()) {
         if (b->object->updating) {
             b->object->update();
         }
     }
     // Render.
-    for (Camera *camera : em.aspects<Camera>()) {
-        Transform *camera_transform = em.get_sibling<Transform>(camera);
+    for (auto camera : em.aspects<Camera>()) {
+        auto camera_transform = camera.sibling<Transform>();
         mat4x4 view_matrix = camera_transform->inverse_matrix();
         mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
         shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
-        for (Drawable *drawable : em.aspects<Drawable>()) {
-            Transform *t = em.get_sibling<Transform>(drawable);
+        for (auto drawable : em.aspects<Drawable>()) {
+            auto t = drawable.sibling<Transform>();
             mat4x4 model_matrix = t->matrix();
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
 
@@ -189,9 +189,9 @@ void World::mouse_handler(MouseEvent e)
 
 // WorldReference
 //--------------------------------------------------------------------------------
-World &WorldReference::operator->() {
+World &WorldReference::operator*() {
     return *World::table.lookup(handle);
 }
-World *WorldReference::operator*() {
+World *WorldReference::operator->() {
     return World::table.lookup(handle);
 }

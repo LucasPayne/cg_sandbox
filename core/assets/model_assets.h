@@ -1,7 +1,7 @@
 #ifndef MODEL_ASSETS_H
 #define MODEL_ASSETS_H
 #include "core.h"
-#include "resource_model/resource_model.h"
+#include "world/resource_model/resource_model.h"
 #include "model_loader/model_loader.h"
 #include "rendering/vertex_arrays.h"
 

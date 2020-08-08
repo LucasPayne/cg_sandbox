@@ -11,18 +11,17 @@ such as the creation of game objects.
 #define WORLD_H
 #include "core.h"
 #include "data_structures/table.h"
-#include "registry/registry.h"
-#include "resource_model/resource_model.h"
-#include "assets/assets.h"
-#include "entity_model/entity_model.h"
-#include "rendering/rendering.h"
-#include "world/standard_aspects/standard_aspects.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
+#include "assets/assets.h"
+#include "rendering/rendering.h"
+
 #include "world/world_reference.h"
+#include "world/entity_model/entity_model.h"
+#include "world/resource_model/resource_model.h"
+#include "world/standard_aspects/standard_aspects.h"
 
 class World : public IGC::Callbacks {
 public:
-    World() {}
     static WorldReference new_world();
     static void save_world(std::string &path);
     static WorldReference load_world(std::string &path);
@@ -54,7 +53,7 @@ public:
     --------------------------------------------------------------------------------*/
     template <typename B>
     B *add_behaviour(Entity e) {
-        Behaviour *behaviour = em.add_aspect<Behaviour>(e);
+        auto behaviour = e.add<Behaviour>();
         behaviour->object_size = sizeof(B);
         behaviour->object = new B();
 
@@ -66,7 +65,6 @@ public:
 
         return reinterpret_cast<B *>(behaviour->object);
     }
-
     // Component subsystems.
     EntityModel em;
     ResourceModel rm;
@@ -79,6 +77,10 @@ private:
 
     static bool created_table;
     static Table<World> table; // Global table which contains Worlds.
+
+    World() {}
 };
+
+#include "world/entity_model/entity_model_template_implementations.h"
 
 #endif // WORLD_H

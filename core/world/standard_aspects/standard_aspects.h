@@ -1,14 +1,15 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
 #include "core.h"
-#include "spatial_algebra/spatial_algebra.h"
-#include "resource_model/resource_model.h"
-#include "entity_model/entity_model.h"
-#include "rendering/rendering.h"
 #include "interactive_graphics_context/input.h"
+#include "rendering/rendering.h"
+#include "spatial_algebra/spatial_algebra.h"
+
+#include "world/resource_model/resource_model.h"
+#include "world/entity_model/entity_model.h"
+
 #include "reflector/serialization.h"
 
-#include "registry/registry.h"
 class World;
 
 /*REFLECTED*/ struct Transform : public IAspectType<Transform> {

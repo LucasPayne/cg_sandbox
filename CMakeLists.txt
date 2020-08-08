@@ -34,26 +34,29 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 add_library(cg_sandbox
     core/main.cpp
     core/data_structures/table.cpp
-    core/registry/registry.cpp
-    core/world/world.cpp
-    core/resource_model/resource_model.cpp
     core/assets/assets.cpp
     core/assets/model_assets.cpp
     core/assets/shading_assets.cpp
+
+    core/gl/glsl.cpp
+    core/gl/gl_shader_program.cpp
+
     core/rendering/rendering.cpp
     core/rendering/shading.cpp
     core/rendering/vertex_arrays.cpp
     core/rendering/drawing.cpp
-    core/entity_model/entity_model.cpp
+    ${BISON_shading_file_parser_OUTPUTS}
+    ${FLEX_shading_file_lexer_OUTPUTS}
+
+    core/world/world.cpp
+    core/world/entity_model/entity_model.cpp
+    core/world/resource_model/resource_model.cpp
     core/world/standard_aspects/standard_aspects.cpp
     core/world/standard_aspects/Transform.cpp
     core/world/standard_aspects/Camera.cpp
     core/world/standard_aspects/Drawable.cpp
     core/world/standard_aspects/Behaviour.cpp
-    core/gl/glsl.cpp
-    core/gl/gl_shader_program.cpp
-    ${BISON_shading_file_parser_OUTPUTS}
-    ${FLEX_shading_file_lexer_OUTPUTS}
+
     dependencies/glad/glad.c
     tools/reflector/serialization.cpp
 )

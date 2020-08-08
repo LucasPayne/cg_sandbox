@@ -60,6 +60,7 @@ return a byte pointer which must be interpreted by the caller.
         handle.id = 0; // id of zero signifies this is a null handle.
         return handle;
     }
+    TableHandle() {}
 };
 class GenericTable {
 public:

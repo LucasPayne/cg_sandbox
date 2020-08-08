@@ -8,7 +8,7 @@ Provides rendering resources:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
-#include "resource_model/resource_model.h"
+#include "world/resource_model/resource_model.h"
 
 #include "reflector/serialization.h"
 

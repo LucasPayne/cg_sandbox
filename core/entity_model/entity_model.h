@@ -16,7 +16,6 @@ IDEAS/THINGS:
 #include "data_structures/table.h"
 #include "core.h"
 #include "reflector/serialization.h"
-#include "world/world_reference.h"
 
 /*================================================================================
     Table data
@@ -26,47 +25,11 @@ IDEAS/THINGS:
     These are handles that conform to the Table data structure, having
     an index and id.
 --------------------------------------------------------------------------------*/
-
-/*REFLECTED*/ struct Entity {
-    WorldReference world; // Not serialized.
-    /*ENTRY*/ TableHandle handle;
-    Entity(WorldReference _world, TableHandle _handle) :
-        world{_world}, handle{_handle}
-    {}
-};
+typedef TableHandle Entity;
 typedef TableCollectionType AspectType;
-
 template <typename TYPE>
-/*REFLECTED*/ struct Aspect {
-    WorldReference world; // Not serialized.
-    /*ENTRY*/ TableCollectionHandle<TYPE> handle;
-    inline Aspect<TYPE> &operator*() {
-        Aspect<TYPE> *asp = world->em.aspects.lookup<TYPE>(handle);
-        if (asp == nullptr) {
-            fprintf(stderr, "[entity_model] ERROR: Attempted to dereference an invalid aspect handle.\n");
-            exit(EXIT_FAILURE);
-        }
-        return *asp;
-    }
-    inline Aspect<TYPE> *operator->() {
-        return &(*(*this));
-    }
-};
-/*REFLECTED*/ struct TypedAspect {
-    WorldReference world; // Not serialized.
-    /*ENTRY*/ TypedTableCollectionHandle handle;
-    inline AspectBase &operator*() {
-        AspectBase *asp_base = world->em.aspects.lookup(handle);
-        if (asp == nullptr) {
-            fprintf(stderr, "[entity_model] ERROR: Attempted to dereference an invalid aspect handle.\n");
-            exit(EXIT_FAILURE);
-        }
-        return *asp_base;
-    }
-    inline AspectBase *operator->() {
-        return &(*(*this));
-    }
-};
+using Aspect = TableCollectionHandle<TYPE>;
+typedef TypedTableCollectionHandle TypedAspect;
 
 /*--------------------------------------------------------------------------------
     Entity and aspect table entries.
@@ -153,24 +116,21 @@ public: // Usage interface
 
     // Creation and destruction of aspects.
     template <typename TYPE>
-    void destroy_aspect(Aspect<TYPE> aspect) {
-
+    void destroy_aspect(Aspect<TYPE> aspect_handle) {
         // Delink from entity linked list.
-        AspectBase &entry = *aspect; // This gives an error if the aspect does not exist.
-
+        AspectBase *aspect = get_aspect<TYPE>(aspect_handle);
+        if (aspect == nullptr) return; // Do nothing if the entity does not exist.
         // First, retrieve the entity.
-        EntityEntry &entity_entry = *(entry.entity);
-
+        EntityEntry *entity = get_entity(aspect->entity);
         // If this aspect is at the head of the list, remove it.
-        if (entity_entry.first_aspect.type == TYPE::type_id && entity_entry.first_aspect.id == aspect.handle.id) {
+        if (entity->first_aspect.type == TYPE::type_id && entity->first_aspect.id == aspect_handle.id) {
             // Found the aspect. Removed from head.
-            entity_entry.first_aspect = entry.next_aspect;
-	    m_aspect_tables.remove<TYPE>(aspect.handle);
+            entity->first_aspect = aspect->next_aspect;
+	    m_aspect_tables.remove<TYPE>(aspect_handle);
             return;
         } else {
             // Otherwise, find it then delink it.
-            // AspectBase &prev_aspect = m_aspect_tables.lookup(entity->first_aspect);
-            AspectBase &prev_aspect = *(entity_entry.first_aspect);
+            AspectBase *prev_aspect = m_aspect_tables.lookup(entity->first_aspect);
             TypedAspect cur_aspect_handle = prev_aspect->next_aspect;
             AspectBase *cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
             while (cur_aspect != nullptr) {
@@ -210,6 +170,32 @@ public: // Usage interface
         
         return new_aspect;
     }
+    template <typename TYPE>
+    TYPE *try_get_aspect(Entity entity_handle) {
+        // Search the entity's aspect linked list for an aspect of the given type.
+        EntityEntry *entity = m_entity_table.lookup(entity_handle);
+
+        TypedAspect cur_aspect_handle = entity->first_aspect;
+        AspectBase *cur_aspect = m_aspect_tables.lookup(entity->first_aspect);
+        while (cur_aspect != nullptr) {
+            if (cur_aspect_handle.type == TYPE::type_id) {
+                return reinterpret_cast<TYPE *>(cur_aspect);
+            }
+            cur_aspect_handle = cur_aspect->next_aspect;
+            cur_aspect = m_aspect_tables.lookup(cur_aspect_handle);
+        }
+        return nullptr;
+    }
+    template <typename TYPE>
+    TYPE *get_aspect(Entity entity) {
+        TYPE *aspect = try_get_aspect<TYPE>(entity);
+        if (aspect == nullptr) {
+            // error
+            fprintf(stderr, "ERROR\n");
+            exit(EXIT_FAILURE);
+        }
+        return aspect;
+    }
 
     // Retrieve sibling aspects. A sibling aspect is the first occurence of an aspect of a certain type
     // attached to the same entity.
@@ -246,8 +232,8 @@ public: // Usage interface
 
     /*ENTRY*/ Table<EntityEntry> m_entity_table;
     /*ENTRY*/ TableCollection<AspectBase> m_aspect_tables;
-    WorldReference world; // Not serialized.
 };
+
 
 #include "/home/lucas/computer_graphics/cg_sandbox/core/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 #endif // ENTITY_MODEL_H

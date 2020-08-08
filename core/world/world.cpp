@@ -17,21 +17,20 @@ IDEAS/THINGS:
 
 ShadingModelInstance *shading_model_model_test;
 
-bool World::created_table = false;
-TableReference<World> World::table;
-Reference<World> World::new_world()
+Table<World> World::table;
+
+WorldReference World::new_world()
 {
     if (!created_table) {
-        // Static initialization is unorderable, so do this when the first world is created, as it is known that by
-        // then the registry will be initialized.
-        printf("[world] Initializing World table in registry...\n");
-        table = Registry::add<World>();
+        // Static initialization is unorderable, so do this when the first world is created, to make sure.
+        printf("[world] Initializing World table ...\n");
+        table = Table<World>(1);
         created_table = true;
         printf("[world] World table initialized.\n");
     }
     printf("[world] Creating world reference...\n");
-    Reference<World> world_reference = table.add();
-    World *world = new(&(*world_reference)) World;
+    WorldReference world_reference = table.add();
+    World *world = table.lookup(world_reference);
     world->reference = world_reference;
     printf("[world] Created new world reference.\n");
 
@@ -186,4 +185,13 @@ void World::mouse_handler(MouseEvent e)
             b->object->mouse_handler(e);
         }
     }
+}
+
+// WorldReference
+//--------------------------------------------------------------------------------
+World &WorldReference::operator->() {
+    return *World::table.lookup(handle);
+}
+World *WorldReference::operator*() {
+    return World::table.lookup(handle);
 }

@@ -42,7 +42,7 @@ struct Drawable : public IAspectType<Drawable> {
 
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
 /*REFLECTED*/ struct IBehaviour {
-    /*ENTRY*/ Reference<World> world;
+    /*ENTRY*/ WorldReference world;
     /*ENTRY*/ Entity entity;
         // Each Behaviour attached to an entity is given a reference to the entity.
     /*ENTRY*/ bool updating;

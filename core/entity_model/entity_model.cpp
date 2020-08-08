@@ -14,7 +14,9 @@ EntityModel::EntityModel()
 
 Entity EntityModel::new_entity()
 {
-    Entity handle = m_entity_table.add();
+    TableHandle handle = m_entity_table.add();
+    Entity entity(world, handle);
+
     EntityEntry *entity = get_entity(handle);
     entity->first_aspect.id = 0; // Nullify the head of the aspect linked list.
     return handle;

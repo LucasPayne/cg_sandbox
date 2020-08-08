@@ -146,6 +146,8 @@ App::App(World &_world) : world{_world}
 
     // Teleport the entity table out to disk and read it back.
     world.em.m_entity_table = transporter(world.em.m_entity_table);
+
+    // Create some more objects.
     for (int i = 0; i < 3; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/nefertiti.obj");
         Entity dolphin = world.em.new_entity();

@@ -18,13 +18,14 @@ such as the creation of game objects.
 #include "rendering/rendering.h"
 #include "world/standard_aspects/standard_aspects.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
+#include "world/world_reference.h"
 
 class World : public IGC::Callbacks {
 public:
     World() {}
-    static Reference<World> new_world();
+    static WorldReference new_world();
     static void save_world(std::string &path);
-    static Reference<World> load_world(std::string &path);
+    static WorldReference load_world(std::string &path);
 
     // Callbacks.
     void close();
@@ -74,10 +75,10 @@ public:
     Assets assets;
 
 private:
-    Reference<World> reference;
+    WorldReference reference;
 
     static bool created_table;
-    static TableReference<World> table; // Table in the global registry which contains Worlds.
+    static Table<World> table; // Global table which contains Worlds.
 };
 
 #endif // WORLD_H

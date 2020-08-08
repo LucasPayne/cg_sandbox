@@ -10,6 +10,7 @@ IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "data_structures/table.h"
+#include "world/world_reference.h"
 
 class ResourceModel;
 typedef TableCollectionType ResourceType;
@@ -67,21 +68,21 @@ private:
     TableCollection<ResourceBase, Resource> m_resource_tables;
 };
 
-
 template <typename TYPE>
-struct Resource : TableCollectionHandle<TYPE> {
-    // The resource model is passed as a pointer to each handle. This allows, without introducing a singleton resource model,
-    // for a dereference operator to get a pointer to the actual data. I think this is convenient enough for the handle-size overhead.
-    ResourceModel *rm;
-
-    // Dereference operator. Returns a reference to the actual data.
+struct Resource {
+    WorldReference world;
+    TableHandle handle;
     inline TYPE &operator*() {
-        return *(rm->get_resource<TYPE>(*this));
+        TYPE *res =  world->rm.m_resource_tables.lookup<TYPE>(handle);
+        if (res == nullptr) {
+            fprintf(stderr, "[resource_model] ERROR, dereferenced invalid resource.\n");
+            exit(EXIT_FAILURE);
+        }
+        return *res;
     }
     inline TYPE *operator->() {
-        return rm->get_resource<TYPE>(*this);
+        return &(*(*this));
     }
 };
-
 
 #endif // RESOURCE_MODEL_H

@@ -1,4 +1,5 @@
 #include "world/graphics/drawing.h"
+#include "world/graphics/drawing.serialize.cpp"
 
 
 PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)

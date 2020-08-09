@@ -13,7 +13,7 @@ Provides rendering resources:
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
-/*REFLECTED*/struct VertexSemantic {
+/*REFLECTED*/ struct VertexSemantic {
     /*ENTRY*/ char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
     /*ENTRY*/ GLenum type;
     /*ENTRY*/ GLint size;
@@ -75,7 +75,8 @@ typedef uint16_t VertexAttributeBindingIndex;
 };
 
 
-struct VertexArray {
+// Reflected for now, to provide the serialization functions a resource needs, but doesn't really make sense.
+/*REFLECTED*/ struct VertexArray {
     static VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;

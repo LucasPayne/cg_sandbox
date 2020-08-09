@@ -6,6 +6,7 @@
 
 #include "world/world.h"
 
+#include "reflector/serialization.h"
 
 /*--------------------------------------------------------------------------------
 Transform aspect
@@ -42,10 +43,11 @@ Camera aspect
 /*--------------------------------------------------------------------------------
 Drawable aspect
 --------------------------------------------------------------------------------*/
-struct Drawable : public AspectBase {
-    GeometricMaterialInstance geometric_material;
-    MaterialInstance material;
+/*REFLECTED*/ struct Drawable : public AspectBase {
+    /*ENTRY*/ GeometricMaterialInstance geometric_material;
+    /*ENTRY*/ MaterialInstance material;
 };
 
 
+#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 #endif // STANDARD_ASPECTS_H

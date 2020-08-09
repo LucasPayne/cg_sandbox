@@ -92,29 +92,32 @@ World::World()
     printf("[world] InputState initialized.\n");
 }
 
-void World::save_world(std::string &path)
+void World::save(std::string &path)
 {
+    std::ofstream file;
+    file.open(path, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (!file.is_open()) {
+        printf("[world] Failed to open file \"%s\" when saving world.\n", path.c_str());
+        exit(EXIT_FAILURE);
+    }
+    // Component subsystems.
+    // EntityModel em;    Saved.
+    // ResourceModel rm;  
+    // Graphics graphics; 
+    // InputState input;  Thrown out.
+    // Assets assets;
 
+    // EntityModel
+    pack(em.entity_table, file);
+    pack(em.aspect_tables, file);
 }
+
+
 World World::load_world(std::string &path)
 {
     return World();
 }
 
-/*
-void World::save_world(std::string &path)
-{
-    std::ofstream file;
-    file.open(path, std::ios::trunc | std::ios::write);
-    if (!file.is_open()) {
-        printf("![world]! Error saving world, could not open file at path \"%s\".\n", path.c_str());
-        exit(EXIT_FAILURE);
-    }
-    pack(reference, out); // Pack the Reference<World>, a reference into the registry.
-    pack(em, out);
-    pack(rm, out);
-}
-*/
 
 void World::close()
 {

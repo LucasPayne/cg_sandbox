@@ -197,13 +197,32 @@ typedef uint16_t TableCollectionType;
 
 // When a type is registered to a table collection, in code, this static data is instantiated,
 // which will contain the type ID.
+
+struct TypeData {
+    TableCollectionType type_id;
+    std::string name;
+    size_t size;
+
+    // Serialization functions.
+    GenericPackFunction pack_function;
+    GenericUnpackFunction unpack_function;
+    GenericPrintFunction print_function;
+
+    TypeData() {
+        type_id = NULL_TABLE_COLLECTION_TYPE_ID;
+        pack_function = nullptr;
+        unpack_function = nullptr;
+        print_function = nullptr;
+    }
+};
+
 template <typename TYPE>
 struct TableCollectionTypeData {
-    static TableCollectionType type_id;
+    static TypeData data;
 };
-// Statically initialize all of these IDs to null.
+// Statically initialize all type data to null values.
 template <typename TYPE>
-TableCollectionType TableCollectionTypeData<TYPE>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
+TypeData TableCollectionTypeData<TYPE>::data;
 
 
 /*--------------------------------------------------------------------------------
@@ -226,7 +245,7 @@ template <typename TYPE>
         TypedTableCollectionHandle typed_handle;
         typed_handle.index = handle.index;
         typed_handle.id = handle.id;
-        typed_handle.type = TableCollectionTypeData<TYPE>::type_id;
+        typed_handle.type = TableCollectionTypeData<TYPE>::data.type_id;
         return typed_handle;
     }
 };
@@ -235,16 +254,14 @@ template <typename TYPE>
 class MemberTable : public GenericTable {
 public:
     MemberTable() {} //empty constructor, appears to be needed for std::vector.
-    MemberTable(TableCollectionType _type, size_t _size, const std::string &_name, int length = 1) :
-        GenericTable(_size, length),
-        m_type{_type}, m_name{_name}
+    MemberTable(TypeData *_type_data, int length = 1) :
+        GenericTable(_type_data->size, length),
+        type_data{_type_data}
     {}
-    TableCollectionType type() const { return m_type; }
-    std::string name() const { return m_name; }
+    TableCollectionType type() const { return type_data->type_id; }
+    std::string name() const { return type_data->name; }
 private:
-    TableCollectionType m_type;
-    size_t m_type_size;
-    std::string m_name;
+    TypeData *type_data; // Pointer to global constant type information.
 };
 
 
@@ -266,15 +283,23 @@ public:
             exit(EXIT_FAILURE);
         }
         TableCollectionType next_type_id = num_types;
-        // Set the type ID so that templated methods can access it.
-        TableCollectionTypeData<TYPE>::type_id = next_type_id;
-        m_tables.push_back(MemberTable(next_type_id, sizeof(TYPE), name, TABLE_COLLECTION_TABLE_START_LENGTH));
+        // Set up the global data for the type -- the ID and the serialization functions.
+        // !-IMPORTANT-! This implies that a single type cannot be added to different TableCollections.
+        TableCollectionTypeData<TYPE>::data.type_id = next_type_id;
+        TableCollectionTypeData<TYPE>::data.size = sizeof(TYPE);
+        TableCollectionTypeData<TYPE>::data.name = name;
+
+        TableCollectionTypeData<TYPE>::data.pack_function = generic_pack<TYPE>();
+        TableCollectionTypeData<TYPE>::data.unpack_function = generic_unpack<TYPE>();
+        TableCollectionTypeData<TYPE>::data.print_function = generic_print<TYPE>();
+
+        m_tables.push_back(MemberTable(&TableCollectionTypeData<TYPE>::data, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
     // Unregistered types are statically initialized to -1. This macro is used by the templated methods, so that
     // the probably common bug of forgetting to register a type is easily discovered. However, this is a slight overhead
     // every call to a templated method.
     #define CHECK_IF_REGISTERED(TYPE) {\
-        if (TableCollectionTypeData<TYPE>::type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
+        if (TableCollectionTypeData<TYPE>::data.type_id == NULL_TABLE_COLLECTION_TYPE_ID) {\
             fprintf(stderr, "ERROR: Forgot to register a type in a TableCollection!\n");\
             exit(EXIT_FAILURE);\
         }\
@@ -310,7 +335,7 @@ public:
         TypedTableCollectionHandle typed_handle;
         typed_handle.id = handle.id;
         typed_handle.index = handle.index;
-        typed_handle.type = TableCollectionTypeData<TYPE>::type_id;
+        typed_handle.type = TableCollectionTypeData<TYPE>::data.type_id;
         return typed_handle;
     }
     // A typed handle can be used for lookup. The relevant table is searched,
@@ -342,12 +367,17 @@ private:
     // Helper method for templated methods to retrieve the relevant table for the type template-parameter.
     template <typename TYPE>
     inline MemberTable *get_table() {
-        return &m_tables[TableCollectionTypeData<TYPE>::type_id];
+        return &m_tables[TableCollectionTypeData<TYPE>::data.type_id];
     }
     inline MemberTable *get_table(TableCollectionType type) {
         return &m_tables[type];
     }
 };
+// TableCollection serialization functions.
+template <typename BASE_TYPE>
+void pack(TableCollection<BASE_TYPE> &obj, std::ostream &out) {
+    
+}
 
 
 /*--------------------------------------------------------------------------------

@@ -6,6 +6,8 @@ using namespace ShadingFileDetails;
 #include <algorithm> //find
 #include <sstream> //istringstream
 
+#include "graphics_resources/shading.serialize.cpp"
+
 
 static void print_listing(const std::string &title, const std::string &text)
 {

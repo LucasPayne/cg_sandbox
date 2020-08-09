@@ -3,7 +3,10 @@
 #include "core.h"
 #include "data_structures/table.h"
 
+#include "reflector/serialization.h"
 
+
+class World; // Classes here are a friend of World, only so World can handle saving the entity model.
 /*--------------------------------------------------------------------------------
 Aspect<TYPE>
     An Aspect is a handle to data associated to an entity.
@@ -15,10 +18,12 @@ Aspect<TYPE>
 struct Entity;
 class EntityModel;
 struct TypedAspect;
+
 template <typename TYPE>
-struct Aspect {
+/*REFLECTED*/ struct Aspect {
     friend class Entity;
     friend class EntityModel;
+    friend class World;
 public:
     TYPE &operator*();
     TYPE *operator->();
@@ -40,9 +45,9 @@ public:
     {}
     Aspect() {};
     Aspect(TypedAspect typed_aspect);
-private:
-    EntityModel *em;
-    TableCollectionHandle<TYPE> handle;
+// private:
+    EntityModel *em; // Not serialized. This _must_ be set manually when an EntityModel is loaded.
+    /*ENTRY*/ TableCollectionHandle<TYPE> handle;
 };
 
 
@@ -53,9 +58,11 @@ Entity
 --------------------------------------------------------------------------------*/
 struct EntityEntry;
 class EntityModel;
-struct Entity {
+
+/*REFLECTED*/ struct Entity {
     friend class EntityModel;
     template <typename TYPE> friend class Aspect;
+    friend class World;
 public:
     Entity() {}
 
@@ -66,13 +73,13 @@ public:
     Aspect<TYPE> get();
 
     TableEntryID ID() const;
-private:
+// private:
     Entity(EntityModel *_em, TableHandle _handle) :
         em{_em}, handle{_handle}
     {}
 
     EntityModel *em;
-    TableHandle handle;
+    /*ENTRY*/ TableHandle handle;
 };
 
 
@@ -84,9 +91,10 @@ TypedAspect
     of the aspect linked list.
 --------------------------------------------------------------------------------*/
 struct AspectBase;
-struct TypedAspect {
+
+/*REFLECTED*/ struct TypedAspect {
     EntityModel *em;
-    TypedTableCollectionHandle handle;
+    /*ENTRY*/ TypedTableCollectionHandle handle;
     AspectBase &operator*();
     AspectBase *operator->();
 
@@ -100,9 +108,9 @@ struct TypedAspect {
 AspectBase
     Each entry in the aspect tables has a common base of data, given here.
 --------------------------------------------------------------------------------*/
-struct AspectBase {
-    Entity entity;
-    TypedAspect next_aspect;
+/*REFLECTED*/ struct AspectBase {
+    /*ENTRY*/ Entity entity;
+    /*ENTRY*/ TypedAspect next_aspect;
 };
 
 
@@ -110,8 +118,8 @@ struct AspectBase {
 EntityEntry
     An entry in the entity table. The aspects can be traversed starting here.
 --------------------------------------------------------------------------------*/
-struct EntityEntry {
-    TypedAspect first_aspect;
+/*REFLECTED*/ struct EntityEntry {
+    /*ENTRY*/ TypedAspect first_aspect;
 };
 
 
@@ -132,6 +140,7 @@ class EntityModel {
     template <typename T> friend class Aspect;
     friend class TypedAspect;
     friend class Entity;
+    friend class World;
 public:
     EntityModel();
 
@@ -149,13 +158,12 @@ private:
 };
 
 
-
-
 //================================================================================
 // Template implementations.
 //================================================================================
 // Entity
 //--------------------------------------------------------------------------------
+// Add an aspect to the entity.
 template <typename TYPE>
 Aspect<TYPE> Entity::add()
 {
@@ -177,10 +185,11 @@ Aspect<TYPE> Entity::add()
 }
 
 
+// Get an aspect from an entity.
 template <typename TYPE>
 Aspect<TYPE> Entity::get()
 {
-    AspectType aspect_type = TableCollectionTypeData<TYPE>::type_id;
+    AspectType aspect_type = TableCollectionTypeData<TYPE>::data.type_id;
     EntityEntry *entry = em->entity_table.lookup(handle);
 
     // Search this entity's aspects.
@@ -203,7 +212,7 @@ Aspect<TYPE>::Aspect(TypedAspect typed_aspect) :
     em{typed_aspect.em}
 {
     // Assert that this conversion is valid.
-    if (typed_aspect.handle.type != TableCollectionTypeData<TYPE>::type_id) {
+    if (typed_aspect.handle.type != TableCollectionTypeData<TYPE>::data.type_id) {
         fprintf(stderr, "[entity_model] ASSERTION ERROR: Something went wrong. Invalid aspect handle conversion was attempted.\n");
         exit(EXIT_FAILURE);
     }
@@ -284,4 +293,5 @@ GenericTable::Iterator<Aspect<TYPE>> EntityModel::aspects()
 }
 
 
+#include "/home/lucas/computer_graphics/cg_sandbox/core/world/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 #endif // ENTITY_MODEL_H

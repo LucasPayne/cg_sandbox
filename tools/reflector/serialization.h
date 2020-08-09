@@ -2,6 +2,50 @@
 #define SERIALIZATION_H
 #include <vector>
 #include <iostream>
+#include <functional>
+/*--------------------------------------------------------------------------------
+    Typedefs for serialization functions.
+--------------------------------------------------------------------------------*/
+template <typename T>
+using PackFunction = void (*)(T &, std::ostream &);
+template <typename T>
+using UnpackFunction = void (*)(std::istream &, T &);
+template <typename T>
+using PrintFunction = void (*)(T &);
+
+
+// To dynamically serialize different types, a generic interface is needed.
+// Serialization functions can be converted to a generic byte-serializing function
+// with the methods below.
+typedef std::function<void(uint8_t &, std::ostream &)> GenericPackFunction;
+typedef std::function<void(std::istream &, uint8_t &)> GenericUnpackFunction;
+typedef std::function<void(uint8_t &)> GenericPrintFunction;
+
+// These methods are used to convert a serialization function into a generic version that
+// serializes bytes.
+template <typename T>
+GenericPackFunction generic_pack()
+{
+    return [](uint8_t &bytes, std::ostream &out) {
+        pack(reinterpret_cast<T &>(bytes), out);
+    };
+}
+template <typename T>
+GenericUnpackFunction generic_unpack()
+{
+    return [](std::istream &in, uint8_t &bytes) {
+        unpack(in, reinterpret_cast<T &>(bytes));
+    };
+}
+template <typename T>
+GenericPrintFunction generic_print()
+{
+    return [](uint8_t &bytes) {
+        print(reinterpret_cast<T &>(bytes));
+    };
+}
+
+
 /*--------------------------------------------------------------------------------
     Declarations
 --------------------------------------------------------------------------------*/
@@ -68,5 +112,6 @@ void print(std::vector<T> &obj) {
 // Dummy struct used to flag struct/class declarations for the code generator.
 // Serialized structs/classes must derive from this.
 struct SERIALIZE {};
+
 
 #endif // SERIALIZATION_H

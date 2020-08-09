@@ -42,7 +42,7 @@ class World;
 };
 
 
-struct Behaviour : public IAspectType<Behaviour> {
+struct Behaviour : public AspectBase {
     size_t object_size;
     IBehaviour *object;
 };

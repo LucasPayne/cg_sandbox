@@ -168,7 +168,7 @@ public:
     };
     TableEntryID next_id();
     // Get the header of the entry/slot at the given index. This contains the ID and index of the next in the free list.
-    inline Header *get_header(uint32_t index) {
+    Header *get_header(uint32_t index) {
         return reinterpret_cast<Header *>(&m_buffer[m_entry_size * index]);
     }
     std::vector<uint8_t> m_buffer;

@@ -32,10 +32,14 @@ public:
 
     TableEntryID ID() const;
 
-    Aspect(EntityModel *_em, TableHandle _handle);
-    Aspect(EntityModel *_em, TableCollectionHandle<TYPE> _handle);
+    Aspect(EntityModel *_em, TableCollectionHandle<TYPE> _handle) :
+        em{_em}, handle{_handle}
+    {}
+    Aspect(EntityModel *_em, TableHandle _handle) :
+        em{_em}, handle{_handle}
+    {}
+    Aspect() {};
     Aspect(TypedAspect typed_aspect);
-    Aspect();
 private:
     EntityModel *em;
     TableCollectionHandle<TYPE> handle;
@@ -118,33 +122,7 @@ AspectTypeStaticData
 typedef TableCollectionType AspectType;
 
 
-template <typename T>
-struct AspectTypeStaticData {
-    static AspectType type_id;
-};
-
-
-// Statically initialize the aspect type ID to null.
-template <typename T>
-AspectType AspectTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
-
-
 // } // end namespace details
-
-
-/*--------------------------------------------------------------------------------
-IAspectType<T>
-    When defining an aspect type T, inherit from IAspectType<T>. In this way,
-    static data for the aspect type is initialized, and the actual aspect-instance
-    data struct is defined in the body.
-
-    This global variable for the ID allows aspect type template parameters to be convertible
-    to actual type IDs, through TYPE::type_id. For example, entity.add<Transform>() will
-    internally use Transform::type_id.
---------------------------------------------------------------------------------*/
-template <typename T>
-struct IAspectType : AspectTypeStaticData<T>, public AspectBase {
-};
 
 
 /*================================================================================
@@ -185,23 +163,16 @@ Aspect<TYPE> Entity::add()
 
     TableCollectionHandle<TYPE> aspect_handle = em->aspect_tables.add<TYPE>();
     Aspect<TYPE> aspect(em, aspect_handle);
+    aspect->entity = *this; // Give a reference to this entity (Entity is a referential type, so just give it the whole thing). 
+
+
     TypedAspect typed_aspect(em, TypedTableCollectionHandle::create(aspect_handle));
 
-    // Add this aspect to the end of the linked list.
-    if (entry->first_aspect.handle.id == 0) {
-        // Put this aspect at the head of the linked list.
-        entry->first_aspect = typed_aspect;
-        return aspect;
-    }
-    TypedAspect prev = entry->first_aspect;
-    TypedAspect cur = prev->next_aspect;
+    // Add this aspect to the head of the linked list.
+    TypedAspect temp = entry->first_aspect;
+    entry->first_aspect = typed_aspect;
+    typed_aspect->next_aspect = temp;
 
-    while (cur.handle.id != 0) {
-        prev = cur;
-        cur = prev->next_aspect;
-    }
-    // Put this aspect in the middle or at the end of the linked list.
-    prev->next_aspect = TypedAspect(em, TypedTableCollectionHandle::create(aspect_handle));
     return aspect;
 }
 
@@ -209,7 +180,7 @@ Aspect<TYPE> Entity::add()
 template <typename TYPE>
 Aspect<TYPE> Entity::get()
 {
-    AspectType aspect_type = TYPE::type_id;
+    AspectType aspect_type = TableCollectionTypeData<TYPE>::type_id;
     EntityEntry *entry = em->entity_table.lookup(handle);
 
     // Search this entity's aspects.
@@ -228,21 +199,11 @@ Aspect<TYPE> Entity::get()
 // Aspect<TYPE>
 //--------------------------------------------------------------------------------
 template <typename TYPE>
-Aspect<TYPE>::Aspect(EntityModel *_em, TableCollectionHandle<TYPE> _handle) :
-    em{_em}, handle{_handle}
-{}
-template <typename TYPE>
-Aspect<TYPE>::Aspect(EntityModel *_em, TableHandle _handle) :
-    em{_em}, handle{_handle}
-{}
-
-
-template <typename TYPE>
 Aspect<TYPE>::Aspect(TypedAspect typed_aspect) :
     em{typed_aspect.em}
 {
     // Assert that this conversion is valid.
-    if (typed_aspect.handle.type != TYPE::type_id) {
+    if (typed_aspect.handle.type != TableCollectionTypeData<TYPE>::type_id) {
         fprintf(stderr, "[entity_model] ASSERTION ERROR: Something went wrong. Invalid aspect handle conversion was attempted.\n");
         exit(EXIT_FAILURE);
     }
@@ -275,7 +236,8 @@ template <typename TYPE>
 Entity Aspect<TYPE>::entity()
 {
     // The entity reference is not stored in the handle, but in the table.
-    return (*this)->entity;
+    AspectBase *aspect_entry = reinterpret_cast<AspectBase *>(em->aspect_tables.lookup<TYPE>(handle));
+    return aspect_entry->entity;
 }
 
 

@@ -11,11 +11,21 @@ IDEAS/THINGS:
 #include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
 #include <math.h>
+#include <stdarg.h>
 
 #include "world/standard_aspects/standard_aspects.h"
 
 ShadingModelInstance *shading_model_model_test;
 
+static void log_render(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    printf("[render] ");
+    vprintf(format, args);
+    printf("\n");
+    va_end(args);
+}
 
 World::World()
 {
@@ -110,6 +120,10 @@ void World::close()
 {
 }
 
+
+
+
+
 void World::loop()
 {
     printf("================================================================================\n");
@@ -139,16 +153,25 @@ void World::loop()
     }
     // Render.
     for (auto camera : em.aspects<Camera>()) {
+        log_render("Getting camera transform...");
         auto camera_transform = camera.sibling<Transform>();
+        log_render("Calculating view-projection matrix...");
         mat4x4 view_matrix = camera_transform->inverse_matrix();
         mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
+        log_render("Uploading view-projection matrix...");
         shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
+        log_render("Rendering Drawables:");
         for (auto drawable : em.aspects<Drawable>()) {
+            log_render("  Rendering drawable with ID %u.", drawable.ID());
+            log_render("    Getting transform...");
             auto t = drawable.sibling<Transform>();
+            log_render("    Calculating model matrix...");
             mat4x4 model_matrix = t->matrix();
+            log_render("    Uploading model matrix...");
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
 
+            log_render("    Draw.");
             graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
         }
     }

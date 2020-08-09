@@ -10,7 +10,7 @@
 /*--------------------------------------------------------------------------------
 Transform aspect
 --------------------------------------------------------------------------------*/
-/*REFLECTED*/ struct Transform : public IAspectType<Transform> {
+/*REFLECTED*/ struct Transform : public AspectBase {
     /*ENTRY*/ vec3 position;
     /*ENTRY*/ Quaternion rotation;
 
@@ -28,7 +28,7 @@ Transform aspect
 /*--------------------------------------------------------------------------------
 Camera aspect
 --------------------------------------------------------------------------------*/
-/*REFLECTED*/ struct Camera : public IAspectType<Camera> {
+/*REFLECTED*/ struct Camera : public AspectBase {
     // Viewport extents (in terms of the application subrectangle).
     /*ENTRY*/ float bottom_left[2];
     /*ENTRY*/ float top_right[2];
@@ -42,7 +42,7 @@ Camera aspect
 /*--------------------------------------------------------------------------------
 Drawable aspect
 --------------------------------------------------------------------------------*/
-struct Drawable : public IAspectType<Drawable> {
+struct Drawable : public AspectBase {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
 };

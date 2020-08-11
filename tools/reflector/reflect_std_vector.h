@@ -3,17 +3,38 @@
 
 
 template <typename T>
-REFLECT_PRIMITIVE_TEMPLATED(std::vector<T>);
+struct PrimitiveTypeDescriptor<std::vector<T>> : public TypeDescriptor {
+    PrimitiveTypeDescriptor() :
+        TypeDescriptor{sizeof(std::vector<T>), "std::vector"}
+    {
+        element_type = TypeDescriptorGiver<T>::get();
+    }
+    virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
+    virtual void pack(uint8_t &obj, std::ostream &out) const;
+    virtual void unpack(std::istream &in, uint8_t &obj) const;
 
+    TypeDescriptor *element_type;
 
+    virtual std::string name() const {
+        return std::string(base_name) + "<" + element_type->name() + ">";
+    }
+};
 template <typename T>
-REFLECT_PRIMITIVE_GETTER_TEMPLATED(std::vector<T>);
+struct TypeDescriptorGiver<std::vector<T>> {
+public:
+    static TypeDescriptor *get() { return &desc; }
+private:
+    static PrimitiveTypeDescriptor<std::vector<T>> desc;
+};
+template <typename T>
+PrimitiveTypeDescriptor<std::vector<T>> TypeDescriptorGiver<std::vector<T>>::desc;
 
+// DESCRIPTOR_INSTANCE(std::vector<T>)();
 
 template <typename T>
 REFLECT_PRIMITIVE_PRINT(std::vector<T>) {
     auto vec = (std::vector<T> &) obj;
-    out << name << "[\n";
+    out << name() << "[\n";
     for (T &entry : vec) {
         out << std::string(4*(indent_level+1), ' ');
         Reflector::print(entry, indent_level + 1);

@@ -22,16 +22,19 @@ TypeDescriptor
 --------------------------------------------------------------------------------*/
 struct TypeDescriptor {
     size_t size;
-    const char *name;
+    const char *base_name;
 
-    TypeDescriptor(size_t _size, const char *_name) :
-        size{_size}, name{_name}
+    TypeDescriptor(size_t _size, const char *_base_name) :
+        size{_size}, base_name{_base_name}
     {}
     TypeDescriptor() {}
 
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const = 0;
     virtual void pack(uint8_t &obj, std::ostream &out) const = 0;
     virtual void unpack(std::istream &in, uint8_t &obj) const = 0;
+    
+    // name() is overridable so, for example, each instantiation of a template class can have a different name.
+    virtual std::string name() const { return std::string(base_name); }
 };
 
 
@@ -103,36 +106,17 @@ struct PrimitiveTypeDescriptor;
         virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
-    };
-#define REFLECT_PRIMITIVE_TEMPLATED(TYPE)\
-    struct PrimitiveTypeDescriptor<TYPE> : public TypeDescriptor {\
-        PrimitiveTypeDescriptor() : TypeDescriptor{sizeof(TYPE), #TYPE} {}\
-        virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
-        virtual void pack(uint8_t &obj, std::ostream &out) const;\
-        virtual void unpack(std::istream &in, uint8_t &obj) const;\
-    };
-
-#define REFLECT_PRIMITIVE_DECLARE_GETTER(TYPE)\
+    };\
     template <>\
     struct TypeDescriptorGiver<TYPE> {\
-        static TypeDescriptor *get();\
-    }
-
-
-// Implementations file.
-#define REFLECT_PRIMITIVE_GETTER(TYPE)\
-    TypeDescriptor *TypeDescriptorGiver<TYPE>::get()\
-    {\
+    public:\
+        static TypeDescriptor *get() { return &desc; }\
+    private:\
         static PrimitiveTypeDescriptor<TYPE> desc;\
-        return &desc;\
-    }
-#define REFLECT_PRIMITIVE_GETTER_TEMPLATED(TYPE)\
-    struct TypeDescriptorGiver<TYPE> {\
-        static TypeDescriptor *get() {\
-            static PrimitiveTypeDescriptor<TYPE> desc;\
-            return &desc;\
-        }\
-    }
+    };
+
+#define DESCRIPTOR_INSTANCE(TYPE)\
+    PrimitiveTypeDescriptor<TYPE> TypeDescriptorGiver<TYPE>::desc
 
 
 #define REFLECT_PRIMITIVE_PRINT(TYPE)\
@@ -173,7 +157,7 @@ Example:
         static TypeDescriptor *get()\
         {\
             static TypeDescriptor_Struct desc;\
-            desc.name = #STRUCT_NAME;\
+            desc.base_name = #STRUCT_NAME;\
             using TYPE = STRUCT_NAME;\
             desc.size = sizeof(TYPE);\
             desc.entries = {\
@@ -195,19 +179,12 @@ Reflection declarations for the basic C++ types.
 These are included here for convenience, since they will most likely be needed.
 ================================================================================*/
 REFLECT_PRIMITIVE(float);
-REFLECT_PRIMITIVE_DECLARE_GETTER(float);
 REFLECT_PRIMITIVE(bool);
-REFLECT_PRIMITIVE_DECLARE_GETTER(bool);
 REFLECT_PRIMITIVE(int);
-REFLECT_PRIMITIVE_DECLARE_GETTER(int);
 REFLECT_PRIMITIVE(uint8_t);
-REFLECT_PRIMITIVE_DECLARE_GETTER(uint8_t);
 REFLECT_PRIMITIVE(uint16_t);
-REFLECT_PRIMITIVE_DECLARE_GETTER(uint16_t);
 REFLECT_PRIMITIVE(uint32_t);
-REFLECT_PRIMITIVE_DECLARE_GETTER(uint32_t);
 REFLECT_PRIMITIVE(uint64_t);
-REFLECT_PRIMITIVE_DECLARE_GETTER(uint64_t);
 
 
 
@@ -254,7 +231,6 @@ void unpack(std::istream &in, TYPE &obj)
 
 // Non-basic, but common C++ types have reflection declared here.
 REFLECT_PRIMITIVE(std::string);
-REFLECT_PRIMITIVE_DECLARE_GETTER(std::string);
 // std::vector is templated, and has reflections organized in its own header file.
 #include "reflector/reflect_std_vector.h"
 

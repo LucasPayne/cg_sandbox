@@ -210,6 +210,7 @@ void World::mouse_handler(MouseEvent e)
 /*--------------------------------------------------------------------------------
     Entity serialization.
 --------------------------------------------------------------------------------*/
+/*
 void World::pack_entity(Entity entity, std::ostream &out)
 {
     // The TypeDescriptor gives a type tree, information that can be traversed.
@@ -258,7 +259,6 @@ Entity World::unpack_entity(std::istream &in)
     return entity;
 }
 
-
 Entity World::copy_entity(Entity entity)
 {
     std::ostringstream buffer;
@@ -287,3 +287,4 @@ Entity World::import_entity(std::string &path)
     return entity;
 }
 
+*/

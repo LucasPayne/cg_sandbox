@@ -19,5 +19,6 @@
 
 // Reflection is standard.
 #include "reflector/reflector.h"
+#include "reflector/reflect_std_vector.h"
 
 #endif // CORE_H

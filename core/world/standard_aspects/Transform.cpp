@@ -5,6 +5,7 @@ void Transform::init(vec3 _position, Quaternion _rotation)
 {
     position = _position;
     rotation = _rotation;
+    scale = 1.f;
 }
 
 
@@ -12,6 +13,7 @@ void Transform::init(float x, float y, float z)
 {
     position = vec3(x,y,z);
     rotation = Quaternion::identity();
+    scale = 1.f;
 }
 
 
@@ -19,6 +21,7 @@ void Transform::init(vec3 _position)
 {
     position = _position;
     rotation = Quaternion::identity();
+    scale = 1.f;
 }
 
 
@@ -26,6 +29,7 @@ void Transform::init_lookat(vec3 position, vec3 target)
 {
     position = position;
     lookat(target);
+    scale = 1.f;
 }
 
 
@@ -63,9 +67,9 @@ mat4x4 Transform::matrix() const
     Quaternion q3 = rotation * Quaternion(0,0,0,1) * inverse_rotation;
 
     // note: mat4x4 constructor parameter order is column-major.
-    return mat4x4(q1.i(),q1.j(),q1.k(),0,
-                  q2.i(),q2.j(),q2.k(),0,
-                  q3.i(),q3.j(),q3.k(),0,
+    return mat4x4(scale * q1.i(),scale * q1.j(),scale * q1.k(),0,
+                  scale * q2.i(),scale * q2.j(),scale * q2.k(),0,
+                  scale * q3.i(),scale * q3.j(),scale * q3.k(),0,
                   position.x(),position.y(),position.z(),1);
 }
 
@@ -76,9 +80,9 @@ mat4x4 Transform::inverse_matrix() const
     Quaternion q1 = rotation * Quaternion(0,1,0,0) * inverse_rotation;
     Quaternion q2 = rotation * Quaternion(0,0,1,0) * inverse_rotation;
     Quaternion q3 = rotation * Quaternion(0,0,0,1) * inverse_rotation;
-    mat4x4 M(q1.i(),q2.i(),q3.i(),0,
-             q1.j(),q2.j(),q3.j(),0,
-             q1.k(),q2.k(),q3.k(),0,
+    mat4x4 M(scale * q1.i(),scale * q2.i(),scale * q3.i(),0,
+             scale * q1.j(),scale * q2.j(),scale * q3.j(),0,
+             scale * q1.k(),scale * q2.k(),scale * q3.k(),0,
              0,0,0,1);
     vec4 p = M * vec4(-position, 1);
     M.entry(0,3) = p.x();

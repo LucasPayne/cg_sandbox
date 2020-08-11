@@ -14,11 +14,15 @@ void TypeDescriptor_Struct::print(uint8_t &obj, std::ostream &out, int indent_le
 }
 void TypeDescriptor_Struct::pack(uint8_t &obj, std::ostream &out) const
 {
-
+    for (const StructEntry &entry : entries) {
+        entry.type->pack((&obj)[entry.offset], out);
+    }
 }
 void TypeDescriptor_Struct::unpack(std::istream &in, uint8_t &obj) const
 {
-
+    for (const StructEntry &entry : entries) {
+        entry.type->unpack(in, (&obj)[entry.offset]);
+    }
 }
 
 
@@ -77,4 +81,6 @@ REFLECT_PRIMITIVE_FLAT(uint64_t);
 
 
 
-
+/*--------------------------------------------------------------------------------
+Definitions for the standard non-basic primitive types.
+--------------------------------------------------------------------------------*/

@@ -1,3 +1,5 @@
+
+
 struct CameraController : public IBehaviour {
     float azimuth;
     float angle;
@@ -94,3 +96,19 @@ struct CameraController : public IBehaviour {
         mouse_sensitivity = 1;
     }
 };
+
+
+REFLECT_STRUCT(CameraController)
+    STRUCT_ENTRY(azimuth)
+    STRUCT_ENTRY(angle)
+    STRUCT_ENTRY(strafe_speed)
+    STRUCT_ENTRY(forward_speed)
+    STRUCT_ENTRY(lift_speed)
+    STRUCT_ENTRY(view_with_mouse)
+    STRUCT_ENTRY(key_view_speed_horizontal)
+    STRUCT_ENTRY(key_view_speed_vertical)
+    STRUCT_ENTRY(min_angle)
+    STRUCT_ENTRY(max_angle)
+    STRUCT_ENTRY(mouse_sensitivity)
+END_REFLECT_STRUCT()
+

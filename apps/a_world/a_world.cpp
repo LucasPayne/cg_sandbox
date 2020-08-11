@@ -6,6 +6,10 @@
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 
+
+CameraController *cc = nullptr;
+
+
 class App : public IGC::Callbacks {
 public:
     World &world;
@@ -29,16 +33,17 @@ App::App(World &_world) : world{_world}
         auto t = cameraman.add<Transform>();
         t->init(0,0,0);
         CameraController *controller = world.add<CameraController>(cameraman);
-        controller->init();
+        controller->init();    
+        cc = controller; //make globally available.
 
-        printf("Testing...\n");
-        printf("Camera\n");
-        auto cc = cameraman.get<Camera>();
-        cc->bottom_left[0] = 0.1;
-        printf("Transform\n");
-        auto tt = cameraman.get<Transform>();
-        tt->position = vec3(1,1,1);
-        printf("Done\n");
+        // printf("Testing...\n");
+        // printf("Camera\n");
+        // auto cc = cameraman.get<Camera>();
+        // cc->bottom_left[0] = 0.1;
+        // printf("Transform\n");
+        // auto tt = cameraman.get<Transform>();
+        // tt->position = vec3(1,1,1);
+        // printf("Done\n");
     }
 #endif
 #if 1
@@ -70,6 +75,13 @@ void App::window_handler(WindowEvent e)
 void App::keyboard_handler(KeyboardEvent e)
 {
     check_quit_key(e, KEY_Q);
+
+    if (e.action == KEYBOARD_PRESS) {
+        if (e.key.code == KEY_I) {
+            Reflector::print(*cc);
+            getchar();
+        }
+    }
 }
 void App::mouse_handler(MouseEvent e)
 {
@@ -77,6 +89,11 @@ void App::mouse_handler(MouseEvent e)
 
 int main(int argc, char *argv[])
 {
+    // Test basic serialization.
+    // Quaternion q(0.3, -12, 31, 0.3222);
+    // Reflector::print(q);
+    // getchar();
+
     printf("[main] Creating context...\n");
     IGC::Context context("A world");
     printf("[main] Creating world...\n");

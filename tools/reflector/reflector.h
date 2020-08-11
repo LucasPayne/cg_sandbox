@@ -29,7 +29,7 @@ struct TypeDescriptor {
     {}
     TypeDescriptor() {}
 
-    virtual void print(uint8_t &obj) const = 0;
+    virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const = 0;
     virtual void pack(uint8_t &obj, std::ostream &out) const = 0;
     virtual void unpack(std::istream &in, uint8_t &obj) const = 0;
 };
@@ -45,6 +45,8 @@ TypeDescriptor_Struct
     TypeDescriptorOf().
 --------------------------------------------------------------------------------*/
 struct TypeDescriptor_Struct : public TypeDescriptor {
+    // reference: https://github.com/preshing/FlexibleReflection/blob/part1/Reflect.h
+
     struct StructEntry {
         const char *name;
         size_t offset;
@@ -53,19 +55,9 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
     std::vector<StructEntry> entries;
     TypeDescriptor_Struct() {}
 
-    virtual void print(uint8_t &obj) const {
-        std::cout << name << "{\n";
-        for (const StructEntry &entry : entries) {
-            entry.type->print((&obj)[entry.offset]);
-        }
-        std::cout << "}";
-    }
-    virtual void pack(uint8_t &obj, std::ostream &out) const {
-
-    }
-    virtual void unpack(std::istream &in, uint8_t &obj) const {
-
-    }
+    virtual void print(uint8_t &obj, std::ostream &out, int indent_level = 0) const;
+    virtual void pack(uint8_t &obj, std::ostream &out) const;
+    virtual void unpack(std::istream &in, uint8_t &obj) const;
 };
 
 
@@ -105,7 +97,7 @@ struct PrimitiveTypeDescriptor;
     template <>\
     struct PrimitiveTypeDescriptor<TYPE> : public TypeDescriptor {\
         PrimitiveTypeDescriptor() : TypeDescriptor{sizeof(TYPE), #TYPE} {}\
-        virtual void print(uint8_t &obj) const;\
+        virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
     };\
@@ -123,7 +115,7 @@ struct PrimitiveTypeDescriptor;
 
 
 #define REFLECT_PRIMITIVE_PRINT(TYPE)\
-    void PrimitiveTypeDescriptor<TYPE>::print(uint8_t &obj) const
+    void PrimitiveTypeDescriptor<TYPE>::print(uint8_t &obj, std::ostream &out, int indent_level) const
 
 
 // Many primitive types will be simple flat data types, meaning their binary pack/unpack functions
@@ -167,7 +159,7 @@ Example:
 
 
 /*================================================================================
-Declarations of the basic C++ types.
+Reflection declarations for the basic C++ types.
 These are included here for convenience, since they will most likely be needed.
 ================================================================================*/
 REFLECT_PRIMITIVE(float);
@@ -178,5 +170,46 @@ REFLECT_PRIMITIVE(uint16_t);
 REFLECT_PRIMITIVE(uint32_t);
 REFLECT_PRIMITIVE(uint64_t);
 //--------------------------------------------------------------------------------
+
+
+
+
+/*--------------------------------------------------------------------------------
+    Helper functions for users of reflection.
+--------------------------------------------------------------------------------*/
+namespace Reflector {
+
+
+// A family of template functions is defined for ease-of-use of the serialization functions available.
+
+
+template <typename TYPE>
+void print(TYPE &obj, std::ostream &out, int indent_level = 0)
+{
+    TypeDescriptorOf<TYPE>()->print((uint8_t &)obj, out, indent_level);
+}
+// Convenient overload for printing to stdout.
+template <typename TYPE>
+void print(TYPE &obj, int indent_level = 0)
+{
+    TypeDescriptorOf<TYPE>()->print((uint8_t &)obj, std::cout, indent_level);
+}
+
+
+template <typename TYPE>
+void pack(TYPE &obj, std::ostream &out)
+{
+    TypeDescriptorOf<TYPE>()->pack((uint8_t &)obj, out);
+}
+
+
+template <typename TYPE>
+void unpack(std::istream &in, TYPE &obj)
+{
+    TypeDescriptorOf<TYPE>()->unpack(in, (uint8_t &)obj);
+}
+
+
+} // end namespace Reflector
 
 #endif // REFLECTOR_H

@@ -8,7 +8,7 @@
 #include "graphics_resources/graphics_resources.h"
 #include "world/standard_aspects/standard_aspects.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
-#include "spatial_algebra/spatial_algebra.h"
+#include "mathematics/mathematics.h"
 #include "model_loader/model_loader.h"
 
 #endif // CG_SANDBOX

@@ -2,11 +2,10 @@
 #define STANDARD_ASPECTS_H
 #include "core.h"
 #include "interactive_graphics_context/input.h"
-#include "spatial_algebra/spatial_algebra.h"
+#include "mathematics/mathematics.h"
 
 #include "world/world.h"
 
-#include "reflector/serialization.h"
 
 /*--------------------------------------------------------------------------------
 Transform aspect
@@ -49,5 +48,4 @@ Drawable aspect
 };
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/standard_aspects.serialize.h" /*SERIALIZE*/
 #endif // STANDARD_ASPECTS_H

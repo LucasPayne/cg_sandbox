@@ -7,6 +7,7 @@
 #include <string>
 #include "spatial_algebra/spatial_algebra.h"
 
+
 struct TexCoord {
     float u;
     float v;

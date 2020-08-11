@@ -17,4 +17,7 @@
 
 #define frand() (rand() / (RAND_MAX * 1.0))
 
+// Reflection is standard.
+#include "reflector/reflector.h"
+
 #endif // CORE_H

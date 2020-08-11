@@ -1,12 +1,10 @@
 #ifndef DRAWING_H
 #define DRAWING_H
-#include "spatial_algebra/spatial_algebra.h"
+#include "mathematics/mathematics.h"
 
 #include "graphics_resources/graphics_resources.h"
 
 #include "world/resource_model/resource_model.h"
-
-#include "reflector/serialization.h"
 
 
 struct PropertySheet {
@@ -103,5 +101,4 @@ template <typename T>
 };
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/drawing.serialize.h" /*SERIALIZE*/
 #endif // DRAWING_H

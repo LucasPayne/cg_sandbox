@@ -1,15 +1,20 @@
 #include "world/standard_aspects/standard_aspects.h"
 
+
 void Transform::init(vec3 _position, Quaternion _rotation)
 {
     position = _position;
     rotation = _rotation;
 }
+
+
 void Transform::init(float x, float y, float z)
 {
     position = vec3(x,y,z);
     rotation = Quaternion::identity();
 }
+
+
 void Transform::init(vec3 _position)
 {
     position = _position;
@@ -23,12 +28,14 @@ void Transform::init_lookat(vec3 position, vec3 target)
     lookat(target);
 }
 
+
 vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
 {
     vec3 Z = vec3::cross(v, axis);
     vec3 X = vec3::cross(axis, Z);
     return vec3::dot(v, axis)*axis + cos(angle)*X + sin(angle)*Z;
 }
+
 
 // lookat assumes that the plane of pitch rotation is spanned by the world Y-axis and the direction to the target.
 void Transform::lookat(vec3 target)
@@ -47,6 +54,7 @@ void Transform::lookat(vec3 target)
     rotation = q2 * q1;
 }
 
+
 mat4x4 Transform::matrix() const
 {
     Quaternion inverse_rotation = rotation.inverse();
@@ -60,6 +68,8 @@ mat4x4 Transform::matrix() const
                   q3.i(),q3.j(),q3.k(),0,
                   position.x(),position.y(),position.z(),1);
 }
+
+
 mat4x4 Transform::inverse_matrix() const
 {
     Quaternion inverse_rotation = rotation.inverse();

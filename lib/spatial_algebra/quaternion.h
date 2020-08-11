@@ -8,16 +8,16 @@ https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Using_quaternion_
 #include "vec3_vec4.h"
 #include <math.h>
 #include <ostream>
-#include "reflector/serialization.h"
 
-/*REFLECTED*/ struct Quaternion {
+
+struct Quaternion {
     Quaternion(float scalar, float i, float j, float k) :
         entries{scalar,i,j,k}
     {}
     Quaternion() {}
     static inline Quaternion identity() { return Quaternion(1,0,0,0); }
 
-    /*ENTRY*/ float entries[4];
+    float entries[4];
     inline float scalar() const { return entries[0]; }
     inline float &scalar() { return entries[0]; }
     inline float i() const { return entries[1]; }
@@ -82,5 +82,5 @@ inline Quaternion operator*(const Quaternion &A, const Quaternion &B) {
 }
 std::ostream &operator<<(std::ostream &os, const Quaternion &q);
 
-#include "/home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/quaternion.serialize.h" /*SERIALIZE*/
+
 #endif // SPATIAL_ALGEBRA_QUATERNION_H

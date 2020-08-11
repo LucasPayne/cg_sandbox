@@ -8,7 +8,6 @@ Provides rendering resources:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "gl/gl.h"
-#include "reflector/serialization.h"
 
 #include "world/resource_model/resource_model.h"
 
@@ -90,6 +89,4 @@ typedef uint16_t VertexAttributeBindingIndex;
     GLuint gl_index_buffer_id;
 };
 
-
-#include "/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/vertex_arrays.serialize.h" /*SERIALIZE*/
 #endif // VERTEX_ARRAYS_H

@@ -17,8 +17,6 @@ Provides rendering resources:
 
 #include "world/resource_model/resource_model.h"
 
-#include "reflector/serialization.h"
-
 
 /*--------------------------------------------------------------------------------
     GeometricMaterial + Material + ShadingModel system.
@@ -320,5 +318,4 @@ void shading_file_lexer_set_istream(const std::istream &stream);
     END private implementation details.
 ================================================================================*/
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/shading.serialize.h" /*SERIALIZE*/
 #endif // SHADING_H

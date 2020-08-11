@@ -2,11 +2,11 @@
 #define SPATIAL_ALGEBRA_MAT4X4_H
 #include <string.h>
 #include <ostream>
-#include "reflector/serialization.h"
+
 
 // mat4x4 is column-major, as default in OpenGL/GLSL.
-/*REFLECTED*/ struct mat4x4 {
-    /*ENTRY*/ float entries[16];
+struct mat4x4 {
+    float entries[16];
     // Constructor with column-major parameter order.
     mat4x4(float e00, float e10, float e20, float e30,
            float e01, float e11, float e21, float e31,
@@ -91,5 +91,5 @@ inline mat4x4 operator*(mat4x4 A, mat4x4 B) {
 }
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M);
 
-#include "/home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/mat4x4.serialize.h" /*SERIALIZE*/
+
 #endif // SPATIAL_ALGEBRA_MAT4X4_H

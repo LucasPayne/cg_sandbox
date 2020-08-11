@@ -3,8 +3,6 @@
 #include "core.h"
 #include "data_structures/table.h"
 
-#include "reflector/serialization.h"
-
 
 class World; // Classes here are a friend of World, only so World can handle saving the entity model.
 /*--------------------------------------------------------------------------------
@@ -293,5 +291,4 @@ GenericTable::Iterator<Aspect<TYPE>> EntityModel::aspects()
 }
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/entity_model/entity_model.serialize.h" /*SERIALIZE*/
 #endif // ENTITY_MODEL_H

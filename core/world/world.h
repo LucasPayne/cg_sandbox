@@ -16,29 +16,27 @@ such as the entity and resource models.
 #include "world/assets/assets.h"
 #include "world/graphics/graphics.h"
 
-#include "reflector/serialization.h"
-
 
 /*--------------------------------------------------------------------------------
 Behaviour aspect
 --------------------------------------------------------------------------------*/
 class World;
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
-/*REFLECTED*/ struct IBehaviour {
+struct IBehaviour {
     World *world;
-    /*ENTRY*/ Entity entity;
+    Entity entity;
         // Each Behaviour attached to an entity is given a reference to the entity.
-    /*ENTRY*/ bool updating;
+    bool updating;
     virtual void update() {
         // After one call, signify that this virtual function has not been overridden,
         // and that it is a no-op.
         updating = false;
     }
-    /*ENTRY*/ bool handling_mouse;
+    bool handling_mouse;
     virtual void mouse_handler(MouseEvent e) {
         handling_mouse = false;
     }
-    /*ENTRY*/ bool handling_keyboard;
+    bool handling_keyboard;
     virtual void keyboard_handler(KeyboardEvent e) {
         handling_keyboard = false;
     }
@@ -111,5 +109,4 @@ private:
 };
 
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/world.serialize.h" /*SERIALIZE*/
 #endif // WORLD_H

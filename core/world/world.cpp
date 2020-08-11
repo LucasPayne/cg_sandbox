@@ -15,7 +15,9 @@ IDEAS/THINGS:
 
 #include "world/standard_aspects/standard_aspects.h"
 
+
 ShadingModelInstance *shading_model_model_test;
+
 
 static void log_render(const char *format, ...)
 {
@@ -26,6 +28,7 @@ static void log_render(const char *format, ...)
     printf("\n");
     va_end(args);
 }
+
 
 World::World()
 {
@@ -92,6 +95,7 @@ World::World()
     printf("[world] InputState initialized.\n");
 }
 
+
 void World::save(std::string &path)
 {
     std::ofstream file;
@@ -108,7 +112,7 @@ void World::save(std::string &path)
     // Assets assets;
 
     // EntityModel
-    pack(em.entity_table, file);
+    // pack(em.entity_table, file);
     // pack(em.aspect_tables, file);
 }
 
@@ -122,9 +126,6 @@ World World::load_world(std::string &path)
 void World::close()
 {
 }
-
-
-
 
 
 void World::loop()
@@ -180,6 +181,7 @@ void World::loop()
     }
 }
 
+
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : em.aspects<Behaviour>()) {
@@ -188,6 +190,8 @@ void World::keyboard_handler(KeyboardEvent e)
         }
     }
 }
+
+
 void World::mouse_handler(MouseEvent e)
 {
     for (auto b : em.aspects<Behaviour>()) {
@@ -196,4 +200,3 @@ void World::mouse_handler(MouseEvent e)
         }
     }
 }
-

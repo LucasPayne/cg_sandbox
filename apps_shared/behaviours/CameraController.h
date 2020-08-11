@@ -1,23 +1,21 @@
-// #include "reflector/serialization.h"
+struct CameraController : public IBehaviour {
+    float azimuth;
+    float angle;
 
-/*REFLECTED*/ struct CameraController : public IBehaviour {
-    /*ENTRY*/ float azimuth;
-    /*ENTRY*/ float angle;
+    float strafe_speed;
+    float forward_speed;
+    float lift_speed;
 
-    /*ENTRY*/ float strafe_speed;
-    /*ENTRY*/ float forward_speed;
-    /*ENTRY*/ float lift_speed;
+    bool view_with_mouse;
+    float key_view_speed_horizontal;
+    float key_view_speed_vertical;
 
-    /*ENTRY*/ bool view_with_mouse;
-    /*ENTRY*/ float key_view_speed_horizontal;
-    /*ENTRY*/ float key_view_speed_vertical;
-
-    /*ENTRY*/ float min_angle;
-    /*ENTRY*/ float max_angle;
+    float min_angle;
+    float max_angle;
 
     #define BASE_MOUSE_SENSITIVITY 1.22
     // mouse_sensitivity multiplies the base sensitivity.
-    /*ENTRY*/ float mouse_sensitivity;
+    float mouse_sensitivity;
 
     inline void lock_angle() {
         if (angle < min_angle) angle = min_angle;
@@ -96,6 +94,3 @@
         mouse_sensitivity = 1;
     }
 };
-
-#include "/home/lucas/computer_graphics/cg_sandbox/apps_shared/behaviours/CameraController.serialize.h" /*SERIALIZE*/
-// #include "behaviours/CameraController.serialize.cpp" // Include definitions, this is a header-only module.

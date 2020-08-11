@@ -42,6 +42,8 @@ add_library(cg_sandbox
     ${BISON_shading_file_parser_OUTPUTS}
     ${FLEX_shading_file_lexer_OUTPUTS}
 
+    core/mathematics/mathematics.cpp
+
     core/world/world.cpp
     core/world/entity_model/entity_model.cpp
     core/world/resource_model/resource_model.cpp
@@ -56,7 +58,7 @@ add_library(cg_sandbox
     core/world/graphics/drawing.cpp
 
     dependencies/glad/glad.c
-    tools/reflector/serialization.cpp
+    tools/reflector/reflector.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 

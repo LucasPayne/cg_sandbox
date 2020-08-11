@@ -3,14 +3,14 @@
 #include <math.h>
 #include <ostream>
 #include <stdlib.h>
-#include "reflector/serialization.h"
 #define frand() (rand() / (RAND_MAX * 1.0))
+
 
 // vec3 and vec4 classes.
 // references:
 //    Peter Shirley, Ray Tracing in One Weekend, intro on vector classes
-/*REFLECTED*/ struct vec3 {
-    /*ENTRY*/ float entries[3];
+struct vec3 {
+    float entries[3];
     vec3() {}
     static inline vec3 zero() { return vec3(0,0,0); }
     vec3(float x, float y, float z) : entries{x,y,z} {}
@@ -273,5 +273,5 @@ inline vec4 operator/(const vec4 &v, const float &t) {
 std::ostream &operator<<(std::ostream &os, const vec3 &v);
 std::ostream &operator<<(std::ostream &os, const vec4 &v);
 
-#include "/home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/vec3_vec4.serialize.h" /*SERIALIZE*/
+
 #endif // SPATIAL_ALGEBRA_VEC3_VEC4_H

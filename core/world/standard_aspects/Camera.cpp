@@ -1,5 +1,6 @@
 #include "world/standard_aspects/standard_aspects.h"
 
+
 void Camera::init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio)
 {
     float n = near_plane_distance;

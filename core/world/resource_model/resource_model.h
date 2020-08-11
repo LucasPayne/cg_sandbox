@@ -6,8 +6,6 @@
 #include "core.h"
 #include "data_structures/table.h"
 
-#include "reflector/serialization.h"
-
 
 typedef TableCollectionType ResourceType;
 
@@ -111,5 +109,5 @@ TableEntryID Resource<TYPE>::ID() const
     return handle.id;
 }
 
-#include "/home/lucas/computer_graphics/cg_sandbox/core/world/resource_model/resource_model.serialize.h" /*SERIALIZE*/
+
 #endif // RESOURCE_MODEL_H

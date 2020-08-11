@@ -1,5 +1,4 @@
 #include "world/entity_model/entity_model.h"
-#include "world/entity_model/entity_model.serialize.cpp"
 
 
 // Entity

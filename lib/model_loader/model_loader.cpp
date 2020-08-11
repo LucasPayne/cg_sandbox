@@ -2,6 +2,7 @@
 #include "spatial_algebra/spatial_algebra.h"
 #include <stdarg.h>
 
+
 static ModelFileFormatLoader model_file_format_loaders[] = {
     load_OFF_model,
     load_Obj_model,

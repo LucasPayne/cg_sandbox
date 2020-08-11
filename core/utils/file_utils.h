@@ -8,6 +8,8 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <time.h>
+#include <vector>
+
 
 typedef std::vector<uint8_t> ByteArray;
 

@@ -12,6 +12,10 @@ IDEAS/THINGS:
 #include "spatial_algebra/spatial_algebra.h"
 #include <math.h>
 #include <stdarg.h>
+#include <sstream>
+
+#include <assert.h>
+
 
 #include "world/standard_aspects/standard_aspects.h"
 
@@ -200,3 +204,86 @@ void World::mouse_handler(MouseEvent e)
         }
     }
 }
+
+
+
+/*--------------------------------------------------------------------------------
+    Entity serialization.
+--------------------------------------------------------------------------------*/
+void World::pack_entity(Entity entity, std::ostream &out)
+{
+    // The TypeDescriptor gives a type tree, information that can be traversed.
+    // Why dictate a single pack function?
+    // How could traversal policies be made clear by the user?
+    // For example, pack this but instead of serializing Resource<T>s as handles
+    // (which makes sense if everything is being serialized), actually pack the underlying
+    // data, and when unpacking, create a new Resource<T> for it. This is what would be wanted here.
+
+    // Pack how many names that unpacker will need to read.
+    size_t num_aspects = entity.num_aspects();
+    pack(num_aspects, out);
+    // Pack the names of the types. These names will need to be mapped to types at runtime later, when unpacking.
+    for (Aspect &aspect : entity.aspects()) {
+        pack(aspect.type->name, out);
+        // Now pack the actual aspect data.
+        aspect.type->pack((uint8_t &) *aspect, out);
+    }
+}
+
+
+Entity World::unpack_entity(std::istream &in)
+{
+    Entity entity = em.new_entity();
+    size_t num_aspects;
+    unpack(in, num_aspects);
+    std::vector<std::string> type_names(num_aspects);
+    for (auto &name : type_names) {
+        unpack(in, name);
+    }
+    for (auto &name : type_names) {
+        unpack(in, name);
+
+        //... map name to type descriptor ...
+        TypeDescriptor *type = TypeDescriptorLookup(name);
+
+        //... generic alternative to the templated add_aspect ...
+        // Aspect without <> is generic. Why not be uniform here, and always store type information (the type descriptor)
+        // in handles? Then the template methods are just helpers.
+        Aspect aspect = entity.add_aspect(type);
+        type->unpack(in, *aspect);
+    }
+    // ... something, fix up references ...
+
+
+    return entity;
+}
+
+
+Entity World::copy_entity(Entity entity)
+{
+    std::ostringstream buffer;
+    pack_entity(entity, buffer);
+    return unpack_entity(buffer);
+}
+
+
+void World::export_entity(Entity entity, std::string &path)
+{
+    std::ofstream file;
+    file.open(path, std::ios::trunc | std::ios::out | std::ios::binary);
+    assert(file.is_open());
+    pack_entity(entity, file);
+    file.close();
+}
+
+
+Entity World::import_entity(std::string &path)
+{
+    std::ifstream file;
+    file.open(path, std::ios::trunc | std::ios::in | std::ios::binary);
+    assert(file.is_open());
+    Entity entity = unpack_entity(file);
+    file.close();
+    return entity;
+}
+

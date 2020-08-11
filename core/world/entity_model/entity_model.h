@@ -18,7 +18,7 @@ class EntityModel;
 struct TypedAspect;
 
 template <typename TYPE>
-/*REFLECTED*/ struct Aspect {
+struct Aspect {
     friend class Entity;
     friend class EntityModel;
     friend class World;
@@ -45,7 +45,7 @@ public:
     Aspect(TypedAspect typed_aspect);
 // private:
     EntityModel *em; // Not serialized. This _must_ be set manually when an EntityModel is loaded.
-    /*ENTRY*/ TableCollectionHandle<TYPE> handle;
+    TableCollectionHandle<TYPE> handle;
 };
 
 
@@ -57,7 +57,7 @@ Entity
 struct EntityEntry;
 class EntityModel;
 
-/*REFLECTED*/ struct Entity {
+struct Entity {
     friend class EntityModel;
     template <typename TYPE> friend class Aspect;
     friend class World;
@@ -77,7 +77,7 @@ public:
     {}
 
     EntityModel *em;
-    /*ENTRY*/ TableHandle handle;
+    TableHandle handle;
 };
 
 
@@ -90,9 +90,9 @@ TypedAspect
 --------------------------------------------------------------------------------*/
 struct AspectBase;
 
-/*REFLECTED*/ struct TypedAspect {
+struct TypedAspect {
     EntityModel *em;
-    /*ENTRY*/ TypedTableCollectionHandle handle;
+    TypedTableCollectionHandle handle;
     AspectBase &operator*();
     AspectBase *operator->();
 
@@ -106,9 +106,9 @@ struct AspectBase;
 AspectBase
     Each entry in the aspect tables has a common base of data, given here.
 --------------------------------------------------------------------------------*/
-/*REFLECTED*/ struct AspectBase {
-    /*ENTRY*/ Entity entity;
-    /*ENTRY*/ TypedAspect next_aspect;
+struct AspectBase {
+    Entity entity;
+    TypedAspect next_aspect;
 };
 
 
@@ -116,8 +116,8 @@ AspectBase
 EntityEntry
     An entry in the entity table. The aspects can be traversed starting here.
 --------------------------------------------------------------------------------*/
-/*REFLECTED*/ struct EntityEntry {
-    /*ENTRY*/ TypedAspect first_aspect;
+struct EntityEntry {
+    TypedAspect first_aspect;
 };
 
 

@@ -79,15 +79,15 @@ App::App(World &_world) : world{_world}
 
     // Create some objects.
     for (int i = 0; i < 1; i++) {
-        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/buddha.obj");
-
-        // Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/venus_de_milo.obj");
+        // Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/buddha.obj");
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/venus_de_milo.obj");
         Entity dolphin = world.em.new_entity();
         auto t = dolphin.add<Transform>();
         vec3 base(0,0,0);
         t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
         t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI);
-        t->scale = 2;
+        // t->scale = 2;
+        t->scale = 0.001;
         auto drawable = dolphin.add<Drawable>();
         drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
         drawable->material = MaterialInstance(mat);

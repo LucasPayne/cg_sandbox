@@ -13,11 +13,10 @@ Provides rendering resources:
 
 
 typedef uint16_t VertexAttributeBindingIndex;
-#define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
-/*REFLECTED*/ struct VertexSemantic {
-    /*ENTRY*/ char name[MAX_VERTEX_SEMANTIC_NAME_LENGTH + 1];
-    /*ENTRY*/ GLenum type;
-    /*ENTRY*/ GLint size;
+struct VertexSemantic {
+    std::string name;
+    GLenum type;
+    GLint size;
     
     VertexAttributeBindingIndex get_binding_index();
 
@@ -25,42 +24,48 @@ typedef uint16_t VertexAttributeBindingIndex;
     inline bool operator==(VertexSemantic other) {
         return (type == other.type)
                 && (size == other.size)
-                && (strncmp(name, other.name, MAX_VERTEX_SEMANTIC_NAME_LENGTH) == 0);
+                && (name == other.name);
     }
     // Returns the byte-length of a single attribute of this semantic.
     size_t type_size() const;
 
     VertexSemantic(GLenum _type, GLint _size, const std::string &_name) :
-        type{_type}, size{_size}
-    {
-        if (_name.length() > MAX_VERTEX_SEMANTIC_NAME_LENGTH) {
-            fprintf(stderr, "ERROR: Vertex semantic name too long.\n");
-            exit(EXIT_FAILURE);
-        }
-        snprintf(name, MAX_VERTEX_SEMANTIC_NAME_LENGTH+1, "%s", _name.c_str());
-    }
+        type{_type}, size{_size}, name{_name}
+    {}
 
     VertexSemantic() {}//testing
 };
+REFLECT_STRUCT(VertexSemantic)
+    STRUCT_ENTRY(name)
+    STRUCT_ENTRY(type)
+    STRUCT_ENTRY(size)
+END_REFLECT_STRUCT()
 
 
-/*REFLECTED*/ struct VertexArrayLayout {
-    /*ENTRY*/ GLenum index_type;
+struct VertexArrayLayout {
+    GLenum index_type;
         // GL_UNSIGNED_{BYTE,SHORT,INT}
-    /*ENTRY*/ uint32_t num_vertices;
-    /*ENTRY*/ bool indexed;
-    /*ENTRY*/ uint32_t num_indices;
+    uint32_t num_vertices;
+    bool indexed;
+    uint32_t num_indices;
 
     std::vector<VertexSemantic> semantics;
     size_t vertex_size() const;
     size_t index_type_size() const;
 };
+REFLECT_STRUCT(VertexArrayLayout)
+    STRUCT_ENTRY(index_type)
+    STRUCT_ENTRY(num_vertices)
+    STRUCT_ENTRY(indexed)
+    STRUCT_ENTRY(num_indices)
+    STRUCT_ENTRY(semantics)
+END_REFLECT_STRUCT()
 
 
-/*REFLECTED*/ struct VertexArrayData {
-    /*ENTRY*/ VertexArrayLayout layout;
-    /*ENTRY*/ std::vector<std::vector<uint8_t>> attribute_buffers;
-    /*ENTRY*/ std::vector<uint8_t> index_buffer;
+struct VertexArrayData {
+    VertexArrayLayout layout;
+    std::vector<std::vector<uint8_t>> attribute_buffers;
+    std::vector<uint8_t> index_buffer;
         //note: uint8_t just signifies this is a byte-buffer.
 
     // Since index data can be packed in 1 or 2 or 4 bytes, this function is here for access to the i'th index.
@@ -74,10 +79,14 @@ typedef uint16_t VertexAttributeBindingIndex;
         }
     }
 };
+REFLECT_STRUCT(VertexArrayData)
+    STRUCT_ENTRY(layout)
+    STRUCT_ENTRY(attribute_buffers)
+    STRUCT_ENTRY(index_buffer)
+END_REFLECT_STRUCT()
 
 
-// Reflected for now, to provide the serialization functions a resource needs, but doesn't really make sense.
-/*REFLECTED*/ struct VertexArray : public ResourceBase {
+struct VertexArray : public ResourceBase {
     static VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;

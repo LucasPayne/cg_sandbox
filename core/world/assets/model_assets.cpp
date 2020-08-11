@@ -3,9 +3,11 @@ notes:
     Messy serialization stuff here.
 --------------------------------------------------------------------------------*/
 #include <limits>//numeric_limits
-#include "world/assets/model_assets.h"
 #include "gl/gl.h"
 #include "utils/file_utils.h"
+
+#include "world/assets/model_assets.h"
+
 
 // Logging for this module.
 static void log(const char *format, ...)
@@ -71,108 +73,7 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
     }
 }
 
-struct PODSArrayPtr {
-    uint32_t offset;
-    uint32_t size;
-    PODSArrayPtr(uint32_t _offset, uint32_t _size) :
-        offset{_offset}, size{_size}
-    {}
-};
 
-struct PODS {
-    // Using a PODS for serializing an object.
-    template <typename T>
-    static PODS object(const T &obj) {
-        PODS pods;
-        pods.buffer = std::vector<uint8_t>(sizeof(T));
-        memcpy(&pods.buffer[0], &obj, sizeof(T));
-        return pods;
-    }
-    // Deserialize a binary file by reading it into the PODS buffer.
-    PODS() {}
-
-    std::vector<uint8_t> buffer;
-
-    template <typename VECTOR_OF>
-    size_t pack_vector(size_t vector_entry_offset, const std::vector<VECTOR_OF> &vec) {
-        size_t vector_data_offset = buffer.size();
-        size_t vector_data_size = sizeof(VECTOR_OF) * vec.size();
-        buffer.resize(vector_data_offset + vector_data_size);
-        PODSArrayPtr array_ptr(vector_data_offset, vector_data_size);
-        *((PODSArrayPtr *) &buffer[vector_entry_offset]) = array_ptr;
-        memcpy(&buffer[vector_data_offset], &vec[0], vector_data_size);
-        return vector_data_offset;
-    }
-
-    template <typename VECTOR_OF>
-    std::vector<VECTOR_OF> unpack_vector(size_t vector_entry_offset, size_t *packed_offset = nullptr) {
-        PODSArrayPtr array_ptr = *((PODSArrayPtr *) &buffer[vector_entry_offset]);
-        if (packed_offset != nullptr) *packed_offset = array_ptr.offset;
-        // printf("Unpacking offset:%zu, size:%zu\n", array_ptr.offset, array_ptr.size);getchar();
-        // printf("%zu\n", array_ptr.size / sizeof(VECTOR_OF));
-        std::vector<VECTOR_OF> vec = std::vector<VECTOR_OF>(array_ptr.size / sizeof(VECTOR_OF));
-        // for (int i = 0; i < vec.size(); i++) {
-        //     vec[i] = ((VECTOR_OF *) &buffer[array_ptr.offset])[i];
-        // }
-
-        //---If packed_offset is not nullptr, then the caller is using that offset to fill the buffer.
-        //---This is done for non PODS types such as std::vector that seem to just cause a segfault when memcpy'd over.
-        if (packed_offset == nullptr) memcpy(&vec[0], &buffer[array_ptr.offset], array_ptr.size);
-        return vec;
-    }
-};
-
-bool VertexArrayData_compile(const VertexArrayData &vertex_array, std::ofstream &file)
-{
-    // Pack the vertex array data into a contiguous file.
-    PODS pods = PODS::object<VertexArrayData>(vertex_array);
-    pods.pack_vector<VertexSemantic>
-        ((uint8_t *)&vertex_array.layout.semantics - (uint8_t *)&vertex_array, vertex_array.layout.semantics);
-    size_t attribute_buffers_offset = pods.pack_vector<std::vector<uint8_t>>
-        ((uint8_t *)&vertex_array.attribute_buffers - (uint8_t *)&vertex_array, vertex_array.attribute_buffers);
-    pods.pack_vector<uint8_t>
-        ((uint8_t *)&vertex_array.index_buffer - (uint8_t *)&vertex_array, vertex_array.index_buffer);
-
-    // Deeper array references (e.g. arrays of arrays) are laid out in breadth first order.
-    // First, array references in the flat struct, then in the members of those arrays, etc.
-    for (unsigned int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
-        pods.pack_vector<uint8_t>(attribute_buffers_offset + i*sizeof(std::vector<uint8_t>), vertex_array.attribute_buffers[i]);
-    }
-    file.write((char *)&pods.buffer[0], pods.buffer.size());
-
-    return true;
-}
-bool VertexArrayData_decompile(ByteArray &bytes, VertexArrayData &vertex_array)
-{
-    PODS pods;
-    pods.buffer = bytes; //--does this copy?
-
-    // VertexArrayData pods_vertex_array = *((VertexArrayData *) &pods.buffer[0]);
-    VertexArrayData *pods_vertex_array = ((VertexArrayData *) &pods.buffer[0]);
-    // printf("%u\n", pods_vertex_array->layout.num_vertices);
-    vertex_array.layout.index_type = pods_vertex_array->layout.index_type;
-    vertex_array.layout.num_vertices = pods_vertex_array->layout.num_vertices;
-    vertex_array.layout.indexed = pods_vertex_array->layout.indexed;
-    vertex_array.layout.num_indices = pods_vertex_array->layout.num_indices;
-    vertex_array.layout.semantics = pods.unpack_vector<VertexSemantic>
-        ((uint8_t *)&vertex_array.layout.semantics - (uint8_t *)&vertex_array);
-    size_t attribute_buffers_offset;
-    vertex_array.attribute_buffers = pods.unpack_vector<std::vector<uint8_t>>
-        ((uint8_t *)&vertex_array.attribute_buffers - (uint8_t *)&vertex_array, &attribute_buffers_offset);
-    vertex_array.index_buffer = pods.unpack_vector<uint8_t>
-        ((uint8_t *)&vertex_array.index_buffer - (uint8_t *)&vertex_array);
-
-    for (unsigned int i = 0; i < vertex_array.attribute_buffers.size(); i++) {
-        vertex_array.attribute_buffers[i] = pods.unpack_vector<uint8_t>(attribute_buffers_offset + i*sizeof(std::vector<uint8_t>));
-    }
-
-    // size_t attribute_buffers_offset = pods.vector<std::vector<uint8_t>>
-    //     ((uint8_t *)&vertex_array.attribute_buffers - (uint8_t *)&vertex_array, vertex_array.attribute_buffers);
-    // pods.vector<uint8_t>
-    //     ((uint8_t *)&vertex_array.index_buffer - (uint8_t *)&vertex_array, vertex_array.index_buffer);
-
-    return true;
-}
 
 Resource<VertexArray> ModelAssets::load(const std::string &path)
 {
@@ -194,20 +95,19 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         // The source asset has not changed since the last time it was compiled.
         // Read in the compiled file.
         log("Model has an up-to-date compiled version, loading that...\n");
-        ByteArray compiled_bytes;
-        if (!load_bytes_from_file(compiled_path, compiled_bytes)) {
-            fprintf(stderr, "ERROR: Failed to load bytes from file \"%s\".\n", compiled_path.c_str());
-            exit(EXIT_FAILURE);
-        }
-        VertexArrayData_decompile(compiled_bytes, va);
+        Reflector::unpack(compiled_file, va);
     } else {
-        // Either a compiled asset does not exist, or the source asset has changed since the last time it was compiled.
+        // Either a compiled asset does not exist (or it failed to open), or the source asset has changed since the last time it was compiled.
         // Compile the asset, and save it on disk.
         log("Model has no compiled version, compiling model and saving to disk...\n");
         std::ofstream new_compiled_file(compiled_path, std::ios::binary | std::ios::out);
+        if (!new_compiled_file.is_open()) {
+            fprintf(stderr, "ERROR: Failed to create new file \"%s\" when compiling model.\n", compiled_path.c_str());
+            exit(EXIT_FAILURE);
+        }
         MLModel model = MLModel::load(path, ML_COMPUTE_PHONG_NORMALS);
         MLModel_to_VertexArrayData(model, va);
-        VertexArrayData_compile(va, new_compiled_file);
+        Reflector::pack(va, new_compiled_file);
     }
     auto vertex_array_resource = rm->new_resource<VertexArray>();
     *vertex_array_resource = VertexArray::from_vertex_array_data(va);

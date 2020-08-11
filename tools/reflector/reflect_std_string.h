@@ -1,13 +1,11 @@
-#ifndef REFLECT_STD_VECTOR_H
-#define REFLECT_STD_VECTOR_H
+#ifndef REFLECT_STD_STRING_H
+#define REFLECT_STD_STRING_H
 
 
-template <typename T>
-REFLECT_PRIMITIVE_TEMPLATED(std::vector<T>);
+REFLECT_PRIMITIVE(std::string);
 
 
-template <typename T>
-REFLECT_PRIMITIVE_GETTER_TEMPLATED(std::vector<T>);
+REFLECT_PRIMITIVE_DECLARE_GETTER(std::vector<T>);
 
 
 template <typename T>
@@ -48,4 +46,4 @@ REFLECT_PRIMITIVE_UNPACK(std::vector<T>) {
 }
 
 
-#endif // REFLECT_STD_VECTOR_H
+#endif // REFLECT_STD_STRING_H

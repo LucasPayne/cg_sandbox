@@ -32,6 +32,8 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 # Executable
 #================================================================================
 add_library(cg_sandbox
+    tools/reflector/reflector.cpp
+
     core/data_structures/table.cpp
 
     core/gl/glsl.cpp
@@ -58,7 +60,6 @@ add_library(cg_sandbox
     core/world/graphics/drawing.cpp
 
     dependencies/glad/glad.c
-    tools/reflector/reflector.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g)
 

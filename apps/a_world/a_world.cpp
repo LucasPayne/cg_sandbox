@@ -58,6 +58,7 @@ App::App(World &_world) : world{_world}
         controller->init();    
 
         controller->test_vector = {{1,2,3}, {2,9,8}, {-3,0,0}, {1,23,45}};
+        controller->test_string = "hello, world";
 
 
         cc = controller; //make globally available.

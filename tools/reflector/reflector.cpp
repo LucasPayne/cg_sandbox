@@ -84,3 +84,22 @@ REFLECT_PRIMITIVE_FLAT(uint64_t);
 /*--------------------------------------------------------------------------------
 Definitions for the standard non-basic primitive types.
 --------------------------------------------------------------------------------*/
+REFLECT_PRIMITIVE_GETTER(std::string);
+REFLECT_PRIMITIVE_PRINT(std::string) {
+    std::string &str = (std::string &) obj;
+    out << name << "(\"" << str << "\")";
+}
+REFLECT_PRIMITIVE_PACK(std::string) {
+    std::string &str = (std::string &) obj;
+    size_t length = str.length();
+    out.write((char *)&length, sizeof(size_t));
+    out.write(str.c_str(), sizeof(char)*length);
+}
+REFLECT_PRIMITIVE_UNPACK(std::string) {
+    size_t length;
+    in.read((char *)&length, sizeof(size_t));
+    std::string str(length, '\0');
+    in.read(&str[0], sizeof(char)*length);
+
+    *((std::string *) &obj) = str;
+}

@@ -30,6 +30,7 @@ struct CameraController : public IBehaviour {
     float mouse_sensitivity;
 
     std::vector<TestStruct> test_vector;
+    std::string test_string;
 
 
     inline void lock_angle() {
@@ -124,5 +125,6 @@ REFLECT_STRUCT(CameraController)
     STRUCT_ENTRY(max_angle)
     STRUCT_ENTRY(mouse_sensitivity)
     STRUCT_ENTRY(test_vector)
+    STRUCT_ENTRY(test_string)
 END_REFLECT_STRUCT()
 

@@ -9,7 +9,6 @@ references:
 ================================================================================*/
 #include <iostream>
 #include <vector>
-#include <string>
 #include <iomanip> // Input-output manipulators. Used to set decimal places in output floats.
 #include <stdint.h>
 
@@ -211,10 +210,6 @@ REFLECT_PRIMITIVE(uint64_t);
 REFLECT_PRIMITIVE_DECLARE_GETTER(uint64_t);
 
 
-//--------------------------------------------------------------------------------
-
-
-
 
 /*--------------------------------------------------------------------------------
     Helper functions for users of reflection.
@@ -253,5 +248,15 @@ void unpack(std::istream &in, TYPE &obj)
 
 
 } // end namespace Reflector
+
+
+
+
+// Non-basic, but common C++ types have reflection declared here.
+REFLECT_PRIMITIVE(std::string);
+REFLECT_PRIMITIVE_DECLARE_GETTER(std::string);
+// std::vector is templated, and has reflections organized in its own header file.
+#include "reflector/reflect_std_vector.h"
+
 
 #endif // REFLECTOR_H

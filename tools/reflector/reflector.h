@@ -105,6 +105,13 @@ struct PrimitiveTypeDescriptor;
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
     };
+#define REFLECT_PRIMITIVE_TEMPLATED(TYPE)\
+    struct PrimitiveTypeDescriptor<TYPE> : public TypeDescriptor {\
+        PrimitiveTypeDescriptor() : TypeDescriptor{sizeof(TYPE), #TYPE} {}\
+        virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
+        virtual void pack(uint8_t &obj, std::ostream &out) const;\
+        virtual void unpack(std::istream &in, uint8_t &obj) const;\
+    };
 
 #define REFLECT_PRIMITIVE_DECLARE_GETTER(TYPE)\
     template <>\
@@ -119,6 +126,13 @@ struct PrimitiveTypeDescriptor;
     {\
         static PrimitiveTypeDescriptor<TYPE> desc;\
         return &desc;\
+    }
+#define REFLECT_PRIMITIVE_GETTER_TEMPLATED(TYPE)\
+    struct TypeDescriptorGiver<TYPE> {\
+        static TypeDescriptor *get() {\
+            static PrimitiveTypeDescriptor<TYPE> desc;\
+            return &desc;\
+        }\
     }
 
 
@@ -173,9 +187,6 @@ Example:
             return &desc;\
         }\
     };\
-
-
-
 
 
 

@@ -1,4 +1,14 @@
 
+struct TestStruct {
+    int a;
+    int b;
+    int c;
+};
+REFLECT_STRUCT(TestStruct)
+    STRUCT_ENTRY(a)
+    STRUCT_ENTRY(b)
+    STRUCT_ENTRY(c)
+END_REFLECT_STRUCT()
 
 struct CameraController : public IBehaviour {
     float azimuth;
@@ -18,6 +28,9 @@ struct CameraController : public IBehaviour {
     #define BASE_MOUSE_SENSITIVITY 1.22
     // mouse_sensitivity multiplies the base sensitivity.
     float mouse_sensitivity;
+
+    std::vector<TestStruct> test_vector;
+
 
     inline void lock_angle() {
         if (angle < min_angle) angle = min_angle;
@@ -110,5 +123,6 @@ REFLECT_STRUCT(CameraController)
     STRUCT_ENTRY(min_angle)
     STRUCT_ENTRY(max_angle)
     STRUCT_ENTRY(mouse_sensitivity)
+    STRUCT_ENTRY(test_vector)
 END_REFLECT_STRUCT()
 

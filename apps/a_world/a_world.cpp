@@ -56,6 +56,10 @@ App::App(World &_world) : world{_world}
         t->init(0,0,0);
         CameraController *controller = world.add<CameraController>(cameraman);
         controller->init();    
+
+        controller->test_vector = {{1,2,3}, {2,9,8}, {-3,0,0}, {1,23,45}};
+
+
         cc = controller; //make globally available.
 
         // printf("Testing...\n");

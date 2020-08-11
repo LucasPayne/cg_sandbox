@@ -14,9 +14,9 @@ Provides rendering resources:
 
 typedef uint16_t VertexAttributeBindingIndex;
 struct VertexSemantic {
-    std::string name;
     GLenum type;
     GLint size;
+    std::string name;
     
     VertexAttributeBindingIndex get_binding_index();
 
@@ -35,11 +35,7 @@ struct VertexSemantic {
 
     VertexSemantic() {}//testing
 };
-REFLECT_STRUCT(VertexSemantic)
-    STRUCT_ENTRY(name)
-    STRUCT_ENTRY(type)
-    STRUCT_ENTRY(size)
-END_REFLECT_STRUCT()
+REFLECT_STRUCT(VertexSemantic);
 
 
 struct VertexArrayLayout {
@@ -53,13 +49,7 @@ struct VertexArrayLayout {
     size_t vertex_size() const;
     size_t index_type_size() const;
 };
-REFLECT_STRUCT(VertexArrayLayout)
-    STRUCT_ENTRY(index_type)
-    STRUCT_ENTRY(num_vertices)
-    STRUCT_ENTRY(indexed)
-    STRUCT_ENTRY(num_indices)
-    STRUCT_ENTRY(semantics)
-END_REFLECT_STRUCT()
+REFLECT_STRUCT(VertexArrayLayout);
 
 
 struct VertexArrayData {
@@ -79,11 +69,7 @@ struct VertexArrayData {
         }
     }
 };
-REFLECT_STRUCT(VertexArrayData)
-    STRUCT_ENTRY(layout)
-    STRUCT_ENTRY(attribute_buffers)
-    STRUCT_ENTRY(index_buffer)
-END_REFLECT_STRUCT()
+REFLECT_STRUCT(VertexArrayData);
 
 
 struct VertexArray : public ResourceBase {

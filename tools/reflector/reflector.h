@@ -9,7 +9,6 @@ references:
 ================================================================================*/
 #include <iostream>
 #include <vector>
-#include <iomanip> // Input-output manipulators. Used to set decimal places in output floats.
 #include <stdint.h>
 
 
@@ -37,18 +36,11 @@ struct TypeDescriptor {
     virtual std::string name() const { return std::string(base_name); }
 };
 
-
-/*--------------------------------------------------------------------------------
-TypeDescriptor_Struct
-    This concrete type descriptor class describes a struct type, which consists
-    of information about the names and offsets of its entries.
-
-    There is a collection of macros to make it easy to define a new global
-    TypeDescriptor_Struct instance for a specific type, which is obtainable through
-    TypeDescriptorGiver<T>::get().
---------------------------------------------------------------------------------*/
 struct TypeDescriptor_Struct : public TypeDescriptor {
-    // reference: https://github.com/preshing/FlexibleReflection/blob/part1/Reflect.h
+    TypeDescriptor_Struct(size_t _size, const char *_base_name) :
+        TypeDescriptor{_size, _base_name}
+    {}
+    TypeDescriptor_Struct() {}
 
     struct StructEntry {
         const char *name;
@@ -56,27 +48,22 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
         TypeDescriptor *type;
     };
     std::vector<StructEntry> entries;
-    TypeDescriptor_Struct() {}
 
-    virtual void print(uint8_t &obj, std::ostream &out, int indent_level = 0) const;
+    virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
     virtual void unpack(std::istream &in, uint8_t &obj) const;
 };
 
 
-
-/*--------------------------------------------------------------------------------
-The global type descriptor instance for e.g., vec3, is obtained through
-   TypeDescriptorGiver<vec3>::get()->print,pack,unpack, etc.
-note:
-    This is a struct since template functions can't be partially specialized, and partial specialization is wanted
-    for families of types such as std::vector<T>.
---------------------------------------------------------------------------------*/
+// All concrete type descriptors are of type PrimitiveTypeDescriptor<SOME_TYPE>.
 template <typename TYPE>
-struct TypeDescriptorGiver {
-    // Specializations must implement get(). Can't think of a way to force this, so just using duck-typing.
-    // "virtual static" TypeDescriptor *get();
-};
+struct PrimitiveTypeDescriptor;
+
+
+// Define the global instance of the type descriptor.
+#define DESCRIPTOR_INSTANCE(TYPE)\
+    PrimitiveTypeDescriptor<TYPE> PrimitiveTypeDescriptor<TYPE>::desc(PrimitiveTypeDescriptor<TYPE>::init())
+
 
 
 
@@ -93,30 +80,22 @@ Example:
         ... use the data in lvalue "obj" to print out a representation ...
     }
 --------------------------------------------------------------------------------*/
-// Dummy template that helps with these macro definitions.
-template <typename TYPE>
-struct PrimitiveTypeDescriptor;
 
 
 // Header file.
 #define REFLECT_PRIMITIVE(TYPE)\
     template <>\
     struct PrimitiveTypeDescriptor<TYPE> : public TypeDescriptor {\
+    public:\
         PrimitiveTypeDescriptor() : TypeDescriptor{sizeof(TYPE), #TYPE} {}\
         virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
-    };\
-    template <>\
-    struct TypeDescriptorGiver<TYPE> {\
-    public:\
         static TypeDescriptor *get() { return &desc; }\
     private:\
+        static PrimitiveTypeDescriptor<TYPE> init() { return PrimitiveTypeDescriptor<TYPE>(); };\
         static PrimitiveTypeDescriptor<TYPE> desc;\
-    };
-
-#define DESCRIPTOR_INSTANCE(TYPE)\
-    PrimitiveTypeDescriptor<TYPE> TypeDescriptorGiver<TYPE>::desc
+    };\
 
 
 #define REFLECT_PRIMITIVE_PRINT(TYPE)\
@@ -145,31 +124,42 @@ struct PrimitiveTypeDescriptor;
 /*--------------------------------------------------------------------------------
 Struct reflection macros.
 Example:
-    REFLECT_STRUCT(vec3)
-        STRUCT_ENTRY(x)
-        STRUCT_ENTRY(y)
-        STRUCT_ENTRY(z)
-    END_REFLECT_STRUCT()
+header file
+    REFLECT_STRUCT(vec3);
+    BEGIN_ENTRIES(vec3)
+        ENTRY(x)
+        ENTRY(y)
+        ENTRY(z)
+    END_ENTRIES(vec3)
+implementations file
+    DESCRIPTOR_INSTANCE(vec3);
 --------------------------------------------------------------------------------*/
 #define REFLECT_STRUCT(STRUCT_NAME)\
     template <>\
-    struct TypeDescriptorGiver<STRUCT_NAME> {\
-        static TypeDescriptor *get()\
-        {\
-            static TypeDescriptor_Struct desc;\
-            desc.base_name = #STRUCT_NAME;\
-            using TYPE = STRUCT_NAME;\
-            desc.size = sizeof(TYPE);\
-            desc.entries = {\
-
-#define STRUCT_ENTRY(ENTRY_NAME)\
-                {#ENTRY_NAME, offsetof(TYPE, ENTRY_NAME), TypeDescriptorGiver<decltype(TYPE:: ENTRY_NAME)>::get()},
-
-#define END_REFLECT_STRUCT()\
-            };\
-            return &desc;\
-        }\
+    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct {\
+    public:\
+        PrimitiveTypeDescriptor() : TypeDescriptor_Struct{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
+        static TypeDescriptor *get() { return &desc; };\
+    private:\
+        static PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
+        static PrimitiveTypeDescriptor<STRUCT_NAME> init();\
     };\
+
+#define BEGIN_ENTRIES(STRUCT_NAME)\
+    PrimitiveTypeDescriptor<STRUCT_NAME> PrimitiveTypeDescriptor<STRUCT_NAME>::init() {\
+        PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
+        desc.base_name = #STRUCT_NAME;\
+        using TYPE = STRUCT_NAME;\
+        desc.size = sizeof(TYPE);\
+        desc.entries = {\
+
+#define ENTRY(ENTRY_NAME)\
+	    {#ENTRY_NAME, offsetof(TYPE, ENTRY_NAME), PrimitiveTypeDescriptor<decltype(TYPE:: ENTRY_NAME)>::get()},
+    
+#define END_ENTRIES()\
+        };\
+        return desc;\
+    }\
 
 
 
@@ -200,27 +190,27 @@ namespace Reflector {
 template <typename TYPE>
 void print(TYPE &obj, std::ostream &out, int indent_level = 0)
 {
-    TypeDescriptorGiver<TYPE>::get()->print((uint8_t &)obj, out, indent_level);
+    PrimitiveTypeDescriptor<TYPE>::get()->print((uint8_t &)obj, out, indent_level);
 }
 // Convenient overload for printing to stdout.
 template <typename TYPE>
 void print(TYPE &obj, int indent_level = 0)
 {
-    TypeDescriptorGiver<TYPE>::get()->print((uint8_t &)obj, std::cout, indent_level);
+    PrimitiveTypeDescriptor<TYPE>::get()->print((uint8_t &)obj, std::cout, indent_level);
 }
 
 
 template <typename TYPE>
 void pack(TYPE &obj, std::ostream &out)
 {
-    TypeDescriptorGiver<TYPE>::get()->pack((uint8_t &)obj, out);
+    PrimitiveTypeDescriptor<TYPE>::get()->pack((uint8_t &)obj, out);
 }
 
 
 template <typename TYPE>
 void unpack(std::istream &in, TYPE &obj)
 {
-    TypeDescriptorGiver<TYPE>::get()->unpack(in, (uint8_t &)obj);
+    PrimitiveTypeDescriptor<TYPE>::get()->unpack(in, (uint8_t &)obj);
 }
 
 

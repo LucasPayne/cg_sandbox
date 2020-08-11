@@ -1,4 +1,5 @@
 #include "reflector.h"
+#include <iomanip> // Input-output manipulators. Used to set decimal places in output floats.
 
 /*--------------------------------------------------------------------------------
 TypeDescriptor_Struct

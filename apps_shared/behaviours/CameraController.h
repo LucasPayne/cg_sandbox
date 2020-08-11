@@ -4,11 +4,14 @@ struct TestStruct {
     int b;
     int c;
 };
-REFLECT_STRUCT(TestStruct)
-    STRUCT_ENTRY(a)
-    STRUCT_ENTRY(b)
-    STRUCT_ENTRY(c)
-END_REFLECT_STRUCT()
+REFLECT_STRUCT(TestStruct);
+BEGIN_ENTRIES(TestStruct)
+    ENTRY(a)
+    ENTRY(b)
+    ENTRY(c)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(TestStruct);
+
 
 struct CameraController : public IBehaviour {
     float azimuth;
@@ -110,21 +113,20 @@ struct CameraController : public IBehaviour {
         mouse_sensitivity = 1;
     }
 };
-
-
 REFLECT_STRUCT(CameraController)
-    STRUCT_ENTRY(azimuth)
-    STRUCT_ENTRY(angle)
-    STRUCT_ENTRY(strafe_speed)
-    STRUCT_ENTRY(forward_speed)
-    STRUCT_ENTRY(lift_speed)
-    STRUCT_ENTRY(view_with_mouse)
-    STRUCT_ENTRY(key_view_speed_horizontal)
-    STRUCT_ENTRY(key_view_speed_vertical)
-    STRUCT_ENTRY(min_angle)
-    STRUCT_ENTRY(max_angle)
-    STRUCT_ENTRY(mouse_sensitivity)
-    STRUCT_ENTRY(test_vector)
-    STRUCT_ENTRY(test_string)
-END_REFLECT_STRUCT()
-
+BEGIN_ENTRIES(CameraController)
+    ENTRY(azimuth)
+    ENTRY(angle)
+    ENTRY(strafe_speed)
+    ENTRY(forward_speed)
+    ENTRY(lift_speed)
+    ENTRY(view_with_mouse)
+    ENTRY(key_view_speed_horizontal)
+    ENTRY(key_view_speed_vertical)
+    ENTRY(min_angle)
+    ENTRY(max_angle)
+    ENTRY(mouse_sensitivity)
+    ENTRY(test_vector)
+    ENTRY(test_string)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(CameraController);

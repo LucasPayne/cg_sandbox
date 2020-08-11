@@ -71,6 +71,8 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
         va.attribute_buffers.push_back(normals_buffer);
         va.layout.semantics.push_back(VertexSemantic(GL_FLOAT, 3, "v_normal"));
     }
+
+    return true;
 }
 
 

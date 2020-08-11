@@ -4,10 +4,11 @@
 
 template <typename T>
 struct PrimitiveTypeDescriptor<std::vector<T>> : public TypeDescriptor {
+public:
     PrimitiveTypeDescriptor() :
         TypeDescriptor{sizeof(std::vector<T>), "std::vector"}
     {
-        element_type = TypeDescriptorGiver<T>::get();
+        element_type = PrimitiveTypeDescriptor<T>::get();
     }
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
@@ -18,18 +19,14 @@ struct PrimitiveTypeDescriptor<std::vector<T>> : public TypeDescriptor {
     virtual std::string name() const {
         return std::string(base_name) + "<" + element_type->name() + ">";
     }
-};
-template <typename T>
-struct TypeDescriptorGiver<std::vector<T>> {
-public:
+
     static TypeDescriptor *get() { return &desc; }
 private:
     static PrimitiveTypeDescriptor<std::vector<T>> desc;
 };
 template <typename T>
-PrimitiveTypeDescriptor<std::vector<T>> TypeDescriptorGiver<std::vector<T>>::desc;
+PrimitiveTypeDescriptor<std::vector<T>> PrimitiveTypeDescriptor<std::vector<T>>::desc;
 
-// DESCRIPTOR_INSTANCE(std::vector<T>)();
 
 template <typename T>
 REFLECT_PRIMITIVE_PRINT(std::vector<T>) {

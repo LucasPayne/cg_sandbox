@@ -80,11 +80,16 @@ void print(VertexArrayData &obj) {
     std::cout << "}\n";
 }
 void pack(VertexArray &obj, std::ostream &out) {
+    pack((ResourceBase &)obj, out);
 }
 void unpack(std::istream &in, VertexArray &obj) {
+    unpack(in, (ResourceBase &)obj);
 }
 void print(VertexArray &obj) {
     std::cout << "VertexArray {\n";
+    std::cout << "    base ResourceBase {\n";
+    print((ResourceBase &)obj);
+    std::cout << "    }\n";
     std::cout << "}\n";
 }
 

@@ -11,6 +11,9 @@ public:
     Resource<ShadingModel> load_shading_model(const std::string &path);
     ResourceModel *rm;
 private:
+    std::unordered_map<std::string, Resource<GeometricMaterial>> geometric_material_cache;
+    std::unordered_map<std::string, Resource<Material>> material_cache;
+    std::unordered_map<std::string, Resource<ShadingModel>> shading_model_cache;
 };
 
 #endif // SHADING_ASSETS_H

@@ -11,7 +11,6 @@ public:
     Resource<VertexArray> load(const std::string &path);
     ResourceModel *rm;
 private:
-    // Models are shared after complete processing, as vertex arrays in graphics memory.
     std::unordered_map<std::string, Resource<VertexArray>> vertex_array_cache;
 };
 

@@ -10,6 +10,8 @@ Provides rendering resources:
 #include "gl/gl.h"
 #include "reflector/serialization.h"
 
+#include "world/resource_model/resource_model.h"
+
 
 typedef uint16_t VertexAttributeBindingIndex;
 #define MAX_VERTEX_SEMANTIC_NAME_LENGTH 31
@@ -76,7 +78,7 @@ typedef uint16_t VertexAttributeBindingIndex;
 
 
 // Reflected for now, to provide the serialization functions a resource needs, but doesn't really make sense.
-/*REFLECTED*/ struct VertexArray {
+/*REFLECTED*/ struct VertexArray : public ResourceBase {
     static VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;

@@ -178,7 +178,8 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
 {
     log("Getting model from path \"%s\"...\n", path.c_str());
     // Look up the compiled model in the cache.
-    std::unordered_map<std::string, Resource<VertexArray>>::iterator found = vertex_array_cache.find(path);
+    // std::unordered_map<std::string, Resource<VertexArray>>::iterator found = vertex_array_cache.find(path);
+    auto found = vertex_array_cache.find(path);
     if (found != vertex_array_cache.end()) {
         // The model is already loaded. Return the already-compiled vertex array.
         log("Model is already loaded.\n");
@@ -212,6 +213,7 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
     *vertex_array_resource = VertexArray::from_vertex_array_data(va);
     // Cache this.
     vertex_array_cache[path] = vertex_array_resource;
+    vertex_array_resource->asset_backed = true;
     log("Model found successfully.\n");
     return vertex_array_resource;
 }

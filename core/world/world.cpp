@@ -109,7 +109,7 @@ void World::save(std::string &path)
 
     // EntityModel
     pack(em.entity_table, file);
-    pack(em.aspect_tables, file);
+    // pack(em.aspect_tables, file);
 }
 
 

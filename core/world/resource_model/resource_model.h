@@ -11,6 +11,16 @@
 
 typedef TableCollectionType ResourceType;
 
+/*--------------------------------------------------------------------------------
+ResourceBase
+    All resources must derive from this class.
+--------------------------------------------------------------------------------*/
+/*REFLECTED*/ struct ResourceBase {
+    // If this flag is true, then the resource data is not serialized,
+    // as it will be reloaded from asset files.
+    /*ENTRY*/ bool asset_backed;
+};
+
 
 /*--------------------------------------------------------------------------------
 Resource
@@ -51,7 +61,7 @@ public:
     template <typename TYPE>
     Resource<TYPE> new_resource();
 private:
-    TableCollection<> resource_tables;
+    TableCollection<ResourceBase> resource_tables;
 };
 
 

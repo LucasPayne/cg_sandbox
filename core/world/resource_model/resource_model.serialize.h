@@ -1,3 +1,6 @@
+void pack(ResourceBase &obj, std::ostream &out);
+void unpack(std::istream &in, ResourceBase &obj);
+void print(ResourceBase &obj);
 template <typename TYPE>
 void pack(Resource<TYPE> &obj, std::ostream &out) {
     pack(obj.handle, out);

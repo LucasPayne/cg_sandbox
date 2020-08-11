@@ -26,6 +26,10 @@ Function template specialization is used to define descriptors for primitive typ
 Class template speciailization could also be used, since the wanted mechanism is the instantiation
 of one piece of global data.
 
+------------------------------------------------------------
+A lot of this stuff is _just_, in some way, telling the compiler to store this information globally.
+
+
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include <iomanip> // Input-output manipulators. Used to set decimal places in output floats.
@@ -62,51 +66,114 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
 
 
 // There is no generic implementation of this --- it must only be specialized for each primitive type.
-template <typename PRIMITIVE_TYPE>
+template <typename TYPE>
 TypeDescriptor *TypeDescriptorOf();
 
-// Some specializations for descriptors of primitive types.
-template <>
-TypeDescriptor *TypeDescriptorOf<bool>() {
-    static struct Desc : public TypeDescriptor {
-        Desc() : TypeDescriptor{sizeof(bool), "bool"} {}
-        virtual void print(uint8_t &obj) const {
-            bool val = *((bool *) &obj);
-            std::cout << name << "{" << (val ? "True" : "False") << "}";
-        }
-    } desc;
-    return &desc;
-}
-template <>
-TypeDescriptor *TypeDescriptorOf<float>() {
-    static struct Desc : public TypeDescriptor {
-        Desc() : TypeDescriptor{sizeof(float), "float"} {}
-        virtual void print(uint8_t &obj) const {
-            float val = *((float *) &obj);
-            std::cout << name << "{" << std::fixed << std::setprecision(6) << val << "}";
-        }
-    } desc;
-    return &desc;
-}
+template <typename TYPE>
+struct TypeDescription;
 
+/*--------------------------------------------------------------------------------
+Primitive reflection macros.
+A "primitive" is anything that is not a struct. This means that it actually
+needs specialized definitions for things such as printing.
+Example:
+    REFLECT_PRIMITIVE(float);
+    REFLECT_PRIMITIVE_PRINT(float) {
+        ... use the data in lvalue "obj" to print out a representation ...
+    }
+--------------------------------------------------------------------------------*/
+#define REFLECT_PRIMITIVE(TYPE)\
+    template <>\
+    struct TypeDescription<TYPE> : public TypeDescriptor {\
+        TypeDescription() : TypeDescriptor{sizeof(TYPE), #TYPE} {}\
+        virtual void print(uint8_t &obj) const;\
+    };\
+    template <>\
+    TypeDescriptor *TypeDescriptorOf<TYPE>() {\
+        static TypeDescription<TYPE> desc;\
+        return &desc;\
+    }
+#define REFLECT_PRIMITIVE_PRINT(TYPE)\
+    void TypeDescription<TYPE>::print(uint8_t &obj) const
+
+/*--------------------------------------------------------------------------------
+Struct reflection macros.
+Example:
+    REFLECT_STRUCT(vec3)
+        STRUCT_ENTRY(x)
+        STRUCT_ENTRY(y)
+        STRUCT_ENTRY(z)
+    END_REFLECT_STRUCT()
+--------------------------------------------------------------------------------*/
+#define REFLECT_STRUCT(STRUCT_NAME)\
+    template <>\
+    TypeDescriptor *TypeDescriptorOf<STRUCT_NAME>() {\
+        static TypeDescriptor_Struct desc;\
+        desc.name = #STRUCT_NAME;\
+        using TYPE = STRUCT_NAME;\
+        desc.size = sizeof(TYPE);\
+        desc.entries = {\
+
+#define STRUCT_ENTRY(ENTRY_NAME)\
+            {#ENTRY_NAME, offsetof(TYPE, ENTRY_NAME), TypeDescriptorOf<decltype(TYPE:: ENTRY_NAME)>()},
+
+#define END_REFLECT_STRUCT()\
+        };\
+        return &desc;\
+    }
+
+
+//--------------------------------------------------------------------------------
+REFLECT_PRIMITIVE(float);
+REFLECT_PRIMITIVE_PRINT(float) {
+    float val = *((float *) &obj);
+    std::cout << name << "{" << std::fixed << std::setprecision(6) << val << "}";
+}
+REFLECT_PRIMITIVE(bool);
+REFLECT_PRIMITIVE_PRINT(bool) {
+    bool val = *((bool *) &obj);
+    std::cout << name << "{" << (val ? "True" : "False") << "}";
+}
+REFLECT_PRIMITIVE(int);
+REFLECT_PRIMITIVE_PRINT(int) {
+    int val = *((int *) &obj);
+    std::cout << name << "{" << val << "}";
+}
+REFLECT_PRIMITIVE(uint8_t);
+REFLECT_PRIMITIVE_PRINT(uint8_t) {
+    uint8_t val = *((uint8_t *) &obj);
+    std::cout << name << "{" << (unsigned int) val << "}"; // Needs to be cast or it will be treated as a char.
+}
+REFLECT_PRIMITIVE(uint16_t);
+REFLECT_PRIMITIVE_PRINT(uint16_t) {
+    uint16_t val = *((uint16_t *) &obj);
+    std::cout << name << "{" << val << "}";
+}
+REFLECT_PRIMITIVE(uint32_t);
+REFLECT_PRIMITIVE_PRINT(uint32_t) {
+    uint16_t val = *((uint32_t *) &obj);
+    std::cout << name << "{" << val << "}";
+}
+REFLECT_PRIMITIVE(uint64_t);
+REFLECT_PRIMITIVE_PRINT(uint64_t) {
+    uint16_t val = *((uint64_t *) &obj);
+    std::cout << name << "{" << val << "}";
+}
+//--------------------------------------------------------------------------------
 
 struct vec3_info {
     // Contrived example of struct within a struct.
     bool flag1;
     bool flag2;
 };
-template <>
-TypeDescriptor *TypeDescriptorOf<vec3_info>() {
-    static TypeDescriptor_Struct desc;
-    desc.name = "vec3_info";
-    using TYPE = vec3_info;
-    desc.size = sizeof(TYPE);
-    desc.entries = {
-        {"flag1", offsetof(TYPE, flag1), TypeDescriptorOf<decltype(TYPE::flag1)>()},
-        {"flag2", offsetof(TYPE, flag2), TypeDescriptorOf<decltype(TYPE::flag2)>()},
-    };
-    return &desc;
-}
+
+
+
+REFLECT_STRUCT(vec3_info)
+    STRUCT_ENTRY(flag1)
+    STRUCT_ENTRY(flag2)
+END_REFLECT_STRUCT()
+    
 
 struct vec3 {
     float x;
@@ -114,21 +181,13 @@ struct vec3 {
     float z;
     vec3_info info;
 };
-template <>
-TypeDescriptor *TypeDescriptorOf<vec3>() {
-    static TypeDescriptor_Struct desc;
-    desc.name = "vec3";
-    using TYPE = vec3;
-    desc.size = sizeof(TYPE);
-    desc.entries = {
-        {"x", offsetof(TYPE, x), TypeDescriptorOf<decltype(TYPE::x)>()},
-        {"y", offsetof(TYPE, y), TypeDescriptorOf<decltype(TYPE::y)>()},
-        {"z", offsetof(TYPE, z), TypeDescriptorOf<decltype(TYPE::z)>()},
-        {"info", offsetof(TYPE, info), TypeDescriptorOf<decltype(TYPE::info)>()},
-    };
-    return &desc;
-}
 
+REFLECT_STRUCT(vec3)
+    STRUCT_ENTRY(x)
+    STRUCT_ENTRY(y)
+    STRUCT_ENTRY(z)
+    STRUCT_ENTRY(info)
+END_REFLECT_STRUCT()
 
 
 struct Quaternion {

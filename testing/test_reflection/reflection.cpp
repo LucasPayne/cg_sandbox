@@ -56,18 +56,18 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
         for (const StructEntry &entry : entries) {
             entry.type->print((&obj)[entry.offset]);
         }
-        std::cout << name << "}";
+        std::cout << "}";
     }
 };
 
 
 // There is no generic implementation of this --- it must only be specialized for each primitive type.
 template <typename PRIMITIVE_TYPE>
-TypeDescriptor *PrimitiveDescriptor();
+TypeDescriptor *TypeDescriptorOf();
 
 // Some specializations for descriptors of primitive types.
 template <>
-TypeDescriptor *PrimitiveDescriptor<bool>() {
+TypeDescriptor *TypeDescriptorOf<bool>() {
     static struct Desc : public TypeDescriptor {
         Desc() : TypeDescriptor{sizeof(bool), "bool"} {}
         virtual void print(uint8_t &obj) const {
@@ -78,7 +78,7 @@ TypeDescriptor *PrimitiveDescriptor<bool>() {
     return &desc;
 }
 template <>
-TypeDescriptor *PrimitiveDescriptor<float>() {
+TypeDescriptor *TypeDescriptorOf<float>() {
     static struct Desc : public TypeDescriptor {
         Desc() : TypeDescriptor{sizeof(float), "float"} {}
         virtual void print(uint8_t &obj) const {
@@ -94,22 +94,18 @@ struct vec3_info {
     // Contrived example of struct within a struct.
     bool flag1;
     bool flag2;
-
-    static TypeDescriptor_Struct _Type_;
-    static TypeDescriptor_Struct _TypeInit_();
 };
-TypeDescriptor_Struct vec3_info::_Type_(vec3_info::_TypeInit_());
-TypeDescriptor_Struct vec3_info::_TypeInit_()
-{
-    TypeDescriptor_Struct desc;
+template <>
+TypeDescriptor *TypeDescriptorOf<vec3_info>() {
+    static TypeDescriptor_Struct desc;
     desc.name = "vec3_info";
     using TYPE = vec3_info;
     desc.size = sizeof(TYPE);
     desc.entries = {
-        {"flag1", offsetof(TYPE, flag1), PrimitiveDescriptor<decltype(TYPE::flag1)>()},
-        {"flag2", offsetof(TYPE, flag2), PrimitiveDescriptor<decltype(TYPE::flag2)>()},
+        {"flag1", offsetof(TYPE, flag1), TypeDescriptorOf<decltype(TYPE::flag1)>()},
+        {"flag2", offsetof(TYPE, flag2), TypeDescriptorOf<decltype(TYPE::flag2)>()},
     };
-    return desc;
+    return &desc;
 }
 
 struct vec3 {
@@ -117,24 +113,20 @@ struct vec3 {
     float y;
     float z;
     vec3_info info;
-
-    static TypeDescriptor_Struct _Type_;
-    static TypeDescriptor_Struct _TypeInit_();
 };
-TypeDescriptor_Struct vec3::_Type_(vec3::_TypeInit_());
-TypeDescriptor_Struct vec3::_TypeInit_()
-{
-    TypeDescriptor_Struct desc;
+template <>
+TypeDescriptor *TypeDescriptorOf<vec3>() {
+    static TypeDescriptor_Struct desc;
     desc.name = "vec3";
     using TYPE = vec3;
     desc.size = sizeof(TYPE);
     desc.entries = {
-        {"x", offsetof(TYPE, x), PrimitiveDescriptor<decltype(TYPE::x)>()},
-        {"y", offsetof(TYPE, y), PrimitiveDescriptor<decltype(TYPE::y)>()},
-        {"z", offsetof(TYPE, z), PrimitiveDescriptor<decltype(TYPE::z)>()},
-        {"info", offsetof(TYPE, info), &decltype(TYPE::info)::_Type_},
+        {"x", offsetof(TYPE, x), TypeDescriptorOf<decltype(TYPE::x)>()},
+        {"y", offsetof(TYPE, y), TypeDescriptorOf<decltype(TYPE::y)>()},
+        {"z", offsetof(TYPE, z), TypeDescriptorOf<decltype(TYPE::z)>()},
+        {"info", offsetof(TYPE, info), TypeDescriptorOf<decltype(TYPE::info)>()},
     };
-    return desc;
+    return &desc;
 }
 
 
@@ -159,6 +151,6 @@ int main(void)
     v.info.flag1 = true;
     v.info.flag2 = false;
 
-    vec3::_Type_.print((uint8_t &)v);
+    TypeDescriptorOf<vec3>()->print((uint8_t &)v);
     
 }

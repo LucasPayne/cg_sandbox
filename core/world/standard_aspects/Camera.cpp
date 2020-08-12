@@ -22,3 +22,5 @@ void Camera::init_projective(float near_plane_distance, float far_plane_distance
     top_right[0] = 1.0;
     top_right[0] = 1.0;
 }
+
+

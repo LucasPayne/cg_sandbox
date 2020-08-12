@@ -119,7 +119,6 @@ std::map<std::string, TypeDescriptor *> &DescriptorMap::name_to_type() {
 }
 
 TypeDescriptor *DescriptorMap::get(const std::string &name) {
-    printf("%map size: %zu\n", DescriptorMap::name_to_type().size());
     auto found = DescriptorMap::name_to_type().find(name);
     if (found == DescriptorMap::name_to_type().end()) {
         std::cerr << "ERROR: Searched for non-registered type \"" << name << "\"\n";
@@ -140,11 +139,7 @@ void DescriptorMap::register_descriptor(TypeDescriptor *desc)
         printf("[reflector] Type \"%s\" is already registered.\n", name.c_str());
         return;
     }
-    printf("Registered type descriptors:\n");
     name_to_type()[name] = desc;
-    for (auto &element : name_to_type()) {
-        std::cout << "name: " << element.first << "\n";
-    }
 }
 
 

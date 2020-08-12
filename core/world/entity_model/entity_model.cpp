@@ -66,4 +66,5 @@ AspectBase *TypedAspect::operator->()
     return &(*(*this));
 }
 
+
 // } // end namespace details

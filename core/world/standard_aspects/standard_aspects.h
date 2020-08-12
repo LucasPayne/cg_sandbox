@@ -24,6 +24,7 @@ struct Transform : public AspectBase {
     mat4x4 matrix() const;
     mat4x4 inverse_matrix() const;
 };
+REFLECT_STRUCT(Transform);
 
 
 /*--------------------------------------------------------------------------------
@@ -47,6 +48,7 @@ struct Drawable : public AspectBase {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
 };
+
 
 
 #endif // STANDARD_ASPECTS_H

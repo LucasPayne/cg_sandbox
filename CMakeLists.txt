@@ -34,6 +34,7 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 add_library(cg_sandbox
 
     tools/reflector/reflector.cpp
+    tools/reflector/type_handle.cpp
 
     core/data_structures/table.cpp
 

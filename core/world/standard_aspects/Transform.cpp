@@ -90,3 +90,12 @@ mat4x4 Transform::inverse_matrix() const
     M.entry(2,3) = p.z();
     return M;
 }
+
+
+BEGIN_ENTRIES(Transform)
+    ENTRY(position)
+    ENTRY(rotation)
+    ENTRY(scale)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(Transform);
+

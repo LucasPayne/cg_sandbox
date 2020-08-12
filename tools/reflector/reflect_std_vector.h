@@ -19,7 +19,7 @@ public:
     }
     static PrimitiveTypeDescriptor<std::vector<T>> init(bool register_type) {
         auto desc = PrimitiveTypeDescriptor<std::vector<T>>();
-        if (register_type) Reflector::register_descriptor(&desc);
+        if (register_type) Reflector::DescriptorMap::register_descriptor(&desc);
         return desc;
     }
     static TypeDescriptor *get() {

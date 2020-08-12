@@ -135,11 +135,17 @@ int main(int argc, char *argv[])
     // Reflector::print(q);
     // getchar();
 
+    vec3 a_vec3(1,2,3);
+    Reflector::print(a_vec3);
+    printf("\n");
+    getchar();
+
     std::vector<std::vector<int>> stuff;
     std::cout << Reflector::get_descriptor(stuff)->name() << "\n";
     getchar();
 
-    std::cout << Reflector::name_to_descriptor("CameraController")->size << "\n";
+    // std::cout << Reflector::name_to_descriptor("CameraController")->size << "\n";
+    std::cout << Reflector::DescriptorMap::get("CameraController")->size << "\n";
     std::cout << sizeof(CameraController) << "\n";
     getchar();
 

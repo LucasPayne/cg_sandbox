@@ -32,17 +32,13 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 # Executable
 #================================================================================
 add_library(cg_sandbox
+
     tools/reflector/reflector.cpp
 
     core/data_structures/table.cpp
 
     core/gl/glsl.cpp
     core/gl/gl_shader_program.cpp
-
-    core/graphics_resources/shading.cpp
-    core/graphics_resources/vertex_arrays.cpp
-    ${BISON_shading_file_parser_OUTPUTS}
-    ${FLEX_shading_file_lexer_OUTPUTS}
 
     core/mathematics/mathematics.cpp
 
@@ -58,6 +54,11 @@ add_library(cg_sandbox
     core/world/assets/shading_assets.cpp
     core/world/graphics/graphics.cpp
     core/world/graphics/drawing.cpp
+
+    core/graphics_resources/shading.cpp
+    core/graphics_resources/vertex_arrays.cpp
+    ${BISON_shading_file_parser_OUTPUTS}
+    ${FLEX_shading_file_lexer_OUTPUTS}
 
     dependencies/glad/glad.c
 )

@@ -10,6 +10,7 @@ references:
 #include <iostream>
 #include <vector>
 #include <stdint.h>
+#include <map>
 
 
 
@@ -40,11 +41,16 @@ struct TypeDescriptor {
 
 namespace Reflector {
 
-// Register a type in the global map.
-void register_descriptor(TypeDescriptor *desc);
 
-// Lookup a registered type by its name.
-TypeDescriptor *name_to_descriptor(const std::string &name);
+struct DescriptorMap {
+    // Register a type in the global map.
+    static void register_descriptor(TypeDescriptor *desc);
+    // Get a registered type from its name.
+    static TypeDescriptor *get(const std::string &name);
+
+    static std::map<std::string, TypeDescriptor *> &name_to_type();
+};
+
 
 } // end namespace Reflector
 
@@ -107,7 +113,7 @@ Example:
         static TypeDescriptor *get() { return &desc; }\
         static PrimitiveTypeDescriptor<TYPE> init(bool register_type) {\
             auto desc = PrimitiveTypeDescriptor<TYPE>();\
-            if (register_type) Reflector::register_descriptor(&desc);\
+            if (register_type) Reflector::DescriptorMap::register_descriptor(&desc);\
             return desc;\
         };\
         static PrimitiveTypeDescriptor<TYPE> desc;\
@@ -173,7 +179,7 @@ implementations file
     
 #define END_ENTRIES()\
         };\
-        if (register_type) Reflector::register_descriptor(&desc);\
+        if (register_type) Reflector::DescriptorMap::register_descriptor(&desc);\
         return desc;\
     }\
 
@@ -215,9 +221,8 @@ TypeDescriptor *get_descriptor(T &obj)
 
 
 
+
 // A family of template functions is defined for ease-of-use of the serialization functions available.
-
-
 template <typename TYPE>
 void print(TYPE &obj, std::ostream &out, int indent_level = 0)
 {

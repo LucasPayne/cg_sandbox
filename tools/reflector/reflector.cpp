@@ -1,6 +1,6 @@
 #include "reflector.h"
 #include <iomanip> // Input-output manipulators. Used to set decimal places in output floats.
-#include <unordered_map>
+#include <map>
 
 
 /*--------------------------------------------------------------------------------
@@ -113,52 +113,38 @@ Type descriptor registration.
 namespace Reflector {
 
 
-bool initialized_name_to_type_descriptor_map = false;
-std::unordered_map<std::string, TypeDescriptor *> name_to_type_descriptor_map;
-
-void register_descriptor(TypeDescriptor *desc)
-{
-    // Order of static initialization is arbitrary, so initialize the global map when the first descriptor
-    // is registered. This ensures it exists before all registrations.
-        
-    if (!initialized_name_to_type_descriptor_map) {
-        printf("[reflector] Initializing name->descriptor map.\n");
-        name_to_type_descriptor_map = std::unordered_map<std::string, TypeDescriptor *>();
-        initialized_name_to_type_descriptor_map = true;
-    }
-    std::string name = desc->name();
-    printf("[reflector] Registering type \"%s\".\n", name.c_str());
-    auto found = name_to_type_descriptor_map.find(name);
-    if (found != name_to_type_descriptor_map.end()) {
-        printf("[reflector] Type \"%s\" is already registered.\n", name.c_str());
-        return;
-    }
-
-    printf("Before:\n");
-    for (auto &element : name_to_type_descriptor_map) {
-        std::cout << "name: " << element.first << "\n";
-    }
-    printf("After:\n");
-    name_to_type_descriptor_map[name] = desc;
-    for (auto &element : name_to_type_descriptor_map) {
-        std::cout << "name: " << element.first << "\n";
-    }
+std::map<std::string, TypeDescriptor *> &DescriptorMap::name_to_type() {
+    static std::map<std::string, TypeDescriptor *> _name_to_type;
+    return _name_to_type;
 }
 
-
-TypeDescriptor *name_to_descriptor(const std::string &name)
-{
-    for (auto &element : name_to_type_descriptor_map) {
-        std::cout << "name: " << element.first << "\n";
-    }
-
-    printf("%zu\n", name_to_type_descriptor_map.size());
-    auto found = name_to_type_descriptor_map.find(name);
-    if (found == name_to_type_descriptor_map.end()) {
+TypeDescriptor *DescriptorMap::get(const std::string &name) {
+    printf("%map size: %zu\n", DescriptorMap::name_to_type().size());
+    auto found = DescriptorMap::name_to_type().find(name);
+    if (found == DescriptorMap::name_to_type().end()) {
         std::cerr << "ERROR: Searched for non-registered type \"" << name << "\"\n";
         exit(EXIT_FAILURE);
     }
     return found->second;
+}
+
+void DescriptorMap::register_descriptor(TypeDescriptor *desc)
+{
+    // Order of static initialization is arbitrary, so initialize the global map when the first descriptor
+    // is registered. This ensures it exists before all registrations.
+        
+    std::string name = desc->name();
+    printf("[reflector] Registering type \"%s\".\n", name.c_str());
+    auto found = name_to_type().find(name);
+    if (found != name_to_type().end()) {
+        printf("[reflector] Type \"%s\" is already registered.\n", name.c_str());
+        return;
+    }
+    printf("Registered type descriptors:\n");
+    name_to_type()[name] = desc;
+    for (auto &element : name_to_type()) {
+        std::cout << "name: " << element.first << "\n";
+    }
 }
 
 

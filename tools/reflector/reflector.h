@@ -12,6 +12,7 @@ references:
 #include <stdint.h>
 
 
+
 /*--------------------------------------------------------------------------------
 TypeDescriptor
     The abstract base class of all type descriptors. Type operations (such as print)
@@ -35,6 +36,18 @@ struct TypeDescriptor {
     // name() is overridable so, for example, each instantiation of a template class can have a different name.
     virtual std::string name() const { return std::string(base_name); }
 };
+
+
+namespace Reflector {
+
+// Register a type in the global map.
+void register_descriptor(TypeDescriptor *desc);
+
+// Lookup a registered type by its name.
+TypeDescriptor *name_to_descriptor(const std::string &name);
+
+} // end namespace Reflector
+
 
 struct TypeDescriptor_Struct : public TypeDescriptor {
     TypeDescriptor_Struct(size_t _size, const char *_base_name) :
@@ -62,7 +75,7 @@ struct PrimitiveTypeDescriptor;
 
 // Define the global instance of the type descriptor.
 #define DESCRIPTOR_INSTANCE(TYPE)\
-    PrimitiveTypeDescriptor<TYPE> PrimitiveTypeDescriptor<TYPE>::desc(PrimitiveTypeDescriptor<TYPE>::init())
+    PrimitiveTypeDescriptor<TYPE> PrimitiveTypeDescriptor<TYPE>::desc(PrimitiveTypeDescriptor<TYPE>::init(true))
 
 
 
@@ -92,8 +105,11 @@ Example:
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
         static TypeDescriptor *get() { return &desc; }\
-    private:\
-        static PrimitiveTypeDescriptor<TYPE> init() { return PrimitiveTypeDescriptor<TYPE>(); };\
+        static PrimitiveTypeDescriptor<TYPE> init(bool register_type) {\
+            auto desc = PrimitiveTypeDescriptor<TYPE>();\
+            if (register_type) Reflector::register_descriptor(&desc);\
+            return desc;\
+        };\
         static PrimitiveTypeDescriptor<TYPE> desc;\
     };\
 
@@ -130,7 +146,7 @@ header file
         ENTRY(x)
         ENTRY(y)
         ENTRY(z)
-    END_ENTRIES(vec3)
+    END_ENTRIES()
 implementations file
     DESCRIPTOR_INSTANCE(vec3);
 --------------------------------------------------------------------------------*/
@@ -140,13 +156,12 @@ implementations file
     public:\
         PrimitiveTypeDescriptor() : TypeDescriptor_Struct{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
         static TypeDescriptor *get() { return &desc; };\
-    private:\
         static PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
-        static PrimitiveTypeDescriptor<STRUCT_NAME> init();\
+        static PrimitiveTypeDescriptor<STRUCT_NAME> init(bool register_type);\
     };\
 
 #define BEGIN_ENTRIES(STRUCT_NAME)\
-    PrimitiveTypeDescriptor<STRUCT_NAME> PrimitiveTypeDescriptor<STRUCT_NAME>::init() {\
+    PrimitiveTypeDescriptor<STRUCT_NAME> PrimitiveTypeDescriptor<STRUCT_NAME>::init(bool register_type) {\
         PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
         desc.base_name = #STRUCT_NAME;\
         using TYPE = STRUCT_NAME;\
@@ -158,6 +173,7 @@ implementations file
     
 #define END_ENTRIES()\
         };\
+        if (register_type) Reflector::register_descriptor(&desc);\
         return desc;\
     }\
 
@@ -182,6 +198,21 @@ REFLECT_PRIMITIVE(uint64_t);
     Helper functions for users of reflection.
 --------------------------------------------------------------------------------*/
 namespace Reflector {
+
+
+// Type descriptors should be looked up through the type through this family of methods.
+template <typename T>
+TypeDescriptor *get_descriptor()
+{
+    return PrimitiveTypeDescriptor<T>::get();
+}
+
+template <typename T>
+TypeDescriptor *get_descriptor(T &obj)
+{
+    return PrimitiveTypeDescriptor<T>::get();
+}
+
 
 
 // A family of template functions is defined for ease-of-use of the serialization functions available.

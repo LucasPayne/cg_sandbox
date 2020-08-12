@@ -135,6 +135,14 @@ int main(int argc, char *argv[])
     // Reflector::print(q);
     // getchar();
 
+    std::vector<std::vector<int>> stuff;
+    std::cout << Reflector::get_descriptor(stuff)->name() << "\n";
+    getchar();
+
+    std::cout << Reflector::name_to_descriptor("CameraController")->size << "\n";
+    std::cout << sizeof(CameraController) << "\n";
+    getchar();
+
     printf("[main] Creating context...\n");
     IGC::Context context("A world");
     printf("[main] Creating world...\n");

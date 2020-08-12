@@ -7,25 +7,29 @@ struct PrimitiveTypeDescriptor<std::vector<T>> : public TypeDescriptor {
 public:
     PrimitiveTypeDescriptor() :
         TypeDescriptor{sizeof(std::vector<T>), "std::vector"}
-    {
-        element_type = PrimitiveTypeDescriptor<T>::get();
-    }
+    {}
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
     virtual void unpack(std::istream &in, uint8_t &obj) const;
 
-    TypeDescriptor *element_type;
-
     virtual std::string name() const {
-        return std::string(base_name) + "<" + element_type->name() + ">";
+        // The element type must be registered already. Ensure this.
+        PrimitiveTypeDescriptor<T> element_desc = PrimitiveTypeDescriptor<T>::init(false);
+        return std::string(base_name) + "<" + element_desc.name() + ">";
     }
-
-    static TypeDescriptor *get() { return &desc; }
-private:
+    static PrimitiveTypeDescriptor<std::vector<T>> init(bool register_type) {
+        auto desc = PrimitiveTypeDescriptor<std::vector<T>>();
+        if (register_type) Reflector::register_descriptor(&desc);
+        return desc;
+    }
+    static TypeDescriptor *get() {
+        return &desc;
+    }
+// private:
     static PrimitiveTypeDescriptor<std::vector<T>> desc;
 };
 template <typename T>
-PrimitiveTypeDescriptor<std::vector<T>> PrimitiveTypeDescriptor<std::vector<T>>::desc;
+PrimitiveTypeDescriptor<std::vector<T>> PrimitiveTypeDescriptor<std::vector<T>>::desc(PrimitiveTypeDescriptor<std::vector<T>>::init(true));
 
 
 template <typename T>

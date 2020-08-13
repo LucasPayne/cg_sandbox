@@ -23,12 +23,18 @@ private:
     TableElement(uint32_t _id, uint32_t _index) :
         id{_id}, index{_index}
     {}
+
+    // Allow serialization functions access to private data.
+    friend class PrimitiveTypeDescriptor<TableElement>;
 };
 REFLECT_STRUCT(TableElement);
 
 
 
+
+class TableIterator;
 class Table {
+    friend class TableIterator;
 public:
     TableElement add();
     void remove(TableElement element);
@@ -37,6 +43,10 @@ public:
     size_t capacity() const; // The number of slots in the table.
     
     Table(TypeHandle _type, uint32_t start_capacity = 1);
+
+    TableIterator begin();
+    TableIterator end();
+
 private:
     struct SlotMetadata {
         uint32_t id;
@@ -45,10 +55,10 @@ private:
         uint32_t next_free_index;
     };
 
-    SlotMetaData *slot_metadata(uint32_t index);
+    SlotMetadata *slot_metadata(uint32_t index);
 
     // Get the entry data (not including the metadata).
-    uint8_t *slot(uint32_t index)
+    uint8_t *slot(uint32_t index);
 
     // Get the data for an empty slot (the slot data cast to EmptySlotData).
     // This must only be used if the slot ID at this index is 0.
@@ -67,18 +77,54 @@ private:
 
     void assert_valid_element(TableElement element); // Helper function for error-checking.
 
+    bool slot_is_empty(uint32_t index);
+
     std::vector<uint8_t> data;
+
+
+    // Allow serialization functions access to private data.
+    friend class PrimitiveTypeDescriptor<Table>;
 };
 REFLECT_PRIMITIVE(Table);
 
 
 
-template <typename ELEMENT_TYPE>
-class Table : public Table {
+class TableIterator {
+    friend class Table;
 public:
-    ELEMENT_TYPE *operator[](TableElement element);
+    TableElement &operator*() {
+        return element;
+    }
+    TableElement *operator->() {
+        return &(operator*());
+    }
+    Iterator &operator++() {
+        
+    }
 private:
-}
+    TableIterator(Table *_table) :
+        table{_table}
+    {}
+    Table *table;
+    TableElement element;
+};
+
+
+
+
+// template <typename ELEMENT_TYPE>
+// class Table : public Table {
+// public:
+//     ELEMENT_TYPE *operator[](TableElement element) {
+//         return reinterpret_cast<ELEMENT_TYPE *>();
+//     }
+// 
+//     Table(uint32_t start_capacity = 1) :
+//         Table(TypeHandle::from_type<ELEMENT_TYPE>(), start_capacity)
+//     {}
+// private:
+// }
+
 
 
 #endif // TABLE_H

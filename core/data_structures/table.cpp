@@ -1,5 +1,6 @@
 #include "data_structures/table.h"
-#include <algorithm>//max
+#include <algorithm>//max, for_each
+#include <assert.h>
 
 
 /*--------------------------------------------------------------------------------
@@ -20,7 +21,7 @@ Table::Table(TypeHandle _type, uint32_t start_capacity) :
 {
     slot_size = std::max(type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
 
-    data = std::vector<uint8_t>(type_size * start_capacity);
+    data = std::vector<uint8_t>(slot_size * start_capacity);
 
     // All slots are empty.
     for (int i = 0; i < start_capacity; i++) {
@@ -38,6 +39,11 @@ Table::Table(TypeHandle _type, uint32_t start_capacity) :
 size_t Table::capacity() const
 {
     return m_capacity;
+}
+
+bool Table::slot_is_empty(uint32_t index)
+{
+    return slot_metadata(index)->id == 0;
 }
 
 
@@ -86,7 +92,7 @@ void Table::remove(TableElement element)
 }
 
 
-uint8_t *operator[](TableElement element)
+uint8_t *Table::operator[](TableElement element)
 {
     assert_valid_element(element);
     return slot(element.index);
@@ -107,3 +113,118 @@ uint8_t *Table::slot(uint32_t index)
 {
     return &data[slot_size * index + sizeof(SlotMetadata)];
 }
+
+
+/*--------------------------------------------------------------------------------
+Table reflection and serialization.
+--------------------------------------------------------------------------------*/
+
+
+// TableElement
+//--------------------------------------------------------------------------------
+BEGIN_ENTRIES(TableElement)
+    ENTRY(id)
+    ENTRY(index)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(TableElement);
+
+
+// Table
+//--------------------------------------------------------------------------------
+DESCRIPTOR_INSTANCE(Table);
+
+
+REFLECT_PRIMITIVE_PRINT(Table)
+{
+}
+
+
+REFLECT_PRIMITIVE_PACK(Table)
+{
+    Table &table = (Table &) obj;
+
+    Reflector::pack(table.type, out);
+
+    // uint32_t num_elements = 0;
+    // uint32_t min_capacity = 1;
+    // for (TableElement element : table) {
+    //     // The minimum capacity the table must be initialized with when unpacked is one plus the maximum index of an element.
+    //     if (element.index+1 > min_capacity) min_capacity = element.index+1;
+    //     num_elements++;
+    // }
+    // Reflector::pack(num_elements, out);
+    // Reflector::pack(min_capacity, out);
+
+    // for (TableElement element : table) {
+    //     Reflector::pack(element, out);
+    //     table.type->pack(*table[element], out);
+    // }
+}
+
+
+REFLECT_PRIMITIVE_UNPACK(Table)
+{
+    // TypeHandle type;
+    // Reflector::unpack(in, type);
+    // uint32_t num_elements;
+    // Reflector::unpack(in, num_elements);
+    // uint32_t capacity;
+    // Reflector::unpack(in, capacity);
+
+    // Table table(type, capacity);
+    // 
+    // // Unpack the elements into their slots.
+    // // This breaks the validity of the table, so it must be fixed after!
+    // for (int i = 0; i < num_elements; i++) {
+    //     TableElement element;
+    //     Reflector::unpack(in, element);
+    //     table.slot_metadata(handle.index)->id = handle.id;
+
+    //     table.type->unpack(in, *table[element]);
+    // }
+    // // Fix up the table.
+    // // Initialize the free list.
+
+    // for (int i = 0; i < capacity; i++) {
+    //     if (table.slot_metadata(i)->id == 0) {
+    //         table.first_free_index = i;
+    //         break;
+    //     }
+    // }
+    // uint32_t connecting_index = table.first_free_index;
+    // for (int i = table.first_free_index + 1; i < capacity; i++) {
+    //     if (table.slot_metadata(i)->id == 0) {
+    //         table.empty_slot(connecting_index)->next_free_index = i;
+    //         connecting_index = i;
+    //     }
+    // }
+    // table.empty_slot(connecting_index)->next_free_index = 0;
+
+    // *((Table *) &obj) = table;
+}
+
+
+TableIterator Table::begin()
+{
+    Iterator iter(this);
+    for (int i = 0; i < m_capacity; i++) {
+        if (!slot_is_empty(i)) {
+            iter.element = TableElement(slot_metadata(i)->id, i);
+            return iter;
+        }
+    }
+    assert(0);
+}
+
+TableIterator &TableIterator::operator++()
+{
+    for (int i = element.index+1; i < table->m_capacity; i++) {
+        
+    }
+}
+
+TableIterator Table::end()
+{
+
+}
+

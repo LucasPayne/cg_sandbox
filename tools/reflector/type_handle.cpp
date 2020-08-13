@@ -14,8 +14,6 @@ TypeDescriptor *TypeHandle::operator->()
 {
     return type_descriptor;
 }
-
-
 const TypeDescriptor &TypeHandle::operator*() const
 {
     return *type_descriptor;

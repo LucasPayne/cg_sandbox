@@ -56,7 +56,7 @@ public:
 
     size_t capacity() const; // The number of slots in the table.
     
-    Table(TypeHandle _type, uint32_t start_capacity = 1);
+    Table(TypeHandle _type, uint32_t start_capacity = 1, size_t extra_bytes = 0);
 
     TableIterator begin();
     TableIterator end();
@@ -90,6 +90,8 @@ private:
     uint32_t next_id;
 
     size_t m_capacity;
+
+    size_t m_extra_bytes; // Each slot can store extra bytes at the end. The user of the table can then put any data there.
 
     void assert_valid_element(TableElement element); // Helper function for error-checking.
 

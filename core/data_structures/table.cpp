@@ -16,10 +16,10 @@ uint32_t TableElement::ID() const
 Table
 --------------------------------------------------------------------------------*/
 
-Table::Table(TypeHandle _type, uint32_t start_capacity) :
-    m_type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}
+Table::Table(TypeHandle _type, uint32_t start_capacity, size_t extra_bytes) :
+    m_type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}, m_extra_bytes{extra_bytes}
 {
-    slot_size = std::max(m_type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
+    slot_size = std::max(m_type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata) + extra_bytes;
 
     data = std::vector<uint8_t>(slot_size * start_capacity);
 
@@ -158,8 +158,6 @@ REFLECT_PRIMITIVE_PACK(Table)
 
     Reflector::pack(table.type(), out);
 
-    Reflector::print(table.type());
-
     uint32_t num_elements = 0;
     uint32_t min_capacity = 1;
     for (TableElement element : table) {
@@ -200,7 +198,6 @@ REFLECT_PRIMITIVE_UNPACK(Table)
     }
     // Fix up the table.
     // Initialize the free list.
-
     for (int i = 0; i < capacity; i++) {
         if (table.slot_metadata(i)->id == 0) {
             table.first_free_index = i;

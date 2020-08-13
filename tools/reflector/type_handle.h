@@ -6,6 +6,11 @@ class TypeHandle {
 public:
     TypeDescriptor &operator*();
     TypeDescriptor *operator->();
+    const TypeDescriptor &operator*() const;
+    const TypeDescriptor *operator->() const;
+
+    bool operator==(const TypeHandle &other) const;
+    bool operator!=(const TypeHandle &other) const;
 
     // A TypeHandle can be constructed from a pointer to a TypeDescriptor, the name of a reflected type,
     // or from the reflected type symbol through from_type<T>().

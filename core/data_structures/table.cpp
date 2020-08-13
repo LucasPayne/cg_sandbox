@@ -17,9 +17,9 @@ Table
 --------------------------------------------------------------------------------*/
 
 Table::Table(TypeHandle _type, uint32_t start_capacity) :
-    type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}
+    m_type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}
 {
-    slot_size = std::max(type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
+    slot_size = std::max(m_type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
 
     data = std::vector<uint8_t>(slot_size * start_capacity);
 
@@ -40,6 +40,11 @@ size_t Table::capacity() const
 {
     return m_capacity;
 }
+TypeHandle &Table::type()
+{
+    return m_type;
+}
+
 
 bool Table::slot_is_empty(uint32_t index)
 {
@@ -140,7 +145,7 @@ REFLECT_PRIMITIVE_PRINT(Table)
     out << name() << "[\n";
     for (TableElement element : table) {
         out << std::string(4*(indent_level+1), ' ');
-        table.type->print(*table[element], out, indent_level + 1);
+        table.type()->print(*table[element], out, indent_level + 1);
         out << ",\n";
     }
     out << std::string(4*indent_level, ' ') << "]";
@@ -151,9 +156,9 @@ REFLECT_PRIMITIVE_PACK(Table)
 {
     Table &table = (Table &) obj;
 
-    Reflector::pack(table.type, out);
+    Reflector::pack(table.type(), out);
 
-    Reflector::print(table.type);
+    Reflector::print(table.type());
 
     uint32_t num_elements = 0;
     uint32_t min_capacity = 1;
@@ -167,7 +172,7 @@ REFLECT_PRIMITIVE_PACK(Table)
 
     for (TableElement element : table) {
         Reflector::pack(element, out);
-        table.type->pack(*table[element], out);
+        table.type()->pack(*table[element], out);
     }
 }
 
@@ -191,7 +196,7 @@ REFLECT_PRIMITIVE_UNPACK(Table)
         Reflector::unpack(in, element);
         table.slot_metadata(element.index)->id = element.id;
 
-        table.type->unpack(in, *table[element]);
+        table.type()->unpack(in, *table[element]);
     }
     // Fix up the table.
     // Initialize the free list.

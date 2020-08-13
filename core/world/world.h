@@ -65,7 +65,7 @@ public:
     void mouse_handler(MouseEvent e);
     // Component subsystems.
     EntityModel em;
-    ResourceModel rm;
+    Resources resources;
     Graphics graphics; // Graphics state, such as cached compiled shaders.
     InputState input;
     Assets assets;

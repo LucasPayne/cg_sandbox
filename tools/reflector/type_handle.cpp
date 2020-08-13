@@ -16,6 +16,28 @@ TypeDescriptor *TypeHandle::operator->()
 }
 
 
+const TypeDescriptor &TypeHandle::operator*() const
+{
+    return *type_descriptor;
+}
+const TypeDescriptor *TypeHandle::operator->() const
+{
+    return type_descriptor;
+}
+
+
+
+bool TypeHandle::operator==(const TypeHandle &other) const
+{
+    //todo: Names are unique, but a comparing unique IDs computed at static initialization would be better.
+    return type_descriptor->name() == other->name();
+}
+bool TypeHandle::operator!=(const TypeHandle &other) const
+{
+    return !(*this == other);
+}
+
+
 DESCRIPTOR_INSTANCE(TypeHandle);
 
 

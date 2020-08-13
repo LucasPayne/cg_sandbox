@@ -61,6 +61,8 @@ public:
     TableIterator begin();
     TableIterator end();
 
+    TypeHandle &type();
+
 private:
     struct SlotMetadata {
         uint32_t id;
@@ -78,7 +80,7 @@ private:
     // This must only be used if the slot ID at this index is 0.
     EmptySlotData *empty_slot(uint32_t index);
 
-    TypeHandle type;
+    TypeHandle m_type;
     size_t slot_size;
 
     // First slot in the free list.

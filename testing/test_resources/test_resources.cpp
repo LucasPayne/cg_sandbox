@@ -40,6 +40,17 @@ BEGIN_ENTRIES(Thing)
 END_ENTRIES()
 DESCRIPTOR_INSTANCE(Thing);
 
+struct OtherThing {
+    Thing t;
+    Thing k;
+};
+REFLECT_STRUCT(OtherThing);
+BEGIN_ENTRIES(OtherThing)
+    ENTRY(t)
+    ENTRY(k)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(OtherThing);
+
 
 
 int main(void)
@@ -58,11 +69,27 @@ int main(void)
 
     Resources resources;
     resources.register_resource_type<Thing>();
-    for (int i = 0; i < 10; i++) {
+    resources.register_resource_type<OtherThing>();
+
+    for (int i = 0; i < 4; i++) {
         Resource<Thing> a = resources.add<Thing>();
         a->a = i*30 + 123;
         a->b = i*i + 100;
         Reflector::printl(*a);
+        Resource<Thing> b = resources.add<Thing>();
+        b->a = i*i*i;
+        b->b = i+1;
+        Reflector::printl(*b);
+
+        Resource<OtherThing> c = resources.add<OtherThing>();
+        c->t = *a;
+        c->k = *b;
+        Reflector::printl(*c);
     }
 
+    printf("--------------------------------------------------------------------------------\n");
+    Reflector::printl(resources);
+    auto resources_t = transporter(resources);
+    printf("--------------------------------------------------------------------------------\n");
+    Reflector::printl(resources_t);
 }

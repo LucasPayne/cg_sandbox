@@ -37,11 +37,14 @@ public:
     template <typename T>
     T *get(Resource<T> resource);
 
+    void save(std::ostream &out);
+
 private:
     std::vector<Table> resource_tables;
+
+    friend class PrimitiveTypeDescriptor<Resources>;
 };
-
-
+REFLECT_STRUCT(Resources);
 
 
 

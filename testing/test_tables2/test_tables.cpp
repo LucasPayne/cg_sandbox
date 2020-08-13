@@ -49,8 +49,8 @@ int main(void)
         ((Thing *) table[e])->a = i+1;
         ((Thing *) table[e])->b = i*3+1;
     }
-    Reflector::print(table);
+    Reflector::printl(table);
 
     auto table_t = transporter(table);
-    Reflector::print(table_t);
+    Reflector::printl(table_t);
 }

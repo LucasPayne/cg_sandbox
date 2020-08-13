@@ -234,6 +234,14 @@ void print(TYPE &obj, int indent_level = 0)
     PrimitiveTypeDescriptor<TYPE>::get()->print((uint8_t &)obj, std::cout, indent_level);
 }
 
+// Purely a helper function for printing with a newline (convenient for testing with prints).
+template <typename TYPE>
+void printl(TYPE &obj)
+{
+    print(obj, 0);
+    std::cout << "\n";
+}
+
 
 template <typename TYPE>
 void pack(TYPE &obj, std::ostream &out)

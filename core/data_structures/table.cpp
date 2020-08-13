@@ -137,9 +137,13 @@ DESCRIPTOR_INSTANCE(Table);
 REFLECT_PRIMITIVE_PRINT(Table)
 {
     Table &table = (Table &) obj;
+    out << name() << "[\n";
     for (TableElement element : table) {
-        out << "Nice!\n";
+        out << std::string(4*(indent_level+1), ' ');
+        table.type->print(*table[element], out, indent_level + 1);
+        out << ",\n";
     }
+    out << std::string(4*indent_level, ' ') << "]";
 }
 
 
@@ -161,14 +165,8 @@ REFLECT_PRIMITIVE_PACK(Table)
     Reflector::pack(num_elements, out);
     Reflector::pack(min_capacity, out);
 
-    printf("num_elements: %u\n", num_elements);
-    printf("min_capacity: %u\n", min_capacity);
-
     for (TableElement element : table) {
         Reflector::pack(element, out);
-        printf("Packing element\n");
-        table.type->print(*table[element]);
-        printf("\n");
         table.type->pack(*table[element], out);
     }
 }
@@ -176,12 +174,8 @@ REFLECT_PRIMITIVE_PACK(Table)
 
 REFLECT_PRIMITIVE_UNPACK(Table)
 {
-    printf("Unpacking:\n");
     TypeHandle type;
-    printf("inited:\n");
     Reflector::unpack(in, type);
-    printf("Type:\n");
-    Reflector::print(type);
 
     uint32_t num_elements;
     Reflector::unpack(in, num_elements);

@@ -2,88 +2,112 @@
 #define RESOURCE_MODEL_H
 /*--------------------------------------------------------------------------------
     Declarations and interface for the resource model.
-
-BUGS:
-PROBLEMS:
-TO DO:
-IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 #include "core.h"
 #include "data_structures/table.h"
-#include "world/world_reference.h"
 
 
 typedef TableCollectionType ResourceType;
-template <typename TYPE>
-struct Resource; // Fully declared after ResourceModel.
 
-template <typename T>
-struct ResourceTypeStaticData {
-    static ResourceType type_id;
+/*--------------------------------------------------------------------------------
+ResourceBase
+    All resources must derive from this class.
+--------------------------------------------------------------------------------*/
+/*REFLECTED*/ struct ResourceBase {
+    // If this flag is true, then the resource data is not serialized,
+    // as it will be reloaded from asset files.
+    /*ENTRY*/ bool asset_backed;
 };
-// Static initialization of type information. Defaults to null values.
-template <typename T> ResourceType ResourceTypeStaticData<T>::type_id(NULL_TABLE_COLLECTION_TYPE_ID);
-// ResourceBase: Shared data every resource entry has.
-struct ResourceBase {};
-// When defining a resource type T, inherit from IResourceType<T>. In this way, static data for the resource type
-// is initialized, and further non-shared struct data is defined in the body.
-template <typename T>
-struct IResourceType : public ResourceTypeStaticData<T>, public ResourceBase {};
 
+
+/*--------------------------------------------------------------------------------
+Resource
+--------------------------------------------------------------------------------*/
+class ResourceModel;
+
+template <typename TYPE>
+/*REFLECTED*/ struct Resource {
+    friend class ResourceModel;
+public:
+    Resource() {}
+
+    TYPE &operator*();
+    TYPE *operator->();
+
+    TableEntryID ID() const;
+// private:
+    Resource(ResourceModel *_rm, TableHandle _handle) :
+        rm{_rm}, handle{_handle}
+    {}
+
+    ResourceModel *rm; // Not reflected, this must be recomputed on load.
+    /*ENTRY*/ TableHandle handle;
+};
+
+
+/*--------------------------------------------------------------------------------
+ResourceModel
+--------------------------------------------------------------------------------*/
 class ResourceModel {
+    template <typename TYPE> friend class Resource;
 public:
     ResourceModel();
-    template <typename TYPE>
-    inline void register_resource_type(const std::string &name) {
-        m_resource_tables.add_type<TYPE>(name);
-    }
-    
-    // Lookup resources.
-    template <typename TYPE>
-    inline TYPE *try_get_resource(Resource<TYPE> handle) {
-        return m_resource_tables.lookup<TYPE>(handle);
-    }
-    template <typename TYPE>
-    inline TYPE *get_resource(Resource<TYPE> handle) {
-        TYPE *found = try_get_resource<TYPE>(handle);
-        if (found == nullptr) {
-            std::cerr << "ERROR\n";
-            exit(EXIT_FAILURE);
-        }
-        return found;
-    }
-    
-    // Create new resources (which the caller will initialize).
-    template <typename TYPE>
-    inline Resource<TYPE> new_resource() {
-        // The handle type has been extended, using the HANDLE_TYPE TableCollection template parameter.
-        // This is uninitialized by the TableCollection, so make sure to initialize that extra data here.
-        Resource<TYPE> handle = m_resource_tables.add<TYPE>();
-        // Give the handle a pointer to the resource model.
-        handle.rm = this;
-        return handle;
-    }
 
+    template <typename TYPE>
+    void register_resource_type(const std::string &name);
+    
+    template <typename TYPE>
+    Resource<TYPE> new_resource();
 private:
-    TableCollection<ResourceBase, Resource> m_resource_tables;
+    TableCollection<ResourceBase> resource_tables;
 };
+
+
+
+
+// Template implementations
+//--------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------
+    ResourceModel
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+void ResourceModel::register_resource_type(const std::string &name) {
+    resource_tables.add_type<TYPE>(name);
+}
 
 
 template <typename TYPE>
-struct Resource {
-    WorldReference world;
-    TableHandle handle;
-    inline TYPE &operator*() {
-        TYPE *res =  world->rm.m_resource_tables.lookup<TYPE>(handle);
-        if (res == nullptr) {
-            fprintf(stderr, "[resource_model] ERROR, dereferenced invalid resource.\n");
-            exit(EXIT_FAILURE);
-        }
-        return *res;
+Resource<TYPE> ResourceModel::new_resource() {
+    TableHandle handle = resource_tables.add<TYPE>();
+    return Resource<TYPE>(this, handle);
+}
+
+
+/*--------------------------------------------------------------------------------
+    Resource<TYPE>
+--------------------------------------------------------------------------------*/
+template <typename TYPE>
+TYPE &Resource<TYPE>::operator*() {
+    TYPE *res =  rm->resource_tables.lookup<TYPE>(handle);
+    if (res == nullptr) {
+        fprintf(stderr, "[resource_model] ERROR, dereferenced invalid resource.\n");
+        exit(EXIT_FAILURE);
     }
-    inline TYPE *operator->() {
-        return &(*(*this));
-    }
-};
+    return *res;
+}
+
+
+template <typename TYPE>
+TYPE *Resource<TYPE>::operator->() {
+    return &(*(*this));
+}
+
+
+template <typename TYPE>
+TableEntryID Resource<TYPE>::ID() const
+{
+    return handle.id;
+}
+
 
 #endif // RESOURCE_MODEL_H

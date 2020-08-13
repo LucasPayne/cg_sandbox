@@ -1,80 +1,109 @@
 #include "data_structures/table.h"
-#include <stdio.h>
+#include <algorithm>//max
 
 
-// public methods
-//--------------------------------------------------------------------------------
-GenericTable::GenericTable(size_t entry_type_size, int length)
+/*--------------------------------------------------------------------------------
+TableElement
+--------------------------------------------------------------------------------*/
+uint32_t TableElement::ID() const
 {
-    // Length >= 1.
-    m_next_id = 1; // 0 is the null ID.
-    m_length = length;
-    m_first_free_index = 0;
-    m_entry_size = sizeof(Header) + entry_type_size; // The size of per-entry metadata in the table must be accounted for.
-    m_buffer = std::vector<uint8_t>(m_length * m_entry_size); // Allocate the buffer for the table. This must account for metadata size.
+    return id;
+}
+
+
+/*--------------------------------------------------------------------------------
+Table
+--------------------------------------------------------------------------------*/
+
+Table::Table(TypeHandle _type, uint32_t start_capacity) :
+    type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}
+{
+    slot_size = std::max(type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
+
+    data = std::vector<uint8_t>(type_size * start_capacity);
+
+    // All slots are empty.
+    for (int i = 0; i < start_capacity; i++) {
+        slot_metadata(i)->id = 0;
+    }
+
     // Initialize the free list.
-    for (unsigned int index = 0; index < m_length-1; index++) {
-        get_header(index)->next_free_index = index + 1;
+    for (int i = 0; i < start_capacity - 1; i++) {
+        empty_slot(i)->next_free_index = i + 1;
     }
-    if (m_length >= 1) {
-        get_header(m_length-1)->next_free_index = 0;
-    }
+    empty_slot(start_capacity - 1)->next_free_index = 0;
 }
 
-TableHandle GenericTable::add()
+
+size_t Table::capacity() const
 {
-    uint32_t index = m_first_free_index;
-    Header *header = get_header(index);
-    header->id = next_id();
-    if (header->next_free_index == 0) {
-        // Resize the table if needed.
-        uint32_t old_length = m_length;
-        m_length *= 2;
-        m_buffer.resize(m_length * m_entry_size);
-        // Remember to recompute the header pointer!
-        header = get_header(index);
-        // Link the new slots into the free list.
-        header->next_free_index = old_length;
-        for (unsigned int i = old_length; i < m_length-1; i++) {
-            get_header(i)->next_free_index = i + 1; // the next slot is also free.
+    return m_capacity;
+}
+
+
+TableElement Table::add()
+{
+    uint32_t new_id = next_id ++;
+    TableElement element(new_id, first_free_index);
+    // Set up the slot metadata.
+    slot_metadata(first_free_index)->id = new_id;
+
+    // Fix up the free list.
+    first_free_index = empty_slot(first_free_index)->next_free_index;
+
+    if (first_free_index == 0) {
+        // If the free list is empty, increase the capacity of the table.
+        size_t old_capacity = m_capacity;
+        m_capacity *= 2;
+        data.resize(slot_size * m_capacity, 0);
+
+        // Initialize the new slots of the free list.
+        first_free_index = old_capacity;
+        for (int i = old_capacity; i < m_capacity - 1; i++) {
+            empty_slot(i)->next_free_index = i + 1;
         }
-        get_header(m_length-1)->next_free_index = 0; // no free slots past here.
+        empty_slot(m_capacity - 1)->next_free_index = 0;
     }
-    // Delink this slot from the free list.
-    m_first_free_index = header->next_free_index;
-    // Construct and return a handle to the new entry.
-    TableHandle handle;
-    handle.id = header->id;
-    handle.index = index;
-
-    //printf("added new entity at index %u, id %u\n", handle.index, header->id);getchar();
-    return handle;
-}
-
-void GenericTable::remove(TableHandle handle)
-{
-    Header *header = get_header(handle.index);
-    if (handle.id != header->id) return; // not there.
-    // Nullify the entry.
-    header->id = 0;
-    // Link the slot back into the free list.
-    header->next_free_index = m_first_free_index;
-    m_first_free_index = handle.index;
-}
-
-uint8_t *GenericTable::lookup(TableHandle handle)
-{
-    Header *header = get_header(handle.index);
-    if (header->id == 0) return nullptr; // ID 0 represents null, so the entry is not there.
-    if (header->id != handle.id) return nullptr; // Not there.
-    return reinterpret_cast<uint8_t *>(header+1); // Adding one will move the pointer to the start of the data.
-          // -Is this always true? Is pointer arithmetic always +n*sizeof(T) or could structure padding affect this?
+    return element;
 }
 
 
-// private methods
-//--------------------------------------------------------------------------------
-TableEntryID GenericTable::next_id()
+void Table::assert_valid_element(TableElement element)
 {
-    return m_next_id ++;
+    assert(element.id != 0);
+    assert(slot_metadata(element.index)->id == element.id);
+}
+
+
+void Table::remove(TableElement element)
+{
+    assert_valid_element(element);
+    slot_metadata(element.index)->id = 0;
+
+    // Add this slot to the head of the free list.
+    empty_slot(element.index)->next_free_index = first_free_index;
+    first_free_index = element.index;
+}
+
+
+uint8_t *operator[](TableElement element)
+{
+    assert_valid_element(element);
+    return slot(element.index);
+}
+
+
+Table::SlotMetadata *Table::slot_metadata(uint32_t index)
+{
+    return reinterpret_cast<Table::SlotMetadata *>(&data[slot_size * index]);
+}
+
+Table::EmptySlotData *Table::empty_slot(uint32_t index)
+{
+    return reinterpret_cast<Table::EmptySlotData *>(slot(index));
+}
+
+uint8_t *Table::slot(uint32_t index)
+{
+    return &data[slot_size * index + sizeof(SlotMetadata)];
 }

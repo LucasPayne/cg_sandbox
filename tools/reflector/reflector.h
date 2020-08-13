@@ -221,7 +221,6 @@ TypeDescriptor *get_descriptor(T &obj)
 
 
 
-
 // A family of template functions is defined for ease-of-use of the serialization functions available.
 template <typename TYPE>
 void print(TYPE &obj, std::ostream &out, int indent_level = 0)
@@ -259,6 +258,8 @@ void unpack(std::istream &in, TYPE &obj)
 REFLECT_PRIMITIVE(std::string);
 // std::vector is templated, and has reflections organized in its own header file.
 #include "reflector/reflect_std_vector.h"
+
+
 
 
 #endif // REFLECTOR_H

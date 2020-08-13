@@ -43,6 +43,8 @@ reasons for extensions:
 #include <stdlib.h>//exit
 typedef uint32_t TableEntryID;
 
+#include "reflector/serialization.h"
+
 
 /*--------------------------------------------------------------------------------
 A GenericTable is initialized with a type size. This means that tables
@@ -201,8 +203,16 @@ struct TypeData {
     std::string name;
     size_t size;
 
+    // Serialization functions.
+    GenericPackFunction pack_function;
+    GenericUnpackFunction unpack_function;
+    GenericPrintFunction print_function;
+
     TypeData() {
         type_id = NULL_TABLE_COLLECTION_TYPE_ID;
+        pack_function = nullptr;
+        unpack_function = nullptr;
+        print_function = nullptr;
     }
 };
 
@@ -278,6 +288,10 @@ public:
         TableCollectionTypeData<TYPE>::data.type_id = next_type_id;
         TableCollectionTypeData<TYPE>::data.size = sizeof(TYPE);
         TableCollectionTypeData<TYPE>::data.name = name;
+
+        TableCollectionTypeData<TYPE>::data.pack_function = generic_pack<TYPE>();
+        TableCollectionTypeData<TYPE>::data.unpack_function = generic_unpack<TYPE>();
+        TableCollectionTypeData<TYPE>::data.print_function = generic_print<TYPE>();
 
         m_tables.push_back(MemberTable(&TableCollectionTypeData<TYPE>::data, TABLE_COLLECTION_TABLE_START_LENGTH));
     }
@@ -396,7 +410,7 @@ public:
     GenericTable m_table;
 };
 
-/*
+
 // Table serialization functions.
 // These are not auto-generated since a table is a container which needs its own custom serialization.
 template <typename T>
@@ -510,7 +524,6 @@ void print(Table<T> &obj) {
     std::cout << "    ]\n";
     std::cout << "}\n";
 }
-*/
 
-
+#include "/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.serialize.h" /*SERIALIZE*/
 #endif // TABLE_H

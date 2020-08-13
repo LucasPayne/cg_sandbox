@@ -3,6 +3,30 @@
 #include "data_structures/table.h"
 
 
+// Test packing/unpacking by writing an object to disk and reading it back.
+template <typename T>
+T transporter(T &obj)
+{
+    printf("Packing...\n");
+    {
+    std::ofstream file;
+    file.open("transporter_tempfile.binary", std::ios::trunc | std::ios::out | std::ios::binary);
+    Reflector::pack(obj, file);
+    file.close();
+    }
+
+
+    printf("Unpacking...\n");
+    std::ifstream file;
+    T transportered_obj;
+    file.open("transporter_tempfile.binary", std::ios::in | std::ios::binary);
+    Reflector::unpack(file, transportered_obj);
+    file.close();
+
+    return transportered_obj;
+}
+
+
 
 struct Thing {
     int a;
@@ -19,5 +43,14 @@ DESCRIPTOR_INSTANCE(Thing);
 
 int main(void)
 {
-    Table(Reflector::get_descriptor<Thing>());
+    Table table(Reflector::get_descriptor<Thing>());
+    for (int i = 0; i < 3; i++) {
+        TableElement e = table.add();
+        ((Thing *) table[e])->a = i+1;
+        ((Thing *) table[e])->b = i*3+1;
+    }
+    Reflector::print(table);
+
+    auto table_t = transporter(table);
+    Reflector::print(table_t);
 }

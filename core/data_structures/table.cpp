@@ -136,6 +136,10 @@ DESCRIPTOR_INSTANCE(Table);
 
 REFLECT_PRIMITIVE_PRINT(Table)
 {
+    Table &table = (Table &) obj;
+    for (TableElement element : table) {
+        out << "Nice!\n";
+    }
 }
 
 
@@ -145,68 +149,84 @@ REFLECT_PRIMITIVE_PACK(Table)
 
     Reflector::pack(table.type, out);
 
-    // uint32_t num_elements = 0;
-    // uint32_t min_capacity = 1;
-    // for (TableElement element : table) {
-    //     // The minimum capacity the table must be initialized with when unpacked is one plus the maximum index of an element.
-    //     if (element.index+1 > min_capacity) min_capacity = element.index+1;
-    //     num_elements++;
-    // }
-    // Reflector::pack(num_elements, out);
-    // Reflector::pack(min_capacity, out);
+    Reflector::print(table.type);
 
-    // for (TableElement element : table) {
-    //     Reflector::pack(element, out);
-    //     table.type->pack(*table[element], out);
-    // }
+    uint32_t num_elements = 0;
+    uint32_t min_capacity = 1;
+    for (TableElement element : table) {
+        // The minimum capacity the table must be initialized with when unpacked is two plus the maximum index of an element.
+        if (element.index+2 > min_capacity) min_capacity = element.index+2;
+        num_elements++;
+    }
+    Reflector::pack(num_elements, out);
+    Reflector::pack(min_capacity, out);
+
+    printf("num_elements: %u\n", num_elements);
+    printf("min_capacity: %u\n", min_capacity);
+
+    for (TableElement element : table) {
+        Reflector::pack(element, out);
+        printf("Packing element\n");
+        table.type->print(*table[element]);
+        printf("\n");
+        table.type->pack(*table[element], out);
+    }
 }
 
 
 REFLECT_PRIMITIVE_UNPACK(Table)
 {
-    // TypeHandle type;
-    // Reflector::unpack(in, type);
-    // uint32_t num_elements;
-    // Reflector::unpack(in, num_elements);
-    // uint32_t capacity;
-    // Reflector::unpack(in, capacity);
+    printf("Unpacking:\n");
+    TypeHandle type;
+    printf("inited:\n");
+    Reflector::unpack(in, type);
+    printf("Type:\n");
+    Reflector::print(type);
 
-    // Table table(type, capacity);
-    // 
-    // // Unpack the elements into their slots.
-    // // This breaks the validity of the table, so it must be fixed after!
-    // for (int i = 0; i < num_elements; i++) {
-    //     TableElement element;
-    //     Reflector::unpack(in, element);
-    //     table.slot_metadata(handle.index)->id = handle.id;
+    uint32_t num_elements;
+    Reflector::unpack(in, num_elements);
+    uint32_t capacity;
+    Reflector::unpack(in, capacity);
 
-    //     table.type->unpack(in, *table[element]);
-    // }
-    // // Fix up the table.
-    // // Initialize the free list.
+    Table table(type, capacity);
+    
+    // Unpack the elements into their slots.
+    // This breaks the validity of the table, so it must be fixed after!
+    for (int i = 0; i < num_elements; i++) {
+        TableElement element;
+        Reflector::unpack(in, element);
+        table.slot_metadata(element.index)->id = element.id;
 
-    // for (int i = 0; i < capacity; i++) {
-    //     if (table.slot_metadata(i)->id == 0) {
-    //         table.first_free_index = i;
-    //         break;
-    //     }
-    // }
-    // uint32_t connecting_index = table.first_free_index;
-    // for (int i = table.first_free_index + 1; i < capacity; i++) {
-    //     if (table.slot_metadata(i)->id == 0) {
-    //         table.empty_slot(connecting_index)->next_free_index = i;
-    //         connecting_index = i;
-    //     }
-    // }
-    // table.empty_slot(connecting_index)->next_free_index = 0;
+        table.type->unpack(in, *table[element]);
+    }
+    // Fix up the table.
+    // Initialize the free list.
 
-    // *((Table *) &obj) = table;
+    for (int i = 0; i < capacity; i++) {
+        if (table.slot_metadata(i)->id == 0) {
+            table.first_free_index = i;
+            break;
+        }
+    }
+    uint32_t connecting_index = table.first_free_index;
+    for (int i = table.first_free_index + 1; i < capacity; i++) {
+        if (table.slot_metadata(i)->id == 0) {
+            table.empty_slot(connecting_index)->next_free_index = i;
+            connecting_index = i;
+        }
+    }
+    table.empty_slot(connecting_index)->next_free_index = 0;
+
+    *((Table *) &obj) = table;
 }
 
 
+/*--------------------------------------------------------------------------------
+Table forward iterator.
+--------------------------------------------------------------------------------*/
 TableIterator Table::begin()
 {
-    Iterator iter(this);
+    TableIterator iter(this);
     for (int i = 0; i < m_capacity; i++) {
         if (!slot_is_empty(i)) {
             iter.element = TableElement(slot_metadata(i)->id, i);
@@ -219,12 +239,19 @@ TableIterator Table::begin()
 TableIterator &TableIterator::operator++()
 {
     for (int i = element.index+1; i < table->m_capacity; i++) {
-        
+        if (!table->slot_is_empty(i)) {
+            element = TableElement(table->slot_metadata(i)->id, i);
+            return *this;
+        }
     }
+    element = TableElement(0, 0);
+    return *this;
 }
 
 TableIterator Table::end()
 {
-
+    TableIterator iter(this);
+    iter.element = TableElement(0, 0);
+    return iter;
 }
 

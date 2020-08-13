@@ -30,7 +30,7 @@ struct TypeDescriptor {
     {}
     TypeDescriptor() {}
 
-    virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const = 0;
+    virtual void print(uint8_t &obj, std::ostream &out = std::cout, int indent_level = 0) const = 0;
     virtual void pack(uint8_t &obj, std::ostream &out) const = 0;
     virtual void unpack(std::istream &in, uint8_t &obj) const = 0;
     

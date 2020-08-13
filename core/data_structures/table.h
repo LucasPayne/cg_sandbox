@@ -14,8 +14,19 @@
 class Table;
 struct TableElement {
     friend class Table;
+    friend class TableIterator;
 public:
     uint32_t ID() const;
+    TableElement() :
+        id{0}, index{0}
+    {}
+    bool operator==(const TableElement &other) const {
+        return (id == other.id) && (index == other.index);
+    }
+    bool operator!=(const TableElement &other) const {
+        return !(*this == other);
+    }
+
 private:
     uint32_t id;
     uint32_t index;
@@ -25,6 +36,7 @@ private:
     {}
 
     // Allow serialization functions access to private data.
+    friend class PrimitiveTypeDescriptor<Table>;
     friend class PrimitiveTypeDescriptor<TableElement>;
 };
 REFLECT_STRUCT(TableElement);
@@ -36,6 +48,8 @@ class TableIterator;
 class Table {
     friend class TableIterator;
 public:
+    Table() {}
+
     TableElement add();
     void remove(TableElement element);
     uint8_t *operator[](TableElement element);
@@ -67,7 +81,7 @@ private:
     TypeHandle type;
     size_t slot_size;
 
-    // First entry in the free list.
+    // First slot in the free list.
     uint32_t first_free_index;
 
     // The ID to give the next element added to the table.
@@ -98,8 +112,13 @@ public:
     TableElement *operator->() {
         return &(operator*());
     }
-    Iterator &operator++() {
-        
+    TableIterator &operator++();
+    bool operator==(const TableIterator &other) {
+        // The table pointer is assumed the same.
+        return element == other.element;
+    }
+    bool operator!=(const TableIterator &other) {
+        return !(*this == other);
     }
 private:
     TableIterator(Table *_table) :

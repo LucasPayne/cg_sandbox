@@ -2,6 +2,7 @@
 #include "reflector/reflector.h"
 #include "data_structures/table.h"
 #include "world/resources/resources.h"
+#include "world/entities/entities.h"
 
 
 // Test packing/unpacking by writing an object to disk and reading it back.

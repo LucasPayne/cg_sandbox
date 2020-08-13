@@ -13,7 +13,10 @@ private:
     TableCollectionElement(uint16_t _type_index, TableElement _table_element) :
         type_index{_type_index}, table_element{_table_element}
     {}
+
+    friend class PrimitiveTypeDescriptor<TableCollectionElement>;
 };
+REFLECT_STRUCT(TableCollectionElement);
 
 
 class TableCollection {
@@ -27,7 +30,12 @@ public:
     template <typename T>
     T *get(TableCollectionElement element);
 
+    TableCollection(size_t _table_start_capacity = 16) :
+        table_start_capacity{_table_start_capacity}
+    {}
+
 private:
+    size_t table_start_capacity; // Capacity that each new table is created with.
     std::vector<Table> tables;
 
     friend class PrimitiveTypeDescriptor<TableCollection>;
@@ -41,7 +49,7 @@ template <typename T>
 void TableCollection::register_type()
 {
     TypeHandle type(Reflector::get_descriptor<T>());
-    tables.push_back(Table(type, 16));
+    tables.push_back(Table(type, table_start_capacity));
 }
 
 template <typename T>

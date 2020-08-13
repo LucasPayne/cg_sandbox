@@ -16,10 +16,10 @@ uint32_t TableElement::ID() const
 Table
 --------------------------------------------------------------------------------*/
 
-Table::Table(TypeHandle _type, uint32_t start_capacity, size_t extra_bytes) :
-    m_type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}, m_extra_bytes{extra_bytes}
+Table::Table(TypeHandle _type, uint32_t start_capacity) :
+    m_type{_type}, first_free_index{0}, next_id{1}, m_capacity{start_capacity}
 {
-    slot_size = std::max(m_type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata) + extra_bytes;
+    slot_size = std::max(m_type->size, sizeof(EmptySlotData)) + sizeof(SlotMetadata);
 
     data = std::vector<uint8_t>(slot_size * start_capacity);
 

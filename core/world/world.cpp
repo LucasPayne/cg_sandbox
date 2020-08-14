@@ -210,7 +210,6 @@ void World::mouse_handler(MouseEvent e)
 /*--------------------------------------------------------------------------------
     Entity serialization.
 --------------------------------------------------------------------------------*/
-/*
 void World::pack_entity(Entity entity, std::ostream &out)
 {
     // The TypeDescriptor gives a type tree, information that can be traversed.
@@ -222,18 +221,31 @@ void World::pack_entity(Entity entity, std::ostream &out)
 
     // Pack how many names that unpacker will need to read.
     size_t num_aspects = entity.num_aspects();
-    pack(num_aspects, out);
-    // Pack the names of the types. These names will need to be mapped to types at runtime later, when unpacking.
-    for (Aspect &aspect : entity.aspects()) {
-        pack(aspect.type->name, out);
+    Reflector::pack(num_aspects, out);
+
+    for (auto &aspect : entity) {
+        Reflector::pack(aspect.type(), out);
         // Now pack the actual aspect data.
-        aspect.type->pack((uint8_t &) *aspect, out);
+        aspect.type()->pack(*aspect.get_data(), out);
     }
 }
 
-
+/*
 Entity World::unpack_entity(std::istream &in)
 {
+    auto entity = entities.add();
+    int num_aspects;
+    Reflector::unpack(in, num_aspects);
+    for (int i = 0; i < num_aspects; i++) {
+        TypeHandle type;
+        Reflector::unpack(in, type);
+
+        auto aspect = entity.add(type);
+
+        type->unpack(in, 
+    }
+
+
     Entity entity = em.new_entity();
     size_t num_aspects;
     unpack(in, num_aspects);
@@ -286,7 +298,6 @@ Entity World::import_entity(std::string &path)
     file.close();
     return entity;
 }
-
 */
 
 

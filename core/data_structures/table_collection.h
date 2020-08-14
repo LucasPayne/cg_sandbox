@@ -40,8 +40,12 @@ public:
     template <typename T>
     void register_type();
     
+    // Add an element to the table storing the given type. Forward the arguments to a constructor for that type.
     template <typename T, typename... Args>
     TableCollectionElement add(Args&&... args);
+
+    // Run-time generic add.
+    TableCollectionElement add(TypeHandle type);
     
     // Get an object with the given type from the tables.
     template <typename T>
@@ -58,9 +62,13 @@ public:
 
     template <typename T>
     Table *get_table();
+    // Run-time generic version.
+    Table *get_table(TypeHandle type);
 
     template <typename T>
     uint32_t get_type_index();
+    // Run-time generic version.
+    uint32_t get_type_index(TypeHandle type);
 
 private:
     size_t table_start_capacity; // Capacity that each new table is created with.
@@ -81,14 +89,16 @@ void TableCollection::register_type()
 }
 
 template <typename T, typename... Args>
-TableCollectionElement TableCollection::add(Args&&... args) {
+TableCollectionElement TableCollection::add(Args&&... args)
+{
     Table *table = get_table<T>();
     size_t type_index = table - &tables[0]; //...
     return TableCollectionElement(type_index, table->add<T>(std::forward<Args>(args)...));
 }
 
 template <typename T>
-T *TableCollection::get(TableCollectionElement element) {
+T *TableCollection::get(TableCollectionElement element)
+{
     return reinterpret_cast<T *>(tables[element.type_index][element.table_element]);
 }
 
@@ -104,14 +114,7 @@ uint32_t TableCollection::get_type_index()
 {
     // Maps the type symbol to an index through string comparison. Not very efficient...
     TypeHandle type(Reflector::get_descriptor<T>());
-    int type_index = 0;
-    for (Table &table : tables) {
-        if (type == table.type()) {
-            return type_index;
-        }
-        type_index++;
-    }
-    assert(0);
+    return get_type_index(type);
 }
 
 #endif // TABLE_COLLECTION_H

@@ -46,6 +46,7 @@ public:
 App::App(World &_world) : world{_world}
 {
 #if 1
+    printf("ok\n");
     // Create a camera man.
     {
         cameraman = world.entities.add();
@@ -62,16 +63,8 @@ App::App(World &_world) : world{_world}
 
 
         cc = controller; //make globally available.
-
-        // printf("Testing...\n");
-        // printf("Camera\n");
-        // auto cc = cameraman.get<Camera>();
-        // cc->bottom_left[0] = 0.1;
-        // printf("Transform\n");
-        // auto tt = cameraman.get<Transform>();
-        // tt->position = vec3(1,1,1);
-        // printf("Done\n");
     }
+    printf("ok\n");
 #endif
 #if 1
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
@@ -93,6 +86,26 @@ App::App(World &_world) : world{_world}
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
+
+    for (int i = 0; i < 25; i++) {
+        Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
+        Entity dolphin = world.entities.add();
+        auto t = dolphin.add<Transform>();
+        vec3 base(3,3,0);
+        t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
+        auto drawable = dolphin.add<Drawable>();
+        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
+        drawable->material = MaterialInstance(mat);
+        drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    }
+
+
+    auto entities_t = transporter(world.entities);
+    Reflector::printl(entities_t);
+    getchar();
+
+
+
 #endif
 }
 void App::close()
@@ -134,14 +147,6 @@ int main(int argc, char *argv[])
     // Quaternion q(0.3, -12, 31, 0.3222);
     // Reflector::print(q);
     // getchar();
-
-    TypeHandle handle("std::vector<TestStruct>");
-    Reflector::print(handle);
-    printf("\n");
-    TypeHandle handle_t = transporter(handle);
-    Reflector::print(handle_t);
-    printf("\n");
-    getchar();
 
 
     // std::vector<std::vector<int>> stuff;

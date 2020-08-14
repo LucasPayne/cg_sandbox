@@ -34,13 +34,14 @@ public:
     // Get the aspect data as a generic byte-array.
     uint8_t *get_data();
 
+    GenericAspect(Entities *_entities, TableCollectionElement _table_collection_element) :
+        entities{_entities}, table_collection_element{_table_collection_element}
+    {}
+
 private:
     Entities *entities; //---
     TableCollectionElement table_collection_element;
 
-    GenericAspect(Entities *_entities, TableCollectionElement _table_collection_element) :
-        entities{_entities}, table_collection_element{_table_collection_element}
-    {}
 
     friend class PrimitiveTypeDescriptor<GenericAspect>;
 };
@@ -146,8 +147,13 @@ public:
 
     void destroy();
 
+    // Add an aspect, forward the arguments to an aspect constructor.
     template <typename T, typename... Args>
     Aspect<T> add(Args&&... args);
+
+    // Run-time generic add.
+    GenericAspect add(TypeHandle type);
+
 
     template <typename T>
     Aspect<T> get();
@@ -155,6 +161,7 @@ public:
     
     AspectIterator begin();
     AspectIterator end();
+    int num_aspects();
 
     Entity() :
         entities{nullptr}, table_element()
@@ -164,6 +171,9 @@ private:
     Entity(Entities *_entities, TableElement _table_element) :
         entities{_entities}, table_element{_table_element}
     {}
+
+    // The common component to both the templated and run-time-generic add() functions.
+    void init_added(GenericAspect aspect);
 
     Entities *entities;
     TableElement table_element;
@@ -233,21 +243,7 @@ Aspect<T> Entity::add(Args&&... args)
 {
     // Initialize the aspect by forwarding the arguments to its constructor.
     auto aspect = Aspect<T>(entities, entities->aspect_tables.add<T>(std::forward<Args>(args)...));
-
-    // Add the aspect to the entity's linked list.
-    EntityEntry *entry = entities->get_entry(*this);
-    if (entry->first_aspect == GenericAspect()) {
-        // Add at the head.
-        entry->first_aspect = aspect.generic();
-    } else {
-        // Add to the end.
-        GenericAspect last = entry->first_aspect;
-        for (auto a : *this) {
-            last = a;
-        }
-        last.metadata()->next_aspect = aspect;
-    }
-    aspect.metadata()->entity = *this; // Give the aspect a handle to this entity.
+    init_added(aspect.generic());
     return aspect;
 }
 

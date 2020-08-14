@@ -22,7 +22,7 @@ static void print_listing(const std::string &title, const std::string &text)
 
 Loading and unloading functions.
 --------------------------------------------------------------------------------*/
-bool GeometricMaterial::load(const std::istream &stream)
+bool GeometricMaterial::load(Resources &resources, const std::istream &stream)
 {
     GeometricMaterial *geometric_material = this;
     // printf("Parsing geometric material file.\n");
@@ -43,7 +43,7 @@ bool GeometricMaterial::load(const std::istream &stream)
     if (properties_block != nullptr) {
         // This shading file has a property block.
         geometric_material->has_properties = true;
-        geometric_material->properties = properties_block->deastify();
+        geometric_material->properties = resources.add<ShadingBlock>(properties_block->deastify());
     }
 
     //-todo: primitive type
@@ -63,7 +63,7 @@ bool GeometricMaterial::load(const std::istream &stream)
 }
 
 
-bool Material::load(const std::istream &stream)
+bool Material::load(Resources &resources, const std::istream &stream)
 {
     Material *material = this;
     // printf("Parsing material file.\n");
@@ -82,7 +82,7 @@ bool Material::load(const std::istream &stream)
     if (properties_block != nullptr) {
         // This shading file has a property block.
         material->has_properties = true;
-        material->properties = properties_block->deastify();
+        material->properties = resources.add<ShadingBlock>(properties_block->deastify());
     }
 
     ShadingFileASTNode *frag_section;
@@ -97,7 +97,7 @@ bool Material::load(const std::istream &stream)
 }
 
 
-bool ShadingModel::load(const std::istream &stream)
+bool ShadingModel::load(Resources &resources, const std::istream &stream)
 {
     ShadingModel *shading_model = this;
 
@@ -117,7 +117,7 @@ bool ShadingModel::load(const std::istream &stream)
     if (properties_block != nullptr) {
         // This shading file has a property block.
         shading_model->has_properties = true;
-        shading_model->properties = properties_block->deastify();
+        shading_model->properties = resources.add<ShadingBlock>(properties_block->deastify());
     }
 
     ShadingFileASTNode *geom_post_section;
@@ -345,13 +345,13 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     std::string uniforms_snippet = "";
     // Generation of GLSL property block declarations is separated into another function.
     if (g.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(g.properties, "PROPERTIES_GeometricMaterial", 0);
+        uniforms_snippet += generate_glsl_property_block_declaration(*g.properties, "PROPERTIES_GeometricMaterial", 0);
     }
     if (m.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(m.properties, "PROPERTIES_Material", 1);
+        uniforms_snippet += generate_glsl_property_block_declaration(*m.properties, "PROPERTIES_Material", 1);
     }
     if (sm.has_properties) {
-        uniforms_snippet += generate_glsl_property_block_declaration(sm.properties, "PROPERTIES_ShadingModel", 2);
+        uniforms_snippet += generate_glsl_property_block_declaration(*sm.properties, "PROPERTIES_ShadingModel", 2);
     }
 
     // Vertex shader

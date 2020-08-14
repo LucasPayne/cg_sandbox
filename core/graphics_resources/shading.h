@@ -132,7 +132,7 @@ REFLECT_STRUCT(ShadingBlock);
 --------------------------------------------------------------------------------*/
 //todo: Force these to be backed by asset files.
 struct GeometricMaterial {
-    bool load(const std::istream &stream);
+    bool load(Resources &resources, const std::istream &stream);
     //-Vertex shader only.
     ShadingDataflow dataflow;
     // The dataflow is dependent on the primitives it processes, so that information is here.
@@ -140,28 +140,28 @@ struct GeometricMaterial {
     uint32_t patch_length; // used if primitive == GL_PATCHES
 
     bool has_properties;
-    ShadingBlock properties;
+    Resource<ShadingBlock> properties;
 };
 REFLECT_STRUCT(GeometricMaterial);
 
 
 struct Material {
-    bool load(const std::istream &stream);
+    bool load(Resources &resources, const std::istream &stream);
     ShadingDataflow dataflow;
 
     bool has_properties;
-    ShadingBlock properties;
+    Resource<ShadingBlock> properties;
 };
 REFLECT_STRUCT(Material);
 
 
 struct ShadingModel {
-    bool load(const std::istream &stream);
+    bool load(Resources &resources, const std::istream &stream);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
 
     bool has_properties;
-    ShadingBlock properties;
+    Resource<ShadingBlock> properties;
 };
 REFLECT_STRUCT(ShadingModel);
 

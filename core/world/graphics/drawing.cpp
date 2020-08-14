@@ -1,12 +1,12 @@
 #include "world/graphics/drawing.h"
 
 
-PropertySheet PropertySheet::instantiate_from(ShadingBlock &properties)
+PropertySheet PropertySheet::instantiate_from(Resource<ShadingBlock> properties)
 {
     // Create a property sheet for a specific block. This matches the size of the block.
     PropertySheet sheet;
-    sheet.block = &properties;
-    sheet.size = properties.block_size;
+    sheet.block = properties;
+    sheet.size = properties->block_size;
     // Create properties data in application memory.
     sheet.data = std::vector<uint8_t>(sheet.size);
     memset(&sheet.data[0], 0, sheet.size);
@@ -52,6 +52,7 @@ BEGIN_ENTRIES(PropertySheet)
     ENTRY(size)
     ENTRY(in_sync)
     ENTRY(buffer_id)
+    ENTRY(block)
 END_ENTRIES()
 
 

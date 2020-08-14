@@ -15,7 +15,7 @@ Resource<GeometricMaterial> ShadingAssets::load_geometric_material(const std::st
         fprintf(stderr, "ERROR: Failed to find GeometricMaterial asset.\n");
         exit(EXIT_FAILURE);
     }
-    handle->load(file);
+    handle->load(*resources, file);
     // Cache this.
     geometric_material_cache[path] = handle;
     return handle;
@@ -34,7 +34,7 @@ Resource<Material> ShadingAssets::load_material(const std::string &path)
         fprintf(stderr, "ERROR: Failed to find asset.\n");
         exit(EXIT_FAILURE);
     }
-    handle->load(file);
+    handle->load(*resources, file);
     // Cache this.
     material_cache[path] = handle;
     return handle;
@@ -53,7 +53,7 @@ Resource<ShadingModel> ShadingAssets::load_shading_model(const std::string &path
         fprintf(stderr, "ERROR: Failed to find asset.\n");
         exit(EXIT_FAILURE);
     }
-    handle->load(file);
+    handle->load(*resources, file);
     // Cache this.
     shading_model_cache[path] = handle;
     return handle;

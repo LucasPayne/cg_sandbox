@@ -38,7 +38,11 @@ template <typename T>
 REFLECT_STRUCT_TEMPLATED(Resource<T>);
 template <typename T>
 DESCRIPTOR_INSTANCE(Resource<T>);
-
+template <typename T>
+BEGIN_ENTRIES(Resource<T>)
+    ENTRY(resources)
+    ENTRY(table_collection_element)
+END_ENTRIES()
 
 
 class Resources {
@@ -99,11 +103,5 @@ T *Resources::get(Resource<T> resource) {
     return resource_tables.get<T>(resource.table_collection_element);
 }
 
-
-
-template <typename T>
-BEGIN_ENTRIES(Resource<T>)
-    ENTRY(table_collection_element)
-END_ENTRIES()
 
 #endif // RESOURCES_H

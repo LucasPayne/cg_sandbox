@@ -108,13 +108,16 @@ public:
 
     // Entities are copied by packing to a buffer then unpacking from that buffer.
     // Entities can also be exported to disk and loaded from disk.
+
+    void print_entity(Entity entity);
+
     void pack_entity(Entity entity, std::ostream &out);
     Entity unpack_entity(std::istream &in);
 
     Entity copy_entity(Entity entity);
 
-    void export_entity(Entity entity, std::string &path);
-    Entity import_entity(std::string &path);
+    void export_entity(Entity entity, const std::string &path);
+    Entity import_entity(const std::string &path);
 
 private:
 };

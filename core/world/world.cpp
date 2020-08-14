@@ -23,8 +23,10 @@ IDEAS/THINGS:
 ShadingModelInstance *shading_model_model_test;
 
 
+static const bool logging_rendering = false;
 static void log_render(const char *format, ...)
 {
+    if (!logging_rendering) return;
     va_list args;
     va_start(args, format);
     printf("[render] ");
@@ -50,6 +52,7 @@ World::World()
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);
+    REGISTER_RESOURCE_TYPE(ShadingBlock); //Data layout description for material properties.
     REGISTER_RESOURCE_TYPE(ShadingProgram);
     REGISTER_RESOURCE_TYPE(VertexArray);
     printf("[world] Resource model initialized.\n");
@@ -90,7 +93,7 @@ World::World()
     Resource<ShadingModel> sm = resources.add<ShadingModel>();
     std::fstream sm_file;
     sm_file.open("resources/model_test/model_test.sm");
-    sm->load(sm_file);
+    sm->load(resources, sm_file);
     shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
     // Input.
@@ -210,6 +213,19 @@ void World::mouse_handler(MouseEvent e)
 /*--------------------------------------------------------------------------------
     Entity serialization.
 --------------------------------------------------------------------------------*/
+
+
+void World::print_entity(Entity entity)
+{
+    std::cout << "entity:\n    ";
+    for (auto &aspect : entity) {
+        // Now pack the actual aspect data.
+        aspect.type()->print(*aspect.get_data(), std::cout, 1);
+        printf("\n    ");
+    }
+    std::cout << "\n";
+}
+
 void World::pack_entity(Entity entity, std::ostream &out)
 {
     // The TypeDescriptor gives a type tree, information that can be traversed.
@@ -219,8 +235,7 @@ void World::pack_entity(Entity entity, std::ostream &out)
     // (which makes sense if everything is being serialized), actually pack the underlying
     // data, and when unpacking, create a new Resource<T> for it. This is what would be wanted here.
 
-    // Pack how many names that unpacker will need to read.
-    size_t num_aspects = entity.num_aspects();
+    int num_aspects = entity.num_aspects();
     Reflector::pack(num_aspects, out);
 
     for (auto &aspect : entity) {
@@ -230,7 +245,6 @@ void World::pack_entity(Entity entity, std::ostream &out)
     }
 }
 
-/*
 Entity World::unpack_entity(std::istream &in)
 {
     auto entity = entities.add();
@@ -239,47 +253,21 @@ Entity World::unpack_entity(std::istream &in)
     for (int i = 0; i < num_aspects; i++) {
         TypeHandle type;
         Reflector::unpack(in, type);
-
         auto aspect = entity.add(type);
-
-        type->unpack(in, 
+        type->unpack(in, *aspect.get_data());
     }
-
-
-    Entity entity = em.new_entity();
-    size_t num_aspects;
-    unpack(in, num_aspects);
-    std::vector<std::string> type_names(num_aspects);
-    for (auto &name : type_names) {
-        unpack(in, name);
-    }
-    for (auto &name : type_names) {
-        unpack(in, name);
-
-        //... map name to type descriptor ...
-        TypeDescriptor *type = TypeDescriptorLookup(name);
-
-        //... generic alternative to the templated add_aspect ...
-        // Aspect without <> is generic. Why not be uniform here, and always store type information (the type descriptor)
-        // in handles? Then the template methods are just helpers.
-        Aspect aspect = entity.add_aspect(type);
-        type->unpack(in, *aspect);
-    }
-    // ... something, fix up references ...
-
-
     return entity;
 }
 
 Entity World::copy_entity(Entity entity)
 {
-    std::ostringstream buffer;
+    std::stringstream buffer;
     pack_entity(entity, buffer);
     return unpack_entity(buffer);
 }
 
 
-void World::export_entity(Entity entity, std::string &path)
+void World::export_entity(Entity entity, const std::string &path)
 {
     std::ofstream file;
     file.open(path, std::ios::trunc | std::ios::out | std::ios::binary);
@@ -289,16 +277,15 @@ void World::export_entity(Entity entity, std::string &path)
 }
 
 
-Entity World::import_entity(std::string &path)
+Entity World::import_entity(const std::string &path)
 {
     std::ifstream file;
-    file.open(path, std::ios::trunc | std::ios::in | std::ios::binary);
+    file.open(path, std::ios::in | std::ios::binary);
     assert(file.is_open());
     Entity entity = unpack_entity(file);
     file.close();
     return entity;
 }
-*/
 
 
 DESCRIPTOR_INSTANCE(Behaviour);

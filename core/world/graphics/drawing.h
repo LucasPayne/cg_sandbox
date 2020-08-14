@@ -8,14 +8,14 @@
 
 
 struct PropertySheet {
-    ShadingBlock *block;
+    Resource<ShadingBlock> block;
     std::vector<uint8_t> data;
     size_t size;
     bool in_sync;
     GLuint buffer_id;
 
     // Create a property sheet for a specific block. This matches the size of the block.
-    static PropertySheet instantiate_from(ShadingBlock &properties);
+    static PropertySheet instantiate_from(Resource<ShadingBlock> properties);
 
     // Synchronize application data with graphics data. This only uploads if a property changes.
     void synchronize();
@@ -76,7 +76,7 @@ struct GMSMInstance {
         } else {
             properties.size = 0;
             properties.buffer_id = 0;
-            properties.block = nullptr;
+            // properties.block = nullptr;
         }
     }
 };

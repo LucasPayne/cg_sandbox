@@ -210,6 +210,53 @@ REFLECT_PRIMITIVE(uint16_t);
 REFLECT_PRIMITIVE(uint32_t);
 REFLECT_PRIMITIVE(uint64_t);
 
+/*--------------------------------------------------------------------------------
+Reflection for raw pointers.
+--------------------------------------------------------------------------------*/
+template <typename T>
+struct PrimitiveTypeDescriptor<T *> : public TypeDescriptor {
+public:
+    PrimitiveTypeDescriptor() :
+        TypeDescriptor{sizeof(T *), "__RAW_POINTER__"}
+    {}
+    virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
+    virtual void pack(uint8_t &obj, std::ostream &out) const;
+    virtual void unpack(std::istream &in, uint8_t &obj) const;
+
+    virtual std::string name() const {
+        // The element type must be registered already. Ensure this.
+        PrimitiveTypeDescriptor<T> element_desc = PrimitiveTypeDescriptor<T>::init(false);
+        return std::string(base_name) + "<" + element_desc.name() + ">";
+    }
+    static PrimitiveTypeDescriptor<T *> init(bool register_type) {
+        auto desc = PrimitiveTypeDescriptor<T *>();
+        if (register_type) Reflector::DescriptorMap::register_descriptor(&desc);
+        return desc;
+    }
+    static TypeDescriptor *get() {
+        return &desc;
+    }
+// private:
+    static PrimitiveTypeDescriptor<T *> desc;
+};
+template <typename T>
+PrimitiveTypeDescriptor<T *> PrimitiveTypeDescriptor<T *>::desc(PrimitiveTypeDescriptor<T *>::init(true));
+
+template <typename T>
+REFLECT_PRIMITIVE_PRINT(T *) {
+    void *ptr = *((void **) &obj);
+    out << name() << "{" << ptr << "}";
+}
+template <typename T>
+REFLECT_PRIMITIVE_PACK(T *) {
+    out.write((char *)&obj, sizeof(void *));
+}
+template <typename T>
+REFLECT_PRIMITIVE_UNPACK(T *) {
+    in.read((char *)&obj, sizeof(void *));
+}
+//--------------------------------------------------------------------------------
+
 
 /*--------------------------------------------------------------------------------
     Helper functions for users of reflection.

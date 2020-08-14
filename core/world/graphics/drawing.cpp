@@ -39,3 +39,39 @@ void PropertySheet::synchronize()
     glBindBuffer(GL_UNIFORM_BUFFER, buffer_id);
     in_sync = true;
 }
+
+
+
+
+/*================================================================================
+    Reflection
+================================================================================*/
+DESCRIPTOR_INSTANCE(PropertySheet);
+BEGIN_ENTRIES(PropertySheet)
+    ENTRY(data)
+    ENTRY(size)
+    ENTRY(in_sync)
+    ENTRY(buffer_id)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(GeometricMaterialInstance);
+BEGIN_ENTRIES(GeometricMaterialInstance)
+    ENTRY(base)
+    ENTRY(properties)
+    ENTRY(vertex_array)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(MaterialInstance);
+BEGIN_ENTRIES(MaterialInstance)
+    ENTRY(base)
+    ENTRY(properties)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingModelInstance);
+BEGIN_ENTRIES(ShadingModelInstance)
+    ENTRY(base)
+    ENTRY(properties)
+END_ENTRIES()

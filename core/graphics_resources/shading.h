@@ -15,7 +15,7 @@ Provides rendering resources:
 #include "core.h"
 #include "gl/gl.h"
 
-#include "world/resource_model/resource_model.h"
+#include "world/resources/resources.h"
 
 
 /*--------------------------------------------------------------------------------
@@ -62,6 +62,9 @@ struct ShadingParameter {
     // "source" only makes sense for inputs, and denotes the shading stage the inputs came from, or whether it comes from the vertex array.
     uint8_t source;
 };
+REFLECT_STRUCT(ShadingParameter);
+
+
 struct ShadingOutput {
     ShadingParameter output;
     std::vector<ShadingParameter> inputs;
@@ -76,11 +79,17 @@ struct ShadingOutput {
     bool used;
     uint8_t latest_using_stage;
 };
+REFLECT_STRUCT(ShadingOutput);
+
+
 struct ShadingDataflow {
     std::vector<ShadingOutput> outputs;
     void print();
     ShadingDataflow() {}
 };
+REFLECT_STRUCT(ShadingDataflow);
+
+
 //-End shading dataflow structure-------------------------------------------------
 
 /*--------------------------------------------------------------------------------
@@ -100,22 +109,29 @@ struct ShadingBlockEntry {
     bool is_array;
     unsigned int array_length;
 };
+REFLECT_STRUCT(ShadingBlockEntry);
+
+
 struct ShadingBlockEntryLayout {
     // Contains layout information for a single entry in a ShadingBlock.
     size_t offset;
 };
+REFLECT_STRUCT(ShadingBlockEntryLayout);
+
+
 struct ShadingBlock {
     size_t block_size;
     std::vector<ShadingBlockEntry> entries;
     std::unordered_map<std::string, ShadingBlockEntryLayout> entry_layout;
 };
+REFLECT_STRUCT(ShadingBlock);
+
 
 /*--------------------------------------------------------------------------------
     GeometricMaterial, Material, ShadingModel
 --------------------------------------------------------------------------------*/
-// Reflected for compatibility
 //todo: Force these to be backed by asset files.
-/*REFLECTED*/ struct GeometricMaterial : public ResourceBase {
+struct GeometricMaterial {
     bool load(const std::istream &stream);
     //-Vertex shader only.
     ShadingDataflow dataflow;
@@ -126,14 +142,20 @@ struct ShadingBlock {
     bool has_properties;
     ShadingBlock properties;
 };
-/*REFLECTED*/ struct Material : public ResourceBase {
+REFLECT_STRUCT(GeometricMaterial);
+
+
+struct Material {
     bool load(const std::istream &stream);
     ShadingDataflow dataflow;
 
     bool has_properties;
     ShadingBlock properties;
 };
-/*REFLECTED*/ struct ShadingModel : public ResourceBase {
+REFLECT_STRUCT(Material);
+
+
+struct ShadingModel {
     bool load(const std::istream &stream);
     ShadingDataflow geom_post_dataflow;
     ShadingDataflow frag_post_dataflow;
@@ -141,11 +163,13 @@ struct ShadingBlock {
     bool has_properties;
     ShadingBlock properties;
 };
+REFLECT_STRUCT(ShadingModel);
+
 
 /*--------------------------------------------------------------------------------
     ShadingProgram, outcome of GeometricMaterial+Material+ShadingModel.
 --------------------------------------------------------------------------------*/
-/*REFLECTED*/ struct ShadingProgram {
+struct ShadingProgram {
     // There is no loading from a stream. ShadingPrograms are rather created with create(),
     // constructed from a G+M+SM triple.
     static ShadingProgram create(GeometricMaterial &geometric_material,
@@ -153,6 +177,8 @@ struct ShadingBlock {
                                  ShadingModel &shading_model);
     GLuint program_id;
 };
+REFLECT_STRUCT(ShadingProgram);
+
 
 /*================================================================================
     BEGIN private implementation details.

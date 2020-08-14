@@ -4,7 +4,7 @@
 
 #include "graphics_resources/graphics_resources.h"
 
-#include "world/resource_model/resource_model.h"
+#include "world/resources/resources.h"
 
 
 struct PropertySheet {
@@ -59,12 +59,16 @@ struct PropertySheet {
         in_sync = false;
     }
 };
+REFLECT_STRUCT(PropertySheet)
 
 
 template <typename T>
-/*REFLECTED*/ struct GMSMInstance {
-    /*ENTRY*/ Resource<T> base;
+struct GMSMInstance {
+    Resource<T> base;
     PropertySheet properties;
+
+    GMSMInstance() {}
+
     GMSMInstance(Resource<T> _base) : base{_base} {
         // Instantiate a property sheet if the base material has any properties.
         if (base->has_properties) {
@@ -78,27 +82,37 @@ template <typename T>
 };
 
 
-/*REFLECTED*/ struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
-    /*ENTRY*/ Resource<VertexArray> vertex_array;
+struct GeometricMaterialInstance : public GMSMInstance<GeometricMaterial> {
+    Resource<VertexArray> vertex_array;
+
+    GeometricMaterialInstance() {}
 
     GeometricMaterialInstance(Resource<GeometricMaterial> _base, Resource<VertexArray> _vertex_array) :
         GMSMInstance<GeometricMaterial>(_base), vertex_array{_vertex_array}
     {}
 };
+REFLECT_STRUCT(GeometricMaterialInstance);
 
+struct MaterialInstance : public GMSMInstance<Material> {
 
-/*REFLECTED*/ struct MaterialInstance : public GMSMInstance<Material> {
+    MaterialInstance() {}
+
     MaterialInstance(Resource<Material> _base) :
         GMSMInstance<Material>(_base)
     {}
 };
+REFLECT_STRUCT(MaterialInstance);
 
 
-/*REFLECTED*/ struct ShadingModelInstance : public GMSMInstance<ShadingModel> {
+struct ShadingModelInstance : public GMSMInstance<ShadingModel> {
+
+    ShadingModelInstance() {}
+
     ShadingModelInstance(Resource<ShadingModel> _base) :
         GMSMInstance<ShadingModel>(_base)
     {}
 };
+REFLECT_STRUCT(ShadingModelInstance);
 
 
 #endif // DRAWING_H

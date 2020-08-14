@@ -111,11 +111,10 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         MLModel_to_VertexArrayData(model, va);
         Reflector::pack(va, new_compiled_file);
     }
-    auto vertex_array_resource = rm->new_resource<VertexArray>();
+    auto vertex_array_resource = resources->add<VertexArray>();
     *vertex_array_resource = VertexArray::from_vertex_array_data(va);
     // Cache this.
     vertex_array_cache[path] = vertex_array_resource;
-    vertex_array_resource->asset_backed = true;
     log("Model found successfully.\n");
     return vertex_array_resource;
 }

@@ -18,3 +18,10 @@ uint8_t *TableCollection::operator[](TableCollectionElement element)
 {
     return tables[element.type_index][element.table_element];
 }
+
+
+TypeHandle &TableCollection::type_of(TableCollectionElement element)
+{
+    // Must be a valid element, or else this breaks!
+    return tables[element.type_index].type();
+}

@@ -4,33 +4,6 @@ Implementations for the vertex arrays submodule of the rendering module.
 #include "graphics_resources/vertex_arrays.h"
 
 
-// Global type data instances.
-BEGIN_ENTRIES(VertexSemantic)
-    ENTRY(name)
-    ENTRY(type)
-    ENTRY(size)
-END_ENTRIES()
-DESCRIPTOR_INSTANCE(VertexSemantic);
-
-
-BEGIN_ENTRIES(VertexArrayLayout)
-    ENTRY(index_type)
-    ENTRY(num_vertices)
-    ENTRY(indexed)
-    ENTRY(num_indices)
-    ENTRY(semantics)
-END_ENTRIES()
-DESCRIPTOR_INSTANCE(VertexArrayLayout);
-
-
-BEGIN_ENTRIES(VertexArrayData)
-    ENTRY(layout)
-    ENTRY(attribute_buffers)
-    ENTRY(index_buffer)
-END_ENTRIES()
-DESCRIPTOR_INSTANCE(VertexArrayData);
-
-
 size_t VertexSemantic::type_size() const
 {
     #define CASE(TYPE,SIZE) if (type == ( TYPE )) return size * ( SIZE );
@@ -166,3 +139,40 @@ VertexArray VertexArray::from_vertex_array_data(VertexArrayData &data)
 
     return vertex_array;
 }
+
+/*================================================================================
+    Reflection
+================================================================================*/
+DESCRIPTOR_INSTANCE(VertexSemantic);
+BEGIN_ENTRIES(VertexSemantic)
+    ENTRY(name)
+    ENTRY(type)
+    ENTRY(size)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(VertexArrayLayout);
+BEGIN_ENTRIES(VertexArrayLayout)
+    ENTRY(index_type)
+    ENTRY(num_vertices)
+    ENTRY(indexed)
+    ENTRY(num_indices)
+    ENTRY(semantics)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(VertexArrayData);
+BEGIN_ENTRIES(VertexArrayData)
+    ENTRY(layout)
+    ENTRY(attribute_buffers)
+    ENTRY(index_buffer)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(VertexArray);
+BEGIN_ENTRIES(VertexArray)
+    ENTRY(layout)
+    ENTRY(gl_vao_id)
+    ENTRY(gl_buffer_id)
+    ENTRY(gl_index_buffer_id)
+END_ENTRIES()

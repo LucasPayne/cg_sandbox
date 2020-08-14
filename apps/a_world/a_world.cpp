@@ -48,7 +48,7 @@ App::App(World &_world) : world{_world}
 #if 1
     // Create a camera man.
     {
-        cameraman = world.em.new_entity();
+        cameraman = world.entities.add();
         auto camera = cameraman.add<Camera>();
         camera->init_projective(0.1, 300, 0.1, 0.566);
 
@@ -81,7 +81,7 @@ App::App(World &_world) : world{_world}
     for (int i = 0; i < 1; i++) {
         // Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/buddha.obj");
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/venus_de_milo.obj");
-        Entity dolphin = world.em.new_entity();
+        Entity dolphin = world.entities.add();
         auto t = dolphin.add<Transform>();
         vec3 base(0,0,0);
         t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));

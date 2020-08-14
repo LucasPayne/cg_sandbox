@@ -9,7 +9,7 @@ Provides rendering resources:
 #include "core.h"
 #include "gl/gl.h"
 
-#include "world/resource_model/resource_model.h"
+#include "world/resources/resources.h"
 
 
 typedef uint16_t VertexAttributeBindingIndex;
@@ -72,7 +72,7 @@ struct VertexArrayData {
 REFLECT_STRUCT(VertexArrayData);
 
 
-struct VertexArray : public ResourceBase {
+struct VertexArray {
     static VertexArray from_vertex_array_data(VertexArrayData &data);
 
     VertexArrayLayout layout;
@@ -83,5 +83,7 @@ struct VertexArray : public ResourceBase {
     // If the vertices are indexed, the index buffer is a separate buffer whose handle is stored here.
     GLuint gl_index_buffer_id;
 };
+REFLECT_STRUCT(VertexArray);
+
 
 #endif // VERTEX_ARRAYS_H

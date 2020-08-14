@@ -10,7 +10,7 @@
 /*--------------------------------------------------------------------------------
 Transform aspect
 --------------------------------------------------------------------------------*/
-struct Transform : public AspectBase {
+struct Transform : public IAspectType {
     vec3 position;
     Quaternion rotation;
     float scale;
@@ -30,7 +30,7 @@ REFLECT_STRUCT(Transform);
 /*--------------------------------------------------------------------------------
 Camera aspect
 --------------------------------------------------------------------------------*/
-struct Camera : public AspectBase {
+struct Camera : public IAspectType {
     // Viewport extents (in terms of the application subrectangle).
     float bottom_left[2];
     float top_right[2];
@@ -39,15 +39,17 @@ struct Camera : public AspectBase {
     // Initialize this to a projective camera, with the default full viewport.
     void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
 };
+REFLECT_STRUCT(Camera);
 
 
 /*--------------------------------------------------------------------------------
 Drawable aspect
 --------------------------------------------------------------------------------*/
-struct Drawable : public AspectBase {
+struct Drawable : public IAspectType {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
 };
+REFLECT_STRUCT(Drawable);
 
 
 

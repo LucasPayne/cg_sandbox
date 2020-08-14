@@ -17,6 +17,12 @@ public:
     const T &operator*() const;
     const T *operator->() const;
 
+    // Unique runtime ID.
+    TableElementID ID() const { return table_collection_element.ID(); }
+
+    Resource() :
+        resources{nullptr}, table_collection_element()
+    {} //default null
 
 private:
     Resources *resources; //---
@@ -25,7 +31,13 @@ private:
     Resource(Resources *_resources, TableCollectionElement _table_collection_element) :
         resources{_resources}, table_collection_element{_table_collection_element}
     {}
+
+    friend class PrimitiveTypeDescriptor<Resource<T>>;
 };
+template <typename T>
+REFLECT_STRUCT_TEMPLATED(Resource<T>);
+template <typename T>
+DESCRIPTOR_INSTANCE(Resource<T>);
 
 
 
@@ -87,5 +99,11 @@ T *Resources::get(Resource<T> resource) {
     return resource_tables.get<T>(resource.table_collection_element);
 }
 
+
+
+template <typename T>
+BEGIN_ENTRIES(Resource<T>)
+    ENTRY(table_collection_element)
+END_ENTRIES()
 
 #endif // RESOURCES_H

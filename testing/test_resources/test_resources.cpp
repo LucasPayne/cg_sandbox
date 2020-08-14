@@ -107,15 +107,22 @@ int main(void)
     entities.register_aspect_type<OtherThing>();
     for (int i = 0; i < 10; i++) {
         auto e = entities.add();
-        printf("Added entity\n");getchar();
         auto t = e.add<Thing>(i, i+1);
         auto k = e.add<Thing>(2*i, 2*i+1);
         auto o = e.add<OtherThing>(*t, *k);
-        printf("Added aspects\n");getchar();
         for (auto aspect : e) {
-            printf("nice\n");
+            // std::cout << aspect.type()->name() << "\n";
+            aspect.type()->print(*aspect.get_data());
+            std::cout << "\n";
         }
+        std::cout << "Sibling OtherThing:\n";
+        auto sib = t.sibling<OtherThing>();
+        sib.type()->print((uint8_t &)*sib);
+        getchar();
     }
-
     Reflector::printl(entities);
+    auto entities_t = transporter(entities);
+    printf("-TRANSPORTING-------------------------------------------------------------------\n");
+    getchar();
+    Reflector::printl(entities_t);
 }

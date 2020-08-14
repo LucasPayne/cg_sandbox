@@ -41,7 +41,7 @@ EntityEntry *Entities::get_entry(Entity entity)
 
 IAspectType *GenericAspect::metadata()
 {
-    return reinterpret_cast<IAspectType *>(entities->aspect_tables[table_collection_element]);
+    return reinterpret_cast<IAspectType *>(get_data());
 }
 
 
@@ -60,4 +60,16 @@ AspectIterator Entity::end()
 {
     return AspectIterator(GenericAspect());
 }
+
+
+TypeHandle &GenericAspect::type() const {
+    return entities->aspect_tables.type_of(table_collection_element);
+}
+
+
+uint8_t *GenericAspect::get_data()
+{
+    return entities->aspect_tables[table_collection_element];
+}
+
 

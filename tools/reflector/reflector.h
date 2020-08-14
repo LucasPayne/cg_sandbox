@@ -166,6 +166,18 @@ implementations file
         static PrimitiveTypeDescriptor<STRUCT_NAME> init(bool register_type);\
     };\
 
+
+// helper macro removes the template line.
+#define REFLECT_STRUCT_TEMPLATED(STRUCT_NAME)\
+    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct {\
+    public:\
+        PrimitiveTypeDescriptor() : TypeDescriptor_Struct{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
+        static TypeDescriptor *get() { return &desc; };\
+        static PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
+        static PrimitiveTypeDescriptor<STRUCT_NAME> init(bool register_type);\
+    };\
+
+
 #define BEGIN_ENTRIES(STRUCT_NAME)\
     PrimitiveTypeDescriptor<STRUCT_NAME> PrimitiveTypeDescriptor<STRUCT_NAME>::init(bool register_type) {\
         PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
@@ -197,7 +209,6 @@ REFLECT_PRIMITIVE(uint8_t);
 REFLECT_PRIMITIVE(uint16_t);
 REFLECT_PRIMITIVE(uint32_t);
 REFLECT_PRIMITIVE(uint64_t);
-
 
 
 /*--------------------------------------------------------------------------------

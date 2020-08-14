@@ -11,8 +11,8 @@ such as the entity and resource models.
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include "graphics_resources/graphics_resources.h"
 
-#include "world/entity_model/entity_model.h"
-#include "world/resource_model/resource_model.h"
+#include "world/entities/entities.h"
+#include "world/resources/resources.h"
 #include "world/assets/assets.h"
 #include "world/graphics/graphics.h"
 
@@ -43,10 +43,11 @@ struct IBehaviour {
 };
 
 
-struct Behaviour : public AspectBase {
+struct Behaviour : public IAspectType {
     size_t object_size;
     IBehaviour *object;
 };
+REFLECT_STRUCT(Behaviour);
 
 
 /*--------------------------------------------------------------------------------
@@ -64,7 +65,7 @@ public:
     void keyboard_handler(KeyboardEvent e);
     void mouse_handler(MouseEvent e);
     // Component subsystems.
-    EntityModel em;
+    Entities entities;
     Resources resources;
     Graphics graphics; // Graphics state, such as cached compiled shaders.
     InputState input;

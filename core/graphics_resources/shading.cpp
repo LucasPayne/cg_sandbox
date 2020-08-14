@@ -808,3 +808,90 @@ ShadingBlock ShadingFileASTBlock::deastify() const
 /*================================================================================
     END private implementation details.
 ================================================================================*/
+
+
+/*================================================================================
+    Reflection
+================================================================================*/
+DESCRIPTOR_INSTANCE(GeometricMaterial);
+BEGIN_ENTRIES(GeometricMaterial)
+    ENTRY(dataflow)
+    ENTRY(primitive)
+    ENTRY(patch_length)
+    ENTRY(has_properties)
+    ENTRY(properties)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(Material);
+BEGIN_ENTRIES(Material)
+    ENTRY(dataflow)
+    ENTRY(has_properties)
+    ENTRY(properties)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingModel);
+BEGIN_ENTRIES(ShadingModel)
+    ENTRY(geom_post_dataflow)
+    ENTRY(frag_post_dataflow)
+    ENTRY(has_properties)
+    ENTRY(properties)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingProgram);
+BEGIN_ENTRIES(ShadingProgram)
+    ENTRY(program_id)
+END_ENTRIES()
+
+
+
+DESCRIPTOR_INSTANCE(ShadingDataflow);
+BEGIN_ENTRIES(ShadingDataflow)
+    ENTRY(outputs)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingOutput);
+BEGIN_ENTRIES(ShadingOutput)
+    ENTRY(output)
+    ENTRY(inputs)
+    ENTRY(uniforms)
+    ENTRY(snippet)
+    ENTRY(used)
+    ENTRY(latest_using_stage)
+END_ENTRIES()
+
+
+
+//-----not done
+DESCRIPTOR_INSTANCE(ShadingParameter);
+BEGIN_ENTRIES(ShadingParameter)
+    ENTRY(type)
+    ENTRY(name)
+    ENTRY(used)
+    ENTRY(source)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingBlockEntry);
+BEGIN_ENTRIES(ShadingBlockEntry)
+    ENTRY(type)
+    ENTRY(is_array)
+    ENTRY(array_length)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingBlockEntryLayout);
+BEGIN_ENTRIES(ShadingBlockEntryLayout)
+    ENTRY(offset)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(ShadingBlock);
+BEGIN_ENTRIES(ShadingBlock)
+    ENTRY(block_size)
+    ENTRY(entries)
+    // ENTRY(entry_layout) //todo: map needs to reflected.
+END_ENTRIES()

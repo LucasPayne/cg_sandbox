@@ -12,12 +12,15 @@
 #include "reflector/type_handle.h"
 
 
+using TableElementID = uint32_t;
+
+
 class Table;
 struct TableElement {
     friend class Table;
     friend class TableIterator;
 public:
-    uint32_t ID() const;
+    TableElementID ID() const;
     TableElement() :
         id{0}, index{0}
     {} //default null
@@ -29,10 +32,10 @@ public:
     }
 
 private:
-    uint32_t id;
+    TableElementID id;
     uint32_t index;
 
-    TableElement(uint32_t _id, uint32_t _index) :
+    TableElement(TableElementID _id, uint32_t _index) :
         id{_id}, index{_index}
     {}
 
@@ -99,7 +102,7 @@ private:
     uint32_t first_free_index;
 
     // The ID to give the next element added to the table.
-    uint32_t next_id;
+    TableElementID next_id;
 
     size_t m_capacity;
 
@@ -134,6 +137,10 @@ public:
     bool operator!=(const TableIterator &other) {
         return !(*this == other);
     }
+    TableIterator() :
+        table{nullptr}, element()
+    {} //default null
+
 private:
     TableIterator(Table *_table) :
         table{_table}
@@ -142,21 +149,6 @@ private:
     TableElement element;
 };
 
-
-
-
-// template <typename ELEMENT_TYPE>
-// class Table : public Table {
-// public:
-//     ELEMENT_TYPE *operator[](TableElement element) {
-//         return reinterpret_cast<ELEMENT_TYPE *>();
-//     }
-// 
-//     Table(uint32_t start_capacity = 1) :
-//         Table(TypeHandle::from_type<ELEMENT_TYPE>(), start_capacity)
-//     {}
-// private:
-// }
 
 
 

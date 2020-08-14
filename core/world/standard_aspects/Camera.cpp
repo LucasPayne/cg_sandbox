@@ -24,3 +24,7 @@ void Camera::init_projective(float near_plane_distance, float far_plane_distance
 }
 
 
+DESCRIPTOR_INSTANCE(Camera);
+BEGIN_ENTRIES(Camera)
+    ENTRY(projection_matrix)
+END_ENTRIES()

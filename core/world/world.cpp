@@ -40,10 +40,10 @@ World::World()
 
     // Initialize the resource model.
     printf("[world] Initializing resource model...\n");
-    rm = ResourceModel();
+    resources = Resources();
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
-        rm.register_resource_type<NAME>(#NAME);\
+        resources.register_resource_type<NAME>();\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering resource types...\n");
@@ -56,10 +56,10 @@ World::World()
 
     // Initialize the entity model, with no entities.
     printf("[world] Initializing entity model...\n");
-    em = EntityModel();
+    entities = Entities();
     // Register aspect types. Remember to do this!
     #define REGISTER_ASPECT_TYPE(NAME) {\
-        em.register_aspect_type<NAME>(#NAME);\
+        entities.register_aspect_type<NAME>();\
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering aspect types...\n");
@@ -72,22 +72,22 @@ World::World()
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
     printf("[world] Initializing Assets...\n");
     assets = Assets();
-    assets.rm = &rm;
-    assets.models.rm = &rm;
-    assets.shading.rm = &rm;
+    assets.resources = &resources;
+    assets.models.resources = &resources;
+    assets.shading.resources = &resources;
     printf("[world] Assets initialized.\n");
 
     // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     printf("[world] Initializing Graphics...\n");
-    graphics = Graphics(&rm); // The Graphics component relies on the resource model.
+    graphics = Graphics(&resources); // The Graphics component relies on the resource model.
     printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //
     glEnable(GL_DEPTH_TEST); // todo: Remove this.
     glDepthFunc(GL_LESS);    //
 
-    // Resource<ShadingModel> sm = rm.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    Resource<ShadingModel> sm = rm.new_resource<ShadingModel>();
+    // Resource<ShadingModel> sm = resources.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
+    Resource<ShadingModel> sm = resources.add<ShadingModel>();
     std::fstream sm_file;
     sm_file.open("resources/model_test/model_test.sm");
     sm->load(sm_file);
@@ -109,13 +109,13 @@ void World::save(std::string &path)
         exit(EXIT_FAILURE);
     }
     // Component subsystems.
-    // EntityModel em;    Saved.
-    // ResourceModel rm;  
+    // Entities entities;    Saved.
+    // Resources resources;  
     // Graphics graphics; 
     // InputState input;  Thrown out.
     // Assets assets;
 
-    // EntityModel
+    // Entities
     // pack(em.entity_table, file);
     // pack(em.aspect_tables, file);
 }
@@ -154,13 +154,13 @@ void World::loop()
     glDisable(GL_SCISSOR_TEST);
 
     // Update entity behaviours.
-    for (auto b : em.aspects<Behaviour>()) {
+    for (auto b : entities.aspects<Behaviour>()) {
         if (b->object->updating) {
             b->object->update();
         }
     }
     // Render.
-    for (auto camera : em.aspects<Camera>()) {
+    for (auto camera : entities.aspects<Camera>()) {
         log_render("Getting camera transform...");
         auto camera_transform = camera.sibling<Transform>();
         log_render("Calculating view-projection matrix...");
@@ -170,8 +170,8 @@ void World::loop()
         shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
 
         log_render("Rendering Drawables:");
-        for (auto drawable : em.aspects<Drawable>()) {
-            log_render("  Rendering drawable with ID %u.", drawable.ID());
+        for (auto drawable : entities.aspects<Drawable>()) {
+            log_render("  Rendering drawable.\n");
             log_render("    Getting transform...");
             auto t = drawable.sibling<Transform>();
             log_render("    Calculating model matrix...");
@@ -188,7 +188,7 @@ void World::loop()
 
 void World::keyboard_handler(KeyboardEvent e)
 {
-    for (auto b : em.aspects<Behaviour>()) {
+    for (auto b : entities.aspects<Behaviour>()) {
         if (b->object->handling_keyboard) {
             b->object->keyboard_handler(e);
         }
@@ -198,7 +198,7 @@ void World::keyboard_handler(KeyboardEvent e)
 
 void World::mouse_handler(MouseEvent e)
 {
-    for (auto b : em.aspects<Behaviour>()) {
+    for (auto b : entities.aspects<Behaviour>()) {
         if (b->object->handling_mouse) {
             b->object->mouse_handler(e);
         }
@@ -288,3 +288,9 @@ Entity World::import_entity(std::string &path)
 }
 
 */
+
+
+DESCRIPTOR_INSTANCE(Behaviour);
+BEGIN_ENTRIES(Behaviour)
+    ENTRY(object_size)
+END_ENTRIES()

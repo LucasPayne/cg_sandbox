@@ -6,14 +6,14 @@ and is the interface through which things are drawn.
 --------------------------------------------------------------------------------*/
 #include "core.h"
 
-#include "world/resource_model/resource_model.h"
+#include "world/resources/resources.h"
 #include "world/graphics/drawing.h"
 
 // Shading programs, compiled from a GeometricMaterial+Material+ShadingModel, are cached.
 struct ShadingProgramKey {
-    TableEntryID gmat_id;
-    TableEntryID mat_id;
-    TableEntryID sm_id;
+    TableElementID gmat_id;
+    TableElementID mat_id;
+    TableElementID sm_id;
     ShadingProgramKey(const Resource<GeometricMaterial> &gmat, const Resource<Material> &mat, const Resource<ShadingModel> &sm) :
         gmat_id{gmat.ID()}, mat_id{mat.ID()}, sm_id{sm.ID()}
     {}
@@ -35,8 +35,8 @@ Graphics
 --------------------------------------------------------------------------------*/
 class Graphics {
 public:
-    Graphics(ResourceModel *_rm) :
-        rm{_rm}
+    Graphics(Resources *_resources) :
+        resources{_resources}
     {}
     Graphics() {}
 
@@ -47,7 +47,7 @@ public:
               ShadingModelInstance &sm_instance);
 
 private:
-    ResourceModel *rm;
+    Resources *resources;
     ShadingProgramCache shading_program_cache;
 };
 

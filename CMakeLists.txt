@@ -37,6 +37,7 @@ add_library(cg_sandbox
     tools/reflector/type_handle.cpp
 
     core/data_structures/table.cpp
+    core/data_structures/table_collection.cpp
 
     core/gl/glsl.cpp
     core/gl/gl_shader_program.cpp
@@ -44,8 +45,8 @@ add_library(cg_sandbox
     core/mathematics/mathematics.cpp
 
     core/world/world.cpp
-    core/world/entity_model/entity_model.cpp
-    core/world/resource_model/resource_model.cpp
+    core/world/entities/entities.cpp
+    core/world/resources/resources.cpp
     core/world/standard_aspects/standard_aspects.cpp
     core/world/standard_aspects/Transform.cpp
     core/world/standard_aspects/Camera.cpp

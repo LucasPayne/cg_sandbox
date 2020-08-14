@@ -12,7 +12,7 @@ public:
     ModelAssets models;
     ShadingAssets shading;
 
-    ResourceModel *rm;
+    Resources *resources;
 private:
 }; 
 

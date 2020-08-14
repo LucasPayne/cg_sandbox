@@ -29,6 +29,11 @@ public:
     // It is important that _all_ aspects derive from IAspectType, or this will break.
     IAspectType *metadata();
 
+    TypeHandle &type() const;
+
+    // Get the aspect data as a generic byte-array.
+    uint8_t *get_data();
+
 private:
     Entities *entities; //---
     TableCollectionElement table_collection_element;
@@ -41,15 +46,6 @@ private:
 };
 REFLECT_STRUCT(GenericAspect);
 
-
-// Metadata for each aspect, stored with the aspect.
-// Named "IAspectType" since all aspects must inherit from this.
-struct IAspectType {
-    GenericAspect next_aspect;
-    IAspectType() :
-        next_aspect()
-    {} //default null
-};
 
 
 template <typename T>
@@ -64,10 +60,18 @@ public:
 
     GenericAspect &generic() { return *this; }
 
-private:
+    template <typename SIBLING_TYPE>
+    Aspect<SIBLING_TYPE> sibling();
+
+    Aspect() : GenericAspect()
+    {} //default null
+        
+    Aspect(GenericAspect generic_aspect) : GenericAspect(generic_aspect) {}
+
     Aspect(Entities *entities, TableCollectionElement table_collection_element) :
         GenericAspect(entities, table_collection_element)
     {}
+private:
 };
 
 
@@ -98,7 +102,40 @@ private:
     GenericAspect aspect;
 };
 
+template <typename T>
+class AspectsIterator {
+public:
+    Aspect<T> &operator*() {
+        return aspect;
+    }
+    Aspect<T> *operator->() {
+        return &(operator*());
+    }
+    AspectsIterator<T> &operator++();
+    bool operator==(const AspectsIterator<T> &other) {
+        return aspect == other.aspect;
+    }
+    bool operator!=(const AspectsIterator<T> &other) {
+        return !(*this == other);
+    }
 
+    AspectsIterator<T> &begin();
+    AspectsIterator<T> &end();
+
+    AspectsIterator(Entities *_entities, uint32_t _type_index, Table *_table) :
+        entities{_entities}, table{_table},
+        table_iterator(), aspect(),
+        type_index{_type_index}
+    {}
+private:
+    void update_aspect();
+
+    Entities *entities;
+    Table *table;
+    TableIterator table_iterator;
+    Aspect<T> aspect;
+    uint32_t type_index;
+};
 
 
 
@@ -119,6 +156,9 @@ public:
     AspectIterator begin();
     AspectIterator end();
 
+    Entity() :
+        entities{nullptr}, table_element()
+    {} //default null
 
 private:
     Entity(Entities *_entities, TableElement _table_element) :
@@ -138,6 +178,20 @@ struct EntityEntry {
 REFLECT_STRUCT(EntityEntry);
 
 
+
+
+// Metadata for each aspect, stored with the aspect.
+// Named "IAspectType" since all aspects must inherit from this.
+struct IAspectType {
+    Entity entity;
+    GenericAspect next_aspect;
+    IAspectType() :
+        entity(), next_aspect()
+    {} //default null
+};
+
+
+
 class Entities {
     friend class Entity;
     friend class GenericAspect;
@@ -150,6 +204,9 @@ public:
     void register_aspect_type();
 
     Entity add();
+
+    template <typename T>
+    AspectsIterator<T> aspects();
 
 private:
 
@@ -170,26 +227,27 @@ void Entities::register_aspect_type()
 }
 
 
-
+// Add an aspect to the entity.
 template <typename T, typename... Args>
 Aspect<T> Entity::add(Args&&... args)
 {
-    std::cout << "Adding aspect " << Reflector::get_descriptor<T>()->name() << "\n";
-
+    // Initialize the aspect by forwarding the arguments to its constructor.
     auto aspect = Aspect<T>(entities, entities->aspect_tables.add<T>(std::forward<Args>(args)...));
+
+    // Add the aspect to the entity's linked list.
     EntityEntry *entry = entities->get_entry(*this);
-    printf("Got entry\n");
     if (entry->first_aspect == GenericAspect()) {
-        printf("Setting up head\n");
+        // Add at the head.
         entry->first_aspect = aspect.generic();
     } else {
-        printf("Appending\n");
+        // Add to the end.
         GenericAspect last = entry->first_aspect;
         for (auto a : *this) {
             last = a;
         }
         last.metadata()->next_aspect = aspect;
     }
+    aspect.metadata()->entity = *this; // Give the aspect a handle to this entity.
     return aspect;
 }
 
@@ -197,6 +255,12 @@ Aspect<T> Entity::add(Args&&... args)
 template <typename T>
 Aspect<T> Entity::get()
 {
+    for (auto a : *this) {
+        if (a.type() == TypeHandle(Reflector::get_descriptor<T>())) {
+            return Aspect<T>(a);
+        }
+    }
+    assert(0);
 }
 
 
@@ -225,5 +289,55 @@ T *Aspect<T>::operator->()
 {
     return &(operator*());
 }
+
+
+
+template <typename T>
+template <typename SIBLING_TYPE>
+Aspect<SIBLING_TYPE> Aspect<T>::sibling()
+{
+    return metadata()->entity.get<SIBLING_TYPE>();
+}
+
+
+template <typename T>
+AspectsIterator<T> Entities::aspects()
+{
+    return AspectsIterator<T>(this, aspect_tables.get_type_index<T>(), aspect_tables.get_table<T>());
+}
+
+
+
+template <typename T>
+void AspectsIterator<T>::update_aspect()
+{
+    aspect = Aspect<T>(entities, TableCollectionElement(type_index, *table_iterator));
+}
+
+template <typename T>
+AspectsIterator<T> &AspectsIterator<T>::begin()
+{
+    table_iterator = table->begin();
+    update_aspect();
+    return *this;
+}
+
+template <typename T>
+AspectsIterator<T> &AspectsIterator<T>::operator++()
+{
+    ++table_iterator;
+    update_aspect();
+    return *this;
+}
+
+template <typename T>
+AspectsIterator<T> &AspectsIterator<T>::end()
+{
+    table_iterator = table->end();
+    update_aspect();
+    return *this;
+}
+
+
 
 #endif // ENTITIES_H

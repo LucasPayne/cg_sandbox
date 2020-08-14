@@ -24,12 +24,12 @@ Table::Table(TypeHandle _type, uint32_t start_capacity) :
     data = std::vector<uint8_t>(slot_size * start_capacity);
 
     // All slots are empty.
-    for (int i = 0; i < start_capacity; i++) {
+    for (unsigned int i = 0; i < start_capacity; i++) {
         slot_metadata(i)->id = 0;
     }
 
     // Initialize the free list.
-    for (int i = 0; i < start_capacity - 1; i++) {
+    for (unsigned int i = 0; i < start_capacity - 1; i++) {
         empty_slot(i)->next_free_index = i + 1;
     }
     empty_slot(start_capacity - 1)->next_free_index = 0;
@@ -70,7 +70,7 @@ TableElement Table::add()
 
         // Initialize the new slots of the free list.
         first_free_index = old_capacity;
-        for (int i = old_capacity; i < m_capacity - 1; i++) {
+        for (unsigned int i = old_capacity; i < m_capacity - 1; i++) {
             empty_slot(i)->next_free_index = i + 1;
         }
         empty_slot(m_capacity - 1)->next_free_index = 0;
@@ -189,7 +189,7 @@ REFLECT_PRIMITIVE_UNPACK(Table)
     
     // Unpack the elements into their slots.
     // This breaks the validity of the table, so it must be fixed after!
-    for (int i = 0; i < num_elements; i++) {
+    for (unsigned int i = 0; i < num_elements; i++) {
         TableElement element;
         Reflector::unpack(in, element);
         table.slot_metadata(element.index)->id = element.id;
@@ -198,14 +198,14 @@ REFLECT_PRIMITIVE_UNPACK(Table)
     }
     // Fix up the table.
     // Initialize the free list.
-    for (int i = 0; i < capacity; i++) {
+    for (unsigned int i = 0; i < capacity; i++) {
         if (table.slot_metadata(i)->id == 0) {
             table.first_free_index = i;
             break;
         }
     }
     uint32_t connecting_index = table.first_free_index;
-    for (int i = table.first_free_index + 1; i < capacity; i++) {
+    for (unsigned int i = table.first_free_index + 1; i < capacity; i++) {
         if (table.slot_metadata(i)->id == 0) {
             table.empty_slot(connecting_index)->next_free_index = i;
             connecting_index = i;
@@ -223,7 +223,7 @@ Table forward iterator.
 TableIterator Table::begin()
 {
     TableIterator iter(this);
-    for (int i = 0; i < m_capacity; i++) {
+    for (unsigned int i = 0; i < m_capacity; i++) {
         if (!slot_is_empty(i)) {
             iter.element = TableElement(slot_metadata(i)->id, i);
             return iter;
@@ -234,7 +234,7 @@ TableIterator Table::begin()
 
 TableIterator &TableIterator::operator++()
 {
-    for (int i = element.index+1; i < table->m_capacity; i++) {
+    for (unsigned int i = element.index+1; i < table->m_capacity; i++) {
         if (!table->slot_is_empty(i)) {
             element = TableElement(table->slot_metadata(i)->id, i);
             return *this;

@@ -30,9 +30,13 @@ T transporter(T &obj)
 
 
 
-struct Thing {
+struct Thing : IAspectType {
     int a;
     int b;
+    Thing() {}
+    Thing(int _a, int _b) :
+        a{_a}, b{_b}
+    {}
 };
 REFLECT_STRUCT(Thing);
 BEGIN_ENTRIES(Thing)
@@ -41,9 +45,13 @@ BEGIN_ENTRIES(Thing)
 END_ENTRIES()
 DESCRIPTOR_INSTANCE(Thing);
 
-struct OtherThing {
+struct OtherThing : IAspectType {
     Thing t;
     Thing k;
+    OtherThing() {}
+    OtherThing(Thing _t, Thing _k) :
+        t{_t}, k{_k}
+    {}
 };
 REFLECT_STRUCT(OtherThing);
 BEGIN_ENTRIES(OtherThing)
@@ -58,7 +66,7 @@ int main(void)
 {
     Table table(Reflector::get_descriptor<Thing>());
     for (int i = 0; i < 3; i++) {
-        TableElement e = table.add();
+        auto e = table.add();
         ((Thing *) table[e])->a = i+1;
         ((Thing *) table[e])->b = i*3+1;
     }
@@ -73,16 +81,16 @@ int main(void)
     resources.register_resource_type<OtherThing>();
 
     for (int i = 0; i < 4; i++) {
-        Resource<Thing> a = resources.add<Thing>();
+        auto a = resources.add<Thing>();
         a->a = i*30 + 123;
         a->b = i*i + 100;
         Reflector::printl(*a);
-        Resource<Thing> b = resources.add<Thing>();
+        auto b = resources.add<Thing>();
         b->a = i*i*i;
         b->b = i+1;
         Reflector::printl(*b);
 
-        Resource<OtherThing> c = resources.add<OtherThing>();
+        auto c = resources.add<OtherThing>();
         c->t = *a;
         c->k = *b;
         Reflector::printl(*c);
@@ -93,4 +101,21 @@ int main(void)
     auto resources_t = transporter(resources);
     printf("--------------------------------------------------------------------------------\n");
     Reflector::printl(resources_t);
+
+    Entities entities;
+    entities.register_aspect_type<Thing>();
+    entities.register_aspect_type<OtherThing>();
+    for (int i = 0; i < 10; i++) {
+        auto e = entities.add();
+        printf("Added entity\n");getchar();
+        auto t = e.add<Thing>(i, i+1);
+        auto k = e.add<Thing>(2*i, 2*i+1);
+        auto o = e.add<OtherThing>(*t, *k);
+        printf("Added aspects\n");getchar();
+        for (auto aspect : e) {
+            printf("nice\n");
+        }
+    }
+
+    Reflector::printl(entities);
 }

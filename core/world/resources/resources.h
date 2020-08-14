@@ -1,6 +1,7 @@
 #ifndef RESOURCES_H
 #define RESOURCES_H
 #include <assert.h>
+#include <utility>//std::forward
 #include "core.h"
 #include "data_structures/table_collection.h"
 
@@ -33,8 +34,8 @@ public:
     template <typename T>
     void register_resource_type();
     
-    template <typename T>
-    Resource<T> add();
+    template <typename T, typename... Args>
+    Resource<T> add(Args&&... args);
     
     template <typename T>
     T *get(Resource<T> resource);
@@ -76,9 +77,9 @@ void Resources::register_resource_type()
     resource_tables.register_type<T>();
 }
 
-template <typename T>
-Resource<T> Resources::add() {
-    return Resource<T>(this, resource_tables.add<T>());
+template <typename T, typename... Args>
+Resource<T> Resources::add(Args&&... args) {
+    return Resource<T>(this, resource_tables.add<T>(std::forward<Args>(args)...));
 }
 
 template <typename T>

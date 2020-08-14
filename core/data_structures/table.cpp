@@ -229,7 +229,7 @@ TableIterator Table::begin()
             return iter;
         }
     }
-    assert(0);
+    return end();
 }
 
 TableIterator &TableIterator::operator++()

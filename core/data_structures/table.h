@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <string>//std::string
+#include <utility>//std::forward
 #include <stdint.h>
 #include <stdio.h>//error logging
 #include <stdlib.h>//exit
@@ -19,7 +20,7 @@ public:
     uint32_t ID() const;
     TableElement() :
         id{0}, index{0}
-    {}
+    {} //default null
     bool operator==(const TableElement &other) const {
         return (id == other.id) && (index == other.index);
     }
@@ -50,7 +51,18 @@ class Table {
 public:
     Table() {}
 
+    // Reserves uninitialized memory for an object.
     TableElement add();
+
+    // Construct a new object in the table.
+    template <typename T, typename... Args>
+    TableElement add(Args&&... args) {
+        TableElement element = add();
+        auto location = reinterpret_cast<T *>((*this)[element]);
+        new (location) T(std::forward<Args>(args)...);
+        return element;
+    }
+
     void remove(TableElement element);
     uint8_t *operator[](TableElement element);
 

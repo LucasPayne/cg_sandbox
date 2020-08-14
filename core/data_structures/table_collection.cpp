@@ -12,3 +12,9 @@ DESCRIPTOR_INSTANCE(TableCollection);
 BEGIN_ENTRIES(TableCollection)
     ENTRY(tables)
 END_ENTRIES()
+
+
+uint8_t *TableCollection::operator[](TableCollectionElement element)
+{
+    return tables[element.type_index][element.table_element];
+}

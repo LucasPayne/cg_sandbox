@@ -6,6 +6,17 @@
 
 class TableCollectionElement {
     friend class TableCollection;
+public:
+    bool operator==(const TableCollectionElement &other) {
+        return (type_index == other.type_index) && (table_element == other.table_element);
+    }
+    bool operator!=(const TableCollectionElement &other) {
+        return !(*this == other);
+    }
+
+    TableCollectionElement() :
+        type_index{0}, table_element()
+    {} // default null
 private:
     uint16_t type_index;
     TableElement table_element;
@@ -24,11 +35,15 @@ public:
     template <typename T>
     void register_type();
     
-    template <typename T>
-    TableCollectionElement add();
+    template <typename T, typename... Args>
+    TableCollectionElement add(Args&&... args);
     
+    // Get an object with the given type from the tables.
     template <typename T>
     T *get(TableCollectionElement element);
+
+    // Get a generic byte-array pointer from the handle.
+    uint8_t *operator[](TableCollectionElement element);
 
     TableCollection(size_t _table_start_capacity = 16) :
         table_start_capacity{_table_start_capacity}
@@ -52,13 +67,13 @@ void TableCollection::register_type()
     tables.push_back(Table(type, table_start_capacity));
 }
 
-template <typename T>
-TableCollectionElement TableCollection::add() {
+template <typename T, typename... Args>
+TableCollectionElement TableCollection::add(Args&&... args) {
     TypeHandle type(Reflector::get_descriptor<T>());
     int type_index = 0;
     for (auto &table : tables) {
         if (type == table.type()) {
-            return TableCollectionElement(type_index, table.add());
+            return TableCollectionElement(type_index, table.add<T>(std::forward<Args>(args)...));
         }
         type_index++;
     }

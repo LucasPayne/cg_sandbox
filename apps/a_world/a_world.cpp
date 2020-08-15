@@ -59,6 +59,10 @@ App::App(World &_world) : world{_world}
         controller->test_vector = {{1,2,3}, {2,9,8}, {-3,0,0}, {1,23,45}};
         controller->test_string = "hello, world";
 
+        Reflector::apply([](const TypeHandle &type, uint8_t &obj) {
+            std::cout << type->name() << "\n";
+        }, *controller);
+        getchar();
 
         cc = controller; //make globally available.
     }

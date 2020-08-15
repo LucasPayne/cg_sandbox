@@ -13,7 +13,6 @@ references:
 #include <functional>
 #include <stdint.h>
 
-
 class TypeDescriptor;
 class TypeHandle {
 public:
@@ -40,6 +39,11 @@ private:
 };
 
 
+// An Applicator applies the given function ("functor") all nodes in the type tree.
+// (This is in depth first order. This order must be respected by a type descriptor's apply() function.)
+using Applicator = std::function<void(const TypeHandle &, uint8_t &)>;
+
+
 
 /*--------------------------------------------------------------------------------
 TypeDescriptor
@@ -60,7 +64,7 @@ struct TypeDescriptor {
     virtual void print(uint8_t &obj, std::ostream &out = std::cout, int indent_level = 0) const = 0;
     virtual void pack(uint8_t &obj, std::ostream &out) const = 0;
     virtual void unpack(std::istream &in, uint8_t &obj) const = 0;
-    virtual void apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const = 0;
+    virtual void apply(Applicator functor, uint8_t &obj) const = 0;
     
     // name() is overridable so, for example, each instantiation of a template class can have a different name.
     virtual std::string name() const { return std::string(base_name); }
@@ -99,7 +103,7 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
     virtual void unpack(std::istream &in, uint8_t &obj) const;
-    virtual void apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const;
+    virtual void apply(Applicator functor, uint8_t &obj) const;
 };
 
 
@@ -139,7 +143,7 @@ Example:
         virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;\
         virtual void pack(uint8_t &obj, std::ostream &out) const;\
         virtual void unpack(std::istream &in, uint8_t &obj) const;\
-        virtual void apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const;\
+        virtual void apply(Applicator functor, uint8_t &obj) const;\
         static TypeDescriptor *get() { return &desc; }\
         static PrimitiveTypeDescriptor<TYPE> init(bool register_type) {\
             auto desc = PrimitiveTypeDescriptor<TYPE>();\
@@ -152,13 +156,13 @@ Example:
 
 // For trivial primitives, apply() applies the functor to the object only.
 #define REFLECT_PRIMITIVE_APPLY_TRIVIAL(TYPE)\
-    void PrimitiveTypeDescriptor<TYPE>::apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const\
+    void PrimitiveTypeDescriptor<TYPE>::apply(Applicator functor, uint8_t &obj) const\
     {\
         functor(TypeHandle(this), obj);\
     }
 
 #define REFLECT_PRIMITIVE_APPLY(TYPE)\
-    void PrimitiveTypeDescriptor<TYPE>::apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const
+    void PrimitiveTypeDescriptor<TYPE>::apply(Applicator functor, uint8_t &obj) const
 
 #define REFLECT_PRIMITIVE_PRINT(TYPE)\
     void PrimitiveTypeDescriptor<TYPE>::print(uint8_t &obj, std::ostream &out, int indent_level) const
@@ -262,7 +266,7 @@ public:
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
     virtual void unpack(std::istream &in, uint8_t &obj) const;
-    virtual void apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const;
+    virtual void apply(Applicator functor, uint8_t &obj) const;
 
     virtual std::string name() const {
         // The element type must be registered already. Ensure this.
@@ -356,6 +360,13 @@ void unpack(std::istream &in, TYPE &obj)
 {
     PrimitiveTypeDescriptor<TYPE>::get()->unpack(in, (uint8_t &)obj);
 }
+
+template <typename TYPE>
+void apply(Applicator functor, TYPE &obj)
+{
+    PrimitiveTypeDescriptor<TYPE>::get()->apply(functor, (uint8_t &)obj);
+}
+
 
 
 } // end namespace Reflector

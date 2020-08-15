@@ -49,8 +49,7 @@ App::App(World &_world) : world{_world}
     // Create a camera man.
     {
         cameraman = world.entities.add();
-        auto camera = cameraman.add<Camera>();
-        camera->init_projective(0.1, 300, 0.1, 0.566);
+        auto camera = cameraman.add<Camera>(0.1, 300, 0.1, 0.566);
 
         auto t = cameraman.add<Transform>();
         t->init(0,0,0);
@@ -94,6 +93,7 @@ App::App(World &_world) : world{_world}
     for (int i = 0; i < 10; i++) {
         auto copy = world.copy_entity(dolphin);
         copy.get<Transform>()->position += vec3(frand(),frand(),frand())*2;
+        copy.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
     }
 
@@ -112,7 +112,7 @@ App::App(World &_world) : world{_world}
 
     auto entities_t = transporter(world.entities);
     Reflector::printl(entities_t);
-    getchar();
+    // getchar();
 
 
 

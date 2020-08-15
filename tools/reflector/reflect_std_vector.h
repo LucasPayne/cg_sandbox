@@ -11,6 +11,7 @@ public:
     virtual void print(uint8_t &obj, std::ostream &out, int indent_level) const;
     virtual void pack(uint8_t &obj, std::ostream &out) const;
     virtual void unpack(std::istream &in, uint8_t &obj) const;
+    virtual void apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const;
 
     virtual std::string name() const {
         // The element type must be registered already. Ensure this.
@@ -33,7 +34,8 @@ PrimitiveTypeDescriptor<std::vector<T>> PrimitiveTypeDescriptor<std::vector<T>>:
 
 
 template <typename T>
-REFLECT_PRIMITIVE_PRINT(std::vector<T>) {
+REFLECT_PRIMITIVE_PRINT(std::vector<T>)
+{
     auto vec = (std::vector<T> &) obj;
     out << name() << "[\n";
     for (T &entry : vec) {
@@ -46,7 +48,8 @@ REFLECT_PRIMITIVE_PRINT(std::vector<T>) {
 
 
 template <typename T>
-REFLECT_PRIMITIVE_PACK(std::vector<T>) {
+REFLECT_PRIMITIVE_PACK(std::vector<T>)
+{
     auto vec = (std::vector<T> &) obj;
     size_t length = vec.size();
     out.write((char *)&length, sizeof(size_t));
@@ -57,7 +60,8 @@ REFLECT_PRIMITIVE_PACK(std::vector<T>) {
 
 
 template <typename T>
-REFLECT_PRIMITIVE_UNPACK(std::vector<T>) {
+REFLECT_PRIMITIVE_UNPACK(std::vector<T>)
+{
     size_t length;
     in.read((char *)&length, sizeof(size_t));
     auto vec = std::vector<T>(length);
@@ -67,6 +71,20 @@ REFLECT_PRIMITIVE_UNPACK(std::vector<T>) {
     }
 
     *((std::vector<T> *) &obj) = vec;
+}
+
+
+template <typename T>
+REFLECT_PRIMITIVE_APPLY(std::vector<T>)
+{
+    functor(TypeHandle(this), obj);
+
+    auto vec = (std::vector<T> &) obj;
+    auto entry_type = TypeHandle::from_type<T>();
+
+    for (T &entry : vec) {
+        entry_type->apply(functor, (uint8_t &) entry);
+    }
 }
 
 

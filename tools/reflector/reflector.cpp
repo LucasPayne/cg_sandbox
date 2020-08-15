@@ -28,6 +28,14 @@ void TypeDescriptor_Struct::unpack(std::istream &in, uint8_t &obj) const
         entry.type->unpack(in, (&obj)[entry.offset]);
     }
 }
+void TypeDescriptor_Struct::apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const
+{
+    functor(TypeHandle(this), obj);
+    for (const StructEntry &entry : entries) {
+        entry.type->apply(functor, (&obj)[entry.offset]);
+    }
+}
+
 
 
 /*--------------------------------------------------------------------------------
@@ -40,6 +48,7 @@ REFLECT_PRIMITIVE_PRINT(float)
     out << name() << "{" << std::fixed << std::setprecision(6) << val << "}";
 }
 REFLECT_PRIMITIVE_FLAT(float);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(float);
 
 DESCRIPTOR_INSTANCE(bool);
 REFLECT_PRIMITIVE_PRINT(bool)
@@ -48,6 +57,7 @@ REFLECT_PRIMITIVE_PRINT(bool)
     out << name() << "{" << (val ? "True" : "False") << "}";
 }
 REFLECT_PRIMITIVE_FLAT(bool);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(bool);
 
 DESCRIPTOR_INSTANCE(int);
 REFLECT_PRIMITIVE_PRINT(int)
@@ -56,6 +66,7 @@ REFLECT_PRIMITIVE_PRINT(int)
     out << name() << "{" << val << "}";
 }
 REFLECT_PRIMITIVE_FLAT(int);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(int);
 
 DESCRIPTOR_INSTANCE(uint8_t);
 REFLECT_PRIMITIVE_PRINT(uint8_t)
@@ -64,6 +75,7 @@ REFLECT_PRIMITIVE_PRINT(uint8_t)
     out << name() << "{" << (unsigned int) val << "}"; // Needs to be cast or it will be treated as a char.
 }
 REFLECT_PRIMITIVE_FLAT(uint8_t);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(uint8_t);
 
 DESCRIPTOR_INSTANCE(uint16_t);
 REFLECT_PRIMITIVE_PRINT(uint16_t)
@@ -72,6 +84,7 @@ REFLECT_PRIMITIVE_PRINT(uint16_t)
     out << name() << "{" << val << "}";
 }
 REFLECT_PRIMITIVE_FLAT(uint16_t);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(uint16_t);
 
 DESCRIPTOR_INSTANCE(uint32_t);
 REFLECT_PRIMITIVE_PRINT(uint32_t)
@@ -80,6 +93,7 @@ REFLECT_PRIMITIVE_PRINT(uint32_t)
     out << name() << "{" << val << "}";
 }
 REFLECT_PRIMITIVE_FLAT(uint32_t);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(uint32_t);
 
 DESCRIPTOR_INSTANCE(uint64_t);
 REFLECT_PRIMITIVE_PRINT(uint64_t)
@@ -88,6 +102,7 @@ REFLECT_PRIMITIVE_PRINT(uint64_t)
     out << name() << "{" << val << "}";
 }
 REFLECT_PRIMITIVE_FLAT(uint64_t);
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(uint64_t);
 
 
 
@@ -117,6 +132,7 @@ REFLECT_PRIMITIVE_UNPACK(std::string)
 
     *((std::string *) &obj) = str;
 }
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(std::string);
 
 
 /*--------------------------------------------------------------------------------
@@ -156,6 +172,78 @@ void DescriptorMap::register_descriptor(TypeDescriptor *desc)
     name_to_type()[name] = desc;
 }
 
-
-
 } // end namespace Reflector
+
+
+/*--------------------------------------------------------------------------------
+    TypeHandle
+--------------------------------------------------------------------------------*/
+TypeHandle::TypeHandle(const std::string &type_name)
+{
+    type_descriptor = Reflector::DescriptorMap::get(type_name);
+}
+
+
+TypeDescriptor &TypeHandle::operator*()
+{
+    return *type_descriptor;
+}
+TypeDescriptor *TypeHandle::operator->()
+{
+    return type_descriptor;
+}
+const TypeDescriptor &TypeHandle::operator*() const
+{
+    return *type_descriptor;
+}
+const TypeDescriptor *TypeHandle::operator->() const
+{
+    return type_descriptor;
+}
+
+
+
+bool TypeHandle::operator==(const TypeHandle &other) const
+{
+    //todo: Names are unique, but a comparing unique IDs computed at static initialization would be better.
+    return type_descriptor->name() == other->name();
+}
+bool TypeHandle::operator!=(const TypeHandle &other) const
+{
+    return !(*this == other);
+}
+
+
+DESCRIPTOR_INSTANCE(TypeHandle);
+
+
+REFLECT_PRIMITIVE_PRINT(TypeHandle)
+{
+    TypeHandle &handle = (TypeHandle &) obj;
+    TypeDescriptor &desc = *handle;
+    
+    out << name() << "(" << desc.name() << ")";
+}
+
+
+REFLECT_PRIMITIVE_PACK(TypeHandle)
+{
+    TypeHandle &handle = (TypeHandle &) obj;
+    TypeDescriptor &desc = *handle;
+    
+    std::string type_name = desc.name();
+
+    // Pack the type name only.
+    Reflector::pack(type_name, out);
+}
+
+
+REFLECT_PRIMITIVE_UNPACK(TypeHandle)
+{
+    std::string type_name;
+    Reflector::unpack(in, type_name);
+    TypeHandle handle(type_name);
+    *((TypeHandle *) &obj) = handle;
+}
+
+REFLECT_PRIMITIVE_APPLY_TRIVIAL(TypeHandle);

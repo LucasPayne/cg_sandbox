@@ -37,7 +37,7 @@ struct Camera : public IAspectType {
     mat4x4 projection_matrix;
 
     // Initialize this to a projective camera, with the default full viewport.
-    void init_projective(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
+    Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
 };
 REFLECT_STRUCT(Camera);
 

@@ -217,6 +217,17 @@ REFLECT_PRIMITIVE_UNPACK(Table)
 }
 
 
+REFLECT_PRIMITIVE_APPLY(Table)
+{
+    functor(TypeHandle(this), obj);
+
+    Table &table = (Table &) obj;
+    for (TableElement element : table) {
+        table.type()->apply(functor, *table[element]);
+    }
+}
+
+
 /*--------------------------------------------------------------------------------
 Table forward iterator.
 --------------------------------------------------------------------------------*/

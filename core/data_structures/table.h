@@ -9,7 +9,6 @@
 #include <stdlib.h>//exit
 
 #include "reflector/reflector.h"
-#include "reflector/type_handle.h"
 
 
 using TableElementID = uint32_t;

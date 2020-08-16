@@ -117,6 +117,10 @@ struct CameraController : public IBehaviour {
 };
 REFLECT_STRUCT(CameraController)
 BEGIN_ENTRIES(CameraController)
+    // Base IBehaviour
+    ENTRY(world)
+    ENTRY(entity)
+
     ENTRY(azimuth)
     ENTRY(angle)
     ENTRY(strafe_speed)

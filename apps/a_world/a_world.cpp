@@ -48,7 +48,7 @@ App::App(World &_world) : world{_world}
 #if 1
     // Create a camera man.
     {
-#if 0
+#if 1
         cameraman = world.import_entity("tmp/cameraman.entity");
 #else
         cameraman = world.entities.add();

@@ -222,8 +222,12 @@ REFLECT_PRIMITIVE_PRINT(GenericOwned)
 {
     GenericOwned &owned = (GenericOwned &) obj;
     out << name() << "{\n";
+    out << std::string(4*(indent_level+1), ' ');
     Reflector::print(owned.type_, out, indent_level+1);
+    out << "\n";
+    out << std::string(4*(indent_level+1), ' ');
     owned.type_->print(*((uint8_t *) owned.data_), out, indent_level + 1);
+    out << "\n";
     out << std::string(4*indent_level, ' ') << "}";
 }
 

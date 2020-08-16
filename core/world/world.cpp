@@ -327,9 +327,25 @@ void World::import_aspect(std::istream &in, GenericAspect aspect)
         std::cout << "        No specialized aspect import function. Unpacking binary data...\n";
         aspect.type()->unpack(in, *aspect.get_data());
     }
-    std::cout << "    Import success:\n        ";
     // Restore the metadata.
     *aspect.metadata() = metadata;
+
+    // Pointer and reference fix-ups specific to aspects.
+    aspect.type()->apply([&](const TypeHandle &type, uint8_t &obj) {
+        std::cout << "Fixing up " << type->name() << "\n";
+        if (type == TypeHandle::from_type<World *>()) {
+            // Fix-up World pointers.
+            (World * &) obj = this;
+        } else if (type == TypeHandle::from_type<Entity>()) {
+            // Fix-up parent entity references.
+            //todo: Make this search for a separate type, ParentEntity.
+            (Entity &) obj = aspect.entity();
+        }
+    }, *aspect.get_data());
+
+    std::cout << "    Import success:\n        ";
+    aspect.type()->print(*aspect.get_data(), std::cout, 2);
+    std::cout << "\n";
 }
 
 

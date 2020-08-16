@@ -48,9 +48,9 @@ App::App(World &_world) : world{_world}
 #if 1
     // Create a camera man.
     {
-        cameraman = world.import_entity("tmp/cameraman.entity");
-
 #if 0
+        cameraman = world.import_entity("tmp/cameraman.entity");
+#else
         cameraman = world.entities.add();
         auto camera = cameraman.add<Camera>(0.1, 300, 0.1, 0.566);
 
@@ -84,7 +84,7 @@ App::App(World &_world) : world{_world}
         printf("imported\n");
 
         auto b_t = cameraman_t.get<Behaviour>();
-        CameraController *cc_tt = ((CameraController *) b_t->object);
+        CameraController *cc_tt = ((CameraController *) b_t->object());
         Reflector::printl(*cc_tt);
         cc_tt->init();
         Reflector::printl(*cc_tt);

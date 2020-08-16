@@ -5,7 +5,6 @@
 
 
 
-
 /*--------------------------------------------------------------------------------
 Definitions for the basic C++ types.
 --------------------------------------------------------------------------------*/
@@ -215,3 +214,41 @@ REFLECT_PRIMITIVE_UNPACK(TypeHandle)
 }
 
 REFLECT_PRIMITIVE_APPLY_TRIVIAL(TypeHandle);
+
+
+DESCRIPTOR_INSTANCE(GenericOwned);
+
+REFLECT_PRIMITIVE_PRINT(GenericOwned)
+{
+    GenericOwned &owned = (GenericOwned &) obj;
+    out << name() << "{\n";
+    Reflector::print(owned.type_, out, indent_level+1);
+    owned.type_->print(*((uint8_t *) owned.data_), out, indent_level + 1);
+    out << std::string(4*indent_level, ' ') << "}";
+}
+
+REFLECT_PRIMITIVE_PACK(GenericOwned)
+{
+    GenericOwned &owned = (GenericOwned &) obj;
+    Reflector::pack(owned.type_, out);
+    owned.type_->pack(*((uint8_t *) owned.data_), out);
+}
+
+
+REFLECT_PRIMITIVE_UNPACK(GenericOwned)
+{
+    GenericOwned &owned = (GenericOwned &) obj;
+    TypeHandle type;
+    Reflector::unpack(in, type);
+    // Uninitialized!
+    owned = GenericOwned(new uint8_t[type->size], type);
+    // Unpacking calls placement new on the uninitialized region, so vtable pointers should be set up properly.
+    owned.type_->unpack(in, *((uint8_t *) owned.data_));
+}
+
+REFLECT_PRIMITIVE_APPLY(GenericOwned)
+{
+    functor(TypeHandle(this), obj);
+    GenericOwned &owned = (GenericOwned &) obj;
+    owned.type_->apply(functor, *((uint8_t *) owned.data_));
+}

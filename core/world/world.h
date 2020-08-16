@@ -53,12 +53,17 @@ struct IBehaviour {
 REFLECT_STRUCT(IBehaviour);
 
 struct Behaviour : public IAspectType {
-    TypeHandle type;
-    IBehaviour *object;
+    // TypeHandle type;
+    // IBehaviour *object;
 
-    static void xport(World *world, Entity entity, uint8_t &obj, std::ostream &out);
-    static void import(World *world, Entity entity, std::istream &in, uint8_t &obj);
-    static void print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level);
+    IBehaviour *object() {
+        return data.as<IBehaviour>();
+    }
+    GenericOwned data;
+
+    // static void xport(World *world, Entity entity, uint8_t &obj, std::ostream &out);
+    // static void import(World *world, Entity entity, std::istream &in, uint8_t &obj);
+    // static void print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level);
 };
 REFLECT_STRUCT(Behaviour);
 
@@ -141,15 +146,17 @@ REFLECT_STRUCT(World);
 
 template <typename T>
 T *World::add(Entity e)
-{
+{   
+    std::cout << "Adding behaviour...\n";
     auto behaviour = e.add<Behaviour>();
-    behaviour->type = TypeHandle::from_type<T>();
-    behaviour->object = new T();
+    behaviour->data = make_owned<T>();
+    std::cout << "Made GenericOwned.\n";
 
-    behaviour->object->world = this;
-    behaviour->object->entity = e;
+    behaviour->object()->world = this;
+    behaviour->object()->entity = e;
 
-    return reinterpret_cast<T *>(behaviour->object);
+    std::cout << "Added.\n";
+    return dynamic_cast<T *>(behaviour->object());
 }
 
 template <typename T>

@@ -421,9 +421,6 @@ REFLECT_PRIMITIVE(std::string);
 /*--------------------------------------------------------------------------------
     TypeHandle template methods.
 --------------------------------------------------------------------------------*/
-
-
-
 REFLECT_PRIMITIVE(TypeHandle);
 
 template <typename T>
@@ -431,5 +428,42 @@ TypeHandle TypeHandle::from_type() {
     return TypeHandle(Reflector::get_descriptor<T>());
 }
 
+
+/*--------------------------------------------------------------------------------
+    Generic ownership handle.
+This is a "run-time generic unique_ptr".
+--------------------------------------------------------------------------------*/
+class GenericOwned {
+public:
+    TypeHandle type() { return type_; }
+
+    GenericOwned() :
+        data_{nullptr}
+    {}
+    GenericOwned(void *data, const TypeHandle &type) :
+        data_{data}, type_{type}
+    {}
+
+    // Cast the data pointer to a pointer to the given type and return it.
+    // This is not really safe...
+    template <typename T>
+    T *as() {
+        return reinterpret_cast<T *>(data_);
+    }
+
+private:
+    TypeHandle type_;
+    void *data_;
+
+    friend class PrimitiveTypeDescriptor<GenericOwned>;
+};
+REFLECT_PRIMITIVE(GenericOwned);
+
+
+template <typename T, typename... Args>
+GenericOwned make_owned(Args&&... args)
+{
+    return GenericOwned(new T(std::forward<Args>(args)...), TypeHandle::from_type<T>());
+}
 
 #endif // REFLECTOR_H

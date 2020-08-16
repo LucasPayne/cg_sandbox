@@ -72,7 +72,7 @@ World::World()
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
     // Specialized import/export.
-    register_aspect_export_functions<Behaviour>({Behaviour::xport, Behaviour::import, Behaviour::print});
+    // register_aspect_export_functions<Behaviour>({Behaviour::xport, Behaviour::import, Behaviour::print});
     printf("[world] Entity model initialized.\n");
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
@@ -161,7 +161,7 @@ void World::loop()
 
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object->update();
+        b->object()->update();
     }
     // Render.
     for (auto camera : entities.aspects<Camera>()) {
@@ -196,7 +196,7 @@ void World::loop()
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object->keyboard_handler(e);
+        b->object()->keyboard_handler(e);
     }
 }
 
@@ -204,7 +204,7 @@ void World::keyboard_handler(KeyboardEvent e)
 void World::mouse_handler(MouseEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object->mouse_handler(e);
+        b->object()->mouse_handler(e);
     }
 }
 
@@ -356,8 +356,9 @@ END_ENTRIES()
 
 DESCRIPTOR_INSTANCE(Behaviour);
 BEGIN_ENTRIES(Behaviour)
-    ENTRY(type)
-    ENTRY(object)
+    ENTRY(data)
+    // ENTRY(type)
+    // ENTRY(object)
 END_ENTRIES()
 
 
@@ -370,34 +371,34 @@ END_ENTRIES()
 
 
 
-// Specialized export functions for Behaviours.
-void Behaviour::xport(World *world, Entity entity, uint8_t &obj, std::ostream &out)
-{
-    auto &behaviour = (Behaviour &) obj;
-    Reflector::pack(behaviour, out);
-    behaviour.type->pack((uint8_t &) *behaviour.object, out);
-}
-void Behaviour::import(World *world, Entity entity, std::istream &in, uint8_t &obj)
-{
-    Behaviour *behaviour = (Behaviour *) &obj;
-    Reflector::unpack(in, *behaviour);
-    // Unpacked pointer makes no sense. Allocate memory and fix the pointer.
-    uint8_t *data = new uint8_t[behaviour->type->size];
-    behaviour->type->unpack(in, *data);
-    IBehaviour *i_behaviour = reinterpret_cast<IBehaviour *>(data);
-    behaviour->object = i_behaviour;
-    behaviour->object->world = world;
-    behaviour->object->entity = entity;
-    behaviour->object->entity.entities = &world->entities;
-    Reflector::printl(entity);
-}
-void Behaviour::print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level)
-{
-    Behaviour *behaviour = (Behaviour *) &obj;
-    out << "Behaviour{\n";
-    out << indents(indent_level+1) << "type: " << behaviour->type->name() << "\n";
-    out << indents(indent_level+1);
-    behaviour->type->print((uint8_t &) *behaviour->object, out, indent_level + 1);
-    out << "\n";
-    out << indents(indent_level) << "}\n";
-}
+// // Specialized export functions for Behaviours.
+// void Behaviour::xport(World *world, Entity entity, uint8_t &obj, std::ostream &out)
+// {
+//     auto &behaviour = (Behaviour &) obj;
+//     Reflector::pack(behaviour, out);
+//     behaviour.type->pack((uint8_t &) *behaviour.object, out);
+// }
+// void Behaviour::import(World *world, Entity entity, std::istream &in, uint8_t &obj)
+// {
+//     Behaviour *behaviour = (Behaviour *) &obj;
+//     Reflector::unpack(in, *behaviour);
+//     // Unpacked pointer makes no sense. Allocate memory and fix the pointer.
+//     uint8_t *data = new uint8_t[behaviour->type->size];
+//     behaviour->type->unpack(in, *data);
+//     IBehaviour *i_behaviour = reinterpret_cast<IBehaviour *>(data);
+//     behaviour->object = i_behaviour;
+//     behaviour->object->world = world;
+//     behaviour->object->entity = entity;
+//     behaviour->object->entity.entities = &world->entities;
+//     Reflector::printl(entity);
+// }
+// void Behaviour::print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level)
+// {
+//     Behaviour *behaviour = (Behaviour *) &obj;
+//     out << "Behaviour{\n";
+//     out << indents(indent_level+1) << "type: " << behaviour->type->name() << "\n";
+//     out << indents(indent_level+1);
+//     behaviour->type->print((uint8_t &) *behaviour->object, out, indent_level + 1);
+//     out << "\n";
+//     out << indents(indent_level) << "}\n";
+// }

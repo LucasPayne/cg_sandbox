@@ -50,6 +50,11 @@ Drawable aspect
 struct Drawable : public IAspectType {
     GeometricMaterialInstance geometric_material;
     MaterialInstance material;
+
+    Drawable(const GeometricMaterialInstance &gmi, const MaterialInstance &mi) :
+        geometric_material{gmi}, material{mi}
+    {}
+    Drawable() {}
 };
 REFLECT_STRUCT(Drawable);
 

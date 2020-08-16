@@ -30,9 +30,9 @@ struct PropertySheet {
     }
     inline void set_vec3(const std::string &name, float a, float b, float c) {
         size_t offset = block->entry_layout[name].offset;
-        *(((float *) &data[offset]) + 0) = a;
-        *(((float *) &data[offset]) + 1) = b;
-        *(((float *) &data[offset]) + 2) = c;
+        ((float *) &data[offset])[0] = a;
+        ((float *) &data[offset])[1] = b;
+        ((float *) &data[offset])[2] = c;
         in_sync = false;
     }
     inline void set_vec3(const std::string &name, const vec3 &v) {
@@ -42,10 +42,10 @@ struct PropertySheet {
     }
     inline void set_vec4(const std::string &name, float a, float b, float c, float d) {
         size_t offset = block->entry_layout[name].offset;
-        *(((float *) &data[offset]) + 0) = a;
-        *(((float *) &data[offset]) + 1) = b;
-        *(((float *) &data[offset]) + 2) = c;
-        *(((float *) &data[offset]) + 3) = d;
+        ((float *) &data[offset])[0] = a;
+        ((float *) &data[offset])[1] = b;
+        ((float *) &data[offset])[2] = c;
+        ((float *) &data[offset])[3] = d;
         in_sync = false;
     }
     inline void set_vec4(const std::string &name, const vec4 &v) {

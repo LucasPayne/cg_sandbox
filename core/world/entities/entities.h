@@ -41,7 +41,7 @@ public:
     {}
 
 private:
-    Entities *entities; //---
+    Entities *entities;
     TableCollectionElement table_collection_element;
 
 

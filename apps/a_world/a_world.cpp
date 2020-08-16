@@ -48,7 +48,7 @@ App::App(World &_world) : world{_world}
 #if 1
     // Create a camera man.
     {
-#if 1
+#if 0
         cameraman = world.import_entity("tmp/cameraman.entity");
 #else
         cameraman = world.entities.add();
@@ -92,12 +92,12 @@ App::App(World &_world) : world{_world}
 #endif
     }
 #endif
+
 #if 1
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/model_test/model_test.gmat");
     Resource<Material> mat = world.assets.shading.load_material("resources/model_test/model_test.mat");
 
     // Create some objects.
-    {
     Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
     // Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/venus_de_milo.obj");
     Entity dolphin = world.entities.add();
@@ -107,47 +107,47 @@ App::App(World &_world) : world{_world}
     t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI);
     t->scale = 2;
     // t->scale = 0.001;
-    auto drawable = dolphin.add<Drawable>();
-    drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
-    drawable->material = MaterialInstance(mat);
+    auto drawable = dolphin.add<Drawable>(GeometricMaterialInstance(gmat, dolphin_model),
+                                          MaterialInstance(mat));
     drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    
+    world.export_entity(dolphin, "tmp/dragon.entity");
+#else
+    world.import_entity("tmp/dragon.entity");
+#endif
 
-    // world.export_entity(dolphin, "tmp/dolphin.entity");
+
     // printf("exported\n");
     // getchar();
     // world.print_entity(dolphin);
     // auto dolphin_t = world.import_entity("tmp/dolphin.entity");
     // printf("imported\n");
     // world.print_entity(dolphin_t);
-
-    // for (int i = 0; i < 10; i++) {
-    //     auto copy = world.copy_entity(dolphin);
-    //     copy.get<Transform>()->position += vec3(frand(),frand(),frand())*2;
-    //     copy.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-    // }
-    }
+    // getchar();
 
 #if 0
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < 10; i++) {
+        auto copy = world.copy_entity(dolphin);
+        copy.get<Transform>()->position += vec3(frand(),frand(),frand())*2;
+        copy.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    }
+#endif
+
+#if 0
+    for (int i = 0; i < 5; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
         Entity dolphin = world.entities.add();
         auto t = dolphin.add<Transform>();
         vec3 base(3,3,0);
         t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
-        auto drawable = dolphin.add<Drawable>();
-        drawable->geometric_material = GeometricMaterialInstance(gmat, dolphin_model);
-        drawable->material = MaterialInstance(mat);
+        auto drawable = dolphin.add<Drawable>(GeometricMaterialInstance(gmat, dolphin_model), MaterialInstance(mat));
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
 #endif
 
-    auto entities_t = transporter(world.entities);
-    Reflector::printl(entities_t);
+    // auto entities_t = transporter(world.entities);
+    // Reflector::printl(entities_t);
     // getchar();
-
-
-
-#endif
 }
 void App::close()
 {

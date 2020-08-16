@@ -48,11 +48,11 @@ void PropertySheet::synchronize()
 ================================================================================*/
 DESCRIPTOR_INSTANCE(PropertySheet);
 BEGIN_ENTRIES(PropertySheet)
+    ENTRY(block)
     ENTRY(data)
     ENTRY(size)
     ENTRY(in_sync)
     ENTRY(buffer_id)
-    ENTRY(block)
 END_ENTRIES()
 
 

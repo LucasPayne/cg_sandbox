@@ -284,6 +284,15 @@ void World::export_aspect(GenericAspect aspect, std::ostream &out)
 
     aspect.type()->pack(*aspect.get_data(), out);
 
+    aspect.type()->apply([&](const TypeHandle &type, uint8_t &obj) {
+        if (type->name() == "Resource<T>" || type->name() == "GenericResource") {
+            auto &resource = reinterpret_cast<GenericResource &>(obj);
+            printf("Exporting resource!\n");
+            Reflector::printl(resource.type());
+            getchar();
+        }
+    }, *aspect.get_data());
+
     std::cout << "    Export success:\n        ";
     aspect.type()->print(*aspect.get_data(), std::cout, 2);
     std::cout << "\n";
@@ -312,9 +321,15 @@ void World::import_aspect(std::istream &in, GenericAspect aspect)
         if (type == TypeHandle::from_type<World *>()) {
             // Fix-up World pointers.
             (World * &) obj = this;
+        } else if (type == TypeHandle::from_type<Resources *>()) {
+            // Fix-up Resources pointers.
+            (Resources * &) obj = &resources;
+        } else if (type == TypeHandle::from_type<Entities *>()) {
+            // Fix-up Entities pointers.
+            (Entities * &) obj = &entities;
         } else if (type == TypeHandle::from_type<Entity>()) {
             // Fix-up parent entity references.
-            //todo: Make this search for a separate type, ParentEntity.
+            //(todo): Make this search for a separate type, ParentEntity.
             (Entity &) obj = aspect.entity();
         }
     }, *aspect.get_data());

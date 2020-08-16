@@ -452,8 +452,8 @@ public:
     }
 
 private:
-    TypeHandle type_;
     void *data_;
+    TypeHandle type_;
 
     friend class PrimitiveTypeDescriptor<GenericOwned>;
 };

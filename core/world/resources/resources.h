@@ -7,31 +7,81 @@
 
 
 class Resources;
+
 template <typename T>
-class Resource {
+class Resource;
+class GenericResource {
     friend class Resources;
 public:
+    GenericResource() :
+        resources{nullptr}, table_collection_element()
+    {} //default null
 
+    GenericResource(Resources *_resources, TableCollectionElement _table_collection_element) :
+        resources{_resources}, table_collection_element{_table_collection_element}
+    {}
+
+
+    bool operator==(const GenericResource &other) {
+        return (resources == other.resources) && (table_collection_element == other.table_collection_element);
+    }
+    bool operator!=(const GenericResource &other) {
+        return !(*this == other);
+    }
+
+    TypeHandle &type() const;
+
+    // Unique runtime ID.
+    TableElementID ID() const { return table_collection_element.ID(); }
+
+    // Get the resource data as a generic byte-array.
+    uint8_t *get_data();
+
+    //...moved to public for pointer fixups...
+    Resources *resources;
+private:
+    TableCollectionElement table_collection_element;
+
+
+    friend class PrimitiveTypeDescriptor<GenericResource>;
+
+    // Since friend classes are not inherited, here it would be wanted to be a friend of PrimitiveTypeDescriptor<Resource<T>> for all T. However, ...
+    //
+    // https://stackoverflow.com/questions/59111863/friend-template-function-instantiations-that-match-parameter
+    // "If you want to have a friend template, you can make all the instatiations of the template a friend, like in your example,
+    //  or you can make a full specialization a friend. There is nothing in between unfortunately."
+    //
+    // This seems like an arbitrary thing to not be able to do.
+
+    // Solution: Why not just be friends with all PrimitiveTypeDescriptors? Wouldn't hurt.
+    template <typename T>
+    friend class PrimitiveTypeDescriptor;
+};
+REFLECT_STRUCT(GenericResource);
+
+
+// This is purely a syntactic wrapper around GenericResource.
+// (todo): Reflection should just treat this as a GenericResource.
+template <typename T>
+class Resource : public GenericResource {
+    friend class Resources;
+public:
     T &operator*();
     T *operator->();
     const T &operator*() const;
     const T *operator->() const;
 
-    // Unique runtime ID.
-    TableElementID ID() const { return table_collection_element.ID(); }
+    GenericResource &generic() { return *this; }
 
-    Resource() :
-        resources{nullptr}, table_collection_element()
+    Resource() : GenericResource()
     {} //default null
+        
+    Resource(GenericResource generic_resource) : GenericResource(generic_resource) {}
 
-private:
-    Resources *resources; //---
-    TableCollectionElement table_collection_element;
-
-    Resource(Resources *_resources, TableCollectionElement _table_collection_element) :
-        resources{_resources}, table_collection_element{_table_collection_element}
+    Resource(Resources *resources, TableCollectionElement table_collection_element) :
+        GenericResource(resources, table_collection_element)
     {}
-
+private:
     friend class PrimitiveTypeDescriptor<Resource<T>>;
 };
 template <typename T>
@@ -46,6 +96,9 @@ END_ENTRIES()
 
 
 class Resources {
+    friend class GenericResource;
+    template <typename T>
+    friend class Resource;
 public:
     template <typename T>
     void register_resource_type();

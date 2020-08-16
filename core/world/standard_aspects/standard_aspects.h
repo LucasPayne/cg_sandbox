@@ -7,6 +7,7 @@
 #include "world/world.h"
 
 
+
 /*--------------------------------------------------------------------------------
 Transform aspect
 --------------------------------------------------------------------------------*/
@@ -38,6 +39,7 @@ struct Camera : public IAspectType {
 
     // Initialize this to a projective camera, with the default full viewport.
     Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
+    Camera() {}
 };
 REFLECT_STRUCT(Camera);
 

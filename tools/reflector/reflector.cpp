@@ -3,38 +3,6 @@
 #include <map>
 
 
-/*--------------------------------------------------------------------------------
-TypeDescriptor_Struct
---------------------------------------------------------------------------------*/
-void TypeDescriptor_Struct::print(uint8_t &obj, std::ostream &out, int indent_level) const
-{
-    out << name() << "{\n";
-    for (const StructEntry &entry : entries) {
-        out << std::string(4*(indent_level+1), ' ') << entry.name << ": ";
-        entry.type->print((&obj)[entry.offset], out, indent_level + 1);
-        out << "\n";
-    }
-    out << std::string(4*indent_level, ' ') << "}";
-}
-void TypeDescriptor_Struct::pack(uint8_t &obj, std::ostream &out) const
-{
-    for (const StructEntry &entry : entries) {
-        entry.type->pack((&obj)[entry.offset], out);
-    }
-}
-void TypeDescriptor_Struct::unpack(std::istream &in, uint8_t &obj) const
-{
-    for (const StructEntry &entry : entries) {
-        entry.type->unpack(in, (&obj)[entry.offset]);
-    }
-}
-void TypeDescriptor_Struct::apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const
-{
-    functor(TypeHandle(this), obj);
-    for (const StructEntry &entry : entries) {
-        entry.type->apply(functor, (&obj)[entry.offset]);
-    }
-}
 
 
 

@@ -20,6 +20,12 @@ BEGIN_ENTRIES(EntityEntry)
     ENTRY(first_aspect)
 END_ENTRIES()
 
+DESCRIPTOR_INSTANCE(Entity);
+BEGIN_ENTRIES(Entity)
+    ENTRY(entities)
+    ENTRY(table_element)
+END_ENTRIES()
+
 
 Entities::Entities() :
     entity_table{Table(TypeHandle(Reflector::get_descriptor<EntityEntry>()), 16)},
@@ -47,7 +53,8 @@ IAspectType *GenericAspect::metadata()
 
 AspectIterator Entity::begin()
 {
-    return AspectIterator(entities->get_entry(*this)->first_aspect);
+    auto first_aspect = entities->get_entry(*this)->first_aspect;
+    return AspectIterator(first_aspect);;
 }
 
 AspectIterator &AspectIterator::operator++()
@@ -106,4 +113,8 @@ void Entity::init_added(GenericAspect aspect)
         last.metadata()->next_aspect = aspect;
     }
     aspect.metadata()->entity = *this; // Give the aspect a handle to this entity.
+}
+
+Entity GenericAspect::entity() {
+    return metadata()->entity;
 }

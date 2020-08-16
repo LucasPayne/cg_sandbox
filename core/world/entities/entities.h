@@ -29,6 +29,8 @@ public:
     // It is important that _all_ aspects derive from IAspectType, or this will break.
     IAspectType *metadata();
 
+    Entity entity();
+
     TypeHandle &type() const;
 
     // Get the aspect data as a generic byte-array.
@@ -167,6 +169,8 @@ public:
         entities{nullptr}, table_element()
     {} //default null
 
+    //Not private, since needs to be able to be fixed up...
+    Entities *entities;
 private:
     Entity(Entities *_entities, TableElement _table_element) :
         entities{_entities}, table_element{_table_element}
@@ -175,9 +179,11 @@ private:
     // The common component to both the templated and run-time-generic add() functions.
     void init_added(GenericAspect aspect);
 
-    Entities *entities;
     TableElement table_element;
+
+    friend class PrimitiveTypeDescriptor<Entity>;
 };
+REFLECT_STRUCT(Entity);
 
 
 

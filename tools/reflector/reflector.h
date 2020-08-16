@@ -87,6 +87,10 @@ struct DescriptorMap {
 } // end namespace Reflector
 
 
+/*--------------------------------------------------------------------------------
+TypeDescriptor_Struct
+--------------------------------------------------------------------------------*/
+template <typename T>
 struct TypeDescriptor_Struct : public TypeDescriptor {
     TypeDescriptor_Struct(size_t _size, const char *_base_name) :
         TypeDescriptor{_size, _base_name}
@@ -105,6 +109,40 @@ struct TypeDescriptor_Struct : public TypeDescriptor {
     virtual void unpack(std::istream &in, uint8_t &obj) const;
     virtual void apply(Applicator functor, uint8_t &obj) const;
 };
+template <typename T>
+void TypeDescriptor_Struct<T>::print(uint8_t &obj, std::ostream &out, int indent_level) const
+{
+    out << name() << "{\n";
+    for (const StructEntry &entry : entries) {
+        out << std::string(4*(indent_level+1), ' ') << entry.name << ": ";
+        entry.type->print((&obj)[entry.offset], out, indent_level + 1);
+        out << "\n";
+    }
+    out << std::string(4*indent_level, ' ') << "}";
+}
+template <typename T>
+void TypeDescriptor_Struct<T>::pack(uint8_t &obj, std::ostream &out) const
+{
+    for (const StructEntry &entry : entries) {
+        entry.type->pack((&obj)[entry.offset], out);
+    }
+}
+template <typename T>
+void TypeDescriptor_Struct<T>::unpack(std::istream &in, uint8_t &obj) const
+{
+    new (&obj) T();
+    for (const StructEntry &entry : entries) {
+        entry.type->unpack(in, (&obj)[entry.offset]);
+    }
+}
+template <typename T>
+void TypeDescriptor_Struct<T>::apply(std::function<void(const TypeHandle &, uint8_t &)> functor, uint8_t &obj) const
+{
+    functor(TypeHandle(this), obj);
+    for (const StructEntry &entry : entries) {
+        entry.type->apply(functor, (&obj)[entry.offset]);
+    }
+}
 
 
 // All concrete type descriptors are of type PrimitiveTypeDescriptor<SOME_TYPE>.
@@ -202,9 +240,9 @@ implementations file
 --------------------------------------------------------------------------------*/
 #define REFLECT_STRUCT(STRUCT_NAME)\
     template <>\
-    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct {\
+    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct<STRUCT_NAME> {\
     public:\
-        PrimitiveTypeDescriptor() : TypeDescriptor_Struct{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
+        PrimitiveTypeDescriptor() : TypeDescriptor_Struct<STRUCT_NAME>{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
         static TypeDescriptor *get() { return &desc; };\
         static PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
         static PrimitiveTypeDescriptor<STRUCT_NAME> init(bool register_type);\
@@ -213,9 +251,9 @@ implementations file
 
 // helper macro removes the template line.
 #define REFLECT_STRUCT_TEMPLATED(STRUCT_NAME)\
-    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct {\
+    struct PrimitiveTypeDescriptor<STRUCT_NAME> : public TypeDescriptor_Struct<STRUCT_NAME> {\
     public:\
-        PrimitiveTypeDescriptor() : TypeDescriptor_Struct{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
+        PrimitiveTypeDescriptor() : TypeDescriptor_Struct<STRUCT_NAME>{sizeof(STRUCT_NAME), #STRUCT_NAME} {}\
         static TypeDescriptor *get() { return &desc; };\
         static PrimitiveTypeDescriptor<STRUCT_NAME> desc;\
         static PrimitiveTypeDescriptor<STRUCT_NAME> init(bool register_type);\
@@ -334,14 +372,14 @@ void print(TYPE &obj, std::ostream &out, int indent_level = 0)
 }
 // Convenient overload for printing to stdout.
 template <typename TYPE>
-void print(TYPE &obj, int indent_level = 0)
+void print(const TYPE &obj, int indent_level = 0)
 {
     PrimitiveTypeDescriptor<TYPE>::get()->print((uint8_t &)obj, std::cout, indent_level);
 }
 
 // Purely a helper function for printing with a newline (convenient for testing with prints).
 template <typename TYPE>
-void printl(TYPE &obj)
+void printl(const TYPE &obj)
 {
     print(obj, 0);
     std::cout << "\n";

@@ -48,6 +48,9 @@ App::App(World &_world) : world{_world}
 #if 1
     // Create a camera man.
     {
+        cameraman = world.import_entity("tmp/cameraman.entity");
+
+#if 0
         cameraman = world.entities.add();
         auto camera = cameraman.add<Camera>(0.1, 300, 0.1, 0.566);
 
@@ -59,12 +62,34 @@ App::App(World &_world) : world{_world}
         controller->test_vector = {{1,2,3}, {2,9,8}, {-3,0,0}, {1,23,45}};
         controller->test_string = "hello, world";
 
-        Reflector::apply([](const TypeHandle &type, uint8_t &obj) {
-            std::cout << type->name() << "\n";
-        }, *controller);
-        getchar();
+        // Test applicator.
+        // Reflector::apply([](const TypeHandle &type, uint8_t &obj) {
+        //     std::cout << type->name() << "\n";
+        // }, *controller);
+        // getchar();
 
         cc = controller; //make globally available.
+
+        // auto cc_t = transporter(*cc);
+        // cc->init();
+        // Reflector::printl(*cc);
+        // cc_t.init();
+        // Reflector::printl(cc_t);
+        // getchar();
+
+        world.export_entity(cameraman, "tmp/cameraman.entity");
+        printf("exported\n");
+
+        Entity cameraman_t = world.import_entity("tmp/cameraman.entity");
+        printf("imported\n");
+
+        auto b_t = cameraman_t.get<Behaviour>();
+        CameraController *cc_tt = ((CameraController *) b_t->object);
+        Reflector::printl(*cc_tt);
+        cc_tt->init();
+        Reflector::printl(*cc_tt);
+        getchar();
+#endif
     }
 #endif
 #if 1
@@ -77,7 +102,7 @@ App::App(World &_world) : world{_world}
     // Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/large/venus_de_milo.obj");
     Entity dolphin = world.entities.add();
     auto t = dolphin.add<Transform>();
-    vec3 base(0,0,0);
+    vec3 base(0,-1,0);
     t->init(base + vec3(2*(frand()-0.5),2*(frand()-0.5),-2));
     t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI);
     t->scale = 2;
@@ -89,18 +114,20 @@ App::App(World &_world) : world{_world}
 
     // world.export_entity(dolphin, "tmp/dolphin.entity");
     // printf("exported\n");
+    // getchar();
     // world.print_entity(dolphin);
     // auto dolphin_t = world.import_entity("tmp/dolphin.entity");
     // printf("imported\n");
     // world.print_entity(dolphin_t);
 
-    for (int i = 0; i < 10; i++) {
-        auto copy = world.copy_entity(dolphin);
-        copy.get<Transform>()->position += vec3(frand(),frand(),frand())*2;
-        copy.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-    }
+    // for (int i = 0; i < 10; i++) {
+    //     auto copy = world.copy_entity(dolphin);
+    //     copy.get<Transform>()->position += vec3(frand(),frand(),frand())*2;
+    //     copy.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    // }
     }
 
+#if 0
     for (int i = 0; i < 25; i++) {
         Resource<VertexArray> dolphin_model = world.assets.models.load("resources/models/dragon.off");
         Entity dolphin = world.entities.add();
@@ -112,7 +139,7 @@ App::App(World &_world) : world{_world}
         drawable->material = MaterialInstance(mat);
         drawable->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
-
+#endif
 
     auto entities_t = transporter(world.entities);
     Reflector::printl(entities_t);

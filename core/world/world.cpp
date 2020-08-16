@@ -15,6 +15,7 @@ IDEAS/THINGS:
 #include <sstream>
 
 #include <assert.h>
+#include "utils/string_utils.h"
 
 
 #include "world/standard_aspects/standard_aspects.h"
@@ -23,7 +24,7 @@ IDEAS/THINGS:
 ShadingModelInstance *shading_model_model_test;
 
 
-static const bool logging_rendering = false;
+static const bool logging_rendering = true;
 static void log_render(const char *format, ...)
 {
     if (!logging_rendering) return;
@@ -70,6 +71,8 @@ World::World()
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
+    // Specialized import/export.
+    register_aspect_export_functions<Behaviour>({Behaviour::xport, Behaviour::import, Behaviour::print});
     printf("[world] Entity model initialized.\n");
 
     // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
@@ -158,12 +161,13 @@ void World::loop()
 
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
-        if (b->object->updating) {
-            b->object->update();
-        }
+        b->object->update();
     }
     // Render.
     for (auto camera : entities.aspects<Camera>()) {
+        printf("[render] Camera rendering...\n");
+        print_entity(camera.entity());
+
         log_render("Getting camera transform...");
         auto camera_transform = camera.sibling<Transform>();
         log_render("Calculating view-projection matrix...");
@@ -174,7 +178,7 @@ void World::loop()
 
         log_render("Rendering Drawables:");
         for (auto drawable : entities.aspects<Drawable>()) {
-            log_render("  Rendering drawable.\n");
+            log_render("  Rendering drawable.");
             log_render("    Getting transform...");
             auto t = drawable.sibling<Transform>();
             log_render("    Calculating model matrix...");
@@ -192,9 +196,7 @@ void World::loop()
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        if (b->object->handling_keyboard) {
-            b->object->keyboard_handler(e);
-        }
+        b->object->keyboard_handler(e);
     }
 }
 
@@ -202,9 +204,7 @@ void World::keyboard_handler(KeyboardEvent e)
 void World::mouse_handler(MouseEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        if (b->object->handling_mouse) {
-            b->object->mouse_handler(e);
-        }
+        b->object->mouse_handler(e);
     }
 }
 
@@ -215,33 +215,24 @@ void World::mouse_handler(MouseEvent e)
 --------------------------------------------------------------------------------*/
 
 
-void World::print_entity(Entity entity)
+void World::print_entity(Entity entity, int indent_level)
 {
-    std::cout << "entity:\n    ";
+    std::cout << "entity {\n";
     for (auto &aspect : entity) {
         // Now pack the actual aspect data.
-        aspect.type()->print(*aspect.get_data(), std::cout, 1);
-        printf("\n    ");
+        print_aspect(aspect, std::cout, indent_level+1);
     }
-    std::cout << "\n";
+    std::cout << indents(indent_level) << "}\n";
 }
 
 void World::pack_entity(Entity entity, std::ostream &out)
 {
-    // The TypeDescriptor gives a type tree, information that can be traversed.
-    // Why dictate a single pack function?
-    // How could traversal policies be made clear by the user?
-    // For example, pack this but instead of serializing Resource<T>s as handles
-    // (which makes sense if everything is being serialized), actually pack the underlying
-    // data, and when unpacking, create a new Resource<T> for it. This is what would be wanted here.
-
     int num_aspects = entity.num_aspects();
     Reflector::pack(num_aspects, out);
 
     for (auto &aspect : entity) {
         Reflector::pack(aspect.type(), out);
-        // Now pack the actual aspect data.
-        aspect.type()->pack(*aspect.get_data(), out);
+        export_aspect(aspect, out);
     }
 }
 
@@ -254,7 +245,7 @@ Entity World::unpack_entity(std::istream &in)
         TypeHandle type;
         Reflector::unpack(in, type);
         auto aspect = entity.add(type);
-        type->unpack(in, *aspect.get_data());
+        import_aspect(in, aspect);
     }
     return entity;
 }
@@ -269,6 +260,7 @@ Entity World::copy_entity(Entity entity)
 
 void World::export_entity(Entity entity, const std::string &path)
 {
+    std::cout << "Exporting entity...\n";
     std::ofstream file;
     file.open(path, std::ios::trunc | std::ios::out | std::ios::binary);
     assert(file.is_open());
@@ -287,8 +279,126 @@ Entity World::import_entity(const std::string &path)
     return entity;
 }
 
+AspectExportFunctions World::get_aspect_export_functions(const std::string &name)
+{
+    auto found = aspect_export_functions_map.find(name);
+    if (found == aspect_export_functions_map.end()) {
+        return {nullptr, nullptr}; // Signify no specialized export functions have been registered.
+    }
+    return found->second;
+}
+
+void World::export_aspect(GenericAspect aspect, std::ostream &out)
+{
+    auto type_name = aspect.type()->name();
+    std::cout << "    Exporting " << type_name << " aspect...\n";
+    auto xport = get_aspect_export_functions(type_name).xport;
+    if (xport != nullptr) {
+        std::cout << "        Specialized aspect export function...\n";
+        xport(this, aspect.metadata()->entity, *aspect.get_data(), out);
+    } else {
+        // If the aspect type has no specialized export function, just pack the binary data out.
+        // This is the case e.g. for Transform.
+        std::cout << "        No specialized aspect export function. Packing binary data...\n";
+        aspect.type()->pack(*aspect.get_data(), out);
+    }
+    std::cout << "    Export success:\n        ";
+    aspect.type()->print(*aspect.get_data(), std::cout, 2);
+    std::cout << "\n";
+}
+
+void World::import_aspect(std::istream &in, GenericAspect aspect)
+{
+    auto type_name = aspect.type()->name();
+    std::cout << "    Importing " << type_name << " aspect...\n";
+    Reflector::printl(aspect.entity());
+
+    // The aspect metadata, including the parent entity and the next aspect,
+    // is stored as data members _in the aspect type_, which derives from IAspectType (the metadata class).
+    // This means it must be saved and restored, since the aspect unpacker
+    // doesn't know this context.
+    IAspectType metadata = *aspect.metadata();
+
+    auto import = get_aspect_export_functions(type_name).import;
+    if (import != nullptr) {
+        std::cout << "        Specialized aspect import function...\n";
+        import(this, aspect.metadata()->entity, in, *aspect.get_data());
+    } else {
+        std::cout << "        No specialized aspect import function. Unpacking binary data...\n";
+        aspect.type()->unpack(in, *aspect.get_data());
+    }
+    std::cout << "    Import success:\n        ";
+    // Restore the metadata.
+    *aspect.metadata() = metadata;
+}
+
+
+void World::print_aspect(GenericAspect aspect, std::ostream &out, int indent_level)
+{
+    auto type_name = aspect.type()->name();
+    auto print = get_aspect_export_functions(type_name).print;
+    out << indents(indent_level);
+    if (print != nullptr) {
+        print(this, aspect.metadata()->entity, *aspect.get_data(), out, indent_level);
+    } else {
+        aspect.type()->print(*aspect.get_data(), out, indent_level);
+    }
+    printf("\n");
+}
+
+
+DESCRIPTOR_INSTANCE(IBehaviour);
+BEGIN_ENTRIES(IBehaviour)
+    ENTRY(world)
+    ENTRY(entity)
+END_ENTRIES()
+
 
 DESCRIPTOR_INSTANCE(Behaviour);
 BEGIN_ENTRIES(Behaviour)
-    ENTRY(object_size)
+    ENTRY(type)
+    ENTRY(object)
 END_ENTRIES()
+
+
+
+DESCRIPTOR_INSTANCE(World);
+BEGIN_ENTRIES(World)
+    //...unfinished
+END_ENTRIES()
+
+
+
+
+// Specialized export functions for Behaviours.
+void Behaviour::xport(World *world, Entity entity, uint8_t &obj, std::ostream &out)
+{
+    auto &behaviour = (Behaviour &) obj;
+    Reflector::pack(behaviour, out);
+    behaviour.type->pack((uint8_t &) *behaviour.object, out);
+}
+void Behaviour::import(World *world, Entity entity, std::istream &in, uint8_t &obj)
+{
+    Behaviour *behaviour = (Behaviour *) &obj;
+    Reflector::unpack(in, *behaviour);
+    // Unpacked pointer makes no sense. Allocate memory and fix the pointer.
+    uint8_t *data = new uint8_t[behaviour->type->size];
+    behaviour->type->unpack(in, *data);
+    IBehaviour *i_behaviour = reinterpret_cast<IBehaviour *>(data);
+    behaviour->object = i_behaviour;
+    behaviour->object->world = world;
+    behaviour->object->entity = entity;
+    behaviour->object->entity.entities = &world->entities;
+    Reflector::printl(entity);
+    getchar();
+}
+void Behaviour::print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level)
+{
+    Behaviour *behaviour = (Behaviour *) &obj;
+    out << "Behaviour{\n";
+    out << indents(indent_level+1) << "type: " << behaviour->type->name() << "\n";
+    out << indents(indent_level+1);
+    behaviour->type->print((uint8_t &) *behaviour->object, out, indent_level + 1);
+    out << "\n";
+    out << indents(indent_level) << "}\n";
+}

@@ -35,6 +35,7 @@ struct CameraController : public IBehaviour {
     std::vector<TestStruct> test_vector;
     std::string test_string;
 
+    CameraController() {}
 
     inline void lock_angle() {
         if (angle < min_angle) angle = min_angle;
@@ -100,6 +101,7 @@ struct CameraController : public IBehaviour {
         t->rotation = q2 * q1;
     }
     void init() {
+        printf("CAMERACONTROLLER INIT\n");
         strafe_speed = 1;
         forward_speed = 1;
         lift_speed = 1;

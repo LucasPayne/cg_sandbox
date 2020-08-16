@@ -163,6 +163,9 @@ void App::window_handler(WindowEvent e)
 }
 void App::keyboard_handler(KeyboardEvent e)
 {
+    if (e.action == KEYBOARD_PRESS && e.key.code == KEY_Q) {
+        world.export_entity(cameraman, "tmp/cameraman.entity");
+    }
     check_quit_key(e, KEY_Q);
 
     if (e.action == KEYBOARD_PRESS) {

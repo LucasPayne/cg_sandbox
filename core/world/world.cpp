@@ -390,7 +390,6 @@ void Behaviour::import(World *world, Entity entity, std::istream &in, uint8_t &o
     behaviour->object->entity = entity;
     behaviour->object->entity.entities = &world->entities;
     Reflector::printl(entity);
-    getchar();
 }
 void Behaviour::print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level)
 {

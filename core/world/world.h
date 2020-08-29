@@ -25,11 +25,15 @@ class World;
 /*--------------------------------------------------------------------------------
 Behaviour aspect
 --------------------------------------------------------------------------------*/
+struct Behaviour;
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
 struct IBehaviour {
+public:
     World *world;
     Entity entity;
         // Each Behaviour attached to an entity is given a reference to the entity.
+
+private:
     virtual void update() {
         //no-op
     }
@@ -39,6 +43,8 @@ struct IBehaviour {
     virtual void keyboard_handler(KeyboardEvent e) {
         //no-op
     }
+    // Behaviour routes calls to the IBehaviour's virtual functions, so needs access to private methods.
+    friend class Behaviour;
 };
 REFLECT_STRUCT(IBehaviour);
 
@@ -47,6 +53,11 @@ struct Behaviour : public IAspectType {
         return data.as<IBehaviour>();
     }
     GenericOwned data;
+
+    void update();
+    void mouse_handler(MouseEvent e);
+    void keyboard_handler(KeyboardEvent e);
+    
 };
 REFLECT_STRUCT(Behaviour);
 

@@ -127,6 +127,7 @@ void World::save(std::string &path)
 
 World World::load_world(std::string &path)
 {
+    //todo
     return World();
 }
 
@@ -159,7 +160,7 @@ void World::loop()
 
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object()->update();
+        b->update();
     }
     // Render.
     for (auto camera : entities.aspects<Camera>()) {
@@ -194,7 +195,7 @@ void World::loop()
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object()->keyboard_handler(e);
+        b->keyboard_handler(e);
     }
 }
 
@@ -202,7 +203,7 @@ void World::keyboard_handler(KeyboardEvent e)
 void World::mouse_handler(MouseEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->object()->mouse_handler(e);
+        b->mouse_handler(e);
     }
 }
 
@@ -347,6 +348,22 @@ void World::print_aspect(GenericAspect aspect, std::ostream &out, int indent_lev
 
     aspect.type()->print(*aspect.get_data(), out, indent_level);
     printf("\n");
+}
+
+
+// Non-virtual Behaviour interface.
+// It may be useful to wrap all behaviour callbacks for debugging.
+void Behaviour::update()
+{
+    object()->update();
+}
+void Behaviour::mouse_handler(MouseEvent e)
+{
+    object()->mouse_handler(e);
+}
+void Behaviour::keyboard_handler(KeyboardEvent e)
+{
+    object()->keyboard_handler(e);
 }
 
 

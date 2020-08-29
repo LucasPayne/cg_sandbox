@@ -65,7 +65,8 @@ continue_here_when_format_selected:
     // Model post-processing.
     if (ML_LOAD_FLAG(flags, ML_COMPUTE_PHONG_NORMALS)) {
         log("Computing Phong normals...\n");
-        model.compute_phong_normals();
+        // model.compute_phong_normals_uniformly_weighted();
+        model.compute_phong_normals_angle_weighted();
     }
     if (ML_LOAD_FLAG(flags, ML_INVERT_WINDING_ORDER)) {
         log("Inverting winding order...\n");
@@ -89,7 +90,7 @@ void MLModel::print() const
 
 // Model post-processing.
 
-void MLModel::compute_phong_normals()
+void MLModel::compute_phong_normals_uniformly_weighted()
 {
     if (!has_triangles) return;
     if (has_normals) normals.clear();
@@ -113,6 +114,38 @@ void MLModel::compute_phong_normals()
     }
     has_normals = true;
 }
+// Angle weighted normals are triangulation independent and of higher quality than uniform weighted normals.
+// These normals are derived in a more principled way, attempting to mimic normals of smooth surfaces.
+void MLModel::compute_phong_normals_angle_weighted()
+{
+    if (!has_triangles) return;
+    if (has_normals) normals.clear();
+    normals = std::vector<vec3>(num_vertices);
+
+    for (unsigned int i = 0; i < num_triangles; i++) {
+        // Assuming the model is consistently counter-clockwise winding.
+        uint32_t index_a = triangles[i].a;
+        uint32_t index_b = triangles[i].b;
+        uint32_t index_c = triangles[i].c;
+        vec3 a = positions[index_a];
+        vec3 b = positions[index_b];
+        vec3 c = positions[index_c];
+        vec3 n = vec3::cross(b - a, c - a).normalized();
+
+        float theta_a = fabs(acos(vec3::dot((b - a).normalized(), (c - a).normalized())));
+        float theta_b = fabs(acos(vec3::dot((c - b).normalized(), (a - b).normalized())));
+        float theta_c = fabs(acos(vec3::dot((a - c).normalized(), (b - c).normalized())));
+
+        normals[index_a] += theta_a * n;
+        normals[index_b] += theta_b * n;
+        normals[index_c] += theta_c * n;
+    }
+    for (unsigned int i = 0; i < num_vertices; i++) {
+        normals[i] = normals[i].normalized();
+    }
+    has_normals = true;
+}
+
 
 void MLModel::invert_winding_order()
 {

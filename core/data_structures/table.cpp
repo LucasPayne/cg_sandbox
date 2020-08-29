@@ -1,5 +1,5 @@
 #include "data_structures/table.h"
-#include <algorithm>//max, for_each
+#include <algorithm>//max
 #include <assert.h>
 
 

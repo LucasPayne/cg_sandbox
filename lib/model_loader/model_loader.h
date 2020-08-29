@@ -58,7 +58,8 @@ struct MLModel {
         num_triangles{0}
     {}
     // Model post-processing.
-    void compute_phong_normals();
+    void compute_phong_normals_uniformly_weighted();
+    void compute_phong_normals_angle_weighted();
     void invert_winding_order();
 
     static MLModel load(const std::string &path, MLLoadFlags flags = 0);

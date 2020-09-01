@@ -126,6 +126,8 @@ public:
 
 private:
     friend class PrimitiveTypeDescriptor<World>;
+
+    World(const World &); // Delete the copy constructor.
 };
 REFLECT_STRUCT(World);
 

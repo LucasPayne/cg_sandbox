@@ -3,7 +3,7 @@
 #include "data_structures/table.h"
 #include "registry/registry.h"
 
-#include "behaviours/CameraController.h"
+#include "behaviours/CameraController.cpp"
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 

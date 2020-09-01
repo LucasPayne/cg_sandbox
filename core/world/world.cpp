@@ -163,7 +163,9 @@ void World::loop()
         b->update();
     }
     // Render.
+    bool any_camera = false;
     for (auto camera : entities.aspects<Camera>()) {
+        any_camera = true;
         printf("[render] Camera rendering...\n");
         print_entity(camera.entity());
 
@@ -189,6 +191,7 @@ void World::loop()
             graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
         }
     }
+    if (!any_camera) printf("[world] No camera.\n"); // Make it easier to tell when the camera is not working.
 }
 
 

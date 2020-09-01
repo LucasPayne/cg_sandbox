@@ -16,6 +16,10 @@ struct Transform : public IAspectType {
     Quaternion rotation;
     float scale;
 
+    Transform() :
+        position{vec3::zero()}, rotation{Quaternion::identity()}, scale{1.f}
+    {}
+
     void init(float x, float y, float z);
     void init(vec3 _position);
     void init(vec3 _position, Quaternion _rotation);

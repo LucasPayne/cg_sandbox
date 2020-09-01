@@ -52,6 +52,12 @@ struct Behaviour : public IAspectType {
     IBehaviour *object() {
         return data.as<IBehaviour>();
     }
+    // Interpet as known IBehaviour-deriving type.
+    template <typename T>
+    T *object_as() {
+        return reinterpret_cast<T *>(data.as<IBehaviour>());
+    }
+
     GenericOwned data;
     bool enabled;
 

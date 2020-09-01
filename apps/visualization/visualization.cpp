@@ -23,10 +23,11 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
-    Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");
+    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
 
     Entity cameraman = create_object_viewer_cameraman(world, obj);
+    cameraman.get<Transform>()->position = vec3(0,0,2);
 }
 
 

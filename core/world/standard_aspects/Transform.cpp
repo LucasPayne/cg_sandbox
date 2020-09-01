@@ -44,7 +44,8 @@ vec3 axis_angle_rotate(vec3 axis, float angle, vec3 v)
 // lookat assumes that the plane of pitch rotation is spanned by the world Y-axis and the direction to the target.
 void Transform::lookat(vec3 target)
 {
-    vec3 f = (target - position).normalized();
+    //note: There was a sign error, so f is negated here to fix it.
+    vec3 f = -(target - position).normalized();
     vec3 fp = vec3(f.x(), 0, f.z()).normalized();
     float theta = acos(fp.z());
     if (fp.x() < 0) theta = -theta;

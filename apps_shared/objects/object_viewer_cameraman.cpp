@@ -8,6 +8,11 @@ struct ObjectViewer : public IBehaviour {
     int mode;
     ObjectViewer() {};
 
+    // State stuff.
+    float timer; // Time since mode change.
+    // Trackball.
+    vec3 start_lookat; // What the camera was looking at when the mode changed to Trackball.
+
     enum ModeType {
         Trackball,
         Free,
@@ -19,12 +24,26 @@ struct ObjectViewer : public IBehaviour {
         target = _target;
         mode = Trackball;
         free_controller->enabled = false;
+
+        // State stuff.
+        timer = 0.f;
+        start_lookat = entity.get<Transform>()->position;
     }
 
     void mouse_handler(MouseEvent e) {
-        if (mode == Trackball) {
+    }
 
+    void update() {
+        if (mode == Trackball) {
+            // Interpolate view direction to look at the object.
+            const float time_to_snap = 0.6;
+            if (timer < time_to_snap) {
+                entity.get<Transform>()->lookat(vec3::lerp(start_lookat, target_position(), timer / time_to_snap));
+            } else {
+                entity.get<Transform>()->lookat(target_position());
+            }
         }
+        timer += dt;
     }
     
     void keyboard_handler(KeyboardEvent e) {
@@ -35,13 +54,41 @@ struct ObjectViewer : public IBehaviour {
                 if (mode == Free) {
                     free_controller->enabled = false;
                 }
+                timer = 0.f;
                 mode = (mode+1) % NUM_MODES;
                 // Entering mode.
+
+	        vec3 looking_at = (entity.get<Transform>()->matrix() * vec4(0,0,-1,1)).xyz();
                 if (mode == Free) {
                     free_controller->enabled = true;
+
+                    // Extract azimuth and angle.
+                    auto transform = entity.get<Transform>();
+
+                    vec3 look_dir = looking_at - transform->position;
+                    // note: 90 degree turn fixes the arithmetic here for some reason.
+                    //    (atan2 quadrant stuff?)
+                    float azimuth = atan2(-look_dir.z(), -look_dir.x()) - M_PI/2;
+                    float horizontal_length = sqrt(look_dir.x()*look_dir.x() + look_dir.z()*look_dir.z());
+                    float angle = atan2(look_dir.y(), horizontal_length);
+
+                    CameraController *cc = free_controller->object_as<CameraController>();
+                    cc->azimuth = azimuth;
+                    cc->angle = angle;
+                } else if (mode == Trackball) {
+                    start_lookat = looking_at;
+                    // Reflector::printl(start_lookat);
+                    // Reflector::printl(entity.get<Transform>()->position);
+                    // Reflector::printl(target_position());
+                    // getchar();
                 }
             }
         }
+    }
+
+    // Helper methods.
+    vec3 target_position() {
+        return target.get<Transform>()->position;
     }
 };
 REFLECT_STRUCT(ObjectViewer)

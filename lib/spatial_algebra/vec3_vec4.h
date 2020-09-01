@@ -100,6 +100,12 @@ struct vec3 {
     static inline vec3 random(float a, float b) {
         return vec3(a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand());
     }
+
+    static inline vec3 lerp(vec3 a, vec3 b, float t) {
+        return vec3((1-t)*a.x() + t*b.x(),
+                    (1-t)*a.y() + t*b.y(),
+                    (1-t)*a.z() + t*b.z());
+    }
 };
 
 // vec3-vec3 operations.
@@ -232,6 +238,11 @@ inline vec3 operator/(const vec3 &v, const float &t) {
     // Returns a random vector with entries in the range [a,b).
     static inline vec4 random(float a, float b) {
         return vec4(a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand(), a + (b-a)*frand());
+    }
+
+    inline vec3 xyz() {
+        // .xyz notation after glsl.
+        return vec3(x(), y(), z());
     }
 };
 

@@ -160,7 +160,7 @@ void World::loop()
 
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
-        b->update();
+        if (b->enabled) b->update();
     }
     // Render.
     bool any_camera = false;
@@ -198,7 +198,7 @@ void World::loop()
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->keyboard_handler(e);
+        if (b->enabled) b->keyboard_handler(e);
     }
 }
 
@@ -206,7 +206,7 @@ void World::keyboard_handler(KeyboardEvent e)
 void World::mouse_handler(MouseEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        b->mouse_handler(e);
+        if (b->enabled) b->mouse_handler(e);
     }
 }
 

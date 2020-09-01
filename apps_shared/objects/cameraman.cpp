@@ -1,4 +1,3 @@
-
 #include "behaviours/CameraController.cpp"
 
 Entity create_cameraman(World &world)
@@ -11,3 +10,4 @@ Entity create_cameraman(World &world)
     controller->init();
     return cameraman;
 }
+

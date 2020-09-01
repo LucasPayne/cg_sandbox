@@ -5,7 +5,8 @@
 #include "utils/check_quit_key.cpp"
 
 #include "objects/mesh_object.cpp"
-#include "objects/cameraman.cpp"
+// #include "objects/cameraman.cpp"
+#include "objects/object_viewer_cameraman.cpp"
 
 
 
@@ -22,10 +23,10 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
-    Entity e = create_cameraman(world);
-    std::cout << e.num_aspects() << "\n";getchar();
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+
+    Entity cameraman = create_object_viewer_cameraman(world, obj);
 }
 
 

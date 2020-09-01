@@ -53,6 +53,7 @@ struct Behaviour : public IAspectType {
         return data.as<IBehaviour>();
     }
     GenericOwned data;
+    bool enabled;
 
     void update();
     void mouse_handler(MouseEvent e);
@@ -138,6 +139,7 @@ T *World::add(Entity e)
 {   
     auto behaviour = e.add<Behaviour>();
     behaviour->data = make_owned<T>();
+    behaviour->enabled = true;
 
     behaviour->object()->world = this;
     behaviour->object()->entity = e;

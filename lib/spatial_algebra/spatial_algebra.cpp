@@ -55,47 +55,73 @@ std::ostream &operator<<(std::ostream &os, const Quaternion &q)
 }
 
 
-vec4 mat4x4::solve(vec4 b) const {
+vec4 mat4x4::solve(vec4 b) const
+{
+    #define SINGULAR() {\
+        fprintf(stderr, "[spatial_algebra] ERROR: Singular matrix in mat4x4::solve.\n");\
+        exit(EXIT_FAILURE);\
+    }
 
     std::cout << "Solving:\n" << *this << "\n";
     getchar();
 
-    // Keep track of the row permutations so the solution vector can be permuted at the end.
-    int row_permutation[4] = {0,1,2,3};
-
     mat4x4 M = *this;
-    for (int col = 0; col < 4; col++) {
-        // Permute the rows with non-zeroes on this column to the top.
-        int last_non_zero_row = -1;
-        bool update_last_non_zero_row = true;
-        for (int row = 3; row >= 0; --row) {
-            if (M.entry(row, col) != 0) {
-                // Initialize last_non_zero_row.
-                if (update_last_non_zero_row) {
-                    last_non_zero_row = row;
-                    update_last_non_zero_row = false;
-                }
-            } else if (last_non_zero_row >= 0) {
-                // Swap the last non-zero row with this row. The end of this process should leave
-                // the non-zero rows at the top.
-                vec4 temp = M.row(last_non_zero_row);
-                std::cout << temp << "\n";
-                for (int j = 0; j < 4; j++) M.entry(last_non_zero_row, j) = M.entry(row, j);
-                for (int j = 0; j < 4; j++) M.entry(row, j) = temp.entries[j];
-                std::swap(row_permutations[last_non_zero_row, row]);
-                last_non_zero_row -= 1;
+
+    for (int col = 0; col < 3; col++) {
+        // Find the element with greatest absolute value to pivot on.
+        float biggest = 0.f;
+        int pivot_row = -1;
+        for (int row = 0; row < 4; row++) {
+            if (fabs(M.entry(row, col)) > biggest) {
+                biggest = fabs(M.entry(row, col));
+                pivot_row = row;
             }
         }
-        std::cout << "Sorted:\n" << M << "\n";
-        getchar();
-
-        float inv_pivot = 1.0 / M.entry(col, col);
-        for (int row = col; row <= last_non_zero_row; row++) {
-            
+        if (pivot_row < 0) SINGULAR();
+        // Swap rows to put this pivot on the diagonal.
+        if (pivot_row != col) {
+            std::swap(b.entries[pivot_row], b.entries[col]);
+            for (int j = 0; j < 4; j++) {
+                std::swap(M.entry(pivot_row, j), M.entry(col, j));
+            }
         }
-    }
+        std::cout << "pivoted:\n" << M << "\n";
 
-    return vec4::zero();
+        // Scale this row to make the pivot element 1.
+        float inv_pivot = 1.f / M.entry(col, col);
+        b.entries[col] *= inv_pivot;
+        M.entry(col, col) = 1.f;
+        for (int j = col+1; j < 4; j++) {
+            M.entry(col, j) *= inv_pivot;
+        }
+
+        // Nullify the entries in this column below the diagonal.
+        for (int row = col+1; row < 4; row++) {
+	    float x = M.entry(row, col);
+            M.entry(row, col) = 0.f;
+            b.entries[row] -= x * b.entries[col];
+            for (int j = col+1; j < 4; j++) {
+                M.entry(row, j) -= x * M.entry(col, j);
+            }
+        }
+        std::cout << "nullified:\n" << M << "\n";
+    }
+    if (M.entry(3,3) == 0) SINGULAR();
+    float inv_last_pivot = 1.f / M.entry(3,3);
+    M.entry(3,3) = 1.f;
+    b.entries[3] *= inv_last_pivot;
+
+    std::cout << "Upper triangular:\n" << M << "\n";
+    getchar();
+    
+    // Solve by back-substitution.
+    vec4 solution;
+    solution.entries[3] = b.entries[3];
+    solution.entries[2] = b.entries[2] - M.entry(2,3) * solution.entries[3];
+    solution.entries[1] = b.entries[1] - M.entry(1,2) * solution.entries[2] - M.entry(1,3) * solution.entries[3];
+    solution.entries[0] = b.entries[0] - M.entry(0,1) * solution.entries[1] - M.entry(0,2) * solution.entries[2] - M.entry(0,3) * solution.entries[3];
+
+    return solution;
 }
 
 

@@ -185,8 +185,6 @@ void World::loop()
         glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
         glEnable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_SCISSOR_TEST);
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
 
         log_render("Getting camera transform...");
@@ -210,6 +208,9 @@ void World::loop()
             log_render("    Draw.");
             graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
         }
+
+        glDisable(GL_SCISSOR_TEST);
+        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     }
     if (!any_camera) printf("[world] No camera.\n"); // Make it easier to tell when the camera is not working.
 }

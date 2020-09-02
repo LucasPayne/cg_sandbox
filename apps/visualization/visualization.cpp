@@ -59,8 +59,25 @@ App::App(World &_world) : world{_world}
     Trackball *tb = world.add<Trackball>(obj);
     tb->init();
 
-    Entity cameraman = create_object_viewer_cameraman(world, obj);
-    cameraman.get<Transform>()->position = vec3(0,0,2);
+    {
+        Entity cameraman = create_object_viewer_cameraman(world, obj);
+        cameraman.get<Transform>()->position = vec3(0,0,2);
+        auto camera = cameraman.get<Camera>();
+        camera->bottom_left[0] = 0.1;
+        camera->bottom_left[1] = 0.3;
+        camera->top_right[0] = 0.45;
+        camera->top_right[1] = 0.7;
+    }
+    {
+        Entity cameraman = create_object_viewer_cameraman(world, obj);
+        cameraman.get<Transform>()->position = vec3(2,0,0);
+        cameraman.get<Transform>()->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI/2);
+        auto camera = cameraman.get<Camera>();
+        camera->bottom_left[0] = 0.55;
+        camera->bottom_left[1] = 0.3;
+        camera->top_right[0] = 0.9;
+        camera->top_right[1] = 0.7;
+    }
 }
 
 

@@ -1,16 +1,22 @@
 
 struct Trackball : public IBehaviour {
-    bool dragging;
     float radius;
 
     vec3 last_ball_point;
     vec3 last_last_ball_point;
     vec3 angular_velocity;
 
+    int mode;
+    enum Mode {
+        Free,
+        Dragging,
+        SnappingToDefault
+    };
+
     void init() {
         radius = 0.5;
-        dragging = false;
         angular_velocity = vec3::zero();
+        mode = Free;
     }
 
     void trackball_stop_dragging()
@@ -25,25 +31,29 @@ struct Trackball : public IBehaviour {
         if (theta > theta_max) theta = theta_max;
         vec3 axis = vec3::cross(p, pp).normalized();
         angular_velocity = (theta / (dt == 0 ? 0.01 : dt)) * axis;
-        dragging = false;
     }
 
     void update() {
-        if (vec3::dot(angular_velocity, angular_velocity) > 1.3) {
-            angular_velocity = (1.0 - 2*dt) * angular_velocity;
-            auto t = entity.get<Transform>();
-            t->rotation = Quaternion::from_axis_angle(angular_velocity * dt) * t->rotation;
-        } else {
-            angular_velocity = vec3::zero();
+        if (mode == Free) {
+            if (vec3::dot(angular_velocity, angular_velocity) > 1.3) {
+                angular_velocity = (1.0 - 2*dt) * angular_velocity;
+                auto t = entity.get<Transform>();
+                t->rotation = Quaternion::from_axis_angle(angular_velocity * dt) * t->rotation;
+            } else {
+                angular_velocity = vec3::zero();
+            }
+        } else if (mode == SnappingToDefault) {
+
         }
     }
 
     void mouse_handler(MouseEvent e) {
         vec3 pos = entity.get<Transform>()->position;
 
-        if (dragging) {
+        if (mode == Dragging) {
             if (e.action == MOUSE_BUTTON_RELEASE && e.button.code == MOUSE_LEFT) {
                 trackball_stop_dragging();
+                mode = Free;
             } else if (e.action == MOUSE_MOVE) {
                 Ray ray;
                 if (world->screen_to_ray(e.cursor.x, e.cursor.y, &ray)) {
@@ -70,16 +80,20 @@ struct Trackball : public IBehaviour {
 		    }
 	        }
             }
-        } else {
-            if (e.action == MOUSE_BUTTON_PRESS && e.button.code == MOUSE_LEFT) {
+        } else if (mode == Free || mode == SnappingToDefault) { // SnappingToDefault can be interrupted to start dragging again.
+            if (e.action == MOUSE_BUTTON_PRESS) {
                 Ray ray;
                 if (world->screen_to_ray(e.cursor.x, e.cursor.y, &ray)) {
                     vec3 intersection;
                     if (ray.intersect(Sphere(pos, radius), &intersection)) {
-                        last_ball_point = intersection - pos;
-                        last_last_ball_point = last_ball_point;
-                        dragging = true;
-                        angular_velocity = vec3::zero();
+                        if (e.button.code == MOUSE_LEFT) {
+                            last_ball_point = intersection - pos;
+                            last_last_ball_point = last_ball_point;
+                            mode = Dragging;
+                            angular_velocity = vec3::zero();
+                        } else if (e.button.code == MOUSE_MIDDLE) {
+                            mode = SnappingToDefault;
+                        }
                     }
                 }
             }

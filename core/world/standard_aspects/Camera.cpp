@@ -46,14 +46,14 @@ void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float 
 Ray Camera::ray(float camera_x, float camera_y)
 {
     // Use the inverse projection matrix to find the ray directed toward (camera_x, camera_y) on the near plane.
-    // The near plane is mapped to x,y -1 to 1 and z = -1.
+    // The near plane is mapped to x,y -1 to 1 and z = 0.
 
     // bl, br, tr, tl
     float xs[4] = {-1, 1, 1, -1};
     float ys[4] = {-1, -1, 1, 1};
     vec3 near_plane[4];
     for (int i = 0; i < 4; i++) {
-        vec4 corner_h = projection_matrix.solve(vec4(xs[i],ys[i],-1, 1));
+        vec4 corner_h = projection_matrix.solve(vec4(xs[i],ys[i],0, 1));
         near_plane[i] = corner_h.xyz() / corner_h.w();
     }
     // Bilinearly interpolate the "near plane" quad.
@@ -65,7 +65,9 @@ Ray Camera::ray(float camera_x, float camera_y)
     auto transform = entity.get<Transform>();
     mat4x4 matrix = transform->matrix();
 
-    return Ray((matrix * vec4(P, 1)).xyz() - transform->position, transform->position);
+    auto ray = Ray(transform->position, (matrix * vec4(P, 1)).xyz() - transform->position);
+    ray.normalize();
+    return ray;
 }
 
 

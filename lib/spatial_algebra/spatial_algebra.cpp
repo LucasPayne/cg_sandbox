@@ -62,9 +62,6 @@ vec4 mat4x4::solve(vec4 b) const
         exit(EXIT_FAILURE);\
     }
 
-    std::cout << "Solving:\n" << *this << "\n";
-    getchar();
-
     mat4x4 M = *this;
 
     for (int col = 0; col < 3; col++) {
@@ -85,7 +82,6 @@ vec4 mat4x4::solve(vec4 b) const
                 std::swap(M.entry(pivot_row, j), M.entry(col, j));
             }
         }
-        std::cout << "pivoted:\n" << M << "\n";
 
         // Scale this row to make the pivot element 1.
         float inv_pivot = 1.f / M.entry(col, col);
@@ -104,16 +100,12 @@ vec4 mat4x4::solve(vec4 b) const
                 M.entry(row, j) -= x * M.entry(col, j);
             }
         }
-        std::cout << "nullified:\n" << M << "\n";
     }
     if (M.entry(3,3) == 0) SINGULAR();
     float inv_last_pivot = 1.f / M.entry(3,3);
     M.entry(3,3) = 1.f;
     b.entries[3] *= inv_last_pivot;
 
-    std::cout << "Upper triangular:\n" << M << "\n";
-    getchar();
-    
     // Solve by back-substitution.
     vec4 solution;
     solution.entries[3] = b.entries[3];

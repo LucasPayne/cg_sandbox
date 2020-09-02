@@ -25,32 +25,32 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
-    mat4x4 M(0, 0, 8, 4,   2, 0, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
-    // mat4x4 M(1, 0, 2, 0,   2, 1, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
-    // for (int i = 0; i < 16; i++) {
-    //     M.entries[i] = 2*frand() - 1;
+    // mat4x4 M(0, 0, 8, 4,   2, 0, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
+    // // mat4x4 M(1, 0, 2, 0,   2, 1, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
+    // // for (int i = 0; i < 16; i++) {
+    // //     M.entries[i] = 2*frand() - 1;
+    // // }
+    // for (int i = 0; i < 5; i++) {
+    //     vec4 v;
+    //     for (int j = 0; j < 4; j++) v.entries[j] = (rand() % 15) - 7;
+    //     vec4 b = M*v;
+    //     std::cout << "v: " << v << "\n";
+    //     std::cout << "b: " << b << "\n";
+    //     getchar();
+    //     std::cout << "solution should = v: " << M.solve(b) << "\n";
+    //     getchar();
     // }
-    for (int i = 0; i < 5; i++) {
-        vec4 v;
-        for (int j = 0; j < 4; j++) v.entries[j] = (rand() % 15) - 7;
-        vec4 b = M*v;
-        std::cout << "v: " << v << "\n";
-        std::cout << "b: " << b << "\n";
-        getchar();
-        std::cout << "solution should = v: " << M.solve(b) << "\n";
-        getchar();
-    }
 
 
-    vec4 x = M.solve(vec4(0,1,2,3));
-    std::cout << x << "\n";
+    // vec4 x = M.solve(vec4(0,1,2,3));
+    // std::cout << x << "\n";
 
-    mat4x4 Minv = M.inverse();
-    std::cout << M << "\n";
-    std::cout << Minv << "\n";
-    std::cout << M * Minv << "\n";
-    std::cout << M.determinant() << "\n";
-    getchar();
+    // mat4x4 Minv = M.inverse();
+    // std::cout << M << "\n";
+    // std::cout << Minv << "\n";
+    // std::cout << M * Minv << "\n";
+    // std::cout << M.determinant() << "\n";
+    // getchar();
     
 
 

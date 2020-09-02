@@ -17,11 +17,57 @@ Camera::Camera(float near_plane_distance, float far_plane_distance, float near_h
                                0,0, -1/n, (-f + n)/(f*n),
                                0,0, -1, 0);
     // The default is the full viewport.
+    rendering_to_framebuffer = true;
     bottom_left[0] = 0.0;
     bottom_left[1] = 0.0;
     top_right[0] = 1.0;
-    top_right[0] = 1.0;
+    top_right[1] = 1.0;
+    layer = 0; // Default to highest-priority layer.
+
+    background_color = vec4(0,0,1,1);
 }
+
+bool Camera::in_viewport(float screen_x, float screen_y)
+{
+    if (!rendering_to_framebuffer) return false;
+    return screen_x >= bottom_left[0] && screen_x <= top_right[0] &&
+           screen_y >= bottom_left[1] && screen_y <= top_right[1];
+}
+
+void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y)
+{
+    *camera_x = (screen_x - bottom_left[0]) / (top_right[0] - bottom_left[0]);
+    *camera_y = (screen_y - bottom_left[1]) / (top_right[1] - bottom_left[1]);
+}
+
+
+
+
+Ray Camera::ray(float camera_x, float camera_y)
+{
+    // Use the inverse projection matrix to find the ray directed toward (camera_x, camera_y) on the near plane.
+    // The near plane is mapped to x,y -1 to 1 and z = -1.
+
+    // bl, br, tr, tl
+    float xs[4] = {-1, 1, 1, -1};
+    float ys[4] = {-1, -1, 1, 1};
+    vec3 near_plane[4];
+    for (int i = 0; i < 4; i++) {
+        vec4 corner_h = projection_matrix.solve(vec4(xs[i],ys[i],-1, 1));
+        near_plane[i] = corner_h.xyz() / corner_h.w();
+    }
+    // Bilinearly interpolate the "near plane" quad.
+    vec3 A = vec3::lerp(near_plane[0], near_plane[1], camera_x);
+    vec3 B = vec3::lerp(near_plane[3], near_plane[2], camera_x);
+
+    vec3 P = vec3::lerp(A, B, camera_y);
+
+    auto transform = entity.get<Transform>();
+    mat4x4 matrix = transform->matrix();
+
+    return Ray((matrix * vec4(P, 1)).xyz() - transform->position, transform->position);
+}
+
 
 
 DESCRIPTOR_INSTANCE(Camera);

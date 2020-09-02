@@ -42,6 +42,7 @@ add_library(cg_sandbox
     core/gl/gl_shader_program.cpp
 
     core/mathematics/mathematics.cpp
+    core/mathematics/ray.cpp
 
     core/world/world.cpp
     core/world/entities/entities.cpp

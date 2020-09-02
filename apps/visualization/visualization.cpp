@@ -8,6 +8,8 @@
 // #include "objects/cameraman.cpp"
 #include "objects/object_viewer_cameraman.cpp"
 
+#include "behaviours/Trackball.cpp"
+
 
 
 class App : public IGC::Callbacks {
@@ -23,8 +25,27 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
+    mat4x4 M(1, 0, 8, 4,   2, 1, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
+    // mat4x4 M(1, 0, 2, 0,   2, 1, 9, 1,  3, 0, -3, 2,   4, 1, 2, 3);
+    // for (int i = 0; i < 16; i++) {
+    //     M.entries[i] = 2*frand() - 1;
+    // }
+    vec4 x = M.solve(vec4(0,1,2,3));
+    std::cout << x << "\n";
+
+    mat4x4 Minv = M.inverse();
+    std::cout << M << "\n";
+    std::cout << Minv << "\n";
+    std::cout << M * Minv << "\n";
+    std::cout << M.determinant() << "\n";
+    getchar();
+    
+
+
     Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    Trackball *tb = world.add<Trackball>(obj);
+    tb->init();
 
     Entity cameraman = create_object_viewer_cameraman(world, obj);
     cameraman.get<Transform>()->position = vec3(0,0,2);

@@ -16,7 +16,7 @@ such as the entity and resource models.
 #include "world/assets/assets.h"
 #include "world/graphics/graphics.h"
 
-
+#include "mathematics/mathematics.h"//screen_to_ray
 
 
 class World;
@@ -130,6 +130,9 @@ public:
     void export_aspect(GenericAspect aspect, std::ostream &out);
     void import_aspect(std::istream &in, GenericAspect aspect);
     void print_aspect(GenericAspect aspect, std::ostream &out, int indent_level = 0);
+
+    // Utilities.
+    bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
 
 private:
     friend class PrimitiveTypeDescriptor<World>;

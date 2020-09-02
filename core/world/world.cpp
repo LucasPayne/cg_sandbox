@@ -165,9 +165,29 @@ void World::loop()
     // Render.
     bool any_camera = false;
     for (auto camera : entities.aspects<Camera>()) {
+        if (!camera->rendering_to_framebuffer) continue;
         any_camera = true;
         printf("[render] Camera rendering...\n");
-        print_entity(camera.entity());
+        // print_entity(camera->entity());
+
+
+        // Set up viewport.
+        GLint viewport_x = viewport[0];
+        GLint viewport_y = viewport[1];
+        GLint viewport_width = viewport[2];
+        GLint viewport_height = viewport[3];
+        float bl_x = viewport_x + floor(viewport_width * camera->bottom_left[0]);
+        float bl_y = viewport_y + floor(viewport_height * camera->bottom_left[1]);
+        float width = floor(viewport_width * (camera->top_right[0] - camera->bottom_left[0]));
+        float height = floor(viewport_height * (camera->top_right[1] - camera->bottom_left[1]));
+        glViewport(bl_x, bl_y, width, height);
+        glScissor(bl_x, bl_y, width, height);
+        glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
+        glEnable(GL_SCISSOR_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_SCISSOR_TEST);
+        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
 
         log_render("Getting camera transform...");
         auto camera_transform = camera.sibling<Transform>();
@@ -390,3 +410,30 @@ BEGIN_ENTRIES(World)
 END_ENTRIES()
 
 
+
+// Utilities.
+bool World::screen_to_ray(float screen_x, float screen_y, Ray *ray)
+{
+    // Get the highest-priority (lowest layer) camera which has its viewport overlapping this screen position.
+    bool any = false;
+    Aspect<Camera> used_camera;
+    for (auto &camera : entities.aspects<Camera>()) {
+        if (camera->in_viewport(screen_x, screen_y)) {
+            if (!any) {
+                any = true;
+                used_camera = camera;
+            } else {
+                if (camera->layer < used_camera->layer) used_camera = camera;
+            }
+        }
+    }
+    if (!any) return false;
+
+    float camera_x, camera_y;
+    used_camera->to_viewport(screen_x, screen_y, &camera_x, &camera_y);
+    *ray = used_camera->ray(camera_x, camera_y);
+    // printf("screen_x: %.2f, screen_y: %.2f\n", screen_x, screen_y);
+    // printf("camera_x: %.2f, camera_y: %.2f\n", camera_x, camera_y);
+    // getchar();
+    return true;
+}

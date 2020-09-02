@@ -36,7 +36,7 @@ struct ObjectViewer : public IBehaviour {
     void update() {
         if (mode == Trackball) {
             // Interpolate view direction to look at the object.
-            const float time_to_snap = 0.6;
+            const float time_to_snap = 0.3;
             if (timer < time_to_snap) {
                 entity.get<Transform>()->lookat(vec3::lerp(start_lookat, target_position(), timer / time_to_snap));
             } else {
@@ -68,7 +68,7 @@ struct ObjectViewer : public IBehaviour {
                     vec3 look_dir = looking_at - transform->position;
                     // note: 90 degree turn fixes the arithmetic here for some reason.
                     //    (atan2 quadrant stuff?)
-                    float azimuth = atan2(-look_dir.z(), -look_dir.x()) - M_PI/2;
+                    float azimuth = atan2(-look_dir.z(), look_dir.x()) - M_PI/2;
                     float horizontal_length = sqrt(look_dir.x()*look_dir.x() + look_dir.z()*look_dir.z());
                     float angle = atan2(look_dir.y(), horizontal_length);
 
@@ -77,10 +77,6 @@ struct ObjectViewer : public IBehaviour {
                     cc->angle = angle;
                 } else if (mode == Trackball) {
                     start_lookat = looking_at;
-                    // Reflector::printl(start_lookat);
-                    // Reflector::printl(entity.get<Transform>()->position);
-                    // Reflector::printl(target_position());
-                    // getchar();
                 }
             }
         }

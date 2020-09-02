@@ -50,3 +50,10 @@ REFLECT_PRIMITIVE_PRINT(Quaternion) {
 }
 REFLECT_PRIMITIVE_FLAT(Quaternion);
 REFLECT_PRIMITIVE_APPLY_TRIVIAL(Quaternion);
+
+
+std::ostream &operator<<(std::ostream &os, const Ray &ray)
+{
+    os << "Ray(" << ray.origin << " -> " << ray.direction << ")";
+    return os;
+}

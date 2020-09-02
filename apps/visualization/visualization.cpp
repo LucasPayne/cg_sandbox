@@ -53,31 +53,58 @@ App::App(World &_world) : world{_world}
     // getchar();
     
 
-
-    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-    Trackball *tb = world.add<Trackball>(obj);
-    tb->init();
+    {
+        Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");
+        obj.get<Drawable>()->material.properties.set_vec4("diffuse", 0,0,0,1);
+        obj.get<Transform>()->position = vec3(-0.75, -0.5, 0);
+        obj.get<Transform>()->scale = 0.4;
+    }
+    {
+        Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");
+        obj.get<Drawable>()->material.properties.set_vec4("diffuse", 0,0,0,1);
+        obj.get<Transform>()->position = vec3(0.75, -0.5, 0);
+        obj.get<Transform>()->scale = 0.4;
+    }
 
     {
+        Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
+        obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+        // Trackball *tb = world.add<Trackball>(obj);
+        // tb->init();
+
         Entity cameraman = create_object_viewer_cameraman(world, obj);
         cameraman.get<Transform>()->position = vec3(0,0,2);
         auto camera = cameraman.get<Camera>();
-        camera->bottom_left[0] = 0.1;
-        camera->bottom_left[1] = 0.3;
-        camera->top_right[0] = 0.45;
-        camera->top_right[1] = 0.7;
+        // camera->bottom_left[0] = 0.1;
+        // camera->bottom_left[1] = 0.3;
+        // camera->top_right[0] = 0.45;
+        // camera->top_right[1] = 0.7;
     }
-    {
-        Entity cameraman = create_object_viewer_cameraman(world, obj);
-        cameraman.get<Transform>()->position = vec3(2,0,0);
-        cameraman.get<Transform>()->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI/2);
-        auto camera = cameraman.get<Camera>();
-        camera->bottom_left[0] = 0.55;
-        camera->bottom_left[1] = 0.3;
-        camera->top_right[0] = 0.9;
-        camera->top_right[1] = 0.7;
-    }
+    // {
+    //     // Could have a Mesh class which is separate from rendering, logic, etc. It is just a mathematical and algorithmic class,
+    //     // mainly for geometry processing but still further in the pipeline can be converted to be rendered.
+    //     // Vertex attribute data can still be contained, but more as a convenience.
+    //     // Mesh mesh = assets.meshes.load_mesh("resources/models/large/nefertiti.obj");
+
+    //     // Meshes will mainly be streamed to a renderable form every frame.
+
+    //     Entity obj = create_mesh_object(world, "resources/models/large/nefertiti.obj", "resources/model_test/model_test.mat");
+    //     obj.get<Transform>()->position = vec3(-1,0,0);
+    //     auto d = obj.get<Drawable>();
+    //     d->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    //     // d->center = mesh.center_of_mass();
+    //     Trackball *tb = world.add<Trackball>(obj);
+    //     tb->init();
+
+    //     Entity cameraman = create_object_viewer_cameraman(world, obj);
+    //     cameraman.get<Transform>()->position = vec3(-0.5,0,0);
+    //     cameraman.get<Transform>()->rotation = Quaternion::from_axis_angle(vec3(0,1,0), M_PI/2);
+    //     auto camera = cameraman.get<Camera>();
+    //     camera->bottom_left[0] = 0.55;
+    //     camera->bottom_left[1] = 0.3;
+    //     camera->top_right[0] = 0.9;
+    //     camera->top_right[1] = 0.7;
+    // }
 }
 
 

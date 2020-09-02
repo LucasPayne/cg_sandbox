@@ -35,6 +35,10 @@ struct Quaternion {
         return Quaternion(scalar() * inv_length, i() * inv_length, j() * inv_length, k() * inv_length);
     }
 
+    inline Quaternion operator-() const {
+        return Quaternion(-scalar(), -i(), -j(), -k());
+    }
+
 
     /*--------------------------------------------------------------------------------
         Quaternion inverse.
@@ -65,6 +69,22 @@ struct Quaternion {
                                           axis.y()*sin_half_angle,
                                           axis.z()*sin_half_angle);
     }
+
+    // This is not spherical interpolation. Intermediate quaternions are not rotation quaternions, and should be normalized by the caller,
+    // if this is being used as an approximation to slerp.
+    static inline Quaternion lerp(const Quaternion &A, const Quaternion &B, float t) {
+        return Quaternion((1-t)*A.scalar() + t*B.scalar(),
+                          (1-t)*A.i() + t*B.i(),
+                          (1-t)*A.j() + t*B.j(),
+                          (1-t)*A.k() + t*B.k());
+    }
+
+    // Returns a quaternion representing the same rotation (if these are unit quaternions),
+    // which is contained in the hemisphere defined by the input quaternion.
+    inline Quaternion to_hemisphere(const Quaternion &q) {
+        if (scalar()*q.scalar() + i()*q.i() + j()*q.j() + k()*q.k() < 0) return -(*this);
+        return *this;
+    }
 };
 
 /*--------------------------------------------------------------------------------
@@ -81,6 +101,7 @@ inline Quaternion operator*(const Quaternion &A, const Quaternion &B) {
                       A.scalar()*B.k() + B.scalar()*A.k() + A.i()*B.j() - B.i()*A.j());
 }
 std::ostream &operator<<(std::ostream &os, const Quaternion &q);
+
 
 
 #endif // SPATIAL_ALGEBRA_QUATERNION_H

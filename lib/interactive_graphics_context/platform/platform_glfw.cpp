@@ -9,11 +9,13 @@
 namespace IGC {
 namespace Platform {
 
+
 void close(WindowReference window)
 {
     glfwTerminate();
     glfwDestroyWindow((GLFWwindow *) window);
 }
+
 
 bool poll(WindowReference window)
 {
@@ -21,15 +23,20 @@ bool poll(WindowReference window)
     glfwPollEvents();
     return true;
 }
+
+
 void present(WindowReference window)
 {
     glFlush();
     glfwSwapBuffers((GLFWwindow *) window);
 }
+
+
 float time()
 {
     return (float) glfwGetTime();
 }
+
 
 static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
@@ -39,6 +46,7 @@ static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int he
     e.framebuffer.height = height;
     Context::window_event(e);
 }
+
 
 static int glfw_keycode_to_keycode(int key)
 {
@@ -79,6 +87,7 @@ static int glfw_keycode_to_keycode(int key)
     }
     return EOF;
 }
+
 
 void glfw_key_callback(GLFWwindow *window, int key,
                        int scancode, int action,
@@ -126,6 +135,8 @@ void glfw_cursor_position_callback(GLFWwindow *window, double window_x, double w
 
     Context::mouse_event(e);
 }
+
+
 void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     MouseEvent e;
@@ -147,6 +158,17 @@ void glfw_mouse_button_callback(GLFWwindow *window, int button, int action, int 
     e.cursor = g_cursor;
     Context::mouse_event(e);
 }
+
+
+void glfw_scroll_callback(GLFWwindow* window, double x_offset, double y_offset)
+{
+    MouseEvent e;
+    e.action = MOUSE_SCROLL;
+    e.scroll_y = y_offset;
+    Context::mouse_event(e);
+}
+
+
 
 WindowReference create_window(const std::string &name)
 {
@@ -172,6 +194,7 @@ WindowReference create_window(const std::string &name)
     glfwSetKeyCallback(glfw_window, glfw_key_callback);
     glfwSetMouseButtonCallback(glfw_window, glfw_mouse_button_callback);
     glfwSetCursorPosCallback(glfw_window, glfw_cursor_position_callback);
+    glfwSetScrollCallback(glfw_window, glfw_scroll_callback);
     glfwSetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback);
 
     return (WindowReference) glfw_window;

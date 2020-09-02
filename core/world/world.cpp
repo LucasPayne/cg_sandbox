@@ -24,7 +24,7 @@ IDEAS/THINGS:
 ShadingModelInstance *shading_model_model_test;
 
 
-static const bool logging_rendering = true;
+static const bool logging_rendering = false;
 static void log_render(const char *format, ...)
 {
     if (!logging_rendering) return;
@@ -201,7 +201,7 @@ void World::loop()
             log_render("    Getting transform...");
             auto t = drawable.sibling<Transform>();
             log_render("    Calculating model matrix...");
-            mat4x4 model_matrix = t->matrix();
+            mat4x4 model_matrix = drawable->model_matrix();
             log_render("    Uploading model matrix...");
             drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
 

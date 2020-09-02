@@ -6,6 +6,9 @@ struct Trackball : public IBehaviour {
     vec3 last_last_ball_point;
     vec3 angular_velocity;
 
+    Quaternion snap_to_default_start; // The orientation when the state was changed to SnappingToDefault.
+    float snap_to_default_timer;
+
     int mode;
     enum Mode {
         Free,
@@ -43,7 +46,18 @@ struct Trackball : public IBehaviour {
                 angular_velocity = vec3::zero();
             }
         } else if (mode == SnappingToDefault) {
+            auto t = entity.get<Transform>();
+            const float time_to_snap_to_default = 0.3;
 
+            if (snap_to_default_timer >= time_to_snap_to_default) {
+                t->rotation = Quaternion::identity();
+                mode = Free;
+                angular_velocity = vec3::zero();
+            } else {
+                // Lerp approximation to slerp.
+                t->rotation = Quaternion::lerp(snap_to_default_start, Quaternion::identity(), snap_to_default_timer / time_to_snap_to_default).normalized();
+                snap_to_default_timer += dt;
+            }
         }
     }
 
@@ -61,19 +75,11 @@ struct Trackball : public IBehaviour {
                     if (ray.intersect(Sphere(pos, radius), &intersection)) {
 
                         vec3 ball_point = intersection - pos;
-
-                        std::cout << intersection << "\n";
-                        std::cout << ball_point << "\n";
-                        std::cout << last_ball_point << "\n";
-
                         vec3 axis = vec3::cross(ball_point, last_ball_point).normalized();
                         float cos_theta = vec3::dot(ball_point.normalized(), last_ball_point.normalized());
                         if (cos_theta > 1) cos_theta = 1;
                         if (cos_theta < -1) cos_theta = -1;
                         float theta = acos(cos_theta);
-                        std::cout << "axis: " << axis << "\n";
-                        printf("angle: %.6f\n", theta);
-                        // getchar();
                         entity.get<Transform>()->rotation = Quaternion::from_axis_angle(axis, theta) * entity.get<Transform>()->rotation;
 	                last_last_ball_point = last_ball_point;
 	                last_ball_point = ball_point;
@@ -93,6 +99,10 @@ struct Trackball : public IBehaviour {
                             angular_velocity = vec3::zero();
                         } else if (e.button.code == MOUSE_MIDDLE) {
                             mode = SnappingToDefault;
+                            snap_to_default_timer = 0;
+                            // Quaternion double-cover means that its possible for the journey back to the identity to be longer than needed,
+                            // so use the closest rotation representative.
+                            snap_to_default_start = entity.get<Transform>()->rotation.to_hemisphere(Quaternion::identity());
                         }
                     }
                 }

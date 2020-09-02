@@ -117,26 +117,6 @@ vec4 mat4x4::solve(vec4 b) const
 }
 
 
-// vec4 mat4x4::solve(vec4 b) const {
-//     // Uses Cramer's rule.
-//     vec4 solution;
-//     mat4x4 new_matrix = *this;
-//     float inv_det = 1.0 / determinant();
-//     for (int i = 0; i < 4; i++) {
-//         for (int j = 0; j < 4; j++) {
-//             new_matrix.entry(i, j) = b.entries[j];
-//         }
-//         // Put back the original column that the previous iteration replaced.
-//         if (i > 0) {
-//             for (int j = 0; j < 4; j++) {
-//                 new_matrix.entry(i-1, j) = entry(i-1, j);
-//             }
-//         }
-//         float x = new_matrix.determinant();
-//         solution.entries[i] = x * inv_det;
-//     }
-//     return solution;
-// }
 mat4x4 mat4x4::inverse() const {
     // Not very efficient.
     mat4x4 inv;

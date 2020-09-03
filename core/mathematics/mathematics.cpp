@@ -57,3 +57,12 @@ std::ostream &operator<<(std::ostream &os, const Ray &ray)
     os << "Ray(" << ray.origin << " -> " << ray.direction << ")";
     return os;
 }
+
+
+float saturate(float x, float minimum, float maximum)
+{
+    if (x < minimum) return minimum;
+    if (x > maximum) return maximum;
+    return x;
+}
+

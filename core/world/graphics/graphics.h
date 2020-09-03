@@ -3,6 +3,8 @@
 /*--------------------------------------------------------------------------------
 The Graphics component of the world holds graphics state, such as compiled shaders,
 and is the interface through which things are drawn.
+
+The Graphics component also holds render loops.
 --------------------------------------------------------------------------------*/
 #include "core.h"
 
@@ -33,12 +35,12 @@ typedef std::unordered_map<ShadingProgramKey, Resource<ShadingProgram>, ShadingP
 /*--------------------------------------------------------------------------------
 Graphics
 --------------------------------------------------------------------------------*/
+class World;
 class Graphics {
 public:
-    Graphics(Resources *_resources) :
-        resources{_resources}
+    Graphics(World &_world) :
+        world{_world}
     {}
-    Graphics() {}
 
     ShadingProgram *get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm);
 
@@ -46,8 +48,13 @@ public:
               MaterialInstance &mat_instance,
               ShadingModelInstance &sm_instance);
 
+    // Clear to the default screen.
+    void clear();
+    // Render the world into each camera.
+    void render_for_cameras();
+
 private:
-    Resources *resources;
+    World &world;
     ShadingProgramCache shading_program_cache;
 };
 

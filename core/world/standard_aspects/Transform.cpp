@@ -47,11 +47,11 @@ void Transform::lookat(vec3 target)
     //note: There was a sign error, so f is negated here to fix it.
     vec3 f = -(target - position).normalized();
     vec3 fp = vec3(f.x(), 0, f.z()).normalized();
-    float theta = acos(fp.z());
+    float theta = acos(saturate(fp.z(), -1, 1));
     if (fp.x() < 0) theta = -theta;
     // X' = cross(f', (0,1,0))
     vec3 Xp = vec3(-fp.z(), 0, fp.x());
-    float psi = acos(vec3::dot(f, fp));
+    float psi = acos(saturate(vec3::dot(f, fp), -1, 1));
     if (f.y() < 0) psi = -psi;
 
     Quaternion q1 = Quaternion::from_axis_angle(vec3(0,1,0), theta);

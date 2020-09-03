@@ -7,6 +7,8 @@
 #include "world/resources/resources.h"
 
 
+// note: This is currently being passed around by value, so the underlying buffer cannot be freed in the destructor.
+//       So, this has an explicit destroy() function.
 struct PropertySheet {
     Resource<ShadingBlock> block;
     std::vector<uint8_t> data;
@@ -14,8 +16,10 @@ struct PropertySheet {
     bool in_sync;
     GLuint buffer_id;
 
+    PropertySheet() : size{0}, buffer_id{0} {} // null
+
     // Create a property sheet for a specific block. This matches the size of the block.
-    static PropertySheet instantiate_from(Resource<ShadingBlock> properties);
+    PropertySheet(Resource<ShadingBlock> properties);
 
     // Synchronize application data with graphics data. This only uploads if a property changes.
     void synchronize();
@@ -58,6 +62,10 @@ struct PropertySheet {
         *((mat4x4 *) &data[offset]) = M;
         in_sync = false;
     }
+
+    inline void destroy() {
+        glDeleteBuffers(1, &buffer_id);
+    }
 };
 REFLECT_STRUCT(PropertySheet)
 
@@ -72,11 +80,10 @@ struct GMSMInstance {
     GMSMInstance(Resource<T> _base) : base{_base} {
         // Instantiate a property sheet if the base material has any properties.
         if (base->has_properties) {
-            properties = PropertySheet::instantiate_from(base->properties);
+            properties = PropertySheet(base->properties);
         } else {
             properties.size = 0;
             properties.buffer_id = 0;
-            // properties.block = nullptr;
         }
     }
 };

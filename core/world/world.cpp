@@ -21,23 +21,7 @@ IDEAS/THINGS:
 #include "world/standard_aspects/standard_aspects.h"
 
 
-ShadingModelInstance *shading_model_model_test;
-
-
-static const bool logging_rendering = false;
-static void log_render(const char *format, ...)
-{
-    if (!logging_rendering) return;
-    va_list args;
-    va_start(args, format);
-    printf("[render] ");
-    vprintf(format, args);
-    printf("\n");
-    va_end(args);
-}
-
-
-World::World()
+World::World() : graphics{Graphics(*this)}
 {
     printf("[world] Creating world...\n");
 
@@ -81,21 +65,14 @@ World::World()
     assets.shading.resources = &resources;
     printf("[world] Assets initialized.\n");
 
-    // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
-    printf("[world] Initializing Graphics...\n");
-    graphics = Graphics(&resources); // The Graphics component relies on the resource model.
-    printf("[world] Graphics initialized.\n");
+    // // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
+    // printf("[world] Initializing Graphics...\n");
+    // graphics = Graphics(&resources); // The Graphics component relies on the resource model.
+    // printf("[world] Graphics initialized.\n");
 
     glDisable(GL_CULL_FACE); //
     glEnable(GL_DEPTH_TEST); // todo: Remove this.
     glDepthFunc(GL_LESS);    //
-
-    // Resource<ShadingModel> sm = resources.load_from_file<ShadingModel>("resources/model_test/model_test.sm");
-    Resource<ShadingModel> sm = resources.add<ShadingModel>();
-    std::fstream sm_file;
-    sm_file.open("resources/model_test/model_test.sm");
-    sm->load(resources, sm_file);
-    shading_model_model_test = new ShadingModelInstance(sm); // create a global shading model instance for testing.
 
     // Input.
     printf("[world] Initializing InputState...\n");
@@ -143,76 +120,12 @@ void World::loop()
     printf("Frame start\n");
     printf("================================================================================\n");
 
-    float bg_color[4] = {0,0,0,0};
-    float fg_color[4] = {1,1,1,1};
-
-    // Clearing: window clear to background color, viewport clear to the foreground color.
-    glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
-    glDisable(GL_SCISSOR_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-    glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_SCISSOR_TEST);
-
+    graphics.clear();
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
-    // Render.
-    bool any_camera = false;
-    for (auto camera : entities.aspects<Camera>()) {
-        if (!camera->rendering_to_framebuffer) continue;
-        any_camera = true;
-        printf("[render] Camera rendering...\n");
-        // print_entity(camera->entity());
-
-
-        // Set up viewport.
-        GLint viewport_x = viewport[0];
-        GLint viewport_y = viewport[1];
-        GLint viewport_width = viewport[2];
-        GLint viewport_height = viewport[3];
-        float bl_x = viewport_x + floor(viewport_width * camera->bottom_left[0]);
-        float bl_y = viewport_y + floor(viewport_height * camera->bottom_left[1]);
-        float width = floor(viewport_width * (camera->top_right[0] - camera->bottom_left[0]));
-        float height = floor(viewport_height * (camera->top_right[1] - camera->bottom_left[1]));
-        glViewport(bl_x, bl_y, width, height);
-        glScissor(bl_x, bl_y, width, height);
-        glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
-        glEnable(GL_SCISSOR_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-        log_render("Getting camera transform...");
-        auto camera_transform = camera.sibling<Transform>();
-        log_render("Calculating view-projection matrix...");
-        mat4x4 view_matrix = camera_transform->inverse_matrix();
-        mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
-        log_render("Uploading view-projection matrix...");
-        shading_model_model_test->properties.set_mat4x4("vp_matrix", vp_matrix);
-
-        log_render("Rendering Drawables:");
-        for (auto drawable : entities.aspects<Drawable>()) {
-            log_render("  Rendering drawable.");
-            log_render("    Getting transform...");
-            auto t = drawable.sibling<Transform>();
-            log_render("    Calculating model matrix...");
-            mat4x4 model_matrix = drawable->model_matrix();
-            log_render("    Uploading model matrix...");
-            drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
-
-            log_render("    Draw.");
-            graphics.draw(drawable->geometric_material, drawable->material, *shading_model_model_test);
-        }
-
-        glDisable(GL_SCISSOR_TEST);
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-    }
-    if (!any_camera) printf("[world] No camera.\n"); // Make it easier to tell when the camera is not working.
+    graphics.render_for_cameras();
 }
 
 

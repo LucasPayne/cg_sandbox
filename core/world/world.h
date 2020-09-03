@@ -15,6 +15,7 @@ such as the entity and resource models.
 #include "world/resources/resources.h"
 #include "world/assets/assets.h"
 #include "world/graphics/graphics.h"
+#include "world/standard_aspects/standard_aspects.h"
 
 #include "mathematics/mathematics.h"//screen_to_ray
 

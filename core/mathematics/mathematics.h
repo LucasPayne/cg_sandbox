@@ -12,6 +12,9 @@ REFLECT_PRIMITIVE(mat4x4);
 REFLECT_PRIMITIVE(Quaternion);
 
 
+float saturate(float x, float minimum = 0.f, float maximum = 1.f);
+
+
 struct Sphere {
     vec3 origin;
     float radius;

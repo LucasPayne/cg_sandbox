@@ -10,9 +10,10 @@ Entity create_mesh_object(World &world,
 
     Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/triangle_mesh.gmat");
     Resource<Material> mat = world.assets.shading.load_material(mat_path);
-    auto drawable = e.add<Drawable>(GeometricMaterialInstance(gmat, model),
-				    MaterialInstance(mat));
 
+    auto gmat_instance = GeometricMaterialInstance(gmat, model);
+    auto mat_instance = MaterialInstance(mat);
+    auto drawable = e.add<Drawable>(gmat_instance, mat_instance);
     return e;
 }
 

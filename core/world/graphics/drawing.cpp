@@ -1,27 +1,24 @@
 #include "world/graphics/drawing.h"
 
 
-PropertySheet PropertySheet::instantiate_from(Resource<ShadingBlock> properties)
+PropertySheet::PropertySheet(Resource<ShadingBlock> properties)
 {
     // Create a property sheet for a specific block. This matches the size of the block.
-    PropertySheet sheet;
-    sheet.block = properties;
-    sheet.size = properties->block_size;
+    block = properties;
+    size = properties->block_size;
     // Create properties data in application memory.
-    sheet.data = std::vector<uint8_t>(sheet.size);
-    memset(&sheet.data[0], 0, sheet.size);
+    data = std::vector<uint8_t>(size);
+    memset(&data[0], 0, size);
     // Shadow the buffer in graphics memory. This will be synchronized to application memory when needed.
-    glGenBuffers(1, &sheet.buffer_id);
-    glBindBuffer(GL_UNIFORM_BUFFER, sheet.buffer_id);
+    glGenBuffers(1, &buffer_id);
+    glBindBuffer(GL_UNIFORM_BUFFER, buffer_id);
     glBufferData(GL_UNIFORM_BUFFER,
-                 (GLsizeiptr) sheet.size,
-                 (const void *) &sheet.data[0],
+                 (GLsizeiptr) size,
+                 (const void *) &data[0],
                  GL_DYNAMIC_DRAW);
-    sheet.in_sync = true;
+    in_sync = true;
     // Unbind OpenGL state.
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    return sheet;
 }
 
 
@@ -36,11 +33,9 @@ void PropertySheet::synchronize()
                     (GLsizeiptr) size,
                     (const void *) &data[0]);
     // Unbind OpenGL state.
-    glBindBuffer(GL_UNIFORM_BUFFER, buffer_id);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
     in_sync = true;
 }
-
-
 
 
 /*================================================================================

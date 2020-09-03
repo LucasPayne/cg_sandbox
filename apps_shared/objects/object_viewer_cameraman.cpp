@@ -29,9 +29,22 @@ struct ObjectViewer : public IBehaviour {
     void extract_azimuth_and_angle(vec3 look_dir, float *azimuth, float *angle) {
         // note: 90 degree turn fixes the arithmetic here for some reason.
         //    (atan2 quadrant stuff?)
-        *azimuth = atan2(-look_dir.z(), look_dir.x()) - M_PI/2;
+        // note: Unsure if any of the epsilon stuff really works.
+        if (fabs(look_dir.x()) <= 0.00005f) {
+            *azimuth = look_dir.z() > 0 ? M_PI : 0;
+        } else {
+            *azimuth = atan2(-look_dir.z(), look_dir.x()) - M_PI/2;
+        }
         float horizontal_length = sqrt(look_dir.x()*look_dir.x() + look_dir.z()*look_dir.z());
-        *angle = atan2(look_dir.y(), horizontal_length);
+        if (fabs(horizontal_length) <= 0.00005f) {
+            *angle = look_dir.y() > 0 ? M_PI/2 : -M_PI/2;
+        } else if (fabs(look_dir.y()) <= 0.00005f) {
+            *angle = 0;
+        } else {
+            *angle = atan2(look_dir.y(), horizontal_length);
+        }
+        // printf("%.6f, %.6f\n", *azimuth, *angle);
+        // getchar();
     }
 
     void init(Aspect<Behaviour> _free_controller, Entity _target) {

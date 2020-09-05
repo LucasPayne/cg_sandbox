@@ -55,10 +55,10 @@ add_library(cg_sandbox
     core/world/world.cpp
     core/world/entities/entities.cpp
     core/world/resources/resources.cpp
-    core/world/standard_aspects/standard_aspects.cpp
     core/world/standard_aspects/Transform.cpp
     core/world/standard_aspects/Camera.cpp
     core/world/standard_aspects/Drawable.cpp
+    core/world/standard_aspects/Behaviour.cpp
     core/world/assets/assets.cpp
     core/world/assets/model_assets.cpp
     core/world/graphics/graphics.cpp

@@ -6,10 +6,8 @@
 #include "world/entities/entities.h"
 #include "world/resources/resources.h"
 #include "world/graphics/drawing.h"
+class World;
 
-// #include "world/world.h"
-// 
-// 
 
 /*--------------------------------------------------------------------------------
 Transform aspect
@@ -85,6 +83,52 @@ struct Drawable : public IAspectType {
 };
 REFLECT_STRUCT(Drawable);
 
+
+/*--------------------------------------------------------------------------------
+Behaviour aspect
+--------------------------------------------------------------------------------*/
+struct Behaviour;
+// Specific Behaviours must be defined in a class which derives from IBehaviour.
+struct IBehaviour {
+public:
+    World *world;
+    Entity entity;
+        // Each Behaviour attached to an entity is given a reference to the entity.
+
+private:
+    virtual void update() {
+        //no-op
+    }
+    virtual void mouse_handler(MouseEvent e) {
+        //no-op
+    }
+    virtual void keyboard_handler(KeyboardEvent e) {
+        //no-op
+    }
+    // Behaviour routes calls to the IBehaviour's virtual functions, so needs access to private methods.
+    friend class Behaviour;
+};
+REFLECT_STRUCT(IBehaviour);
+
+struct Behaviour : public IAspectType {
+    IBehaviour *object() {
+        return data.as<IBehaviour>();
+    }
+    // Interpet as known IBehaviour-deriving type.
+    template <typename T>
+    T *object_as() {
+        return reinterpret_cast<T *>(data.as<IBehaviour>());
+    }
+
+    GenericOwned data;
+    bool enabled;
+
+    void update();
+    void mouse_handler(MouseEvent e);
+    void keyboard_handler(KeyboardEvent e);
+    
+};
+REFLECT_STRUCT(Behaviour);
 
 
 #endif // STANDARD_ASPECTS_H

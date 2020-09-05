@@ -15,31 +15,26 @@ such as the entity and resource models.
 #include "world/resources/resources.h"
 #include "world/assets/assets.h"
 #include "world/graphics/graphics.h"
+#include "world/standard_aspects/standard_aspects.h"
 
-
+#include "mathematics/mathematics.h"//screen_to_ray
 
 
 class World;
-
-using AspectExportFunction = std::function<void(World *, Entity, uint8_t &, std::ostream &)>;
-using AspectImportFunction = std::function<void(World *, Entity, std::istream &, uint8_t &)>;
-using AspectPrintFunction = std::function<void(World *, Entity, uint8_t &, std::ostream &, int indent_level)>;
-
-struct AspectExportFunctions {
-    AspectExportFunction xport;
-    AspectImportFunction import;
-    AspectPrintFunction print;
-};
 
 
 /*--------------------------------------------------------------------------------
 Behaviour aspect
 --------------------------------------------------------------------------------*/
+struct Behaviour;
 // Specific Behaviours must be defined in a class which derives from IBehaviour.
 struct IBehaviour {
+public:
     World *world;
     Entity entity;
         // Each Behaviour attached to an entity is given a reference to the entity.
+
+private:
     virtual void update() {
         //no-op
     }
@@ -49,21 +44,28 @@ struct IBehaviour {
     virtual void keyboard_handler(KeyboardEvent e) {
         //no-op
     }
+    // Behaviour routes calls to the IBehaviour's virtual functions, so needs access to private methods.
+    friend class Behaviour;
 };
 REFLECT_STRUCT(IBehaviour);
 
 struct Behaviour : public IAspectType {
-    // TypeHandle type;
-    // IBehaviour *object;
-
     IBehaviour *object() {
         return data.as<IBehaviour>();
     }
-    GenericOwned data;
+    // Interpet as known IBehaviour-deriving type.
+    template <typename T>
+    T *object_as() {
+        return reinterpret_cast<T *>(data.as<IBehaviour>());
+    }
 
-    // static void xport(World *world, Entity entity, uint8_t &obj, std::ostream &out);
-    // static void import(World *world, Entity entity, std::istream &in, uint8_t &obj);
-    // static void print(World *world, Entity entity, uint8_t &obj, std::ostream &out, int indent_level);
+    GenericOwned data;
+    bool enabled;
+
+    void update();
+    void mouse_handler(MouseEvent e);
+    void keyboard_handler(KeyboardEvent e);
+    
 };
 REFLECT_STRUCT(Behaviour);
 
@@ -130,15 +132,13 @@ public:
     void import_aspect(std::istream &in, GenericAspect aspect);
     void print_aspect(GenericAspect aspect, std::ostream &out, int indent_level = 0);
 
-    template <typename T>
-    void register_aspect_export_functions(AspectExportFunctions export_functions);
-
-    AspectExportFunctions get_aspect_export_functions(const std::string &name);
+    // Utilities.
+    bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
 
 private:
-    std::map<std::string, AspectExportFunctions> aspect_export_functions_map;
-
     friend class PrimitiveTypeDescriptor<World>;
+
+    World(const World &); // Delete the copy constructor.
 };
 REFLECT_STRUCT(World);
 
@@ -147,28 +147,15 @@ REFLECT_STRUCT(World);
 template <typename T>
 T *World::add(Entity e)
 {   
-    std::cout << "Adding behaviour...\n";
     auto behaviour = e.add<Behaviour>();
     behaviour->data = make_owned<T>();
-    std::cout << "Made GenericOwned.\n";
+    behaviour->enabled = true;
 
     behaviour->object()->world = this;
     behaviour->object()->entity = e;
 
-    std::cout << "Added.\n";
     return dynamic_cast<T *>(behaviour->object());
 }
 
-template <typename T>
-void World::register_aspect_export_functions(AspectExportFunctions aspect_export_functions)
-{
-    auto name = Reflector::get_descriptor<T>()->name();
-    auto found = aspect_export_functions_map.find(name);
-    if (found != aspect_export_functions_map.end()) {
-        std::cerr << "Attempted to register aspect export functions for aspect type \"" << name << "\" twice.\n";
-        assert(0);
-    }
-    aspect_export_functions_map[name] = aspect_export_functions;
-}
 
 #endif // WORLD_H

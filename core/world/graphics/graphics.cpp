@@ -164,7 +164,9 @@ void Graphics::render_drawables()
 
 void Graphics::init()
 {
-    // Graphics subsystem initialization. Relies on resource model and other subsystems.
-    // This dependence relies on what World does when it initializes subsystems (such as this, Graphics).
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     paint.init();
 }

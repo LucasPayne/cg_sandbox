@@ -162,6 +162,49 @@ void Graphics::render_drawables()
 
 
 
+// Compile an OpenGL shader and store it in the shader cache.
+Resource<GLShader> Graphics::ShaderCache::compile(const std::string &path)
+{
+    // Try to match the file extension to a shader type (e.g. ".vert" to vertex shader).
+    const char *c_path = path.c_str();
+    int path_len = strlen(c_path);
+    struct ShaderExtension {
+        const char *name;
+        GLenum type;
+    };
+    static ShaderExtension extensions[5] = {
+        {"vert", GL_VERTEX_SHADER},
+        {"frag", GL_FRAGMENT_SHADER},
+        {"geom", GL_GEOMETRY_SHADER},
+        {"te", GL_TESS_CONTROL_SHADER},
+        {"tc", GL_TESS_EVALUATION_SHADER},
+    };
+    GLenum shader_type = 0;
+    for (int i = 0; i < sizeof(extensions)/sizeof(ShaderExtension); i++) {
+        int len = strlen(extensions[i].name);
+        if (path_len >= len+1 && (strcmp(strchr(c_path, '\0') - len - 1, extensions[i].name) == 0)) {
+            // Matched a valid extension.
+            shader_type = extensions[i].type;
+            break;
+        }
+    }
+    if (shader_type == 0) {
+        fprintf(stderr, "ERROR: Graphics::ShaderCache::Compile: Failed to match extension for shader \"%s\".\n", c_path);
+        exit(EXIT_FAILURE);
+    }
+
+    auto shader = world.resources.add<GLShader>();
+    *shader = GLShader(shader_type, path);
+    return shader;
+}
+// Reflect opengl_utilities classes.
+DESCRIPTOR_INSTANCE(GLShader);
+BEGIN_ENTRIES(GLShader)
+    //...unreflected
+END_ENTRIES()
+
+
+
 void Graphics::init()
 {
     glDisable(GL_CULL_FACE);

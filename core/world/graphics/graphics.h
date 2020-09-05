@@ -16,6 +16,10 @@ The Graphics component also holds render loops.
 
 #include "world/resource_cache.h"
 
+// Reflect opengl_utilities classes.
+REFLECT_STRUCT(GLShader);
+
+
 /*--------------------------------------------------------------------------------
 Graphics
 --------------------------------------------------------------------------------*/
@@ -23,7 +27,7 @@ class World;
 class Graphics {
 public:
     Graphics(World &_world) :
-        // shaders{_world},
+        shaders(_world),
         shading{*this, _world},
         paint{*this, _world},
         world{_world}
@@ -36,6 +40,7 @@ public:
     void begin_camera_rendering(Aspect<Camera> &camera);
     void end_camera_rendering(Aspect<Camera> &camera);
 
+    // Draw a vertex array (in the geometric material) using a GeometricMaterial+Material+ShadingModel triple.
     void draw(GeometricMaterialInstance &gmat_instance,
               MaterialInstance &mat_instance,
               ShadingModelInstance &sm_instance);
@@ -46,14 +51,13 @@ public:
     void render_drawables(); 
 
 
-    // // All raw OpenGL shader objects should be stored in this cache.
-    // //    note: Currently shading-system shaders are not, since they are generated.
-    // struct ShaderCache : public ResourceCache<GLShader> {
-    //     ShaderCache(World &_world) : ResourceCache<GLShader>(_world) {};
-    //     Resource<GLShader> compile(const std::string &path);
-    // };
-    // ShaderCache shaders;
-
+    // All raw OpenGL shader objects should be stored in this cache.
+    //    note: Currently shading-system shaders are not, since they are generated.
+    struct ShaderCache : public ResourceCache<GLShader> {
+        ShaderCache(World &_world) : ResourceCache<GLShader>(_world) {};
+        Resource<GLShader> compile(const std::string &path);
+    };
+    ShaderCache shaders;
 
     // "Shading" is the term for the model-shading system with geometric materials, materials, and shading models.
     ShadingAssets shading;

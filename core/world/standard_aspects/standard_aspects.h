@@ -3,10 +3,13 @@
 #include "core.h"
 #include "interactive_graphics_context/input.h"
 #include "mathematics/mathematics.h"
+#include "world/entities/entities.h"
+#include "world/resources/resources.h"
+#include "world/graphics/drawing.h"
 
-#include "world/world.h"
-
-
+// #include "world/world.h"
+// 
+// 
 
 /*--------------------------------------------------------------------------------
 Transform aspect

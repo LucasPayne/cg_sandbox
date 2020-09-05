@@ -8,8 +8,8 @@ Entity create_mesh_object(World &world,
     t->init(0,0,0);
     Resource<VertexArray> model = world.assets.models.load(model_path);
 
-    Resource<GeometricMaterial> gmat = world.assets.shading.load_geometric_material("resources/triangle_mesh.gmat");
-    Resource<Material> mat = world.assets.shading.load_material(mat_path);
+    Resource<GeometricMaterial> gmat = world.assets.shading.geometric_materials.load("resources/triangle_mesh.gmat");
+    Resource<Material> mat = world.assets.shading.materials.load(mat_path);
 
     auto gmat_instance = GeometricMaterialInstance(gmat, model);
     auto mat_instance = MaterialInstance(mat);

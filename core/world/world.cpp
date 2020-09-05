@@ -21,7 +21,7 @@ IDEAS/THINGS:
 #include "world/standard_aspects/standard_aspects.h"
 
 
-World::World() : graphics{Graphics(*this)}
+World::World() : graphics{Graphics(*this)}, assets{Assets(*this)}
 {
     printf("[world] Creating world...\n");
 
@@ -57,14 +57,6 @@ World::World() : graphics{Graphics(*this)}
     REGISTER_ASPECT_TYPE(Behaviour);
     printf("[world] Entity model initialized.\n");
 
-    // Initialize an instance of Assets, through which hard-coded specific assets can be loaded and shared using the resource model.
-    printf("[world] Initializing Assets...\n");
-    assets = Assets();
-    assets.resources = &resources;
-    assets.models.resources = &resources;
-    assets.shading.resources = &resources;
-    printf("[world] Assets initialized.\n");
-
     // // Initialize the Graphics component, which holds graphics state, such as compiled shader programs.
     // printf("[world] Initializing Graphics...\n");
     // graphics = Graphics(&resources); // The Graphics component relies on the resource model.
@@ -78,6 +70,10 @@ World::World() : graphics{Graphics(*this)}
     printf("[world] Initializing InputState...\n");
     input = InputState();
     printf("[world] InputState initialized.\n");
+
+    
+    // TODO: Give every subsystem an init().
+    graphics.init();
 }
 
 
@@ -111,21 +107,6 @@ World World::load_world(std::string &path)
 
 void World::close()
 {
-}
-
-
-void World::loop()
-{
-    printf("================================================================================\n");
-    printf("Frame start\n");
-    printf("================================================================================\n");
-
-    graphics.clear();
-    // Update entity behaviours.
-    for (auto b : entities.aspects<Behaviour>()) {
-        if (b->enabled) b->update();
-    }
-    graphics.render_for_cameras();
 }
 
 
@@ -350,4 +331,23 @@ bool World::screen_to_ray(float screen_x, float screen_y, Ray *ray)
     // printf("camera_x: %.2f, camera_y: %.2f\n", camera_x, camera_y);
     // getchar();
     return true;
+}
+
+
+
+void World::loop()
+{
+    printf("================================================================================\n");
+    printf("Frame start\n");
+    printf("================================================================================\n");
+
+    graphics.clear();
+    graphics.paint.clear();
+    // Update entity behaviours.
+    for (auto b : entities.aspects<Behaviour>()) {
+        if (b->enabled) b->update();
+    }
+    graphics.render_drawables();
+    // for (int i = 0; i < 10; i++) graphics.paint.sphere(vec3(frand(), 0,0), 1, vec4(0,1,1,1));
+    // graphics.paint.render();
 }

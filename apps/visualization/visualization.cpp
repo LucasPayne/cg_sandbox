@@ -55,9 +55,11 @@ App::App(World &_world) : world{_world}
 
     {
         Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");
+        printf("Created\n");
         obj.get<Drawable>()->material.properties.set_vec4("diffuse", 0,0,0,1);
         obj.get<Transform>()->position = vec3(-0.75, -0.5, 0);
         obj.get<Transform>()->scale = 0.4;
+        printf("Updated\n");
     }
     {
         Entity obj = create_mesh_object(world, "resources/models/dragon.off", "resources/model_test/model_test.mat");

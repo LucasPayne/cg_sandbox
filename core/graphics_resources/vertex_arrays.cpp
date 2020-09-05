@@ -44,6 +44,16 @@ size_t VertexArrayLayout::index_type_size() const
 }
 
 
+void VertexArrayData::add_attribute(const std::string &name, int vecsize, GLenum type, void *data)
+{
+    auto semantic = VertexSemantic(type, vecsize, name);
+    layout.semantics.push_back(semantic);
+    auto buffer = std::vector<uint8_t>(semantic.type_size() * layout.num_vertices);
+    memcpy(&buffer[0], data, semantic.type_size() * layout.num_vertices);
+    attribute_buffers.push_back(buffer);
+}
+
+
 VertexAttributeBindingIndex VertexSemantic::get_binding_index()
 {
     //!-WARNING-! This is a global list. Something will go wrong.
@@ -61,6 +71,7 @@ VertexAttributeBindingIndex VertexSemantic::get_binding_index()
     VertexAttributeBindingIndex new_binding_index = encountered_semantics.size() - 1;
     return new_binding_index;
 }
+
 
 
 VertexArray VertexArray::from_vertex_array_data(VertexArrayData &data)

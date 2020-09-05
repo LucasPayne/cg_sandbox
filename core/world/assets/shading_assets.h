@@ -4,16 +4,36 @@
 #include "world/resources/resources.h"
 #include "graphics_resources/shading.h"
 
+#include "world/resource_cache.h"
+
+
 class ShadingAssets {
 public:
-    Resource<GeometricMaterial> load_geometric_material(const std::string &path);
-    Resource<Material> load_material(const std::string &path);
-    Resource<ShadingModel> load_shading_model(const std::string &path);
-    Resources *resources;
+    ShadingAssets(World &_world) :
+        geometric_materials(_world),
+        materials(_world),
+        shading_models(_world),
+        world{_world}
+    {}
+
+    struct GeometricMaterialCache : public ResourceCache<GeometricMaterial> {
+        GeometricMaterialCache(World &_world) : ResourceCache<GeometricMaterial>(_world) {}
+        Resource<GeometricMaterial> compile(const std::string &path);
+    };
+    GeometricMaterialCache geometric_materials;
+    struct MaterialCache : public ResourceCache<Material> {
+        MaterialCache(World &_world) : ResourceCache<Material>(_world) {}
+        Resource<Material> compile(const std::string &path);
+    };
+    MaterialCache materials;
+    struct ShadingModelCache : public ResourceCache<ShadingModel> {
+        ShadingModelCache(World &_world) : ResourceCache<ShadingModel>(_world) {}
+        Resource<ShadingModel> compile(const std::string &path);
+    };
+    ShadingModelCache shading_models;
 private:
-    std::unordered_map<std::string, Resource<GeometricMaterial>> geometric_material_cache;
-    std::unordered_map<std::string, Resource<Material>> material_cache;
-    std::unordered_map<std::string, Resource<ShadingModel>> shading_model_cache;
+    World &world;
 };
+
 
 #endif // SHADING_ASSETS_H

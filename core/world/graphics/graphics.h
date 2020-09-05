@@ -10,6 +10,9 @@ The Graphics component also holds render loops.
 
 #include "world/resources/resources.h"
 #include "world/graphics/drawing.h"
+#include "world/graphics/painting/painting.h"
+#include "world/standard_aspects/standard_aspects.h"
+
 
 // Shading programs, compiled from a GeometricMaterial+Material+ShadingModel, are cached.
 struct ShadingProgramKey {
@@ -39,10 +42,18 @@ class World;
 class Graphics {
 public:
     Graphics(World &_world) :
+        paint{*this, _world},
         world{_world}
     {}
 
+    void init();
+
     ShadingProgram *get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm);
+
+    // When rendering into a camera (whether it attached to a framebuffer or a texture),
+    // use these draw calls at the start and end.
+    void begin_camera_rendering(Aspect<Camera> &camera);
+    void end_camera_rendering(Aspect<Camera> &camera);
 
     void draw(GeometricMaterialInstance &gmat_instance,
               MaterialInstance &mat_instance,
@@ -50,8 +61,13 @@ public:
 
     // Clear to the default screen.
     void clear();
-    // Render the world into each camera.
-    void render_for_cameras();
+    // Render the Drawables into each camera.
+    void render_drawables();
+
+    // Immediate-mode drawing of vector graphics in 3D.
+    Painting paint;
+
+
 
 private:
     World &world;

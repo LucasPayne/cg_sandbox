@@ -1,11 +1,11 @@
 /*--------------------------------------------------------------------------------
-notes:
-    Messy serialization stuff here.
+    model_assets
 --------------------------------------------------------------------------------*/
 #include <limits>//numeric_limits
 #include "gl/gl.h"
 #include "utils/file_utils.h"
 
+#include "world/world.h"
 #include "world/assets/model_assets.h"
 
 
@@ -76,20 +76,9 @@ bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va)
 }
 
 
-
-Resource<VertexArray> ModelAssets::load(const std::string &path)
+Resource<VertexArray> Assets::ModelCache::compile(const std::string &path)
 {
-    log("Getting model from path \"%s\"...\n", path.c_str());
-    // Look up the compiled model in the cache.
-    // std::unordered_map<std::string, Resource<VertexArray>>::iterator found = vertex_array_cache.find(path);
-    auto found = vertex_array_cache.find(path);
-    if (found != vertex_array_cache.end()) {
-        // The model is already loaded. Return the already-compiled vertex array.
-        log("Model is already loaded.\n");
-        return found->second;
-    }
-    log("Model is not loaded, loading model...\n");
-
+    log("Loading model \"%s\".\n", path.c_str());
     VertexArrayData va;
     std::string compiled_path = path + ".compiled";
     std::ifstream compiled_file(compiled_path, std::ios::binary | std::ios::in);
@@ -111,11 +100,9 @@ Resource<VertexArray> ModelAssets::load(const std::string &path)
         MLModel_to_VertexArrayData(model, va);
         Reflector::pack(va, new_compiled_file);
     }
-    auto vertex_array_resource = resources->add<VertexArray>();
+    auto vertex_array_resource = world.resources.add<VertexArray>();
     *vertex_array_resource = VertexArray::from_vertex_array_data(va);
-    // Cache this.
-    vertex_array_cache[path] = vertex_array_resource;
-    log("Model found successfully.\n");
+    log("Loaded model.\n");
     return vertex_array_resource;
 }
 

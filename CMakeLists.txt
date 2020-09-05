@@ -56,6 +56,7 @@ add_library(cg_sandbox
     core/world/assets/shading_assets.cpp
     core/world/graphics/graphics.cpp
     core/world/graphics/drawing.cpp
+    core/world/graphics/painting/painting.cpp
 
     core/graphics_resources/shading.cpp
     core/graphics_resources/vertex_arrays.cpp

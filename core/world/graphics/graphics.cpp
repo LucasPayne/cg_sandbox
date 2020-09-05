@@ -103,13 +103,40 @@ static void log_render(const char *format, ...)
 }
 
 
-void Graphics::render_for_cameras()
-{
-    auto sm = world.assets.shading.load_shading_model("resources/model_test/model_test.sm");
-    auto shading_model = ShadingModelInstance(sm);
 
+GLint g_saved_viewport[4]; //horrible global...
+void Graphics::begin_camera_rendering(Aspect<Camera> &camera)
+{
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
+    GLint viewport_x = viewport[0];
+    GLint viewport_y = viewport[1];
+    GLint viewport_width = viewport[2];
+    GLint viewport_height = viewport[3];
+    float bl_x = viewport_x + floor(viewport_width * camera->bottom_left[0]);
+    float bl_y = viewport_y + floor(viewport_height * camera->bottom_left[1]);
+    float width = floor(viewport_width * (camera->top_right[0] - camera->bottom_left[0]));
+    float height = floor(viewport_height * (camera->top_right[1] - camera->bottom_left[1]));
+    glViewport(bl_x, bl_y, width, height);
+    glScissor(bl_x, bl_y, width, height);
+    glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
+    glEnable(GL_SCISSOR_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    for (int i = 0; i < 4; i++) g_saved_viewport[i] = viewport[i]; //-Lazily using a global to restore the last viewport dimensions.
+
+}
+void Graphics::end_camera_rendering(Aspect<Camera> &camera)
+{
+    glDisable(GL_SCISSOR_TEST);
+    glViewport(g_saved_viewport[0], g_saved_viewport[1], g_saved_viewport[2], g_saved_viewport[3]);
+}
+
+
+void Graphics::render_drawables()
+{
+    auto sm = world.assets.shading.shading_models.load("resources/model_test/model_test.sm");
+    auto shading_model = ShadingModelInstance(sm);
+
     // Render.
     bool any_camera = false;
     for (auto camera : world.entities.aspects<Camera>()) {
@@ -120,20 +147,7 @@ void Graphics::render_for_cameras()
 
 
         // Set up viewport.
-        GLint viewport_x = viewport[0];
-        GLint viewport_y = viewport[1];
-        GLint viewport_width = viewport[2];
-        GLint viewport_height = viewport[3];
-        float bl_x = viewport_x + floor(viewport_width * camera->bottom_left[0]);
-        float bl_y = viewport_y + floor(viewport_height * camera->bottom_left[1]);
-        float width = floor(viewport_width * (camera->top_right[0] - camera->bottom_left[0]));
-        float height = floor(viewport_height * (camera->top_right[1] - camera->bottom_left[1]));
-        glViewport(bl_x, bl_y, width, height);
-        glScissor(bl_x, bl_y, width, height);
-        glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
-        glEnable(GL_SCISSOR_TEST);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        begin_camera_rendering(camera);
 
         log_render("Getting camera transform...");
         auto camera_transform = camera.sibling<Transform>();
@@ -157,12 +171,20 @@ void Graphics::render_for_cameras()
             draw(drawable->geometric_material, drawable->material, shading_model);
         }
 
-        glDisable(GL_SCISSOR_TEST);
-        glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+        end_camera_rendering(camera);
     }
     if (!any_camera) printf("[graphics] No camera.\n"); // Make it easier to tell when the camera is not working.
 
 
     // Free the buffer holding shading model parameters (such as the projection matrix).
     shading_model.properties.destroy();
+}
+
+
+
+void Graphics::init()
+{
+    // Graphics subsystem initialization. Relies on resource model and other subsystems.
+    // This dependence relies on what World does when it initializes subsystems (such as this, Graphics).
+    paint.init();
 }

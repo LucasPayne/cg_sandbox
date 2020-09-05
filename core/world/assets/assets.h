@@ -7,13 +7,20 @@
 
 class Assets {
 public:
-    Assets() {}
-
-    ModelAssets models;
+    Assets(World &_world) :
+        models(_world),
+        shading(_world),
+        world{_world}
+    {}
+    struct ModelCache : public ResourceCache<VertexArray> {
+        ModelCache(World &_world) : ResourceCache<VertexArray>(_world) {}
+        Resource<VertexArray> compile(const std::string &path);
+    };
+    ModelCache models;
     ShadingAssets shading;
 
-    Resources *resources;
 private:
+    World &world;
 }; 
 
 #endif // ASSETS_H

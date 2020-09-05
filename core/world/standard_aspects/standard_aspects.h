@@ -58,6 +58,7 @@ struct Camera : public IAspectType {
     // Create a ray that points toward 
     Ray ray(float camera_x, float camera_y);
 
+    mat4x4 view_projection_matrix();
 
     // Initialize this to a projective camera, with the default full viewport.
     Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);

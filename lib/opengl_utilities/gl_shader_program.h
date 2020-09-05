@@ -2,6 +2,7 @@
 #define GL_GL_SHADER_PROGRAM_H
 #include <assert.h>
 #include <string>
+#include <unordered_map>
 
 
 enum GLShaderType {
@@ -52,10 +53,12 @@ private:
 
     GLuint m_gl_shader_program_id;
     bool linked;
+
 public:
     GLShaderProgram(GLuint program_id = 0);
     void add_shader(GLShader shader);
     void link();
+    GLint uniform_location(const std::string &name);
 
     GLuint ID() const {
         return m_gl_shader_program_id;
@@ -66,6 +69,10 @@ public:
     void unbind() const {
         glUseProgram(0);
     }
+
+    // For ease-of-use, a uniform location dictionary is computed when the shader program is linked.
+    // This dictionary is not a good choice for uniform uploads in inner loops.
+    std::unordered_map<std::string, GLint> uniform_location_dictionary;
 };
 
 #endif // GL_GL_SHADER_PROGRAM_H

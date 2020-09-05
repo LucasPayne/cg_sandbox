@@ -40,6 +40,10 @@ void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float 
     *camera_y = (screen_y - bottom_left[1]) / (top_right[1] - bottom_left[1]);
 }
 
+mat4x4 Camera::view_projection_matrix()
+{
+    return projection_matrix * entity.get<Transform>()->inverse_matrix();
+}
 
 
 

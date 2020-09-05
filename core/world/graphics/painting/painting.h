@@ -8,6 +8,17 @@ class Graphics;
 class World;
 
 
+struct PaintingSphere {
+    vec3 position;
+    float radius;
+    vec4 color;
+    PaintingSphere(vec3 _position, float _radius, vec4 _color) :
+        position{_position},
+        radius{_radius},
+        color{_color}
+    {}
+};
+
 
 class Painting {
 public:
@@ -22,9 +33,7 @@ public:
     void sphere(vec3 position, float radius, vec4 color);
 
 private:
-    std::vector<vec3> sphere_positions;
-    std::vector<float> sphere_radii;
-    std::vector<vec4> sphere_colors;
+    std::vector<PaintingSphere> spheres;
 
     Resource<GLShaderProgram> spheres_shader_program;
 

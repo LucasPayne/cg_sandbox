@@ -56,7 +56,10 @@ void World::loop()
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
+    graphics.clear_cameras();
     graphics.render_drawables();
+    graphics.paint.render();
+    graphics.paint.clear();
 }
 
 void World::close()

@@ -122,7 +122,43 @@ void GLShaderProgram::link()
         }
     }
     linked = true;
+
+    // Introspect.
+    GLint num_active_uniforms;
+    // Each active uniform is assigned an "index", distinct from location or block indices.
+    // This is an identifier for use with the (< 4.3) introspection API.
+    glGetProgramiv(m_gl_shader_program_id, GL_ACTIVE_UNIFORMS, &num_active_uniforms);
+    for (int i = 0; i < num_active_uniforms; i++) {
+        const GLsizei buf_size = 2048;
+        char name[buf_size];
+        GLsizei name_length;
+        glGetActiveUniformName(m_gl_shader_program_id, i, buf_size, &name_length, name);
+        if (name_length > buf_size-1) {
+            std::cerr << "ERROR [GLShaderProgram::link]: Uniform name far too long.\n";
+            exit(EXIT_FAILURE);
+        }
+        GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
+        if (location >= 0) {
+            std::string name_string(name, name_length);
+            uniform_location_dictionary[name_string] = location;
+            printf("Active uniform: %s, %d\n", name, location);
+        }
+        // If location < 0, just don't add it, something went wrong.
+        //    ---When is location < 0?
+    }
 }
+
+
+GLint GLShaderProgram::uniform_location(const std::string &name)
+{
+    auto found = uniform_location_dictionary.find(name);
+    if (found == uniform_location_dictionary.end()) {
+        std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
+        exit(EXIT_FAILURE);
+    }
+    return found->second;
+}
+
 
 
 /*--------------------------------------------------------------------------------

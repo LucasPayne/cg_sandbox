@@ -36,9 +36,11 @@ public:
 
     void init();
 
+
+    void clear_cameras();
     // When rendering into a camera (whether it attached to a framebuffer or a texture),
     // use these draw calls at the start and end.
-    void begin_camera_rendering(Aspect<Camera> &camera);
+    void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false);
     void end_camera_rendering(Aspect<Camera> &camera);
 
     // Draw a vertex array (in the geometric material) using a GeometricMaterial+Material+ShadingModel triple.

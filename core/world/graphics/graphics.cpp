@@ -85,9 +85,16 @@ static void log_render(const char *format, ...)
 }
 
 
+void Graphics::clear_cameras()
+{
+    for (auto &camera : world.entities.aspects<Camera>()) {
+        begin_camera_rendering(camera, true);
+        end_camera_rendering(camera);
+    }
+}
 
 GLint g_saved_viewport[4]; //horrible global...
-void Graphics::begin_camera_rendering(Aspect<Camera> &camera)
+void Graphics::begin_camera_rendering(Aspect<Camera> &camera, bool clear)
 {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -103,7 +110,7 @@ void Graphics::begin_camera_rendering(Aspect<Camera> &camera)
     glScissor(bl_x, bl_y, width, height);
     glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
     glEnable(GL_SCISSOR_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (int i = 0; i < 4; i++) g_saved_viewport[i] = viewport[i]; //-Lazily using a global to restore the last viewport dimensions.
 
 }
@@ -131,11 +138,10 @@ void Graphics::render_drawables()
         // Set up viewport.
         begin_camera_rendering(camera);
 
-        log_render("Getting camera transform...");
-        auto camera_transform = camera.sibling<Transform>();
         log_render("Calculating view-projection matrix...");
-        mat4x4 view_matrix = camera_transform->inverse_matrix();
-        mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
+        // mat4x4 view_matrix = camera_transform->inverse_matrix();
+        // mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
+        mat4x4 vp_matrix = camera->view_projection_matrix();
         log_render("Uploading view-projection matrix...");
         shading_model.properties.set_mat4x4("vp_matrix", vp_matrix);
 

@@ -7,7 +7,7 @@ PROBLEMS:
 IDEAS/THINGS:
 --------------------------------------------------------------------------------*/
 #include "core.h"
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 #include "world/world.h"
 #include "spatial_algebra/spatial_algebra.h"
 #include <math.h>

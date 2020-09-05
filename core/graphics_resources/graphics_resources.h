@@ -17,7 +17,7 @@ Submodules:
             VertexArray
 --------------------------------------------------------------------------------*/
 #include "core.h"
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 
 #include "graphics_resources/shading.h"
 #include "graphics_resources/vertex_arrays.h"

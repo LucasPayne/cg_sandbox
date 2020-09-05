@@ -82,7 +82,7 @@ uint8_t *GenericAspect::get_data()
 int Entity::num_aspects()
 {
     int n = 0;
-    for (auto &a : *this) {
+    for ([[maybe_unused]] auto &a : *this) {
         n++;
     }
     return n;

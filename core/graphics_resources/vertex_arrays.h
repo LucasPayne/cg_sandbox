@@ -7,7 +7,7 @@ Provides rendering resources:
     VertexArray
 --------------------------------------------------------------------------------*/
 #include "core.h"
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 
 #include "world/resources/resources.h"
 

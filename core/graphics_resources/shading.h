@@ -13,7 +13,7 @@ Provides rendering resources:
     ShadingProgram    - Encapsulates a GPU rasterization dataflow resolved from a GM+M+SM triple.
 --------------------------------------------------------------------------------*/
 #include "core.h"
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 
 #include "world/resources/resources.h"
 

@@ -7,7 +7,7 @@ using namespace ShadingFileDetails;
 #include <sstream> //istringstream
 
 
-static void print_listing(const std::string &title, const std::string &text)
+[[maybe_unused]] static void print_listing(const std::string &title, const std::string &text)
 {
     printf("================================================================================\n");
     std::cout << title << "\n";

@@ -2,7 +2,7 @@
     model_assets
 --------------------------------------------------------------------------------*/
 #include <limits>//numeric_limits
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 #include "utils/file_utils.h"
 
 #include "world/world.h"

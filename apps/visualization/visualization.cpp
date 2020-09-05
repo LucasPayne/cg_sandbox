@@ -1,5 +1,5 @@
 #include "cg_sandbox.h"
-#include "gl/gl.h"
+#include "opengl_utilities/gl.h"
 
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"

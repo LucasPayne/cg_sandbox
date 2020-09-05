@@ -35,7 +35,6 @@ void Painting::render()
     auto va_resource = world.resources.add<VertexArray>();
     *va_resource = va;
 
-    bool any_camera = false;
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);

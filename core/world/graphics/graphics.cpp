@@ -1,29 +1,11 @@
 #include "world/world.h"
 
 
-ShadingProgram *Graphics::get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm) {
-    // First, try to find the program based on the IDs of the resource handles.
-    ShadingProgramKey key(gmat, mat, sm);
-    ShadingProgramCache::iterator found = shading_program_cache.find(key);
-    if (found != shading_program_cache.end()) {
-        // Found the program directly in the cache, just return it.
-        return &(*(found->second)); //* dereferences handle to a reference, then & gets a regular pointer.
-    }
-    // If this doesn't work, the program might still be compiled, just with G/M/SM under a different ID (if they have been unloaded then reloaded).
-    //    -todo
-    // It is not cached, so compile the program and cache it.
-    auto new_program = world.resources.add<ShadingProgram>();
-    *new_program = ShadingProgram::create(*gmat, *mat, *sm);
-    shading_program_cache[key] = new_program;
-    return &(*new_program);
-}
-
-
 void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
                     MaterialInstance &material_instance,
                     ShadingModelInstance &shading_model_instance)
 {
-    ShadingProgram *shading_program = get_shading_program(geometric_material_instance.base,
+    ShadingProgram *shading_program = shading.get_program(geometric_material_instance.base,
                                                           material_instance.base,
                                                           shading_model_instance.base);
     GeometricMaterial &geometric_material = *(geometric_material_instance.base);
@@ -134,7 +116,7 @@ void Graphics::end_camera_rendering(Aspect<Camera> &camera)
 
 void Graphics::render_drawables()
 {
-    auto sm = world.assets.shading.shading_models.load("resources/model_test/model_test.sm");
+    auto sm = world.graphics.shading.shading_models.load("resources/model_test/model_test.sm");
     auto shading_model = ShadingModelInstance(sm);
 
     // Render.
@@ -160,8 +142,6 @@ void Graphics::render_drawables()
         log_render("Rendering Drawables:");
         for (auto drawable : world.entities.aspects<Drawable>()) {
             log_render("  Rendering drawable.");
-            log_render("    Getting transform...");
-            auto t = drawable.sibling<Transform>();
             log_render("    Calculating model matrix...");
             mat4x4 model_matrix = drawable->model_matrix();
             log_render("    Uploading model matrix...");

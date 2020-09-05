@@ -38,11 +38,19 @@ add_library(cg_sandbox
     core/data_structures/table.cpp
     core/data_structures/table_collection.cpp
 
-    core/gl/glsl.cpp
-    core/gl/gl_shader_program.cpp
-
     core/mathematics/mathematics.cpp
     core/mathematics/ray.cpp
+
+    core/graphics_resources/shading.cpp
+    core/graphics_resources/vertex_arrays.cpp
+    ${BISON_shading_file_parser_OUTPUTS}
+    ${FLEX_shading_file_lexer_OUTPUTS}
+
+    #todo: Separate this library.
+    lib/opengl_utilities/glad/glad.c
+    lib/opengl_utilities/gl_shader_program.cpp
+    lib/opengl_utilities/glsl.cpp
+
 
     core/world/world.cpp
     core/world/entities/entities.cpp
@@ -53,19 +61,14 @@ add_library(cg_sandbox
     core/world/standard_aspects/Drawable.cpp
     core/world/assets/assets.cpp
     core/world/assets/model_assets.cpp
-    core/world/assets/shading_assets.cpp
     core/world/graphics/graphics.cpp
     core/world/graphics/drawing.cpp
+    core/world/graphics/shading_assets.cpp
     core/world/graphics/painting/painting.cpp
-
-    core/graphics_resources/shading.cpp
-    core/graphics_resources/vertex_arrays.cpp
-    ${BISON_shading_file_parser_OUTPUTS}
-    ${FLEX_shading_file_lexer_OUTPUTS}
-
-    dependencies/glad/glad.c
 )
-target_compile_options(cg_sandbox PRIVATE -Wall -g)
+target_compile_options(cg_sandbox PRIVATE -Wall -g -Wno-invalid-offsetof)
+    # no-invalid-offsetof: Ignoring this warning could break things! However, currently with the reflection system,
+    #    this warning happens due to most classes technically not being plain-old-data-types.
 
 # Internal libraries
 # These provide some functionality the core uses, but are separated from the core code.
@@ -75,6 +78,12 @@ target_compile_options(cg_sandbox PRIVATE -Wall -g)
 
 # set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_START_STATIC 1)
 # set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_END_STATIC 1)
+
+# add_subdirectory(lib/opengl_utilities)
+# target_link_libraries(cg_sandbox opengl_utilities)
+
+add_subdirectory(lib/interactive_graphics_context)
+target_link_libraries(cg_sandbox interactive_graphics_context)
 
 add_subdirectory(lib/spatial_algebra)
 target_link_libraries(cg_sandbox spatial_algebra)
@@ -87,11 +96,7 @@ add_subdirectory(lib/model_loader)
 target_link_libraries(cg_sandbox model_loader)
 # target_link_libraries(cg_sandbox STATIC libmodel_loader.a)
 
-add_subdirectory(lib/interactive_graphics_context)
-target_link_libraries(cg_sandbox interactive_graphics_context)
-
 # External dependencies
 #--------------------------------------------------------------------------------
 add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
 target_link_libraries(cg_sandbox glfw)
-

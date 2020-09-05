@@ -11,29 +11,10 @@ The Graphics component also holds render loops.
 #include "world/resources/resources.h"
 #include "world/graphics/drawing.h"
 #include "world/graphics/painting/painting.h"
+#include "world/graphics/shading_assets.h"
 #include "world/standard_aspects/standard_aspects.h"
 
-
-// Shading programs, compiled from a GeometricMaterial+Material+ShadingModel, are cached.
-struct ShadingProgramKey {
-    TableElementID gmat_id;
-    TableElementID mat_id;
-    TableElementID sm_id;
-    ShadingProgramKey(const Resource<GeometricMaterial> &gmat, const Resource<Material> &mat, const Resource<ShadingModel> &sm) :
-        gmat_id{gmat.ID()}, mat_id{mat.ID()}, sm_id{sm.ID()}
-    {}
-    bool operator==(const ShadingProgramKey &other) const {
-        return (gmat_id == other.gmat_id) && (mat_id == other.mat_id) && (sm_id == other.sm_id);
-    }
-};
-struct ShadingProgramHasher {
-    size_t operator()(const ShadingProgramKey &key) const {
-        //--todo: Choose a good hash function for u32,u32,u32 -> u64
-        return 310921*key.gmat_id + 313101*key.mat_id + 233011*key.sm_id;
-    }
-};
-typedef std::unordered_map<ShadingProgramKey, Resource<ShadingProgram>, ShadingProgramHasher> ShadingProgramCache;
-
+#include "world/resource_cache.h"
 
 /*--------------------------------------------------------------------------------
 Graphics
@@ -42,13 +23,13 @@ class World;
 class Graphics {
 public:
     Graphics(World &_world) :
+        // shaders{_world},
+        shading{*this, _world},
         paint{*this, _world},
         world{_world}
     {}
 
     void init();
-
-    ShadingProgram *get_shading_program(Resource<GeometricMaterial> gmat, Resource<Material> mat, Resource<ShadingModel> sm);
 
     // When rendering into a camera (whether it attached to a framebuffer or a texture),
     // use these draw calls at the start and end.
@@ -62,16 +43,25 @@ public:
     // Clear to the default screen.
     void clear();
     // Render the Drawables into each camera.
-    void render_drawables();
+    void render_drawables(); 
 
+
+    // // All raw OpenGL shader objects should be stored in this cache.
+    // //    note: Currently shading-system shaders are not, since they are generated.
+    // struct ShaderCache : public ResourceCache<GLShader> {
+    //     ShaderCache(World &_world) : ResourceCache<GLShader>(_world) {};
+    //     Resource<GLShader> compile(const std::string &path);
+    // };
+    // ShaderCache shaders;
+
+
+    // "Shading" is the term for the model-shading system with geometric materials, materials, and shading models.
+    ShadingAssets shading;
     // Immediate-mode drawing of vector graphics in 3D.
     Painting paint;
 
-
-
 private:
     World &world;
-    ShadingProgramCache shading_program_cache;
 };
 
 

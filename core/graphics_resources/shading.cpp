@@ -548,8 +548,8 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // getchar();
 
     // Compile and link OpenGL program object.
-    GLShader vertex_shader_object = GLShader::from_string(GL_VERTEX_SHADER, vertex_shader.c_str());
-    GLShader fragment_shader_object = GLShader::from_string(GL_FRAGMENT_SHADER, fragment_shader.c_str());
+    GLShader vertex_shader_object = GLShader::from_string(VertexShader, vertex_shader.c_str());
+    GLShader fragment_shader_object = GLShader::from_string(FragmentShader, fragment_shader.c_str());
 
     // Compute introspective information.
     //todo----------
@@ -588,7 +588,10 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     }
 
     // Pass in a pointer to the program ID, since some pre-link setup was done.
-    GLShaderProgram program_object(vertex_shader_object, fragment_shader_object, &program_id);
+    GLShaderProgram program_object(program_id);
+    program_object.add_shader(vertex_shader_object);
+    program_object.add_shader(fragment_shader_object);
+    program_object.link();
     ShadingProgram program;
     program.program_id = program_object.ID();
 

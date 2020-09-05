@@ -180,7 +180,7 @@ Resource<GLShader> Graphics::ShaderCache::compile(const std::string &path)
         {"tc", GL_TESS_EVALUATION_SHADER},
     };
     GLenum shader_type = 0;
-    for (int i = 0; i < sizeof(extensions)/sizeof(ShaderExtension); i++) {
+    for (unsigned int i = 0; i < sizeof(extensions)/sizeof(ShaderExtension); i++) {
         int len = strlen(extensions[i].name);
         if (path_len >= len+1 && (strcmp(strchr(c_path, '\0') - len - 1, extensions[i].name) == 0)) {
             // Matched a valid extension.
@@ -200,6 +200,11 @@ Resource<GLShader> Graphics::ShaderCache::compile(const std::string &path)
 // Reflect opengl_utilities classes.
 DESCRIPTOR_INSTANCE(GLShader);
 BEGIN_ENTRIES(GLShader)
+    //...unreflected
+END_ENTRIES()
+
+DESCRIPTOR_INSTANCE(GLShaderProgram);
+BEGIN_ENTRIES(GLShaderProgram)
     //...unreflected
 END_ENTRIES()
 

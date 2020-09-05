@@ -17,6 +17,8 @@ World::World() :
         printf("[world]   Registered \"%s\".\n", #NAME);\
     }
     printf("[world]  Registering resource types...\n");
+    REGISTER_RESOURCE_TYPE(GLShader);
+    REGISTER_RESOURCE_TYPE(GLShaderProgram);
     REGISTER_RESOURCE_TYPE(Material);
     REGISTER_RESOURCE_TYPE(GeometricMaterial);
     REGISTER_RESOURCE_TYPE(ShadingModel);

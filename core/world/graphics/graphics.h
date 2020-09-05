@@ -18,6 +18,7 @@ The Graphics component also holds render loops.
 
 // Reflect opengl_utilities classes.
 REFLECT_STRUCT(GLShader);
+REFLECT_STRUCT(GLShaderProgram);
 
 
 /*--------------------------------------------------------------------------------

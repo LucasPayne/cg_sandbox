@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include <iostream>
 
-GLShader GLShader::from_string(GLenum shader_type, const char *source)
+
+GLShader GLShader::from_string(int shader_type, const char *source)
 {
     GLShader shader_object;
-    shader_object.m_gl_shader_type = shader_type;
-    shader_object.m_gl_shader_id = glCreateShader(shader_type);
+    shader_object.shader_type = shader_type;
+    shader_object.m_gl_shader_id = glCreateShader(shader_object.gl_type());
     if (shader_object.m_gl_shader_id == 0) {
         std::cerr << "ERROR: Failed to create a shader ID.\n";
         exit(EXIT_FAILURE);
@@ -38,7 +39,7 @@ GLShader GLShader::from_string(GLenum shader_type, const char *source)
 }
 
 // Load a shader.
-GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
+GLShader::GLShader(int shader_type, std::string const &shader_path)
 {
     // https://stackoverflow.com/questions/2912520/read-file-contents-into-a-string-in-c
     FILE *file = fopen(shader_path.c_str(), "r");
@@ -58,30 +59,165 @@ GLShader::GLShader(GLenum shader_type, std::string const &shader_path)
 }
 
 
-GLShaderProgram::GLShaderProgram(GLShader vertex_shader, GLShader fragment_shader, GLuint *passed_program_id)
+
+
+
+
+GLShaderProgram::GLShaderProgram(GLuint program_id) :
+    linked{false}
 {
-    m_vertex_shader = vertex_shader;
-    m_fragment_shader = fragment_shader;
-    if (passed_program_id == nullptr) {
-        m_gl_shader_program_id = glCreateProgram();
-    } else {
-        // A pointer to a program ID can be passed. This allows the caller to do pre-link setup.
-        m_gl_shader_program_id = *passed_program_id;
+    if (program_id == 0) m_gl_shader_program_id = glCreateProgram();
+    else m_gl_shader_program_id = program_id;
+
+    for (int i = 0; i < NUM_SHADER_TYPES; i++) {
+        has_shader[i] = false;
     }
+
     if (m_gl_shader_program_id == 0) {
-        std::cerr << "ERROR: Failed to create shader program.\n";
+        std::cerr << "ERROR [GLShaderProgram::GLShaderProgram]: Failed to create shader program.\n";
         exit(EXIT_FAILURE);
     }
-    glAttachShader(m_gl_shader_program_id, m_vertex_shader.ID());
-    glAttachShader(m_gl_shader_program_id, m_fragment_shader.ID());
+}
+
+void GLShaderProgram::add_shader(GLShader shader)
+{
+    if (linked) {
+        std::cerr << "ERROR [GLShaderProgram::add_shader_program]: Shader program already linked.\n";
+        exit(EXIT_FAILURE);
+    }
+    if (shader.type() < 0 || shader.type() > NUM_SHADER_TYPES) {
+        std::cerr << "ERROR [add_shader_program]: Invalid shader type given.\n";
+        exit(EXIT_FAILURE);
+    }
+    if (has_shader[shader.type()]) {
+        std::cerr << "ERROR [add_shader_program]: Attempted to add a shader type twice.\n";
+        exit(EXIT_FAILURE);
+    }
+    has_shader[shader.type()] = true;
+    shaders[shader.type()] = shader;
+}
+
+void GLShaderProgram::link()
+{
+    if (linked) {
+        std::cerr << "ERROR [GLShaderProgram::link]: Shader program already linked.\n";
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < NUM_SHADER_TYPES; i++) {
+        if (has_shader[i]) {
+            glAttachShader(m_gl_shader_program_id, shaders[i].ID());
+        }
+    }
     glLinkProgram(m_gl_shader_program_id);
     GLint success;
     glGetProgramiv(m_gl_shader_program_id, GL_LINK_STATUS, &success);
     if (success != GL_TRUE) {
-        std::cerr << "ERROR: Failed to link shader program.\n";
+        std::cerr << "ERROR [GLShaderProgram::link]: Failed to link shader program.\n";
         //----print log
         exit(EXIT_FAILURE);
     }
-    glDetachShader(m_gl_shader_program_id, m_vertex_shader.ID());
-    glDetachShader(m_gl_shader_program_id, m_fragment_shader.ID());
+    for (int i = 0; i < NUM_SHADER_TYPES; i++) {
+        if (has_shader[i]) {
+            glDetachShader(m_gl_shader_program_id, shaders[i].ID());
+        }
+    }
+    linked = true;
 }
+
+
+/*--------------------------------------------------------------------------------
+Simple functions to create a ShaderProgram from strings of letters denoting the types of shaders used.
+All these do is fill up the relevant shaders, then send the partially created ShaderProgram
+to a general shader linker.
+
+V: Vertex shader
+T: Tessellation evaluation shader
+Second T: Tessellation control shader (their order in parameters is control then evaluation!)
+G: Geometry shader
+F: Fragment shader
+--------------------------------------------------------------------------------*/
+// GLShaderProgram GLShaderProgram::VF(GLShader &vertex_shader, GLShader &fragment_shader, GLint program_id = 0)
+// {
+//     GLShaderProgram p;
+//     p.has_shaders[VertexShader] = true;
+//     p.has_shaders[FragmentShader] = true;
+//     p.shaders[VertexShader] = vertex_shader;
+//     p.shaders[FragmentShader] = fragment_shader;
+//     link_shader_program(p);
+//     return p;
+// }
+// GLShaderProgram GLShaderProgram::VTF(GLShader &vertex_shader,
+//                                      GLShader &tess_evaluation_shader,
+//                                      GLShader &fragment_shader, GLint program_id)
+// {
+//     GLShaderProgram p;
+//     p.has_shaders[VertexShader] = true;
+//     p.has_shaders[FragmentShader] = true;
+//     p.shaders[VertexShader] = vertex_shader;
+//     p.shaders[FragmentShader] = fragment_shader;
+// 
+//     p.has_shaders[TessEvaluationShader] = true;
+//     p.shaders[TessEvaluationShader] = tess_evaluation_shader;
+//     link_shader_program(p);
+//     return p;
+// }
+// GLShaderProgram GLShaderProgram::VTTF(GLShader &vertex_shader,
+//                                       GLShader &tess_control_shader,
+//                                       GLShader &tess_evaluation_shader,
+//                                       GLShader &fragment_shader, GLint program_id)
+// {
+//     GLShaderProgram p;
+//     p.has_shaders[VertexShader] = true;
+//     p.has_shaders[FragmentShader] = true;
+//     p.shaders[VertexShader] = vertex_shader;
+//     p.shaders[FragmentShader] = fragment_shader;
+// 
+//     p.has_shaders[TessEvaluationShader] = true;
+//     p.shaders[TessEvaluationShader] = tess_evaluation_shader;
+// 
+//     p.has_shaders[TessControlShader] = true;
+//     p.shaders[TessControlShader] = tess_control_shader;
+//     link_shader_program(p);
+//     return p;
+// }
+// GLShaderProgram GLShaderProgram::VGF(GLShader &vertex_shader,
+//                                      GLShader &geometry_shader,
+//                                      GLShader &fragment_shader, GLint program_id)
+// {
+//     GLShaderProgram p;
+//     p.has_shaders[VertexShader] = true;
+//     p.has_shaders[FragmentShader] = true;
+//     p.shaders[VertexShader] = vertex_shader;
+//     p.shaders[FragmentShader] = fragment_shader;
+// 
+//     p.has_shaders[GeometryShader] = true;
+//     p.shaders[GeometryShader] = geometry_shader;
+//     link_shader_program(p);
+//     return p;
+// }
+// 
+// GLShaderProgram GLShaderProgram::VTTGF(GLShader &vertex_shader,
+//                                        GLShader &tess_control_shader,
+//                                        GLShader &tess_evaluation_shader,
+//                                        GLShader &geometry_shader,
+//                                        GLShader &fragment_shader, GLint program_id)
+// {
+//     GLShaderProgram p;
+//     p.has_shaders[VertexShader] = true;
+//     p.has_shaders[FragmentShader] = true;
+//     p.shaders[VertexShader] = vertex_shader;
+//     p.shaders[FragmentShader] = fragment_shader;
+// 
+//     p.has_shaders[TessEvaluationShader] = true;
+//     p.shaders[TessEvaluationShader] = tess_evaluation_shader;
+// 
+//     p.has_shaders[TessControlShader] = true;
+//     p.shaders[TessControlShader] = tess_control_shader;
+// 
+//     p.has_shaders[GeometryShader] = true;
+//     p.shaders[GeometryShader] = geometry_shader;
+//     link_shader_program(p);
+//     return p;
+// }
+
+

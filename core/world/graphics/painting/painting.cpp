@@ -63,4 +63,8 @@ void Painting::sphere(vec3 position, float radius, vec4 color)
 
 void Painting::init()
 {
+    // auto sphere_program = world.resources.add<GLShaderProgram>();
+    // sphere_program->add_shader(GLShader(VertexShader, "resources/painting/spheres.vert"));
+    // sphere_program->add_shader(GLShader(FragmentShader, "resources/painting/spheres.frag"));
+    // sphere_program->link();
 }

@@ -3,6 +3,8 @@
 #include "core.h"
 class World;
 
+
+// ResourceCaches derive from this class and implement the compile() method.
 template <typename T>
 class ResourceCache {
 public:
@@ -10,11 +12,6 @@ public:
     Resource<T> load(const std::string &path);
 protected:
     // Compiling a resource creates the resource from the asset file.
-    // virtual Resource<T> compile(const std::string &path) {
-    //     // Not pure-virtual so template specialization can be used to implement a new resource cache.
-    //     fprintf(stderr, "ERROR: Unimplemented ResourceCache compile().\n");
-    //     exit(EXIT_FAILURE);
-    // }
     virtual Resource<T> compile(const std::string &path) = 0;
     std::unordered_map<std::string, Resource<T>> cache;
     World &world;

@@ -33,13 +33,18 @@ void Painting::render()
         if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);
 
-        mat4x4 vp_matrix = camera->view_projection_matrix();
-        glUniformMatrix4fv(spheres_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
+        // mat4x4 vp_matrix = camera->view_projection_matrix();
+        // glUniformMatrix4fv(spheres_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
 
-        // glPatchParameteri(GL_PATCH_VERTICES, 1);
-        // glDrawArrays(GL_PATCHES, 0, spheres.size());
-        glPointSize(10);
-        glDrawArrays(GL_POINTS, 0, spheres.size());
+        mat4x4 view_matrix = camera->view_matrix();
+        glUniformMatrix4fv(spheres_shader_program->uniform_location("view_matrix"), 1, GL_FALSE, (const GLfloat *) &view_matrix);
+        glUniformMatrix4fv(spheres_shader_program->uniform_location("projection_matrix"), 1, GL_FALSE, (const GLfloat *) &camera->projection_matrix);
+        glUniform1f(spheres_shader_program->uniform_location("aspect_ratio"), camera->aspect_ratio());
+
+        glPatchParameteri(GL_PATCH_VERTICES, 1);
+        glDrawArrays(GL_PATCHES, 0, spheres.size());
+        // glPointSize(10);
+        // glDrawArrays(GL_POINTS, 0, spheres.size());
 
         graphics.end_camera_rendering(camera);
     }
@@ -67,6 +72,8 @@ void Painting::init()
 {
     spheres_shader_program = world.resources.add<GLShaderProgram>();
     spheres_shader_program->add_shader(GLShader(VertexShader, "resources/painting/spheres.vert"));
+    spheres_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/spheres.tcs"));
+    spheres_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/spheres.tes"));
     spheres_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/spheres.frag"));
     spheres_shader_program->link();
 }

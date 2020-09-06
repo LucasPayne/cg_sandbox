@@ -34,15 +34,27 @@ bool Camera::in_viewport(float screen_x, float screen_y)
            screen_y >= bottom_left[1] && screen_y <= top_right[1];
 }
 
+float Camera::aspect_ratio() const
+{
+    // width over height
+    float global_aspect_ratio = 0.566; //----This is just the current aspect ratio of the window subrectangle.
+    float sub_aspect_ratio = (top_right[1] - bottom_left[1]) / (top_right[0] - bottom_left[0]);
+    return global_aspect_ratio * sub_aspect_ratio;
+}
+
 void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y)
 {
     *camera_x = (screen_x - bottom_left[0]) / (top_right[0] - bottom_left[0]);
     *camera_y = (screen_y - bottom_left[1]) / (top_right[1] - bottom_left[1]);
 }
 
+mat4x4 Camera::view_matrix()
+{
+    return entity.get<Transform>()->inverse_matrix();
+}
 mat4x4 Camera::view_projection_matrix()
 {
-    return projection_matrix * entity.get<Transform>()->inverse_matrix();
+    return projection_matrix * view_matrix();
 }
 
 

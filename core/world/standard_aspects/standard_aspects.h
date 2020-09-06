@@ -54,10 +54,12 @@ struct Camera : public IAspectType {
         // Transform screen coordinates to the coordinates of the camera's viewport (a rectangular affine transformation).
     void to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y);
 
+    float aspect_ratio() const;
 
-    // Create a ray that points toward 
+    // Create a ray with origin at the position at this camera that points toward the point on the near plane in camera-screen coordinates.
     Ray ray(float camera_x, float camera_y);
 
+    mat4x4 view_matrix();
     mat4x4 view_projection_matrix();
 
     // Initialize this to a projective camera, with the default full viewport.

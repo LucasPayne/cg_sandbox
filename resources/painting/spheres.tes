@@ -1,0 +1,28 @@
+#version 420
+layout (quads, equal_spacing, ccw) in;
+
+uniform float aspect_ratio;
+
+in controlled_vertex {
+    vec3 t_position;
+    float t_radius;
+    vec4 t_color;
+} vertices[];
+
+out tessellated {
+    vec2 uv;
+    vec4 f_color;
+};
+
+void main(void)
+{
+    vec3 position = vertices[0].t_position;
+    float radius = vertices[0].t_radius;
+
+    float x = 2*gl_TessCoord[0] - 1;
+    float y = 2*gl_TessCoord[1] - 1;
+    gl_Position = vec4(position + vec3(x * radius * aspect_ratio, y * radius, 0), 1);
+
+    uv = vec2(gl_TessCoord[0], gl_TessCoord[1]);
+    f_color = vertices[0].t_color;
+}

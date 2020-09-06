@@ -182,8 +182,8 @@ Resource<GLShader> Graphics::ShaderCache::compile(const std::string &path)
         {"vert", GL_VERTEX_SHADER},
         {"frag", GL_FRAGMENT_SHADER},
         {"geom", GL_GEOMETRY_SHADER},
-        {"te", GL_TESS_CONTROL_SHADER},
-        {"tc", GL_TESS_EVALUATION_SHADER},
+        {"tes", GL_TESS_CONTROL_SHADER},
+        {"tcs", GL_TESS_EVALUATION_SHADER},
     };
     GLenum shader_type = 0;
     for (unsigned int i = 0; i < sizeof(extensions)/sizeof(ShaderExtension); i++) {

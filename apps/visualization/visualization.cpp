@@ -115,7 +115,8 @@ void App::close()
 }
 void App::loop()
 {
-    for (int i = 0; i < 50; i++) world.graphics.paint.sphere(vec3(frand()*2-1,frand()*2-1,frand()*2-1), 0.5, vec4(0,1,1,1));
+    // for (int i = 0; i < 50; i++) world.graphics.paint.sphere(vec3(frand()*2-1,frand()*2-1,frand()*2-1), 0.5, vec4(0,1,1,1));
+    for (int i = 0; i < 10; i++) world.graphics.paint.sphere(vec3(i%3,(i+1)%5, 0), 0.1, vec4(i%2,1,(i+1)%2,1));
 }
 
 void App::window_handler(WindowEvent e)

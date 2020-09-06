@@ -113,7 +113,12 @@ void GLShaderProgram::link()
     glGetProgramiv(m_gl_shader_program_id, GL_LINK_STATUS, &success);
     if (success != GL_TRUE) {
         std::cerr << "ERROR [GLShaderProgram::link]: Failed to link shader program.\n";
-        //----print log
+        GLint log_length; 
+        glGetProgramiv(m_gl_shader_program_id, GL_INFO_LOG_LENGTH, &log_length);
+        char *log = (char *) malloc(log_length * sizeof(char));
+        glGetProgramInfoLog(m_gl_shader_program_id, log_length, NULL, log);
+        printf("%s", log);
+        free(log);
         exit(EXIT_FAILURE);
     }
     for (int i = 0; i < NUM_SHADER_TYPES; i++) {

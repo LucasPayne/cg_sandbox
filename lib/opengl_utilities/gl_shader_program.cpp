@@ -158,8 +158,9 @@ GLint GLShaderProgram::uniform_location(const std::string &name)
 {
     auto found = uniform_location_dictionary.find(name);
     if (found == uniform_location_dictionary.end()) {
-        std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
-        exit(EXIT_FAILURE);
+        return -1; //is this fine? Just in case shader uniforms are optimized out.
+        // std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
+        // exit(EXIT_FAILURE);
     }
     return found->second;
 }

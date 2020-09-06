@@ -1,0 +1,31 @@
+#version 420
+layout (vertices = 1) out;
+
+in vertex {
+    vec3 f_position;
+    float f_radius;
+    vec4 f_color;
+    float sphere_radius;
+} vertices[];
+
+out controlled_vertex {
+    vec3 t_position;
+    float t_radius;
+    vec4 t_color;
+    float sphere_radius;
+} controlled_vertices[];
+
+void main(void)
+{
+    gl_TessLevelOuter[0] = 1;
+    gl_TessLevelOuter[1] = 1;
+    gl_TessLevelOuter[2] = 1;
+    gl_TessLevelOuter[3] = 1;
+    gl_TessLevelInner[0] = 1;
+    gl_TessLevelInner[1] = 1;
+
+    controlled_vertices[gl_InvocationID].t_position = vertices[gl_InvocationID].f_position;
+    controlled_vertices[gl_InvocationID].t_radius = vertices[gl_InvocationID].f_radius;
+    controlled_vertices[gl_InvocationID].t_color = vertices[gl_InvocationID].f_color;
+    controlled_vertices[gl_InvocationID].sphere_radius = vertices[gl_InvocationID].sphere_radius;
+}

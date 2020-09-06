@@ -2,30 +2,37 @@
 
 in tessellated {
     vec2 uv;
-    vec4 f_color;
+
+    vec4 sphere_color;
+    float sphere_radius;
+
+    vec4 eye_position;
 };
+
 
 out vec4 color;
 
-
-
+uniform float aspect_ratio;
+uniform mat4x4 projection_matrix;
 
 void main(void)
 {
     float x = 2*uv.x - 1;
     float y = 2*uv.y - 1;
 
-    // Sphere origin: 0,0,0
-    // Sphere radius: 1
-    // Ray origin: x,y,-2
-    // Ray direction: 0,0,1
-    float discrim = 16 - 4*(x*x + y*y + 3);
-    if (discrim < 0) discard;
-    float t = 0.5 * (4 + sqrt(discrim));
-    vec3 pos = vec3(x,y,-2 + t);
-
-    vec3 light_dir = vec3(1,1,1);
-
-    vec3 n = normalize(pos);
-    color = f_color * max(0, dot(n, light_dir));
+    float xy_length = sqrt(x*x + y*y);
+    float depth;
+    if (xy_length > 1) {
+        // depth = 0.5*sphere_origin.z + 0.5;
+        discard;
+    } else {
+        float z = -sqrt(1 - xy_length);
+        vec4 sphere_point = eye_position;
+        sphere_point.z -= sphere_radius * z;
+        vec4 sphere_point_h = projection_matrix * sphere_point;
+        
+        depth = 0.5*sphere_point_h.z/sphere_point_h.w + 0.5;
+    }
+    color = vec4(vec3(depth), 1);
+    gl_FragDepth = depth;
 }

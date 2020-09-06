@@ -2,15 +2,21 @@
 layout (vertices = 1) out;
 
 in vertex {
-    vec3 f_position;
-    float f_radius;
-    vec4 f_color;
+    vec4 sphere_color;
+    float sphere_radius;
+
+    vec4 ndc_position;
+    float ndc_y_extent;
+    vec4 eye_position;
 } vertices[];
 
 out controlled_vertex {
-    vec3 t_position;
-    float t_radius;
-    vec4 t_color;
+    vec4 sphere_color;
+    float sphere_radius;
+
+    vec4 ndc_position;
+    float ndc_y_extent;
+    vec4 eye_position;
 } controlled_vertices[];
 
 void main(void)
@@ -22,7 +28,9 @@ void main(void)
     gl_TessLevelInner[0] = 1;
     gl_TessLevelInner[1] = 1;
 
-    controlled_vertices[gl_InvocationID].t_position = vertices[gl_InvocationID].f_position;
-    controlled_vertices[gl_InvocationID].t_radius = vertices[gl_InvocationID].f_radius;
-    controlled_vertices[gl_InvocationID].t_color = vertices[gl_InvocationID].f_color;
+    controlled_vertices[gl_InvocationID].sphere_color = vertices[gl_InvocationID].sphere_color;
+    controlled_vertices[gl_InvocationID].sphere_radius = vertices[gl_InvocationID].sphere_radius;
+    controlled_vertices[gl_InvocationID].ndc_position = vertices[gl_InvocationID].ndc_position;
+    controlled_vertices[gl_InvocationID].ndc_y_extent = vertices[gl_InvocationID].ndc_y_extent;
+    controlled_vertices[gl_InvocationID].eye_position = vertices[gl_InvocationID].eye_position;
 }

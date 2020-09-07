@@ -13,7 +13,7 @@ section geom_post {
 section frag_post {
     out vec4 rt_color(in vec4 diffuse, in vec3 f_normal) {
     GLSL
-        return max(0,dot(f_normal, normalize(vec3(1,1,1))))*diffuse;
+        return vec4(max(0,dot(f_normal, normalize(vec3(1,1,1))))*diffuse.xyz, 1);
     END
     }
 }

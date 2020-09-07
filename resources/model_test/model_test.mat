@@ -10,7 +10,7 @@ section frag {
         const float factor = 12;
         if ((abs(factor*f_position.x - int(factor*f_position.x)) > 0.5)
           != (abs(factor*f_position.y - int(factor*f_position.y)) > 0.5)) {
-            return ambient + color * 0.5;
+            return ambient + vec4(color.rgb * 0.5, 1);
         }
         return ambient + color;
     END

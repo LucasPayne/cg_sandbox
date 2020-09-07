@@ -115,8 +115,22 @@ void App::close()
 }
 void App::loop()
 {
-    // for (int i = 0; i < 50; i++) world.graphics.paint.sphere(vec3(frand()*2-1,frand()*2-1,frand()*2-1), 0.5, vec4(0,1,1,1));
-    for (int i = 0; i < 10; i++) world.graphics.paint.sphere(vec3(i%3,(i+1)%5, 0), 0.15*((i%4)+1), vec4(i%2,1,(i+1)%2,1));
+    // for (int i = 0; i < 50; i++) world.graphics.paint.sphere(vec3(frand()*2-1,frand()*2-1,frand()*2-1), 0.08, vec4(0,1,1,1));
+    // for (int i = 0; i < 10; i++) world.graphics.paint.sphere(vec3(i%3,(i+1)%5, 0), 0.15*((i%4)+1), vec4(i%2,1,(i+1)%2,1));
+    for (int i = 0; i < 40; i++) {
+        float y = -0.5 + 1.0/40.0 * i;
+        float x = 0.2*cos(0.6*total_time + 6*y);
+        float z = 0.2*sin(0.6*total_time + 6*y);
+        float r = 0.03;
+        world.graphics.paint.sphere(vec3(x,y,z), r, vec4(i%2,0.1 + (i%3)*0.2,(i+1)%2,1));
+    }
+    for (int i = 0; i < 40; i++) {
+        float y = -0.5 + 1.0/40.0 * i;
+        float x = 0.2*cos(-0.6*total_time - 6*y + M_PI/2);
+        float z = 0.2*sin(-0.6*total_time - 6*y + M_PI/2);
+        float r = 0.03;
+        world.graphics.paint.sphere(vec3(x,y,z), r, vec4(i%2,0.1 + (i%3)*0.2,(i+1)%2,1));
+    }
 }
 
 void App::window_handler(WindowEvent e)

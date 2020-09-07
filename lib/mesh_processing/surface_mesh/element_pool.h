@@ -100,7 +100,6 @@ ElementIndex ElementPool<T>::add()
         }
         pool[new_capacity-1] = 0;
     }
-    
     return index;
 }
 

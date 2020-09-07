@@ -14,7 +14,9 @@ public:
 
 private:
     SurfaceMesh mesh;
-    std::vector<vec3> positions;
+    ElementAttachment<vec3> vertex_positions;
+    ElementAttachment<vec3> vertex_normals;
+    ElementAttachment<vec3> face_normals;
 };
 
 

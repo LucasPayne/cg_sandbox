@@ -4,6 +4,7 @@
     Standard includes for all modules in the mesh_processing library.
 --------------------------------------------------------------------------------*/
 #include <vector>
+#include <memory>
 #include <limits>
 #include "model_loader/model_loader.h"
 #include "spatial_algebra/spatial_algebra.h"

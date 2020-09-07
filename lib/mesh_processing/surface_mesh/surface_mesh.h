@@ -3,6 +3,15 @@
 #include "core.h"
 #include "element_pool.h"
 
+enum ElementTypes {
+    ElementTypeVertex,
+    ElementTypeHalfEdge,
+    ElementTypeFace,
+    NUM_ELEMENT_TYPES
+};
+typedef uint8_t ElementType;
+
+
 class SurfaceMesh;
 struct ElementHandle {
     SurfaceMesh *mesh;
@@ -43,6 +52,14 @@ struct FaceData {
 
 
 
+template <typename T>
+using VertexAttachment = ElementAttachment<Vertex, T>;
+template <typename T>
+using HalfEdgeAttachment = ElementAttachment<HalfEdge, T>;
+template <typename T>
+using FaceAttachment = ElementAttachment<Face, T>;
+
+
 class SurfaceMesh {
 public:
     SurfaceMesh(size_t num_vertices);
@@ -52,7 +69,6 @@ private:
     ElementPool<FaceData> face_data;
 
     std::vector<std::shared_ptr<ElementAttachment>> attachments;
-    std::list<ElementAttachment
 
     friend class Vertex;
     friend class HalfEdge;

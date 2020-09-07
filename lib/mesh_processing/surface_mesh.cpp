@@ -1,19 +1,11 @@
-#include "mesh_processing.h"
-
+#include "surface_mesh.h"
 
 
 SurfaceMesh::SurfaceMesh(size_t num_vertices) :
     vertex_data(num_vertices)
 {
-    
+    log("Creating surface mesh with %zu vertices.");
 }
-
-
-SurfaceGeometry::SurfaceGeometry(MLModel &model) :
-    mesh(model.num_vertices)
-{
-}
-
 
 HalfEdge HalfEdge::next()
 {

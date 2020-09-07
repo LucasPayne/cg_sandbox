@@ -10,6 +10,7 @@
 
 #include "behaviours/Trackball.cpp"
 
+#include "mesh_processing/mesh_processing.h"
 
 
 class App : public IGC::Callbacks {
@@ -107,6 +108,11 @@ App::App(World &_world) : world{_world}
     //     camera->top_right[0] = 0.9;
     //     camera->top_right[1] = 0.7;
     // }
+
+    // mesh_processing testing.
+    MLModel model = MLModel::load("resources/models/dragon.off");
+    auto geometry = SurfaceGeometry(model);
+
 }
 
 

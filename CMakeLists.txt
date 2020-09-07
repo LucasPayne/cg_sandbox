@@ -51,6 +51,9 @@ add_library(cg_sandbox
     lib/opengl_utilities/gl_shader_program.cpp
     lib/opengl_utilities/glsl.cpp
 
+    #todo: Separate this library.
+    lib/mesh_processing/surface_mesh.cpp
+    lib/mesh_processing/surface_geometry.cpp
 
     core/world/world.cpp
     core/world/entities/entities.cpp
@@ -95,6 +98,11 @@ target_link_libraries(cg_sandbox spatial_algebra)
 add_subdirectory(lib/model_loader)
 target_link_libraries(cg_sandbox model_loader)
 # target_link_libraries(cg_sandbox STATIC libmodel_loader.a)
+
+
+# add_subdirectory(lib/mesh_processing)
+# target_link_libraries(cg_sandbox mesh_processing)
+
 
 # External dependencies
 #--------------------------------------------------------------------------------

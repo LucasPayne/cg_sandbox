@@ -21,14 +21,13 @@ ElementIndex ElementPool::add()
 {
     ElementIndex index = least_inactive_index;
     size_t n = capacity();
-    int i = index;
-    for (; i < n; i++) {
-        if (!is_active(i)) {
+    for (; index < n; index++) {
+        if (!is_active(index)) {
             break;
         }
     }
-    assert(i != n); // note: An invariant maintained by ElementPool is that there is always at least one available entry.
-    if (i == n - 1) {
+    assert(index != n); // note: An invariant maintained by ElementPool is that there is always at least one available entry.
+    if (index == n - 1) {
         // The pool is full, grow it.
         size_t new_capacity = 2*n;
         active_flags.resize(new_capacity, 0);
@@ -38,10 +37,13 @@ ElementIndex ElementPool::add()
             attachment->resize(new_capacity);
         }
     }
-    // Use the virtual create() method to create the default entry.
-    attachment->create(i);
-    active_flags[i] = true;
-    least_inactive_index = i+1;
+    for (auto attachment : attachments) {
+        // Use the virtual create() method to create the default entry.
+        attachment->create(index);
+    }
+    active_flags[index] = true;
+    least_inactive_index = index+1;
+    return index;
 }
 
 
@@ -51,7 +53,9 @@ void ElementPool::remove(ElementIndex element_index)
         least_inactive_index = element_index;
     }
     // Use the virtual destroy() method to tear down the entry.
-    attachment->destroy(element_index);
+    for (auto attachment : attachments) {
+        attachment->destroy(element_index);
+    }
 }
 
 
@@ -60,21 +64,20 @@ void ElementPool::remove(ElementIndex element_index)
 SurfaceMesh::SurfaceMesh() :
     vertex_incidence_data(*this),
     edge_incidence_data(*this),
-    face_incidence_data(*this),
-{
-}
-
-
-
-
-ElementHandle(SurfaceMesh &_mesh, ElementIndex _index) :
-    mesh{_mesh}, index{_index}
+    face_incidence_data(*this)
 {}
 
 
 
-ElementAttachmentBase::ElementAttachmentBase(size_t _type_size, uint8_t *_data) :
-    type_size{_type_size}, data{_data}
+
+ElementHandle::ElementHandle(SurfaceMesh &_mesh, ElementIndex _index) :
+    mesh{_mesh}, m_index{_index}
+{}
+
+
+
+ElementAttachmentBase::ElementAttachmentBase(size_t _type_size) :
+    type_size{_type_size}, raw_data{nullptr}
 {}
 
 
@@ -87,24 +90,24 @@ Halfedge Vertex::halfedge() const
 
 Halfedge Edge::a() const
 {
-    return Halfedge(mesh, 2*index);
+    return Halfedge(mesh, 2*m_index);
 }
 Halfedge Edge::b() const
 {
-    return Halfedge(mesh, 2*index + 1);
+    return Halfedge(mesh, 2*m_index + 1);
 }
 
 Halfedge Halfedge::next() const
 {
-    return Halfedge(mesh, mesh.edge_incidence_data[*this].halfedges[index % 2].next_index);
+    return Halfedge(mesh, mesh.edge_incidence_data[*this].halfedges[m_index % 2].next_index);
 }
 Vertex Halfedge::vertex() const
 {
-    return Vertex(mesh, mesh.edge_incidence_data[*this].halfedges[index % 2].vertex_index);
+    return Vertex(mesh, mesh.edge_incidence_data[*this].halfedges[m_index % 2].vertex_index);
 }
 Face Halfedge::face() const
 {
-    return Face(mesh, mesh.edge_incidence_data[*this].halfedges[index % 2].face_index);
+    return Face(mesh, mesh.edge_incidence_data[*this].halfedges[m_index % 2].face_index);
 }
 
 Halfedge Face::halfedge() const

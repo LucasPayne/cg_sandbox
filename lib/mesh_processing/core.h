@@ -4,7 +4,7 @@
     Standard includes for all modules in the mesh_processing library.
 --------------------------------------------------------------------------------*/
 #include <vector>
-#include <memory>
+#include <algorithm>
 #include <limits>
 #include <stdint.h>
 #include <assert.h>

@@ -1,13 +1,20 @@
 #ifndef SURFACE_MESH_H
 #define SURFACE_MESH_H
-#include "core.h"
+#include "mesh_processing/core.h"
 
 
 // typedefs
 typedef uint32_t ElementIndex;
 
 // forward declarations
+class SurfaceMesh;
+class ElementPool;
+template <typename T> class ElementAttachment;
 class ElementAttachmentBase;
+class Vertex;
+class Halfedge;
+class Edge;
+class Face;
 
 
 
@@ -32,14 +39,17 @@ private:
 
     // implementation details.
     ElementIndex least_inactive_index;
+
+    template <typename T>
+    friend class ElementAttachment;
 };
 
 
 class ElementAttachmentBase {
 protected:
-    ElementAttachmentBase(size_t _type_size, uint8_t *_data);
+    ElementAttachmentBase(size_t _type_size);
     size_t type_size;
-    uint8_t *data;
+    uint8_t *raw_data;
     
 private:
     // Virtual shadowing methods. These provide a generic interface to update the templated ElementAttachment's vector<T>
@@ -64,12 +74,15 @@ private:
     virtual void create(ElementIndex element_index) final;
     virtual void destroy(ElementIndex element_index) final;
 
-    std::vector<T> data;
     ElementPool &pool;
+    std::vector<T> data;
 };
 
 
 
+/*--------------------------------------------------------------------------------
+    Vertex, edge, and face attachments.
+--------------------------------------------------------------------------------*/
 template <typename T>
 class VertexAttachment : public ElementAttachment<T> {
 public:
@@ -77,6 +90,22 @@ public:
     T &operator[](const Vertex &vertex);
 };
 
+
+template <typename T>
+class EdgeAttachment : public ElementAttachment<T> {
+public:
+    EdgeAttachment(SurfaceMesh &mesh);
+    T &operator[](const Edge &edge);
+    T &operator[](const Halfedge &halfedge); // Both halfedges map to the same edge attachment entry.
+};
+
+
+template <typename T>
+class FaceAttachment : public ElementAttachment<T> {
+public:
+    FaceAttachment(SurfaceMesh &mesh);
+    T &operator[](const Face &face);
+};
 
 
 
@@ -102,18 +131,22 @@ struct EdgeIncidenceData {
 
 
 class ElementHandle {
+public:
+    inline ElementIndex index() const { return m_index; }
 protected:
     ElementHandle(SurfaceMesh &_mesh, ElementIndex _index);
     SurfaceMesh &mesh;
-    ElementIndex index;
+    ElementIndex m_index;
     friend class SurfaceMesh;
 };
 
 class Vertex : public ElementHandle {
 public:
     Halfedge halfedge() const;
+    Vertex(SurfaceMesh &_mesh, ElementIndex _index) :
+        ElementHandle(_mesh, _index)
+    {}
 private:
-    using ElementHandle::ElementHandle;
     friend class SurfaceMesh;
 };
 
@@ -121,8 +154,10 @@ class Edge : public ElementHandle {
 public:
     Halfedge a() const;
     Halfedge b() const;
+    Edge(SurfaceMesh &_mesh, ElementIndex _index) :
+        ElementHandle(_mesh, _index)
+    {}
 private:
-    using ElementHandle::ElementHandle;
     friend class SurfaceMesh;
 };
 
@@ -132,8 +167,10 @@ public:
     Halfedge next() const;
     Vertex vertex() const;
     Face face() const;
+    Halfedge(SurfaceMesh &_mesh, ElementIndex _index) :
+        ElementHandle(_mesh, _index)
+    {}
 private:
-    using ElementHandle::ElementHandle;
     friend class SurfaceMesh;
 };
 
@@ -141,8 +178,10 @@ private:
 class Face : public ElementHandle {
 public:
     Halfedge halfedge() const;
+    Face(SurfaceMesh &_mesh, ElementIndex _index) :
+        ElementHandle(_mesh, _index)
+    {}
 private:
-    using ElementHandle::ElementHandle;
     friend class SurfaceMesh;
 };
 
@@ -158,6 +197,20 @@ private:
     VertexAttachment<VertexIncidenceData> vertex_incidence_data;
     EdgeAttachment<EdgeIncidenceData> edge_incidence_data;
     FaceAttachment<FaceIncidenceData> face_incidence_data;
+
+    template <typename T>
+    friend class ElementAttachment;
+    template <typename T>
+    friend class VertexAttachment;
+    template <typename T>
+    friend class EdgeAttachment;
+    template <typename T>
+    friend class FaceAttachment;
+
+    friend class Vertex;
+    friend class Edge;
+    friend class Halfedge;
+    friend class Face;
 };
 
 

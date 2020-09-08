@@ -6,5 +6,6 @@ include_directories(../../lib)
 
 add_library(mesh_processing
     surface_mesh.cpp
+    surface_geometry.cpp
 )
 target_compile_options(mesh_processing PRIVATE -Wall -g)

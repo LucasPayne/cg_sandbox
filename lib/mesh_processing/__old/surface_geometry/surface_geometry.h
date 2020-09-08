@@ -8,7 +8,6 @@ public:
     SurfaceGeometry(MLModel &model);
 
     // Creation interface.
-    add_edge
 
     // Mutation interface.
 

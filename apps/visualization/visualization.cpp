@@ -88,7 +88,6 @@ App::App(World &_world) : world{_world}
     //     // mainly for geometry processing but still further in the pipeline can be converted to be rendered.
     //     // Vertex attribute data can still be contained, but more as a convenience.
     //     // Mesh mesh = assets.meshes.load_mesh("resources/models/large/nefertiti.obj");
-
     //     // Meshes will mainly be streamed to a renderable form every frame.
 
     //     Entity obj = create_mesh_object(world, "resources/models/large/nefertiti.obj", "resources/model_test/model_test.mat");

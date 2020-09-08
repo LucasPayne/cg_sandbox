@@ -3,5 +3,6 @@
 
 #include "core.h"
 #include "surface_mesh/surface_mesh.h"
+#include "surface_geometry/surface_geometry.h"
 
 #endif // MESH_PROCESSING_H

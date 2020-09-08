@@ -6,11 +6,10 @@
 #include <vector>
 #include <memory>
 #include <limits>
-#include <stdint.h>
-#include <assert.h>
 #include "model_loader/model_loader.h"
 #include "spatial_algebra/spatial_algebra.h"
 
+#include <assert.h>
 
 #include <stdarg.h>
 static void log(const char *format, ...)

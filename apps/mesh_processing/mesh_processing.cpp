@@ -1,14 +1,10 @@
 #include "cg_sandbox.h"
 #include "opengl_utilities/gl.h"
-
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
-
 #include "objects/mesh_object.cpp"
 #include "objects/object_viewer_cameraman.cpp"
-
 #include "behaviours/Trackball.cpp"
-
 #include "mesh_processing/mesh_processing.h"
 
 
@@ -36,7 +32,18 @@ App::App(World &_world) : world{_world}
 
     // mesh_processing testing.
     MLModel model = MLModel::load("resources/models/dragon.off");
-    // auto geometry = SurfaceGeometry(model);
+    auto mesh = SurfaceMesh();
+
+    auto positions = VertexAttachment<vec3>(mesh);
+
+    auto v1 = mesh.add_vertex();
+    auto v2 = mesh.add_vertex();
+    auto v3 = mesh.add_vertex();
+
+    auto normals = VertexAttachment<vec3>(mesh);
+
+
+    getchar();
 }
 
 

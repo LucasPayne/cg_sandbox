@@ -9,6 +9,7 @@ ElementPool::ElementPool(size_t capacity) :
     least_inactive_index{0}
 {
     assert(capacity > 0);
+    log("Creating new element pool of capacity %zu.", capacity);
 }
 
 size_t ElementPool::capacity() const
@@ -61,12 +62,6 @@ void ElementPool::remove(ElementIndex element_index)
 
 
 
-SurfaceMesh::SurfaceMesh() :
-    vertex_incidence_data(*this),
-    edge_incidence_data(*this),
-    face_incidence_data(*this)
-{}
-
 
 
 
@@ -113,4 +108,28 @@ Face Halfedge::face() const
 Halfedge Face::halfedge() const
 {
     return Halfedge(mesh, mesh.face_incidence_data[*this].halfedge_index);
+}
+
+
+
+/*--------------------------------------------------------------------------------
+    SurfaceMesh
+--------------------------------------------------------------------------------*/
+SurfaceMesh::SurfaceMesh() :
+    vertex_incidence_data(*this),
+    edge_incidence_data(*this),
+    face_incidence_data(*this)
+{
+    log("Creating surface mesh.");
+}
+
+
+Vertex SurfaceMesh::add_vertex()
+{
+    log("Adding vertex.");
+    return Vertex(*this, vertex_pool.add());
+}
+Face SurfaceMesh::add_triangle(Vertex u, Vertex v, Vertex w)
+{
+
 }

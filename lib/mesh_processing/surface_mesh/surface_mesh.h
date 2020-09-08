@@ -190,6 +190,12 @@ class SurfaceMesh {
 public:
     SurfaceMesh();
 
+    
+    // Creation methods.
+    // These do not necessarily maintain invariants.
+    Vertex add_vertex();
+    Face add_triangle(Vertex u, Vertex v, Vertex w);
+
 private:
     ElementPool vertex_pool;
     ElementPool edge_pool;
@@ -197,6 +203,7 @@ private:
     VertexAttachment<VertexIncidenceData> vertex_incidence_data;
     EdgeAttachment<EdgeIncidenceData> edge_incidence_data;
     FaceAttachment<FaceIncidenceData> face_incidence_data;
+
 
     template <typename T>
     friend class ElementAttachment;

@@ -12,6 +12,8 @@ public:
     Vertex add_vertex(float x, float y, float z);
     Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
 
+    SurfaceMesh::VertexContainer vertices() { return mesh.vertices(); }
+
     SurfaceGeometry() :
         mesh(),
         vertex_positions(mesh),
@@ -24,6 +26,10 @@ public:
     VertexAttachment<vec3> vertex_positions;
     VertexAttachment<vec3> vertex_normals;
     FaceAttachment<vec3> face_normals;
+
+
+    // Input/output.
+    void write_OFF(std::ostream &out);
 };
 
 

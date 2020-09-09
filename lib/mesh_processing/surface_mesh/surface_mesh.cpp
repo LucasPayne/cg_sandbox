@@ -27,7 +27,6 @@ void ElementPool::printout()
 }
 
 
-
 ElementIndex ElementPool::add()
 {
     ElementIndex index = least_inactive_index;
@@ -54,6 +53,8 @@ ElementIndex ElementPool::add()
     }
     active_flags[index] = true;
     least_inactive_index = index+1;
+
+    m_num_elements += 1; // update the cached element count.
     return index;
 }
 
@@ -67,6 +68,7 @@ void ElementPool::remove(ElementIndex element_index)
     for (auto attachment : attachments) {
         attachment->destroy(element_index);
     }
+    m_num_elements -= 1; // update the cached element count.
 }
 
 ElementPoolIterator ElementPool::begin()
@@ -231,7 +233,18 @@ void Face::set_halfedge(Halfedge halfedge)
 {
     mesh.face_incidence_data[*this].halfedge_index = halfedge.index();
 }
-
+int Face::num_vertices()
+{
+    if (null()) return 0;
+    int i = 0;
+    auto start = halfedge();
+    auto he = start;
+    do {
+        i++;
+        he = he.next();
+    } while (he != start);
+    return i;
+}
 
 
 /*--------------------------------------------------------------------------------
@@ -274,6 +287,19 @@ Halfedge SurfaceMesh::get_halfedge(Vertex u, Vertex v)
         if (he == start) break;
     }
     return he;
+}
+
+size_t SurfaceMesh::num_vertices() const
+{
+    return vertex_pool.num_elements();
+}
+size_t SurfaceMesh::num_edges() const
+{
+    return edge_pool.num_elements();
+}
+size_t SurfaceMesh::num_faces() const
+{
+    return face_pool.num_elements();
 }
 
 

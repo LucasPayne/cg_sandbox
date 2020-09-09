@@ -1,4 +1,5 @@
 #include "mesh_processing/surface_geometry/surface_geometry.h"
+#include <iomanip>
 
 
 Vertex SurfaceGeometry::add_vertex(vec3 position)
@@ -35,4 +36,32 @@ void SurfaceGeometry::printout()
     }
     printf("------------------------------------------------------------\n");
     getchar();
+}
+
+void SurfaceGeometry::write_OFF(std::ostream &out)
+{
+    // Vertex indices in the ElementPool sense are not necessarily contiguous.
+    // So, a temporary attachment is used to give contiguous indices to the vertices.
+    auto vertex_indices = VertexAttachment<uint32_t>(mesh);
+
+    out << "OFF\n";
+    out << mesh.num_vertices() << " " << mesh.num_faces() << " 0\n";
+    int index = 0;
+    for (auto vertex : mesh.vertices()) {
+        vertex_indices[vertex] = index;
+        vec3 position = vertex_positions[vertex];
+        out << std::fixed << std::setprecision(6) << position.x() << " " position.y() << " " << position.z() << "\n";
+        index ++;
+    }
+    for (auto face : mesh.faces()) {
+        out << face.num_vertices();
+        auto start = face.halfedge();
+        auto he = start;
+        do {
+            uint32_t vertex_index = vertex_indices[he.vertex()];
+            out << " " << vertex_index;
+            he = he.next();
+        } while (start != he);
+        out << "\n";
+    }
 }

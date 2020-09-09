@@ -31,31 +31,6 @@ App::App(World &_world) : world{_world}
     }
 
     // mesh_processing testing.
-    MLModel model = MLModel::load("resources/models/dragon.off");
-    /*
-    auto mesh = SurfaceMesh();
-
-    auto positions = VertexAttachment<vec3>(mesh);
-
-    auto v1 = mesh.add_vertex();
-    auto v2 = mesh.add_vertex();
-    auto v3 = mesh.add_vertex();
-
-    auto normals = VertexAttachment<vec3>(mesh);
-
-    auto triangle = mesh.add_triangle(v1, v2, v3);
-
-    int n = 5;
-    std::vector<Vertex> vertices;
-    for (int i = 0; i < n*n; i++) vertices.push_back(mesh.add_vertex());
-    for (int i = 0; i < n-1; i++) {
-        for (int j = 0; j < n-1; j++) {
-            mesh.add_triangle(vertices[5*i + j], vertices[5*(i+1) +j], vertices[5*i + j+1]);
-            mesh.add_triangle(vertices[5*(i+1) + j], vertices[5*i +j], vertices[5*(i+1) + j+1]);
-        }
-    }
-    getchar();
-    */
     auto geom = SurfaceGeometry();
 
     auto v1 = geom.add_vertex(0,0,0);
@@ -78,8 +53,24 @@ App::App(World &_world) : world{_world}
     }
 
     geom.printout();
-
     getchar();
+
+    for (auto vertex : geom.vertices()) {
+        // Since the outgoing halfedge is arbitrary, the face circled is arbitrary.
+        std::cout << "Circling " << geom.vertex_positions[vertex] << "\n";
+        auto start = vertex.halfedge();
+        auto he = start;
+        do {
+            std::cout << geom.vertex_positions[he.vertex()] << "\n";
+            he = he.next();
+        } while (he != start);
+        getchar();
+    }
+
+
+    for (auto face : geom.faces()) {
+        assert(face.num_vertices() == 3);
+    }
 }
 
 

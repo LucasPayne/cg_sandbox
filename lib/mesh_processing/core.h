@@ -8,6 +8,8 @@
 #include <limits>
 #include <stdint.h>
 #include <assert.h>
+#include <iostream>
+#include <fstream>
 #include "model_loader/model_loader.h"
 #include "spatial_algebra/spatial_algebra.h"
 

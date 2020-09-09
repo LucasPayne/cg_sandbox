@@ -49,6 +49,7 @@ public:
     inline bool is_active(ElementIndex element_index) const {
         return active_flags[element_index];
     }
+    inline size_t num_elements() const { return m_num_elements; }
 
     void printout();
 
@@ -63,6 +64,8 @@ private:
 
     // implementation details.
     ElementIndex least_inactive_index;
+
+    size_t m_num_elements; // This must be kept up-to-date.
 
     template <typename T>
     friend class ElementAttachment;
@@ -241,6 +244,8 @@ private:
 class Face : public ElementHandle {
 public:
     Halfedge halfedge() const;
+    int num_vertices();
+
     Face(SurfaceMesh &_mesh, ElementIndex _index) :
         ElementHandle(_mesh, _index)
     {}
@@ -281,9 +286,13 @@ public:
     Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
     Face add_face(std::vector<Vertex> &vertices);
 
-
     Halfedge add_halfedge(Vertex u, Vertex v);
     Halfedge get_halfedge(Vertex u, Vertex v);
+
+    // Counting elements.
+    size_t num_vertices() const;
+    size_t num_edges() const;
+    size_t num_faces() const;
 
     void printout();
 

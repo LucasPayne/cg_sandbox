@@ -94,7 +94,10 @@ ElementPoolIterator::ElementPoolIterator(ElementPool *_element_pool, ElementInde
     if (element_index != InvalidElementIndex) {
         ElementIndex i = element_index;
         for (; i < n; i++) {
-            if (element_pool->is_active(i)) element_index = i;
+            if (element_pool->is_active(i)) {
+                element_index = i;
+                break;
+            }
         }
         if (i == n) element_index = InvalidElementIndex;
     }

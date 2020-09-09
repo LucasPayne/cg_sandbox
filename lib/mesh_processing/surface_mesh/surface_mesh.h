@@ -22,6 +22,22 @@ class Face;
 /*--------------------------------------------------------------------------------
     ElementPool
 --------------------------------------------------------------------------------*/
+
+class ElementPoolIterator {
+public:
+    ElementPoolIterator(ElementPool *_element_pool = nullptr, ElementIndex _element_index = InvalidElementIndex);
+
+    ElementIndex operator*() const;
+    ElementPoolIterator &operator++();
+    bool operator==(const ElementPoolIterator &other) const;
+    bool operator!=(const ElementPoolIterator &other) const;
+private:
+    ElementPool *element_pool;
+    ElementIndex element_index;
+    size_t n;
+};
+
+
 class ElementPool {
 public:
     ElementPool(size_t capacity = 1);
@@ -35,6 +51,11 @@ public:
     }
 
     void printout();
+
+
+    ElementPoolIterator begin();
+    ElementPoolIterator end();
+
     
 private:
     std::vector<bool> active_flags;
@@ -232,6 +253,23 @@ private:
 };
 
 
+
+
+class VertexIterator {
+public:
+    VertexIterator(SurfaceMesh *_mesh, ElementIndex _element_index);
+    Vertex operator*();
+    VertexIterator &operator++();
+    bool operator==(const VertexIterator &other) const;
+    bool operator!=(const VertexIterator &other) const;
+
+private:
+    SurfaceMesh *mesh;
+    ElementPoolIterator element_pool_iterator;
+};
+
+
+
 class SurfaceMesh {
 public:
     SurfaceMesh();
@@ -248,6 +286,19 @@ public:
     Halfedge get_halfedge(Vertex u, Vertex v);
 
     void printout();
+
+    
+    class VertexContainer {
+    public:
+        VertexContainer(SurfaceMesh *_mesh) : mesh{_mesh} {}
+        VertexIterator begin() { return VertexIterator(mesh, 0); }
+        VertexIterator end() { return VertexIterator(mesh, InvalidElementIndex); }
+    private:
+        SurfaceMesh *mesh;
+    };
+    VertexContainer vertices() {
+        return VertexContainer(this);
+    }
 
 private:
     ElementPool vertex_pool;
@@ -271,6 +322,8 @@ private:
     friend class Edge;
     friend class Halfedge;
     friend class Face;
+
+    friend class VertexIterator;
 };
 
 

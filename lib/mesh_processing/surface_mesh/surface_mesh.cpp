@@ -69,11 +69,69 @@ void ElementPool::remove(ElementIndex element_index)
     }
 }
 
+ElementPoolIterator ElementPool::begin()
+{
+    return ElementPoolIterator(this, 0);
+}
+ElementPoolIterator ElementPool::end()
+{
+    return ElementPoolIterator(this, InvalidElementIndex);
+}
 
 
 
 
 
+/*--------------------------------------------------------------------------------
+    ElementPoolIterator
+--------------------------------------------------------------------------------*/
+ElementPoolIterator::ElementPoolIterator(ElementPool *_element_pool, ElementIndex _element_index) :
+    element_pool{_element_pool},
+    element_index{_element_index},
+    n{_element_pool->capacity()}
+{
+    // Set up the beginning index (the first active entry in the pool).
+    if (element_index != InvalidElementIndex) {
+        ElementIndex i = element_index;
+        for (; i < n; i++) {
+            if (element_pool->is_active(i)) element_index = i;
+        }
+        if (i == n) element_index = InvalidElementIndex;
+    }
+}
+ElementIndex ElementPoolIterator::operator*() const
+{
+    return element_index;
+}
+ElementPoolIterator &ElementPoolIterator::operator++()
+{
+    for (ElementIndex i = element_index+1; i < n; i++) {
+        if (element_pool->is_active(i)) {
+            element_index = i;
+            return *this;
+        }
+    }
+    element_index = InvalidElementIndex;
+    return *this;
+}
+
+// Equality/inequality assumes that the element pools are the same,
+// which is probably reasonable.
+bool ElementPoolIterator::operator==(const ElementPoolIterator &other) const
+{
+    return element_index == other.element_index;
+}
+bool ElementPoolIterator::operator!=(const ElementPoolIterator &other) const
+{
+    return !operator==(other);
+}
+
+
+
+
+/*--------------------------------------------------------------------------------
+    ElementHandle
+--------------------------------------------------------------------------------*/
 
 ElementHandle::ElementHandle(SurfaceMesh &_mesh, ElementIndex _index) :
     mesh{_mesh}, m_index{_index}
@@ -301,84 +359,6 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
 }
 
 
-/*
-Face SurfaceMesh::add_triangle(Vertex v1, Vertex v2, Vertex v3)
-{
-    log("Adding triangle.");
-    assert((v1 != v2) && (v2 != v3));
-    Vertex vertices[] = {v1, v2, v3};
-
-    
-    log("Error-checking and preparation (no changes to the mesh data).");
-    // Error-checking and preparation (no changes to the mesh data).
-    bool connected[3] = {false,false,false};
-    ElementIndex halfedge_indices[3] = {InvalidElementIndex, InvalidElementIndex, InvalidElementIndex};
-    for (int i = 0; i < 3; i++) {
-        Halfedge begin = vertices[i].halfedge();
-        if (begin.index() == InvalidElementIndex) continue;
-        Halfedge he = begin;
-        do {
-            log("%p %u", &he.mesh, he.index());
-            // log("%u", he.index());
-            if (he.tip() == vertices[(i+1)%3]) {
-                // If any non-boundary halfedges exist in the winding direction of the new face,
-                // this is an error.
-                assert(he.face().index() == InvalidElementIndex);
-                connected[i] = true;
-                halfedge_indices[i] = he.flip().index();
-                break;
-            }
-            he = he.flip().next();
-        } while (he.index() != InvalidElementIndex && he != begin);
-    }
-    //todo: Checking of manifoldness at vertices.
-
-
-    log("Addition of the triangle. Mesh data is now changed.");
-    // Addition of the triangle. Mesh data is now changed.
-    auto face = Face(*this, face_pool.add());
-
-    log("Create new edges for unconnected successive vertices.");
-    // Create new edges for unconnected successive vertices.
-    for (int i = 0; i < 3; i++) {
-        if (!connected[i]) {
-            auto edge = Edge(*this, edge_pool.add());
-            halfedge_indices[i] = edge.a().index();
-            auto &exterior_he_incidence = edge_incidence_data[edge.b()];
-            exterior_he_incidence.next_index = InvalidElementIndex;
-            exterior_he_incidence.vertex_index = vertices[(i+1)%3].index();
-            exterior_he_incidence.face_index = InvalidElementIndex;
-        }
-    }
-
-    log("Connect the halfedges to this face.");
-    // Connect the halfedges to this face.
-    for (int i = 0; i < 3; i++) {
-        auto &he_incidence = edge_incidence_data[Halfedge(*this, halfedge_indices[i])];
-        he_incidence.next_index = halfedge_indices[(i+1)%3];
-        he_incidence.vertex_index = vertices[i].index();
-        he_incidence.face_index = face.index();
-    }
-    
-    log("Connect up the other elements.");
-    // Connect up the other elements.
-    for (int i = 0; i < 3; i++) {
-        auto &vertex_incidence = vertex_incidence_data[vertices[i]];
-        if (vertex_incidence.halfedge_index == InvalidElementIndex) {
-            vertex_incidence.halfedge_index = halfedge_indices[i];
-        }
-    }
-    auto &face_incidence = face_incidence_data[face];
-    face_incidence.halfedge_index = halfedge_indices[0];
-
-    log("Done.");
-    return face;
-}
-    // ElementIndex next_index;
-    // ElementIndex vertex_index;
-    // ElementIndex face_index;
-*/
-
 void SurfaceMesh::printout()
 {
     printf("============================================================\n");
@@ -391,4 +371,32 @@ void SurfaceMesh::printout()
     printf("face_pool\n");
     face_pool.printout();
     printf("============================================================\n");
+}
+
+
+
+/*--------------------------------------------------------------------------------
+    Element iterators.
+These iterators are simple wrappers to ElementPoolIterator that augment the iterated type.
+--------------------------------------------------------------------------------*/
+VertexIterator::VertexIterator(SurfaceMesh *_mesh, ElementIndex _element_index) :
+    mesh{_mesh},
+    element_pool_iterator(&_mesh->vertex_pool, _element_index)
+{}
+Vertex VertexIterator::operator*()
+{
+    return Vertex(*mesh, *element_pool_iterator);
+}
+VertexIterator &VertexIterator::operator++()
+{
+    ++element_pool_iterator;
+    return *this;
+}
+bool VertexIterator::operator==(const VertexIterator &other) const
+{
+    return element_pool_iterator == other.element_pool_iterator;
+}
+bool VertexIterator::operator!=(const VertexIterator &other) const
+{
+    return !operator==(other);
 }

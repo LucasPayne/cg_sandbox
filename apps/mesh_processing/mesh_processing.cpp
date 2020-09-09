@@ -32,6 +32,7 @@ App::App(World &_world) : world{_world}
 
     // mesh_processing testing.
     MLModel model = MLModel::load("resources/models/dragon.off");
+    /*
     auto mesh = SurfaceMesh();
 
     auto positions = VertexAttachment<vec3>(mesh);
@@ -53,7 +54,30 @@ App::App(World &_world) : world{_world}
             mesh.add_triangle(vertices[5*(i+1) + j], vertices[5*i +j], vertices[5*(i+1) + j+1]);
         }
     }
+    getchar();
+    */
+    auto geom = SurfaceGeometry();
 
+    auto v1 = geom.add_vertex(0,0,0);
+    auto v2 = geom.add_vertex(1,0,0);
+    auto v3 = geom.add_vertex(0,1,0);
+    auto triangle = geom.add_triangle(v1, v2, v3);
+
+    int n = 5;
+    std::vector<Vertex> vertices;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            vertices.push_back(geom.add_vertex(1+0.1*i, 1+0.1*j, 0));
+        }
+    }
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n-1; j++) {
+            geom.add_triangle(vertices[5*i + j], vertices[5*(i+1) +j], vertices[5*i + j+1]);
+            geom.add_triangle(vertices[5*(i+1) + j], vertices[5*i +j], vertices[5*(i+1) + j+1]);
+        }
+    }
+
+    geom.printout();
 
     getchar();
 }

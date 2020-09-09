@@ -53,6 +53,7 @@ add_library(cg_sandbox
 
     #todo: Separate this library.
     lib/mesh_processing/surface_mesh/surface_mesh.cpp
+    lib/mesh_processing/surface_geometry/surface_geometry.cpp
 
     core/world/world.cpp
     core/world/entities/entities.cpp

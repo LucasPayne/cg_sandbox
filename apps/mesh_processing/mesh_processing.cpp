@@ -42,6 +42,18 @@ App::App(World &_world) : world{_world}
 
     auto normals = VertexAttachment<vec3>(mesh);
 
+    auto triangle = mesh.add_triangle(v1, v2, v3);
+
+    int n = 5;
+    std::vector<Vertex> vertices;
+    for (int i = 0; i < n*n; i++) vertices.push_back(mesh.add_vertex());
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n-1; j++) {
+            mesh.add_triangle(vertices[5*i + j], vertices[5*(i+1) +j], vertices[5*i + j+1]);
+            mesh.add_triangle(vertices[5*(i+1) + j], vertices[5*i +j], vertices[5*(i+1) + j+1]);
+        }
+    }
+
 
     getchar();
 }

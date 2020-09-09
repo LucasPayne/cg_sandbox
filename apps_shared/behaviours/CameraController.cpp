@@ -101,7 +101,6 @@ struct CameraController : public IBehaviour {
         t->rotation = q2 * q1;
     }
     void init() {
-        printf("CAMERACONTROLLER INIT\n");
         strafe_speed = 1;
         forward_speed = 1;
         lift_speed = 1;

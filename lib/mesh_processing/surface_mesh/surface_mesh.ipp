@@ -34,7 +34,10 @@ ElementAttachment<T>::~ElementAttachment()
 template <typename T>
 T &ElementAttachment<T>::get(ElementIndex element_index)
 {
-    assert(pool.is_active(element_index));
+    if (!pool.is_active(element_index)) {
+        log_error("Attempted to get inactive element at index %u.", element_index);
+        assert(pool.is_active(element_index));
+    }
     return data[element_index];
 }
 
@@ -89,13 +92,13 @@ T &VertexAttachment<T>::operator[](const Vertex &vertex)
 --------------------------------------------------------------------------------*/
 template <typename T>
 EdgeAttachment<T>::EdgeAttachment(SurfaceMesh &mesh) :
-    ElementAttachment<T>(mesh.edge_pool)
+    ElementAttachment<HalfedgeDataPair<T>>(mesh.edge_pool)
 {
     log("Adding new edge attachment to mesh.");
 }
 
 template <typename T>
-T &EdgeAttachment<T>::operator[](const Edge &edge)
+HalfedgeDataPair<T> &EdgeAttachment<T>::operator[](const Edge &edge)
 {
     return this->get(edge.index());
 }
@@ -103,7 +106,8 @@ T &EdgeAttachment<T>::operator[](const Edge &edge)
 template <typename T>
 T &EdgeAttachment<T>::operator[](const Halfedge &halfedge)
 {
-    return this->get(halfedge.index() / 2);
+    auto he_index = halfedge.index() / 2;
+    return this->get(he_index).halfedges[halfedge.index() % 2];
 }
 
 

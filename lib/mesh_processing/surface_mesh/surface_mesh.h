@@ -5,6 +5,7 @@
 
 // typedefs
 typedef uint32_t ElementIndex;
+constexpr ElementIndex InvalidElementIndex = std::numeric_limits<ElementIndex>::max();
 
 // forward declarations
 class SurfaceMesh;
@@ -32,6 +33,8 @@ public:
     inline bool is_active(ElementIndex element_index) const {
         return active_flags[element_index];
     }
+
+    void printout();
     
 private:
     std::vector<bool> active_flags;
@@ -45,6 +48,9 @@ private:
 };
 
 
+/*--------------------------------------------------------------------------------
+    ElementAttachmentBase and ElementAttachment<T>
+--------------------------------------------------------------------------------*/
 class ElementAttachmentBase {
 protected:
     ElementAttachmentBase(size_t _type_size);
@@ -91,12 +97,19 @@ public:
 };
 
 
+
 template <typename T>
-class EdgeAttachment : public ElementAttachment<T> {
+struct HalfedgeDataPair {
+    T halfedges[2];
+};
+template <typename T>
+class EdgeAttachment : public ElementAttachment<HalfedgeDataPair<T>> {
 public:
     EdgeAttachment(SurfaceMesh &mesh);
-    T &operator[](const Edge &edge);
-    T &operator[](const Halfedge &halfedge); // Both halfedges map to the same edge attachment entry.
+    // Edge handles access pairs of the T data, one for each associated halfedge.
+    HalfedgeDataPair<T> &operator[](const Edge &edge);
+    // Halfedge handles access the template parameter type T.
+    T &operator[](const Halfedge &halfedge);
 };
 
 
@@ -124,15 +137,20 @@ struct HalfedgeIncidenceData {
     ElementIndex vertex_index;
     ElementIndex face_index;
 };
-struct EdgeIncidenceData {
-    HalfedgeIncidenceData halfedges[2];
-};
 
 
 
 class ElementHandle {
 public:
     inline ElementIndex index() const { return m_index; }
+
+    // For efficiency reasons, the equality operator does not check if these elements are of the same mesh.
+    inline bool operator==(const ElementHandle &other) const { return m_index == other.m_index; }
+    inline bool operator!=(const ElementHandle &other) const { return !(*this == other); }
+
+    ElementHandle &operator=(const ElementHandle &other);
+
+    inline bool null() const { return m_index == InvalidElementIndex; }
 protected:
     ElementHandle(SurfaceMesh &_mesh, ElementIndex _index);
     SurfaceMesh &mesh;
@@ -140,13 +158,24 @@ protected:
     friend class SurfaceMesh;
 };
 
+
+extern SurfaceMesh g_dummy_surface_mesh;
 class Vertex : public ElementHandle {
 public:
     Halfedge halfedge() const;
     Vertex(SurfaceMesh &_mesh, ElementIndex _index) :
         ElementHandle(_mesh, _index)
     {}
+    Vertex() :
+        ElementHandle(g_dummy_surface_mesh, InvalidElementIndex)
+    {}
+
+    // Returns true if this vertex has no cycle among its neighbours.
+    // bool is_boundary();
+
 private:
+    void set_halfedge(Halfedge halfedge);
+
     friend class SurfaceMesh;
 };
 
@@ -154,8 +183,12 @@ class Edge : public ElementHandle {
 public:
     Halfedge a() const;
     Halfedge b() const;
+    Halfedge halfedge(int index) const;
     Edge(SurfaceMesh &_mesh, ElementIndex _index) :
         ElementHandle(_mesh, _index)
+    {}
+    Edge() :
+        ElementHandle(g_dummy_surface_mesh, InvalidElementIndex)
     {}
 private:
     friend class SurfaceMesh;
@@ -165,12 +198,21 @@ private:
 class Halfedge : public ElementHandle {
 public:
     Halfedge next() const;
+    Halfedge flip() const;
     Vertex vertex() const;
+    Vertex tip() const;
     Face face() const;
+    bool is_boundary();
     Halfedge(SurfaceMesh &_mesh, ElementIndex _index) :
         ElementHandle(_mesh, _index)
     {}
+    Halfedge() :
+        ElementHandle(g_dummy_surface_mesh, InvalidElementIndex)
+    {}
 private:
+    void set_vertex(Vertex vertex);
+    void set_face(Face face);
+    void set_next(Halfedge halfedge);
     friend class SurfaceMesh;
 };
 
@@ -181,7 +223,11 @@ public:
     Face(SurfaceMesh &_mesh, ElementIndex _index) :
         ElementHandle(_mesh, _index)
     {}
+    Face() :
+        ElementHandle(g_dummy_surface_mesh, InvalidElementIndex)
+    {}
 private:
+    void set_halfedge(Halfedge halfedge);
     friend class SurfaceMesh;
 };
 
@@ -194,14 +240,21 @@ public:
     // Creation methods.
     // These do not necessarily maintain invariants.
     Vertex add_vertex();
-    Face add_triangle(Vertex u, Vertex v, Vertex w);
+    Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
+    Face add_face(std::vector<Vertex> &vertices);
+
+
+    Halfedge add_halfedge(Vertex u, Vertex v);
+    Halfedge get_halfedge(Vertex u, Vertex v);
+
+    void printout();
 
 private:
     ElementPool vertex_pool;
     ElementPool edge_pool;
     ElementPool face_pool;
     VertexAttachment<VertexIncidenceData> vertex_incidence_data;
-    EdgeAttachment<EdgeIncidenceData> edge_incidence_data;
+    EdgeAttachment<HalfedgeIncidenceData> edge_incidence_data;
     FaceAttachment<FaceIncidenceData> face_incidence_data;
 
 

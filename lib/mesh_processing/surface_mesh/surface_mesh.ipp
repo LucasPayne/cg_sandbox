@@ -71,7 +71,7 @@ void ElementAttachment<T>::destroy(ElementIndex element_index)
     Vertex, Edge, and Face element attachment template methods.
 --------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------------
-    VertexAttachment.
+    VertexAttachment
 --------------------------------------------------------------------------------*/
 template <typename T>
 VertexAttachment<T>::VertexAttachment(SurfaceMesh &mesh) :
@@ -88,7 +88,7 @@ T &VertexAttachment<T>::operator[](const Vertex &vertex)
 
 
 /*--------------------------------------------------------------------------------
-    EdgeAttachment.
+    EdgeAttachment
 --------------------------------------------------------------------------------*/
 template <typename T>
 EdgeAttachment<T>::EdgeAttachment(SurfaceMesh &mesh) :
@@ -112,7 +112,7 @@ T &EdgeAttachment<T>::operator[](const Halfedge &halfedge)
 
 
 /*--------------------------------------------------------------------------------
-    FaceAttachment.
+    FaceAttachment
 --------------------------------------------------------------------------------*/
 template <typename T>
 FaceAttachment<T>::FaceAttachment(SurfaceMesh &mesh) :
@@ -126,3 +126,40 @@ T &FaceAttachment<T>::operator[](const Face &face)
 {
     return this->get(face.index());
 }
+
+
+/*--------------------------------------------------------------------------------
+    Element iterators.
+These iterators are simple wrappers to ElementPoolIterator that augment the iterated type.
+--------------------------------------------------------------------------------*/
+template <typename T>
+ElementIterator<T>::ElementIterator(SurfaceMesh *_mesh, ElementPool *_element_pool, ElementIndex _element_index) :
+    mesh{_mesh},
+    element_pool_iterator(_element_pool, _element_index)
+{}
+
+template <typename T>
+T ElementIterator<T>::operator*()
+{
+    return T(*mesh, *element_pool_iterator);
+}
+
+template <typename T>
+ElementIterator<T> &ElementIterator<T>::operator++()
+{
+    ++element_pool_iterator;
+    return *this;
+}
+
+template <typename T>
+bool ElementIterator<T>::operator==(const ElementIterator &other) const
+{
+    return element_pool_iterator == other.element_pool_iterator;
+}
+
+template <typename T>
+bool ElementIterator<T>::operator!=(const ElementIterator &other) const
+{
+    return !operator==(other);
+}
+

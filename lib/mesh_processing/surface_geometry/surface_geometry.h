@@ -12,14 +12,16 @@ public:
     Vertex add_vertex(float x, float y, float z);
     Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
 
-    SurfaceMesh::VertexContainer vertices() { return mesh.vertices(); }
-
     SurfaceGeometry() :
         mesh(),
         vertex_positions(mesh),
         vertex_normals(mesh),
         face_normals(mesh)
     {}
+
+    SurfaceMesh::ElementContainer<Vertex> vertices() { return mesh.vertices(); }
+    SurfaceMesh::ElementContainer<Edge> edges() { return mesh.edges(); }
+    SurfaceMesh::ElementContainer<Face> faces() { return mesh.faces(); }
 
     void printout();
 

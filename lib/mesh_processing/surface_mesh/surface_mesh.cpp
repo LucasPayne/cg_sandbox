@@ -7,7 +7,8 @@ SurfaceMesh g_dummy_surface_mesh;
 --------------------------------------------------------------------------------*/
 ElementPool::ElementPool(size_t capacity) :
     active_flags(capacity),
-    least_inactive_index{0}
+    least_inactive_index{0},
+    m_num_elements{0}
 {
     assert(capacity > 0);
     log("Creating new element pool of capacity %zu.", capacity);
@@ -404,28 +405,3 @@ void SurfaceMesh::printout()
 
 
 
-/*--------------------------------------------------------------------------------
-    Element iterators.
-These iterators are simple wrappers to ElementPoolIterator that augment the iterated type.
---------------------------------------------------------------------------------*/
-VertexIterator::VertexIterator(SurfaceMesh *_mesh, ElementIndex _element_index) :
-    mesh{_mesh},
-    element_pool_iterator(&_mesh->vertex_pool, _element_index)
-{}
-Vertex VertexIterator::operator*()
-{
-    return Vertex(*mesh, *element_pool_iterator);
-}
-VertexIterator &VertexIterator::operator++()
-{
-    ++element_pool_iterator;
-    return *this;
-}
-bool VertexIterator::operator==(const VertexIterator &other) const
-{
-    return element_pool_iterator == other.element_pool_iterator;
-}
-bool VertexIterator::operator!=(const VertexIterator &other) const
-{
-    return !operator==(other);
-}

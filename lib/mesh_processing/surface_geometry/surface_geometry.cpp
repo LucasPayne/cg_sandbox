@@ -48,9 +48,9 @@ void SurfaceGeometry::write_OFF(std::ostream &out)
     out << mesh.num_vertices() << " " << mesh.num_faces() << " 0\n";
     int index = 0;
     for (auto vertex : mesh.vertices()) {
-        vertex_indices[vertex] = index;
+        vertex_indices[vertex] = index; // Give the vertices contiguous indices.
         vec3 position = vertex_positions[vertex];
-        out << std::fixed << std::setprecision(6) << position.x() << " " position.y() << " " << position.z() << "\n";
+        out << std::fixed << std::setprecision(6) << position.x() << " " << position.y() << " " << position.z() << "\n";
         index ++;
     }
     for (auto face : mesh.faces()) {

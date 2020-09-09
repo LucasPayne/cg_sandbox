@@ -260,13 +260,14 @@ private:
 
 
 
-class VertexIterator {
+template <typename T>
+class ElementIterator {
 public:
-    VertexIterator(SurfaceMesh *_mesh, ElementIndex _element_index);
-    Vertex operator*();
-    VertexIterator &operator++();
-    bool operator==(const VertexIterator &other) const;
-    bool operator!=(const VertexIterator &other) const;
+    ElementIterator(SurfaceMesh *_mesh, ElementPool *_element_pool, ElementIndex _element_index);
+    T operator*();
+    ElementIterator<T> &operator++();
+    bool operator==(const ElementIterator &other) const;
+    bool operator!=(const ElementIterator &other) const;
 
 private:
     SurfaceMesh *mesh;
@@ -297,17 +298,29 @@ public:
     void printout();
 
     
-    class VertexContainer {
+    template <typename T>
+    class ElementContainer {
     public:
-        VertexContainer(SurfaceMesh *_mesh) : mesh{_mesh} {}
-        VertexIterator begin() { return VertexIterator(mesh, 0); }
-        VertexIterator end() { return VertexIterator(mesh, InvalidElementIndex); }
+        ElementContainer(SurfaceMesh *_mesh, ElementPool *_element_pool) :
+            mesh{_mesh},
+            element_pool{_element_pool}
+        {}
+        ElementIterator<T> begin() { return ElementIterator<T>(mesh, element_pool, 0); }
+        ElementIterator<T> end() { return ElementIterator<T>(mesh, element_pool, InvalidElementIndex); }
     private:
         SurfaceMesh *mesh;
+        ElementPool *element_pool;
     };
-    VertexContainer vertices() {
-        return VertexContainer(this);
+    ElementContainer<Vertex> vertices() {
+        return ElementContainer<Vertex>(this, &vertex_pool);
     }
+    ElementContainer<Edge> edges() {
+        return ElementContainer<Edge>(this, &edge_pool);
+    }
+    ElementContainer<Face> faces() {
+        return ElementContainer<Face>(this, &face_pool);
+    }
+
 
 private:
     ElementPool vertex_pool;
@@ -332,7 +345,9 @@ private:
     friend class Halfedge;
     friend class Face;
 
-    friend class VertexIterator;
+    friend class ElementIterator<Vertex>;
+    friend class ElementIterator<Edge>;
+    friend class ElementIterator<Face>;
 };
 
 

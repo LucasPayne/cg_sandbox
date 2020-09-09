@@ -27,7 +27,6 @@ App::App(World &_world) : world{_world}
 
         Entity cameraman = create_object_viewer_cameraman(world, obj);
         cameraman.get<Transform>()->position = vec3(0,0,2);
-        auto camera = cameraman.get<Camera>();
     }
 
     // mesh_processing testing.
@@ -48,29 +47,32 @@ App::App(World &_world) : world{_world}
     for (int i = 0; i < n-1; i++) {
         for (int j = 0; j < n-1; j++) {
             geom.add_triangle(vertices[5*i + j], vertices[5*(i+1) +j], vertices[5*i + j+1]);
-            geom.add_triangle(vertices[5*(i+1) + j], vertices[5*i +j], vertices[5*(i+1) + j+1]);
+            geom.add_triangle(vertices[5*i + j+1], vertices[5*(i+1) + j], vertices[5*(i+1) + j+1]);
         }
     }
 
-    geom.printout();
-    getchar();
+    // geom.printout();
 
-    for (auto vertex : geom.vertices()) {
-        // Since the outgoing halfedge is arbitrary, the face circled is arbitrary.
-        std::cout << "Circling " << geom.vertex_positions[vertex] << "\n";
-        auto start = vertex.halfedge();
-        auto he = start;
-        do {
-            std::cout << geom.vertex_positions[he.vertex()] << "\n";
-            he = he.next();
-        } while (he != start);
-        getchar();
+    // for (auto vertex : geom.vertices()) {
+    //     // Since the outgoing halfedge is arbitrary, the face circled is arbitrary.
+    //     std::cout << "Circling " << geom.vertex_positions[vertex] << "\n";
+    //     auto start = vertex.halfedge();
+    //     auto he = start;
+    //     do {
+    //         std::cout << geom.vertex_positions[he.vertex()] << "\n";
+    //         he = he.next();
+    //     } while (he != start);
+    // }
+
+
+    std::ofstream file("tmp/test.off");
+    geom.write_OFF(file);
+    file.close();
+    {
+        Entity obj = create_mesh_object(world, "tmp/test.off", "resources/model_test/model_test.mat");
+        obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
-
-
-    for (auto face : geom.faces()) {
-        assert(face.num_vertices() == 3);
-    }
+    
 }
 
 

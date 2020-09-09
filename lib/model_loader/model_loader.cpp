@@ -30,10 +30,9 @@ static void log(const char *format, ...)
 
 MLModel MLModel::load(const std::string &path, MLLoadFlags flags)
 {
-    // Select a format based on the file suffix.
     log("Loading model from path \"%s\"...\n", path.c_str());
     const char *c_path = path.c_str();
-    int file_format;
+    ModelFileFormat file_format;
     #define FORMAT(FORMAT_NAME,DOT_SUFFIX)\
         if (strncmp(strchr(c_path, '\0')-strlen(DOT_SUFFIX), DOT_SUFFIX, strlen(DOT_SUFFIX)) == 0) {\
             file_format = MODEL_FILE_FORMAT_ ## FORMAT_NAME;\
@@ -45,22 +44,27 @@ MLModel MLModel::load(const std::string &path, MLLoadFlags flags)
     FORMAT(OBJ, ".OBJ");
     MLModel_error("Could not interpret model file format for file \"%s\".\n", path.c_str());
 continue_here_when_format_selected:
-    MLModel model;
-    ModelFileFormatLoader loader = model_file_format_loaders[file_format];
-
-    log("Interpreted suffix, loading file...\n");
-    std::ifstream file;
-    file.open(path);
+    auto file = std::ifstream(path);
     if (!file.is_open()) {
         MLModel_error("Failed to open file \"%s\".\n", path.c_str());
     }
-    bool success = loader(file, model);
-    if (!success) {
-        MLModel_error("Error loading model \"%s\".\n", path.c_str());
-    }
-    log("Successfully loaded model.\n");
+    MLModel model = MLModel::load(file_format, file, flags);
     model.name = path;
     file.close();
+    return model;
+}
+
+MLModel MLModel::load(ModelFileFormat file_format, std::istream &in, MLLoadFlags flags)
+{
+    // Select a format based on the file suffix.
+    MLModel model;
+    ModelFileFormatLoader loader = model_file_format_loaders[file_format];
+
+    bool success = loader(in, model);
+    if (!success) {
+        MLModel_error("Error loading model.\n");
+    }
+    log("Successfully loaded model.\n");
     
     // Model post-processing.
     if (ML_LOAD_FLAG(flags, ML_COMPUTE_PHONG_NORMALS)) {

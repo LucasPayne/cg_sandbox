@@ -34,6 +34,13 @@ typedef uint32_t MLLoadFlags;
 #define ML_COMPUTE_PHONG_NORMALS (1 << 0)
 #define ML_INVERT_WINDING_ORDER (1 << 1)
 
+enum ModelFileFormats {
+    MODEL_FILE_FORMAT_OFF,
+    MODEL_FILE_FORMAT_OBJ,
+    NUM_MODEL_FILE_FORMATS
+};
+typedef uint8_t ModelFileFormat;
+
 struct MLModel {
     std::string name; // The name is usually the path the model was loaded from.
 
@@ -62,14 +69,11 @@ struct MLModel {
     void compute_phong_normals_angle_weighted();
     void invert_winding_order();
 
+    static MLModel load(ModelFileFormat file_format, std::istream &in, MLLoadFlags flags = 0);
     static MLModel load(const std::string &path, MLLoadFlags flags = 0);
 };
 
 typedef bool (*ModelFileFormatLoader)(std::istream &, MLModel &);
-enum ModelFileFormats {
-    MODEL_FILE_FORMAT_OFF,
-    MODEL_FILE_FORMAT_OBJ,
-};
 bool load_Obj_model(std::istream &stream, MLModel &model);
 bool load_OFF_model(std::istream &stream, MLModel &model);
 

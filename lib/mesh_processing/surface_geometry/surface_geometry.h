@@ -30,8 +30,13 @@ public:
     FaceAttachment<vec3> face_normals;
 
 
+    // model_loader library related methods.
+    void add_model(MLModel &model);
+
     // Input/output.
     void write_OFF(std::ostream &out);
+    void read_OFF(std::istream &in);
+
 };
 
 

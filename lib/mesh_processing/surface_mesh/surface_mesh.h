@@ -53,10 +53,8 @@ public:
 
     void printout();
 
-
     ElementPoolIterator begin();
     ElementPoolIterator end();
-
     
 private:
     std::vector<bool> active_flags;
@@ -130,7 +128,7 @@ template <typename T>
 class EdgeAttachment : public ElementAttachment<HalfedgeDataPair<T>> {
 public:
     EdgeAttachment(SurfaceMesh &mesh);
-    // Edge handles access pairs of the T data, one for each associated halfedge.
+    // Edge handles access to pairs of the T data, one for each associated halfedge.
     HalfedgeDataPair<T> &operator[](const Edge &edge);
     // Halfedge handles access the template parameter type T.
     T &operator[](const Halfedge &halfedge);

@@ -46,8 +46,8 @@ App::App(World &_world) : world{_world}
     }
     for (int i = 0; i < n-1; i++) {
         for (int j = 0; j < n-1; j++) {
-            geom.add_triangle(vertices[5*i + j], vertices[5*(i+1) +j], vertices[5*i + j+1]);
-            geom.add_triangle(vertices[5*i + j+1], vertices[5*(i+1) + j], vertices[5*(i+1) + j+1]);
+            geom.add_triangle(vertices[n*i + j], vertices[n*(i+1) +j], vertices[n*i + j+1]);
+            geom.add_triangle(vertices[n*i + j+1], vertices[n*(i+1) + j], vertices[n*(i+1) + j+1]);
         }
     }
 
@@ -65,13 +65,27 @@ App::App(World &_world) : world{_world}
     // }
 
 
+    {
     std::ofstream file("tmp/test.off");
     geom.write_OFF(file);
     file.close();
-    {
-        Entity obj = create_mesh_object(world, "tmp/test.off", "resources/model_test/model_test.mat");
-        obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    Entity obj = create_mesh_object(world, "tmp/test.off", "resources/model_test/model_test.mat");
+    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
+
+    {
+    auto model = MLModel::load("resources/models/dragon.off");
+    auto model_geom = SurfaceGeometry();
+    model_geom.add_model(model);
+
+    std::ofstream file("tmp/dragon_test.off");
+    model_geom.write_OFF(file);
+    file.close();
+    Entity obj = create_mesh_object(world, "tmp/dragon_test.off", "resources/model_test/model_test.mat");
+    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    }
+
+
     
 }
 

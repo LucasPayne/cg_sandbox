@@ -357,7 +357,6 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
     */
 
     
-    printout();
     log("Adding new edges.");
     // Add new edges for unconnected successive vertices.
     for (unsigned int i = 0; i < n; i++) {
@@ -369,14 +368,12 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
         }
     }
     
-    printout();
     log("Linking halfedges.");
     // Link the halfedges to eachother.
     for (unsigned int i = 0; i < n; i++) {
         halfedges[i].set_next(halfedges[(i+1)%n]);
     }
     
-    printout();
     log("Adding new face.");
     // Add the face and link the halfedges to it.
     auto face = Face(*this, face_pool.add());

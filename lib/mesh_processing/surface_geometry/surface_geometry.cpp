@@ -46,11 +46,12 @@ void SurfaceGeometry::write_OFF(std::ostream &out)
 
     out << "OFF\n";
     out << mesh.num_vertices() << " " << mesh.num_faces() << " 0\n";
+    out << std::fixed << std::setprecision(6);
     int index = 0;
     for (auto vertex : mesh.vertices()) {
         vertex_indices[vertex] = index; // Give the vertices contiguous indices.
         vec3 position = vertex_positions[vertex];
-        out << std::fixed << std::setprecision(6) << position.x() << " " << position.y() << " " << position.z() << "\n";
+        out << position.x() << " " << position.y() << " " << position.z() << "\n";
         index ++;
     }
     for (auto face : mesh.faces()) {
@@ -64,4 +65,29 @@ void SurfaceGeometry::write_OFF(std::ostream &out)
         } while (start != he);
         out << "\n";
     }
+}
+
+
+
+// Add the geometry of the given model to the surface.
+void SurfaceGeometry::add_model(MLModel &model)
+{
+    std::vector<Vertex> new_vertices(model.num_vertices);
+    for (unsigned int i = 0; i < model.num_vertices; i++) {
+        new_vertices[i] = add_vertex(model.positions[i]);
+    }
+    if (model.has_triangles) {
+        for (auto triangle : model.triangles) {
+            add_triangle(new_vertices[triangle.a],
+                         new_vertices[triangle.b],
+                         new_vertices[triangle.c]);
+        }
+    }
+}
+
+
+void SurfaceGeometry::read_OFF(std::istream &in)
+{
+    auto model = MLModel::load(MODEL_FILE_FORMAT_OFF, in);
+    add_model(model);
 }

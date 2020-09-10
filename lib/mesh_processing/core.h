@@ -14,27 +14,6 @@
 #include "spatial_algebra/spatial_algebra.h"
 
 
-#include <stdarg.h>
-static void log(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    printf("[mesh_processing] ");
-    vprintf(format, args);
-    printf("\n");
-    va_end(args);
-}
-
-static void log_error(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    printf("[mesh_processing, error] ");
-    vprintf(format, args);
-    printf("\n");
-    va_end(args);
-}
-
 
 
 #endif // MESH_PROCESSING_CORE_H

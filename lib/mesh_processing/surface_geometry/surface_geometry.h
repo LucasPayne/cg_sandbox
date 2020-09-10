@@ -4,10 +4,11 @@
 #include "mesh_processing/surface_mesh/surface_mesh.h"
 
 
+
 class SurfaceGeometry {
-private:
-    SurfaceMesh mesh;
 public:
+    SurfaceMesh mesh;
+
     Vertex add_vertex(vec3 position);
     Vertex add_vertex(float x, float y, float z);
     Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
@@ -22,6 +23,10 @@ public:
     SurfaceMesh::ElementContainer<Vertex> vertices() { return mesh.vertices(); }
     SurfaceMesh::ElementContainer<Edge> edges() { return mesh.edges(); }
     SurfaceMesh::ElementContainer<Face> faces() { return mesh.faces(); }
+
+    size_t num_vertices() const { return mesh.num_vertices(); }
+    size_t num_edges() const { return mesh.num_edges(); }
+    size_t num_faces() const { return mesh.num_faces(); }
 
     void printout();
 

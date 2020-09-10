@@ -51,6 +51,9 @@ struct mat3x3 {
                       entry(1,0),entry(1,1),entry(1,2),
                       entry(2,0),entry(2,1),entry(2,2));
     }
+    static mat3x3 identity() {
+        return mat3x3(1,0,0, 0,1,0, 0,0,1);
+    }
 };
 // Matrix vector multiplication.
 inline vec3 operator*(mat3x3 M, vec3 v) {
@@ -149,6 +152,10 @@ struct mat4x4 {
 
     // Solve for x in Ax = b.
     vec4 solve(vec4 b) const;
+
+    static mat4x4 identity() {
+        return mat4x4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+    }
 
     mat4x4 inverse() const;
 

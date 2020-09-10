@@ -1,4 +1,5 @@
 #include "mesh_processing/surface_geometry/surface_geometry.h"
+#include "mesh_processing/logging.h"
 #include <iomanip>
 
 
@@ -76,6 +77,7 @@ void SurfaceGeometry::add_model(MLModel &model)
     for (unsigned int i = 0; i < model.num_vertices; i++) {
         new_vertices[i] = add_vertex(model.positions[i]);
     }
+
     if (model.has_triangles) {
         for (auto triangle : model.triangles) {
             add_triangle(new_vertices[triangle.a],

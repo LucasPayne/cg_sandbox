@@ -14,7 +14,6 @@ ElementAttachment<T>::ElementAttachment(ElementPool &_pool) :
     pool{_pool},
     data(_pool.capacity())
 {
-    log("Creating new element attachment.");
     // Set the base class's uint8_t pointer.
     raw_data = reinterpret_cast<uint8_t *>(&data[0]);
 
@@ -35,7 +34,6 @@ template <typename T>
 T &ElementAttachment<T>::get(ElementIndex element_index)
 {
     if (!pool.is_active(element_index)) {
-        log_error("Attempted to get inactive element at index %u.", element_index);
         assert(pool.is_active(element_index));
     }
     return data[element_index];
@@ -76,9 +74,7 @@ void ElementAttachment<T>::destroy(ElementIndex element_index)
 template <typename T>
 VertexAttachment<T>::VertexAttachment(SurfaceMesh &mesh) :
     ElementAttachment<T>(mesh.vertex_pool)
-{
-    log("Adding new vertex attachment to mesh.");
-}
+{}
 
 template <typename T>
 T &VertexAttachment<T>::operator[](const Vertex &vertex)
@@ -93,9 +89,7 @@ T &VertexAttachment<T>::operator[](const Vertex &vertex)
 template <typename T>
 EdgeAttachment<T>::EdgeAttachment(SurfaceMesh &mesh) :
     ElementAttachment<HalfedgeDataPair<T>>(mesh.edge_pool)
-{
-    log("Adding new edge attachment to mesh.");
-}
+{}
 
 template <typename T>
 HalfedgeDataPair<T> &EdgeAttachment<T>::operator[](const Edge &edge)
@@ -117,9 +111,7 @@ T &EdgeAttachment<T>::operator[](const Halfedge &halfedge)
 template <typename T>
 FaceAttachment<T>::FaceAttachment(SurfaceMesh &mesh) :
     ElementAttachment<T>(mesh.face_pool)
-{
-    log("Adding new face attachment to mesh.");
-}
+{}
 
 template <typename T>
 T &FaceAttachment<T>::operator[](const Face &face)

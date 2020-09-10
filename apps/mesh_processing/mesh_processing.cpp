@@ -7,6 +7,9 @@
 #include "behaviours/Trackball.cpp"
 #include "mesh_processing/mesh_processing.h"
 
+SurfaceGeometry *model_geom;
+SurfaceGeometry *test_geom;
+
 
 class App : public IGC::Callbacks {
 public:
@@ -30,24 +33,24 @@ App::App(World &_world) : world{_world}
     }
 
     // mesh_processing testing.
-    auto geom = SurfaceGeometry();
+    test_geom = new SurfaceGeometry();
 
-    auto v1 = geom.add_vertex(0,0,0);
-    auto v2 = geom.add_vertex(1,0,0);
-    auto v3 = geom.add_vertex(0,1,0);
-    auto triangle = geom.add_triangle(v1, v2, v3);
+    auto v1 = test_geom->add_vertex(0,0,0);
+    auto v2 = test_geom->add_vertex(1,0,0);
+    auto v3 = test_geom->add_vertex(0,1,0);
+    auto triangle = test_geom->add_triangle(v1, v2, v3);
 
     int n = 5;
     std::vector<Vertex> vertices;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            vertices.push_back(geom.add_vertex(1+0.1*i, 1+0.1*j, 0));
+            vertices.push_back(test_geom->add_vertex(1+0.1*i, 1+0.1*j, 0));
         }
     }
     for (int i = 0; i < n-1; i++) {
         for (int j = 0; j < n-1; j++) {
-            geom.add_triangle(vertices[n*i + j], vertices[n*(i+1) +j], vertices[n*i + j+1]);
-            geom.add_triangle(vertices[n*i + j+1], vertices[n*(i+1) + j], vertices[n*(i+1) + j+1]);
+            test_geom->add_triangle(vertices[n*i + j], vertices[n*(i+1) +j], vertices[n*i + j+1]);
+            test_geom->add_triangle(vertices[n*i + j+1], vertices[n*(i+1) + j], vertices[n*(i+1) + j+1]);
         }
     }
 
@@ -67,24 +70,26 @@ App::App(World &_world) : world{_world}
 
     {
     std::ofstream file("tmp/test.off");
-    geom.write_OFF(file);
+    test_geom->write_OFF(file);
     file.close();
     Entity obj = create_mesh_object(world, "tmp/test.off", "resources/model_test/model_test.mat");
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    obj.get<Transform>()->position.z() -= 0.05;
     }
 
     {
+    // Load the dragon model, create a SurfaceGeometry from it, write the surface geometry out to an OFF file,
+    // then load that OFF file and create an object from it.
     auto model = MLModel::load("resources/models/dragon.off");
-    auto model_geom = SurfaceGeometry();
-    model_geom.add_model(model);
+    model_geom = new SurfaceGeometry(); //global
+    model_geom->add_model(model);
 
     std::ofstream file("tmp/dragon_test.off");
-    model_geom.write_OFF(file);
+    model_geom->write_OFF(file);
     file.close();
-    Entity obj = create_mesh_object(world, "tmp/dragon_test.off", "resources/model_test/model_test.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    // Entity obj = create_mesh_object(world, "tmp/dragon_test.off", "resources/model_test/model_test.mat");
+    // obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
-
 
     
 }
@@ -108,6 +113,35 @@ void App::loop()
         float z = 0.2*sin(-0.6*total_time - 6*y + M_PI/2);
         float r = 0.03;
         world.graphics.paint.sphere(vec3(x,y,z), r, vec4(i%2,0.1 + (i%3)*0.2,(i+1)%2,1));
+    }
+
+    world.graphics.paint.wireframe(*model_geom, mat4x4::identity(), 0.001);
+    world.graphics.paint.wireframe(*test_geom, mat4x4::identity(), 0.001);
+    
+    // VertexAttachment<vec3> neighbour_averages(model_geom->mesh);
+    // for (auto vertex : model_geom->vertices()) {
+    //     neighbour_averages[vertex] = vec3(0,0,0);
+    // }
+    // for (auto vertex : model_geom->vertices()) {
+    //     auto start = vertex.halfedge();
+    //     auto he = start;
+    //     int n = 0;
+    //     do {
+    //         printf("finding\n");
+    //         auto ring_vertex = he.tip();
+    //         neighbour_averages[vertex] += model_geom->vertex_positions[ring_vertex];
+    //         printf("%u %u\n", he.flip().index(), start.index());
+    //         he = he.flip().next();
+    //         printf("%u %u\n", he.index(), start.index());
+    //         n ++;
+    //     } while (he != start);
+    //     neighbour_averages[vertex] *= 1.0 / n;
+    // }
+    // for (auto vertex : model_geom->vertices()) {
+    //     model_geom->vertex_positions[vertex] = vec3::lerp(model_geom->vertex_positions[vertex], neighbour_averages[vertex], dt);
+    // }
+    for (auto vertex : model_geom->vertices()) {
+        model_geom->vertex_positions[vertex] += 0.1 * dt * vec3(frand()-0.5,frand()-0.5,frand()-0.5);
     }
 }
 

@@ -1,4 +1,5 @@
 #include "mesh_processing/surface_mesh/surface_mesh.h"
+#include "mesh_processing/logging.h"
 
 SurfaceMesh g_dummy_surface_mesh;
 
@@ -328,7 +329,7 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
     std::vector<Halfedge> halfedges(n);
 
     // // Check for manifoldness errors.
-    // for (int i = 0; i < n; i++) {
+    // for (unsigned int i = 0; i < n; i++) {
     //     //---How could this case be handled? Two connected triangles fan off of a vertex, and another disconnected one.
     //     //   another triangle is added which connects the first two into a linked neighbourhood. But now the vertex is non-manifold
     //     //   and cannot become manifold with more additions.
@@ -339,10 +340,10 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
     //     auto he = get_halfedge(vertices[i], vertices[(i+1)%n]);
     //     if (!he.null()) {
     //         connected[i] = true;
-    //         if (!he.is_boundary) {
-    //             log_error("SurfaceMesh::add_face: Edge made non-manifold.");
-    //             exit(1);
-    //         }
+    //         // if (!he.is_boundary) {
+    //         //     log_error("SurfaceMesh::add_face: Edge made non-manifold.");
+    //         //     exit(1);
+    //         // }
     //         halfedges[i] = he;
     //     }
     // }

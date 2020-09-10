@@ -1,6 +1,8 @@
 #ifndef SURFACE_MESH_H
 #define SURFACE_MESH_H
 #include "mesh_processing/core.h"
+#include <utility>
+#include <map>
 
 
 // typedefs
@@ -326,6 +328,8 @@ private:
     VertexAttachment<VertexIncidenceData> vertex_incidence_data;
     EdgeAttachment<HalfedgeIncidenceData> edge_incidence_data;
     FaceAttachment<FaceIncidenceData> face_incidence_data;
+
+    std::map<std::pair<ElementIndex, ElementIndex>, ElementIndex> halfedge_map; //vertices to halfedge.
 
 
     template <typename T>

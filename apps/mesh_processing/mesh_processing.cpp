@@ -126,23 +126,33 @@ void App::loop()
     //     auto start = vertex.halfedge();
     //     auto he = start;
     //     int n = 0;
-    //     do {
-    //         printf("finding\n");
+    //     while (!he.null()) {
     //         auto ring_vertex = he.tip();
     //         neighbour_averages[vertex] += model_geom->vertex_positions[ring_vertex];
-    //         printf("%u %u\n", he.flip().index(), start.index());
     //         he = he.flip().next();
-    //         printf("%u %u\n", he.index(), start.index());
     //         n ++;
-    //     } while (he != start);
-    //     neighbour_averages[vertex] *= 1.0 / n;
+    //         if (he == start) break;
+    //     }
+    //     if (n > 0) neighbour_averages[vertex] *= 1.0 / n;
     // }
     // for (auto vertex : model_geom->vertices()) {
     //     model_geom->vertex_positions[vertex] = vec3::lerp(model_geom->vertex_positions[vertex], neighbour_averages[vertex], dt);
     // }
-    for (auto vertex : model_geom->vertices()) {
-        model_geom->vertex_positions[vertex] += 0.1 * dt * vec3(frand()-0.5,frand()-0.5,frand()-0.5);
-    }
+    // for (auto vertex : model_geom->vertices()) {
+    //     model_geom->vertex_positions[vertex] += 0.1 * dt * vec3(frand()-0.5,frand()-0.5,frand()-0.5);
+    // }
+
+
+    // static Halfedge test_he;
+    // static bool set_test_v = false;
+    // if (!set_test_v) {
+    //     test_he = (*model_geom->vertices().begin()).halfedge();
+    //     set_test_v = true;
+    // }
+    // world.graphics.paint.sphere(model_geom->vertex_positions[test_he.tip()], 0.007, vec4(1,0,0,1));
+    // printf("%u to ", test_he.index());
+    // test_he = test_he.flip().next();
+    // printf("%u\n", test_he.index());
 }
 
 void App::window_handler(WindowEvent e)

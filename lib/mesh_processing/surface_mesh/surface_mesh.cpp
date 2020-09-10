@@ -278,17 +278,25 @@ Halfedge SurfaceMesh::add_halfedge(Vertex u, Vertex v)
     // printf("%u %u %u\n", edge.index(), edge.a().index(), edge.b().index());
     edge.a().set_vertex(u);
     edge.b().set_vertex(v);
+
+    halfedge_map[std::pair<ElementIndex, ElementIndex>(u.index(), v.index())] = edge.a().index();
+
     return edge.a();
 }
 Halfedge SurfaceMesh::get_halfedge(Vertex u, Vertex v)
 {
-    Halfedge start = u.halfedge();
-    Halfedge he = start;
-    while (!he.null()) {
-        he = he.flip().next();
-        if (he == start) break;
+    auto found = halfedge_map.find(std::pair<ElementIndex, ElementIndex>(u.index(), v.index()));
+    if (found == halfedge_map.end()) {
+        return Halfedge(*this, InvalidElementIndex);
     }
-    return he;
+    return Halfedge(*this, found->second);
+    // auto start = u.halfedge();
+    // auto he = start;
+    // while (!he.null()) {
+    //     he = he.flip().next();
+    //     if (he == start) break;
+    // }
+    // return he;
 }
 
 size_t SurfaceMesh::num_vertices() const
@@ -357,6 +365,14 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
     face -> halfedge
     */
 
+    for (unsigned int i = 0; i < n; i++) {
+        auto he = get_halfedge(vertices[i], vertices[(i+1)%n]);
+        if (!he.null()) {
+            connected[i] = true;
+            halfedges[i] = he;
+        }
+    }
+
     
     log("Adding new edges.");
     // Add new edges for unconnected successive vertices.
@@ -366,6 +382,12 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
             halfedges[i] = he;
             // If this vertex is not connected to anything, link it with this halfedge.
             vertices[i].set_halfedge(he);
+
+            // he.set_vertex(vertices[i]);
+            // Set the other halfedge, the one on the boundary.
+            he.flip().set_next(Halfedge(*this, InvalidElementIndex));
+            he.flip().set_face(Face(*this, InvalidElementIndex));
+            // he.flip().set_vertex(vertices[(i+1)%
         }
     }
     

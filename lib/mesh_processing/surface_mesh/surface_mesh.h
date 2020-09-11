@@ -284,7 +284,7 @@ public:
     // These do not necessarily maintain invariants.
     Vertex add_vertex();
     Face add_triangle(Vertex v1, Vertex v2, Vertex v3);
-    Face add_face(std::vector<Vertex> &vertices);
+    Face add_face(std::vector<Vertex> &vertices, bool been_flipped = false);
 
     Halfedge add_halfedge(Vertex u, Vertex v);
     Halfedge get_halfedge(Vertex u, Vertex v);

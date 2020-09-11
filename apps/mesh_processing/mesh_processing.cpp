@@ -31,6 +31,41 @@ App::App(World &_world) : world{_world}
         Entity cameraman = create_object_viewer_cameraman(world, obj);
         cameraman.get<Transform>()->position = vec3(0,0,2);
     }
+    {
+        auto mesh = SurfaceMesh();
+        auto v1 = mesh.add_vertex();
+        auto v2 = mesh.add_vertex();
+        auto v3 = mesh.add_vertex();
+        auto v4 = mesh.add_vertex();
+        mesh.add_triangle(v1, v3, v4);
+        mesh.add_triangle(v1, v4, v2);
+        getchar();
+    }
+    {
+        auto mesh = SurfaceMesh();
+        Vertex vertices[9];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                vertices[3*i + j] = mesh.add_vertex();
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                printf("Square %d %d\n", i, j);
+                int a = 3*i + j;
+                int b = 3*(i+1) + j;
+                int c = 3*i + j+1;
+                int d = 3*(i+1) + j+1;
+                printf("Triangle %d %d %d\n", a, b, d);
+                mesh.add_triangle(vertices[a], vertices[b], vertices[d]);
+                printf("Triangle %d %d %d\n", a, d, c);
+                mesh.add_triangle(vertices[a], vertices[d], vertices[c]);
+            }
+        }
+	getchar();
+    }
+
+
 
     // mesh_processing testing.
     test_geom = new SurfaceGeometry();

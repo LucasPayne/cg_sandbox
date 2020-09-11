@@ -6,6 +6,7 @@
 static ModelFileFormatLoader model_file_format_loaders[] = {
     load_OFF_model,
     load_Obj_model,
+    load_STL_model,
 };
 
 // Error logging for this library.
@@ -42,6 +43,8 @@ MLModel MLModel::load(const std::string &path, MLLoadFlags flags)
     FORMAT(OFF, ".OFF");
     FORMAT(OBJ, ".obj");
     FORMAT(OBJ, ".OBJ");
+    FORMAT(STL, ".stl");
+    FORMAT(STL, ".STL");
     MLModel_error("Could not interpret model file format for file \"%s\".\n", path.c_str());
 continue_here_when_format_selected:
     auto file = std::ifstream(path);

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <assert.h>
 #include "spatial_algebra/spatial_algebra.h"
 
 
@@ -20,11 +21,11 @@ struct MLModelTriangle {
     uint32_t c;
     MLModelTriangle() {}
     MLModelTriangle(uint32_t a, uint32_t b, uint32_t c) : a{a}, b{b}, c{c} {}
-    uint32_t operator[](int index) {
+    uint32_t &operator[](int index) {
         if (index == 0) return a;
         else if (index == 1) return b;
         else if (index == 2) return c;
-        return -1;
+        assert(false);
     }
 };
 
@@ -37,6 +38,7 @@ typedef uint32_t MLLoadFlags;
 enum ModelFileFormats {
     MODEL_FILE_FORMAT_OFF,
     MODEL_FILE_FORMAT_OBJ,
+    MODEL_FILE_FORMAT_STL,
     NUM_MODEL_FILE_FORMATS
 };
 typedef uint8_t ModelFileFormat;
@@ -76,5 +78,6 @@ struct MLModel {
 typedef bool (*ModelFileFormatLoader)(std::istream &, MLModel &);
 bool load_Obj_model(std::istream &stream, MLModel &model);
 bool load_OFF_model(std::istream &stream, MLModel &model);
+bool load_STL_model(std::istream &stream, MLModel &model);
 
 #endif // MODEL_LOADER_H

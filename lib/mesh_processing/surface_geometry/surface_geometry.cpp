@@ -22,6 +22,7 @@ Face SurfaceGeometry::add_triangle(Vertex v1, Vertex v2, Vertex v3)
     vec3 c = vertex_positions[v3];
     vec3 n = vec3::cross(b - a, c - a).normalized();
     auto face = mesh.add_triangle(v1, v2, v3);
+    if (face.null()) return face;
     face_normals[face] = n;
     return face;
 }

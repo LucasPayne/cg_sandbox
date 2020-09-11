@@ -8,5 +8,6 @@ add_library(model_loader
     model_loader.cpp
     model_file_formats/OFF.cpp
     model_file_formats/Obj.cpp
+    model_file_formats/STL.cpp
 )
 target_compile_options(model_loader PRIVATE -Wall -g)

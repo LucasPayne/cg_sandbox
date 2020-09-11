@@ -1,5 +1,7 @@
 #include "mesh_processing/surface_mesh/surface_mesh.h"
 #include "mesh_processing/logging.h"
+#include <algorithm>//reverse
+
 
 SurfaceMesh g_dummy_surface_mesh;
 
@@ -200,6 +202,7 @@ Vertex Halfedge::tip() const
 
 Halfedge Halfedge::flip() const
 {
+    // printf("Flipping %u to %u\n", m_index, m_index ^ 1);getchar();
     return Halfedge(mesh, m_index ^ 1);
 }
 void Halfedge::set_vertex(Vertex vertex)
@@ -280,6 +283,7 @@ Halfedge SurfaceMesh::add_halfedge(Vertex u, Vertex v)
     edge.b().set_vertex(v);
 
     halfedge_map[std::pair<ElementIndex, ElementIndex>(u.index(), v.index())] = edge.a().index();
+    halfedge_map[std::pair<ElementIndex, ElementIndex>(v.index(), u.index())] = edge.b().index();
 
     return edge.a();
 }
@@ -326,7 +330,7 @@ Face SurfaceMesh::add_triangle(Vertex v1, Vertex v2, Vertex v3)
     return add_face(g_add_face_vector);
 }
 
-Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
+Face SurfaceMesh::add_face(std::vector<Vertex> &vertices, bool been_flipped)
 {
     const size_t n = vertices.size();
     log("Adding face of %zu vertices.", n);
@@ -368,8 +372,22 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices)
     for (unsigned int i = 0; i < n; i++) {
         auto he = get_halfedge(vertices[i], vertices[(i+1)%n]);
         if (!he.null()) {
+            printf("Halfedge already there for %u to %u.\n", i, (i+1)%n);
             connected[i] = true;
             halfedges[i] = he;
+            if (!he.face().null()) {
+                log_error("Non-manifold edge.");
+                // Possibly this face causes non-manifoldness because it has the wrong winding.
+                // Attempt to add the face with reversed winding.
+                if (!been_flipped) {
+                    std::reverse(vertices.begin(), vertices.end());
+                    return add_face(vertices, true);
+                } else {
+                    // The been_flipped parameter (defaulting to false) prevents an infinite loop.
+                    return Face(*this, InvalidElementIndex);
+                }
+                // exit(1);
+            }
         }
     }
 

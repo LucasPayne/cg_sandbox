@@ -29,6 +29,8 @@ bool load_STL_model(std::istream &stream, MLModel &model)
     }
 
     // Vertices
+    // STL gives a triangle soup, so a map is used to combine vertices with the same position
+    // into a single vertex with a unique index.
     std::map<std::tuple<float, float, float>, uint32_t> position_to_index;
     std::vector<vec3> positions;
     // Triangles

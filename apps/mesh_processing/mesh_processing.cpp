@@ -39,7 +39,6 @@ App::App(World &_world) : world{_world}
         auto v4 = mesh.add_vertex();
         mesh.add_triangle(v1, v3, v4);
         mesh.add_triangle(v1, v4, v2);
-        getchar();
     }
     {
         auto mesh = SurfaceMesh();
@@ -62,7 +61,6 @@ App::App(World &_world) : world{_world}
                 mesh.add_triangle(vertices[a], vertices[d], vertices[c]);
             }
         }
-	getchar();
     }
 
 
@@ -112,20 +110,32 @@ App::App(World &_world) : world{_world}
     obj.get<Transform>()->position.z() -= 0.05;
     }
 
+#if 1
     {
     // Load the dragon model, create a SurfaceGeometry from it, write the surface geometry out to an OFF file,
     // then load that OFF file and create an object from it.
-    // auto model = MLModel::load("resources/models/dragon.off");
-    auto model = MLModel::load("resources/models/large/bunny_head.stl");
+    // auto model = MLModel::load("resources/models/large/sphinx_of_hatshepsut.stl");
+    auto model = MLModel::load("resources/models/20mm_cube.stl");
     model_geom = new SurfaceGeometry(); //global
     model_geom->add_model(model);
+    for (auto v : model_geom->vertices()) {
+        model_geom->vertex_positions[v] *= 0.02;
+    }
+    // Add some noise (for testing Laplacian smoothing)
+    // for (auto vertex : model_geom->vertices()) {
+    //     float r = 0.05;
+    //     model_geom->vertex_positions[vertex] += vec3(r*(2*frand()-1),
+    //                                                  r*(2*frand()-1),
+    //                                                  r*(2*frand()-1));
+    // }
 
-    std::ofstream file("tmp/dragon_test.off");
-    model_geom->write_OFF(file);
-    file.close();
+    // std::ofstream file("tmp/dragon_test.off");
+    // model_geom->write_OFF(file);
+    // file.close();
     // Entity obj = create_mesh_object(world, "tmp/dragon_test.off", "resources/model_test/model_test.mat");
     // obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     }
+#endif
 
     
 }
@@ -153,30 +163,35 @@ void App::loop()
 
     world.graphics.paint.wireframe(*model_geom, mat4x4::identity(), 0.001);
     world.graphics.paint.wireframe(*test_geom, mat4x4::identity(), 0.001);
-    
-    // VertexAttachment<vec3> neighbour_averages(model_geom->mesh);
-    // for (auto vertex : model_geom->vertices()) {
-    //     neighbour_averages[vertex] = vec3(0,0,0);
-    // }
-    // for (auto vertex : model_geom->vertices()) {
-    //     auto start = vertex.halfedge();
-    //     auto he = start;
-    //     int n = 0;
-    //     while (!he.null()) {
-    //         auto ring_vertex = he.tip();
-    //         neighbour_averages[vertex] += model_geom->vertex_positions[ring_vertex];
-    //         he = he.flip().next();
-    //         n ++;
-    //         if (he == start) break;
-    //     }
-    //     if (n > 0) neighbour_averages[vertex] *= 1.0 / n;
-    // }
-    // for (auto vertex : model_geom->vertices()) {
-    //     model_geom->vertex_positions[vertex] = vec3::lerp(model_geom->vertex_positions[vertex], neighbour_averages[vertex], dt);
-    // }
+
+
+    #if 0
+    // Laplacian smoothing.
+    VertexAttachment<vec3> neighbour_averages(model_geom->mesh);
+    for (auto vertex : model_geom->vertices()) {
+        neighbour_averages[vertex] = vec3(0,0,0);
+    }
+    for (auto vertex : model_geom->vertices()) {
+        auto start = vertex.halfedge();
+        auto he = start;
+        int n = 0;
+        while (!he.null()) {
+            auto ring_vertex = he.tip();
+            neighbour_averages[vertex] += model_geom->vertex_positions[ring_vertex];
+            he = he.flip().next();
+            n ++;
+            if (he == start) break;
+        }
+        if (n > 0) neighbour_averages[vertex] *= 1.0 / n;
+    }
+    for (auto vertex : model_geom->vertices()) {
+        model_geom->vertex_positions[vertex] = vec3::lerp(model_geom->vertex_positions[vertex], neighbour_averages[vertex], dt);
+    }
+
     // for (auto vertex : model_geom->vertices()) {
     //     model_geom->vertex_positions[vertex] += 0.1 * dt * vec3(frand()-0.5,frand()-0.5,frand()-0.5);
     // }
+    #endif
 
 
     // static Halfedge test_he;

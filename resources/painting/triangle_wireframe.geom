@@ -6,11 +6,13 @@ layout (triangle_strip, max_vertices = 3) out;
 in VS_OUT {
     vec3 position;
     vec2 screen_position;
+    int edge_is_boundary;
 } gs_in[];
 
 out GS_OUT {
     noperspective vec3 distances;
     vec3 normal;
+    flat ivec3 edge_is_boundary;
 } gs_out;
 
 uniform float half_width;
@@ -71,6 +73,11 @@ void main(void)
 
         gl_Position = gl_in[i].gl_Position;
         gs_out.normal = n; // Give each vertex the triangle normal for flat shading.
+        
+        gs_out.edge_is_boundary[0] = gs_in[0].edge_is_boundary;
+        gs_out.edge_is_boundary[1] = gs_in[1].edge_is_boundary;
+        gs_out.edge_is_boundary[2] = gs_in[2].edge_is_boundary;
+
         EmitVertex();
     }
     EndPrimitive();

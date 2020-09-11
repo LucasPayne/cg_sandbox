@@ -38,6 +38,7 @@ struct WireframeRenderData {
     GLuint vertex_attribute_buffer;
     GLuint triangle_index_buffer;
     uint32_t num_indices;
+    uint32_t num_vertices;
     mat4x4 model_matrix;
     float width;
 };

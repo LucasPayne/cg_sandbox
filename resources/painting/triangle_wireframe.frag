@@ -3,6 +3,7 @@
 in GS_OUT {
     noperspective vec3 distances;
     vec3 normal;
+    flat ivec3 edge_is_boundary;
 } fs_in;
 
 out vec4 color;
@@ -28,7 +29,10 @@ void main(void)
 
     vec4 edge_color = vec4(0,0,0,1);
 
-    float distance = min(fs_in.distances[0], min(fs_in.distances[1], fs_in.distances[2]));
+    float distance = 99999999;
+    for (int i = 0; i < 3; i++) {
+        if (fs_in.edge_is_boundary[(i+1)%3] != 0 && fs_in.distances[i] < distance) distance = fs_in.distances[i];
+    }
 
     // This causes very bad aliasing.
     // if (distance < 0) {

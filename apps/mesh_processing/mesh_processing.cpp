@@ -115,7 +115,8 @@ App::App(World &_world) : world{_world}
     {
     // Load the dragon model, create a SurfaceGeometry from it, write the surface geometry out to an OFF file,
     // then load that OFF file and create an object from it.
-    auto model = MLModel::load("resources/models/dragon.off");
+    // auto model = MLModel::load("resources/models/dragon.off");
+    auto model = MLModel::load("resources/models/large/bunny_head.stl");
     model_geom = new SurfaceGeometry(); //global
     model_geom->add_model(model);
 

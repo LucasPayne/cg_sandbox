@@ -75,6 +75,11 @@ void App::keyboard_handler(KeyboardEvent e)
                 bspline_knots[i] -= (2*((i+1)%2)-1)*0.1;
             }
         }
+        if (e.key.code == KEY_P) {
+            for (int i = 0; i < bspline_positions.size(); i++) {
+                bspline_positions[i] = vec2::random(0.1, 0.9);
+            }
+        }
     }
 }
 void App::mouse_handler(MouseEvent e)

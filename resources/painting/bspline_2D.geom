@@ -3,7 +3,8 @@ layout (lines) in;
 layout (triangle_strip, max_vertices = 4) out;
 
 out GS_OUT {
-    vec2 quad_position;
+    float quad_position;
+    float extend_factor;
 } gs_out;
 
 uniform float half_width;
@@ -17,23 +18,34 @@ void main(void)
     vec2 B = gl_in[1].gl_Position.xy;
 
     vec2 X = normalize(B - A);
-    vec2 Y = half_width*vec2(-X.y * viewport_height_over_width, X.x);
-    vec2 Yunit = normalize(vec2(-X.y * viewport_height_over_width, X.x));
+    // vec2 Ybase = vec2(-X.y * viewport_height_over_width, X.x);
+    vec2 Ybase = vec2(-X.y, X.x); //----!! aspect ratio stuff has gone wrong.
+    float Ybase_length = length(Ybase);
+    vec2 Yunit = Ybase / Ybase_length;
 
-    float antialiasing_pixel_extent = 2;
-    float antialiasing_extent = 2*antialiasing_pixel_extent*sqrt(Yunit.x*Yunit.x*inv_viewport_width_squared + Yunit.y*Yunit.y*inv_viewport_height_squared);
+    float antialiasing_pixel_extent = 1;
+    float antialiasing_extent = 2*antialiasing_pixel_extent
+                                *sqrt(Yunit.x*Yunit.x*inv_viewport_width_squared + Yunit.y*Yunit.y*inv_viewport_height_squared);
 
-    gl_Position = vec4(A + Y, -1,1);
-    gs_out.quad_position = vec2(0,0);
+    vec2 extend_vector = (half_width*Ybase_length + antialiasing_extent) * Yunit;
+
+    float extend_factor = (half_width*Ybase_length + antialiasing_extent) / half_width*Ybase_length - 1;
+
+    gl_Position = vec4(A + extend_vector, -1,1);
+    gs_out.quad_position = 1 + extend_factor;
+    gs_out.extend_factor = extend_factor;
     EmitVertex();
-    gl_Position = vec4(A - Y, -1,1);
-    gs_out.quad_position = vec2(0,1);
+    gl_Position = vec4(A - extend_vector, -1,1);
+    gs_out.quad_position = -extend_factor;
+    gs_out.extend_factor = extend_factor;
     EmitVertex();
-    gl_Position = vec4(B + Y, -1,1);
-    gs_out.quad_position = vec2(1,0);
+    gl_Position = vec4(B + extend_vector, -1,1);
+    gs_out.quad_position = 1 + extend_factor;
+    gs_out.extend_factor = extend_factor;
     EmitVertex();
-    gl_Position = vec4(B - Y, -1,1);
-    gs_out.quad_position = vec2(1,1);
+    gl_Position = vec4(B - extend_vector, -1,1);
+    gs_out.quad_position = -extend_factor;
+    gs_out.extend_factor = extend_factor;
     EmitVertex();
     EndPrimitive();
 }

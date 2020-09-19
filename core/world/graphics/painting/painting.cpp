@@ -167,7 +167,6 @@ void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width
     glVertexAttribPointer(1, 1, GL_INT, GL_FALSE, sizeof(WireframeVertexAttributes), (const void *) offsetof(WireframeVertexAttributes, edge_is_boundary));
     glEnableVertexAttribArray(1);
 
-
     WireframeRenderData render_data;
     render_data.vao = vao;
     render_data.vertex_attribute_buffer = vertex_buffer;
@@ -175,66 +174,6 @@ void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width
     render_data.width = width;
     render_data.num_vertices = num_vertices;
     wireframe_render_data.push_back(render_data);
-
-
-    /*
-    struct WireframeVertexAttributes {
-        vec3 position;
-    };
-    size_t num_vertices = geom.num_vertices();
-    size_t num_faces = geom.num_faces();
-    auto vertex_indices = VertexAttachment<uint32_t>(geom.mesh);
-    std::vector<WireframeVertexAttributes> vertex_attributes(num_vertices);
-    std::vector<uint32_t> triangle_indices(3*num_faces); //note: It will be checked later that all faces really are triangles.
-
-    int index = 0;
-    for (auto vertex : geom.vertices()) {
-        vertex_indices[vertex] = index;
-        vertex_attributes[index].position = geom.vertex_positions[vertex];
-        index ++;
-    }
-
-    index = 0;
-    for (auto face : geom.faces()) {
-        assert(face.num_vertices() == 3); // currently only triangle wireframes.
-        auto start = face.halfedge();
-        auto he = start;
-        int triangle_index = 0;
-        do {
-            uint32_t vertex_index = vertex_indices[he.vertex()];
-            triangle_indices[3*index + triangle_index] = vertex_index;
-            he = he.next();
-            triangle_index ++;
-        } while (start != he);
-        index ++;
-    }
-
-    GLuint vao;
-    glCreateVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    GLuint vertex_buffer;
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(WireframeVertexAttributes) * num_vertices, (const void *) &vertex_attributes[0], GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(WireframeVertexAttributes), (const void *) 0);
-    glEnableVertexAttribArray(0);
-
-    GLuint index_buffer;
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * 3 * num_faces, (const void *) &triangle_indices[0], GL_DYNAMIC_DRAW);
-
-    WireframeRenderData render_data;
-    render_data.vao = vao;
-    render_data.vertex_attribute_buffer = vertex_buffer;
-    render_data.triangle_index_buffer = index_buffer;
-    render_data.num_indices = 3*num_faces;
-    render_data.model_matrix = model_matrix;
-    render_data.width = width;
-    wireframe_render_data.push_back(render_data);
-    */
 }
 
 
@@ -262,13 +201,7 @@ void Painting::render_wireframes()
             glBindVertexArray(render_data.vao);
 
             glDrawArrays(GL_TRIANGLES, 0, render_data.num_vertices);
-
-            // glDrawElements(GL_TRIANGLES,
-            //                (GLsizei) render_data.num_indices,
-            //                GL_UNSIGNED_INT,
-            //                (const void *) 0);
         }
-
         graphics.end_camera_rendering(camera);
     }
     wireframe_shader_program->unbind();
@@ -311,6 +244,68 @@ void Painting::line(vec3 a, vec3 b, float width, vec4 color)
 }
 
 
+void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
+{
+    // The B-spline is immediately rendered.
+
+    int m = knots.length()-1; // The knot vector is U = { u_0,...,u_m }
+    int n = positions.length(); // Number of control points.
+    int num_patches = n - 2; // Number of patches to renders == number of index windows to create.
+
+    assert(m - 2 == n); // Make sure that the knot vector has the correct length.
+
+    // Use the smallest type of index possible.
+    int index_bytes;
+    GLenum index_type;
+    if (n-1 <= 0xFF) {
+        index_bytes = 1;
+        index_type = GL_UNSIGNED_BYTE;
+    } else if (n-1 <= 0xFFFF) {
+        index_bytes = 2;
+        index_bytes = GL_UNSIGNED_SHORT;
+    } else {
+        // It is assumed that 32 bits will be sufficient, so no check is made.
+        index_bytes = 4;
+        index_bytes = GL_UNSIGNED_INT;
+    }
+    // Create the index array, consisting of windows of 3 indices.
+    // For example, if n == 5, then (012, 123, 234) is created.
+
+    // Convert the knot vector into knot span lengths.
+    std::vector<float> knot_span_lengths(m);
+    for (int i = 0; i < m; i++) {
+        knot_span_lengths[i] = knots[i+1] - knots[i];
+    }
+
+    // Create vertex array.
+    GLuint vao;
+    glCreateVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    GLuint vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * n, (const void *) &positions[0], GL_DYNAMIC_DRAW);
+
+    GLuint index_buffer;
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t)
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
+    glEnableVertexAttribArray(0);
+
+
+
+    quadratic_bspline_2D_shader_program->bind();
+    graphics.begin_camera_rendering(camera);
+
+
+    graphics.end_camera_rendering(camera);
+    quadratic_bspline_2D_shader_program->unbind();
+}
+
+
 
 void Painting::init()
 {
@@ -326,4 +321,11 @@ void Painting::init()
     wireframe_shader_program->add_shader(GLShader(GeometryShader, "resources/painting/triangle_wireframe.geom"));
     wireframe_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/triangle_wireframe.frag"));
     wireframe_shader_program->link();
+
+    quadratic_bspline_2D_shader_program = world.resources.add<GLShaderProgram>();
+    quadratic_bspline_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
+    quadratic_bspline_2D_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
+    quadratic_bspline_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
+    quadratic_bspline_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/quadratic_bspline_2D.frag"));
+    quadratic_bspline_2D_shader_program->link();
 }

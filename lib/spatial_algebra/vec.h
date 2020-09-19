@@ -1,5 +1,5 @@
-#ifndef SPATIAL_ALGEBRA_VEC3_VEC4_H
-#define SPATIAL_ALGEBRA_VEC3_VEC4_H
+#ifndef SPATIAL_ALGEBRA_VEC_H
+#define SPATIAL_ALGEBRA_VEC_H
 #include <math.h>
 #include <ostream>
 #include <stdlib.h>
@@ -142,8 +142,8 @@ inline vec3 operator/(const vec3 &v, const float &t) {
 }
 
 
-/*REFLECTED*/ struct vec4 {
-    /*ENTRY*/ float entries[4];
+struct vec4 {
+    float entries[4];
     vec4() {}
     static inline vec4 zero() { return vec4(0,0,0,0); }
     static inline vec4 origin() { return vec4(0,0,0,1); }
@@ -278,11 +278,97 @@ inline vec4 operator*(const vec4 &v, const float &t) {
 inline vec4 operator/(const vec4 &v, const float &t) {
     return vec4(v[0]/t, v[1]/t, v[2]/t, v[3]/t);
 }
+
+
+/*--------------------------------------------------------------------------------
+    vec2
+--------------------------------------------------------------------------------*/
+struct vec2 {
+    float entries[2];
+    vec2() {}
+    static inline vec2 zero() { return vec2(0,0); }
+    vec2(float x, float y) : entries{x,y} {}
+
+    // Entry accessors
+    inline float x() const { return entries[0]; }
+    inline float y() const { return entries[1]; }
+    // Entry references, for assignment
+    //    u.x() = 2.5;
+    inline float &x() { return entries[0]; }
+    inline float &y() { return entries[1]; }
+
+    inline float &operator[](int index) { return entries[index]; }
+    inline float operator[](int index) const { return entries[index]; }
+
+    // Operation and reassignment, e.g.
+    //    u += vec2(1,1);
+    inline vec2 &operator+=(const vec2 &b) {
+        entries[0] += b[0];
+        entries[1] += b[1];
+        return *this;
+    }
+    inline vec2 &operator-=(const vec2 &b) {
+        entries[0] -= b[0];
+        entries[1] -= b[1];
+        return *this;
+    }
+    inline vec2 &operator*=(const vec2 &b) {
+        entries[0] *= b[0];
+        entries[1] *= b[1];
+        return *this;
+    }
+    inline vec2 &operator/=(const vec2 &b) {
+        entries[0] /= b[0];
+        entries[1] /= b[1];
+        return *this;
+    }
+    // Scalar operation and reassignment, e.g.
+    // u *= 3.0;
+    inline vec2 &operator*=(float t) {
+        entries[0] *= t;
+        entries[1] *= t;
+        return *this;
+    }
+    inline vec2 &operator/=(float t) {
+        entries[0] /= t;
+        entries[1] /= t;
+        return *this;
+    }
+
+    // -u
+    inline vec2 operator-() const {
+        return vec2(-entries[0],-entries[1]);
+    }
+
+    static inline float dot(vec2 a, vec2 b) {
+        return a[0]*b[0] + a[1]*b[1];
+    }
+    inline float length() {
+        return sqrt(x()*x() + y()*y());
+    }
+    inline vec2 normalized() {
+        float inv_length = 1.0 / length();
+        return vec2(inv_length*x(), inv_length*y());
+    }
+    
+    // Returns a random vector with entries in the range [a,b).
+    static inline vec2 random(float a, float b) {
+        return vec2(a + (b-a)*frand(), a + (b-a)*frand());
+    }
+
+    static inline vec2 lerp(vec2 a, vec2 b, float t) {
+        return vec2((1-t)*a.x() + t*b.x(),
+                    (1-t)*a.y() + t*b.y());
+    }
+};
+
+
 //--------------------------------------------------------------------------------
 
 // Printing
+std::ostream &operator<<(std::ostream &os, const vec2 &v);
 std::ostream &operator<<(std::ostream &os, const vec3 &v);
 std::ostream &operator<<(std::ostream &os, const vec4 &v);
 
 
-#endif // SPATIAL_ALGEBRA_VEC3_VEC4_H
+#endif // SPATIAL_ALGEBRA_VEC_H

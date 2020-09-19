@@ -24,7 +24,7 @@ Camera::Camera(float near_plane_distance, float far_plane_distance, float near_h
     top_right[1] = 1.0;
     layer = 0; // Default to highest-priority layer.
 
-    background_color = vec4(0,0,1,1);
+    background_color = vec4(0.9,0.9,0.9,1);
 }
 
 bool Camera::in_viewport(float screen_x, float screen_y)

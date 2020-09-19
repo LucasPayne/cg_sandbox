@@ -55,19 +55,26 @@ public:
     void render();
     void clear();
 
+    // 3D painting commands.
     void sphere(vec3 position, float radius, vec4 color);
     void line(vec3 a, vec3 b, float width, vec4 color);
-
     void wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width);
+
+    // 2D painting commands.
+    void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
 
 private:
     std::vector<PaintingSphere> spheres;
     std::vector<PaintingLine> lines;
     std::vector<WireframeRenderData> wireframe_render_data;
 
+    // 3D painting programs.
     Resource<GLShaderProgram> spheres_shader_program;
     Resource<GLShaderProgram> lines_shader_program;
     Resource<GLShaderProgram> wireframe_shader_program;
+
+    // 2D painting programs.
+    Resource<GLShaderProgram> quadratic_bspline_2D_shader_program;
 
     void render_spheres();
     void render_lines();

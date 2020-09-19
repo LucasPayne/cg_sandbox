@@ -37,7 +37,11 @@ std::ostream &operator<<(std::ostream &os, const mat3x3 &M)
     return os;
 }
 
-
+std::ostream &operator<<(std::ostream &os, const vec2 &v)
+{
+    os << "(" << v.x() << ", " << v.y() << ")";
+    return os;
+}
 std::ostream &operator<<(std::ostream &os, const vec3 &v)
 {
     os << "(" << v.x() << ", " << v.y() << ", " << v.z() << ")";

@@ -5,7 +5,7 @@ some references:
 https://www.gamasutra.com/view/feature/131686/rotating_objects_using_quaternions.php
 https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Using_quaternion_as_rotations
 --------------------------------------------------------------------------------*/
-#include "vec3_vec4.h"
+#include "vec.h"
 #include <math.h>
 #include <ostream>
 

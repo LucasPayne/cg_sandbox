@@ -74,6 +74,7 @@ void main(void)
         gl_Position = gl_in[i].gl_Position;
         gs_out.normal = n; // Give each vertex the triangle normal for flat shading.
         
+        // Pass all the edge_is_boundary data as output for each vertex.
         gs_out.edge_is_boundary[0] = gs_in[0].edge_is_boundary;
         gs_out.edge_is_boundary[1] = gs_in[1].edge_is_boundary;
         gs_out.edge_is_boundary[2] = gs_in[2].edge_is_boundary;

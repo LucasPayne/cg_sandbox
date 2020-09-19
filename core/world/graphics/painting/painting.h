@@ -5,6 +5,7 @@
 #include "world/graphics/drawing.h"
 #include "mathematics/mathematics.h"
 #include "mesh_processing/mesh_processing.h"
+#include "world/standard_aspects/standard_aspects.h"
 class Graphics;
 class World;
 

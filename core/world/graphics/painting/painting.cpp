@@ -247,8 +247,8 @@ void Painting::line(vec3 a, vec3 b, float width, vec4 color)
 void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
 {
     // The B-spline is immediately rendered.
-    int m = knots.length()-1; // The knot vector is U = { u_0,...,u_m }
-    int n = positions.length(); // Number of control points.
+    int m = knots.size()-1; // The knot vector is U = { u_0,...,u_m }
+    int n = positions.size(); // Number of control points.
     int num_patches = n - 2; // Number of patches to renders == number of index windows to create.
     assert(m - 2 == n); // Make sure that the knot vector has the correct length.
 
@@ -326,7 +326,7 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
     //------------------------------------------------------------
     quadratic_bspline_2D_shader_program->bind();
 
-    glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), (const GLfloat *) &color);
+    glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &color);
     glUniform1f(quadratic_bspline_2D_shader_program->uniform_location("inv_num_patches"), 1.0 / num_patches);
 
     graphics.begin_camera_rendering(camera);

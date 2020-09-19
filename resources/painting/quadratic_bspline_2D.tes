@@ -10,10 +10,10 @@ void main(void)
     float t = gl_TessCoord.x;
 
     float knot_window[4];
-    knot_window[0] = sample(knots, float(gl_PrimitiveID) * inv_num_patches);
-    knot_window[1] = sample(knots, float(gl_PrimitiveID + 1) * inv_num_patches);
-    knot_window[2] = sample(knots, float(gl_PrimitiveID + 2) * inv_num_patches);
-    knot_window[3] = sample(knots, float(gl_PrimitiveID + 3) * inv_num_patches);
+    knot_window[0] = texelFetch(knots, gl_PrimitiveID + 0, 0).r;
+    knot_window[0] = texelFetch(knots, gl_PrimitiveID + 1, 0).r;
+    knot_window[0] = texelFetch(knots, gl_PrimitiveID + 2, 0).r;
+    knot_window[0] = texelFetch(knots, gl_PrimitiveID + 3, 0).r;
     float a[3];
     a[0] = knot_window[1] - knot_window[0];
     a[1] = knot_window[2] - knot_window[1];

@@ -3,7 +3,6 @@ layout (isolines, equal_spacing) in;
 
 
 uniform sampler1D knots;
-uniform int inv_num_patches;
 
 void main(void)
 {
@@ -15,9 +14,12 @@ void main(void)
     knot_window[0] = texelFetch(knots, gl_PrimitiveID + 2, 0).r;
     knot_window[0] = texelFetch(knots, gl_PrimitiveID + 3, 0).r;
     float a[3];
-    a[0] = knot_window[1] - knot_window[0];
-    a[1] = knot_window[2] - knot_window[1];
-    a[2] = knot_window[3] - knot_window[2];
+    // a[0] = knot_window[1] - knot_window[0];
+    // a[1] = knot_window[2] - knot_window[1];
+    // a[2] = knot_window[3] - knot_window[2];
+    a[0] = 1;
+    a[1] = 1;
+    a[2] = 1;
 
     float alpha = a[0] / a[1];
     float beta = a[2] / a[1];
@@ -28,8 +30,9 @@ void main(void)
     float c2 = (1 - t)*(t + alpha)*tmp1 + t*(1 - t*tmp2);
     float c3 = t * t * tmp2;
 
-    vec4 p1 = gl_in[0].gl_Position;
-    vec4 p2 = gl_in[1].gl_Position;
-    vec4 p3 = gl_in[2].gl_Position;
-    gl_Position = c1*p1 + c2*p2 + c3*p3;
+    vec2 p1 = gl_in[0].gl_Position.xy;
+    vec2 p2 = gl_in[1].gl_Position.xy;
+    vec2 p3 = gl_in[2].gl_Position.xy;
+    // gl_Position = vec4(c1*p1 + c2*p2 + c3*p3, 1,1);
+    gl_Position = vec4((1 - t)*p1 + t*p3, 1,1);
 }

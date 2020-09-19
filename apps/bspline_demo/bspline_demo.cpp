@@ -8,6 +8,11 @@
 #include "mesh_processing/mesh_processing.h"
 
 
+Aspect<Camera> main_camera;
+std::vector<vec2> bspline_positions;
+std::vector<float> bspline_knots;
+
+
 class App : public IGC::Callbacks {
 public:
     World &world;
@@ -25,6 +30,18 @@ App::App(World &_world) : world{_world}
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     Entity cameraman = create_object_viewer_cameraman(world, obj);
     cameraman.get<Transform>()->position = vec3(0,0,2);
+    
+    main_camera = cameraman.get<Camera>();
+
+    int n = 10;
+    bspline_positions = std::vector<vec2>(n);
+    bspline_knots = std::vector<float>(n + 3);
+    for (int i = 0; i < n; i++) {
+        bspline_positions[i] = vec2::random(0.1, 0.9);
+    }
+    for (int i = 0; i < n+3; i++) {
+        bspline_knots[i] = i;
+    }
 }
 
 
@@ -33,6 +50,7 @@ void App::close()
 }
 void App::loop()
 {
+    world.graphics.paint.quadratic_bspline(main_camera, bspline_positions, bspline_knots, 0.1, vec4(1,0,1,1));
 }
 
 void App::window_handler(WindowEvent e)

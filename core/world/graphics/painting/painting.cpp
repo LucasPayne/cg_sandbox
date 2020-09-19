@@ -283,12 +283,6 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
         }
     }
 
-    // // Convert the knot vector into knot span lengths.
-    // std::vector<float> knot_span_lengths(m);
-    // for (int i = 0; i < m; i++) {
-    //     knot_span_lengths[i] = knots[i+1] - knots[i];
-    // }
-
     // GPU data upload.
     //------------------------------------------------------------
     // Create vertex array.
@@ -300,9 +294,9 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * n, (const void *) &positions[0], GL_DYNAMIC_DRAW);
-
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint index_buffer;
     glGenBuffers(1, &index_buffer);
@@ -317,25 +311,28 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 
     GLuint knot_texture;
     glGenTextures(1, &knot_texture);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
     glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, knot_texture_buffer);
-    glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     // Rendering.
     //------------------------------------------------------------
-    quadratic_bspline_2D_shader_program->bind();
-
-    glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &color);
-    glUniform1f(quadratic_bspline_2D_shader_program->uniform_location("inv_num_patches"), 1.0 / num_patches);
-
+    // auto &program = quadratic_bspline_2D_shader_program;
+    auto &program = primitive_lines_2D_shader_program;
+    program->bind();
     graphics.begin_camera_rendering(camera);
 
-    glPatchParameteri(GL_PATCH_VERTICES, 3);
-    glDrawElements(GL_PATCHES, num_patches, index_type, (const void *) 0);
+    // glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &color);
+    // glUniform1i(quadratic_bspline_2D_shader_program->uniform_location("knots"), 0);
+    // glPatchParameteri(GL_PATCH_VERTICES, 3);
+    // glLineWidth(4);
+    // glDrawElements(GL_PATCHES, num_patches, index_type, (const void *) 0);
+
+    glLineWidth(4);
+    glDrawArrays(GL_LINE_STRIP, 0, positions.size());
 
     graphics.end_camera_rendering(camera);
-    quadratic_bspline_2D_shader_program->unbind();
+    program->unbind();
 
     // Cleanup.
     //------------------------------------------------------------
@@ -369,4 +366,9 @@ void Painting::init()
     quadratic_bspline_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
     quadratic_bspline_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
     quadratic_bspline_2D_shader_program->link();
+
+    primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();
+    primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/primitive_lines_2D.vert"));
+    primitive_lines_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/primitive_lines_2D.frag"));
+    primitive_lines_2D_shader_program->link();
 }

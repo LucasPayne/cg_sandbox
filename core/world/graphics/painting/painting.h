@@ -76,6 +76,7 @@ private:
 
     // 2D painting programs.
     Resource<GLShaderProgram> quadratic_bspline_2D_shader_program;
+    Resource<GLShaderProgram> primitive_lines_2D_shader_program;
 
     void render_spheres();
     void render_lines();

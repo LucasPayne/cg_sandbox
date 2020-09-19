@@ -62,6 +62,7 @@ public:
     void wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width);
 
     // 2D painting commands.
+    void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
 
 private:
@@ -75,7 +76,8 @@ private:
     Resource<GLShaderProgram> wireframe_shader_program;
 
     // 2D painting programs.
-    Resource<GLShaderProgram> quadratic_bspline_2D_shader_program;
+    static const int max_bspline_degree;
+    std::vector<Resource<GLShaderProgram>> bspline_2D_shader_programs; // The program for degree i+1 is at index i.
     Resource<GLShaderProgram> primitive_lines_2D_shader_program;
 
     void render_spheres();

@@ -20,9 +20,6 @@ void main(void)
     a[0] = knot_window[1] - knot_window[0];
     a[1] = knot_window[2] - knot_window[1];
     a[2] = knot_window[3] - knot_window[2];
-    // a[0] = 1;
-    // a[1] = 1;
-    // a[2] = 1;
 
     float alpha = a[0] / a[1];
     float beta = a[2] / a[1];
@@ -38,10 +35,4 @@ void main(void)
     vec2 p3 = tes_in[2].position;
 
     gl_Position = vec4(c1*p1 + c2*p2 + c3*p3, -1,1);
-
-    // Bezier test.
-    // gl_Position = vec4((1-t)*(1-t)*p1 + 2*t*(1-t)*p2 + t*t*p3, -1,1);
-
-    // Uniform knot test.
-    // gl_Position = vec4(0.5*(1-t)*(1-t)*p1 + (0.5*(1 - t)*(1 + t) + t*(1 - 0.5*t))*p2 + 0.5*t*t*p3, -1,1);
 }

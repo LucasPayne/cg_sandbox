@@ -1,3 +1,4 @@
+#include <time.h>
 #include "cg_sandbox.h"
 #include "opengl_utilities/gl.h"
 #include "utils/force_aspect_ratio.cpp"
@@ -33,7 +34,7 @@ App::App(World &_world) : world{_world}
     
     main_camera = cameraman.get<Camera>();
 
-    int n = 10;
+    int n = 15;
     bspline_positions = std::vector<vec2>(n);
     bspline_knots = std::vector<float>(n + 3);
     for (int i = 0; i < n; i++) {
@@ -50,7 +51,9 @@ void App::close()
 }
 void App::loop()
 {
-    world.graphics.paint.quadratic_bspline(main_camera, bspline_positions, bspline_knots, 0.1, vec4(1,0,1,1));
+    float width = 0.1;
+    // float width = 0.008;
+    world.graphics.paint.quadratic_bspline(main_camera, bspline_positions, bspline_knots, width, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)
@@ -80,6 +83,8 @@ void App::mouse_handler(MouseEvent e)
 
 int main(int argc, char *argv[])
 {
+    srand(time(0));
+
     printf("[main] Creating context...\n");
     IGC::Context context("A world");
     printf("[main] Creating world...\n");

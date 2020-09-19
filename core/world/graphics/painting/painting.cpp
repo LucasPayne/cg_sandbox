@@ -244,13 +244,14 @@ void Painting::line(vec3 a, vec3 b, float width, vec4 color)
 }
 
 
-void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
+void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
 {
     // The B-spline is immediately rendered.
     int m = knots.size()-1; // The knot vector is U = { u_0,...,u_m }
     int n = positions.size(); // Number of control points.
-    int num_patches = n - 2; // Number of patches to renders == number of index windows to create.
-    assert(m - 2 == n); // Make sure that the knot vector has the correct length.
+    int num_patches = n - degree; // Number of patches to renders == number of index windows to create.
+    assert(m - degree == n); // Make sure that the knot vector has the correct length.
+    int patch_num_vertices = degree + 1; // Number of points that determine a patch.
 
     // Data initialization.
     //------------------------------------------------------------
@@ -268,17 +269,17 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
         index_bytes = 4;
         index_bytes = GL_UNSIGNED_INT;
     }
-    // Create the index array, consisting of windows of three indices.
-    // For example, if n == 5, then (012, 123, 234) is created.
-    std::vector<uint8_t> index_array_bytes(3 * index_bytes * num_patches);
+    // Create the index array, consisting of windows of patch_num_vertices indices.
+    // For example, if n == 5 and degree == 2, then (012, 123, 234) is created.
+    std::vector<uint8_t> index_array_bytes(patch_num_vertices * index_bytes * num_patches);
     for (int i = 0; i < num_patches; i++) {
-        for (int j = 0; j < 3; j++) {
+        for (int j = 0; j < patch_num_vertices; j++) {
             if (index_bytes == 1) {
-                index_array_bytes[3*i + j] = i + j;
+                index_array_bytes[patch_num_vertices*i + j] = i + j;
             } else if (index_bytes == 2) {
-                *((uint16_t *) &index_array_bytes[3*i + j]) = i + j;
+                *((uint16_t *) &index_array_bytes[patch_num_vertices*i + j]) = i + j;
             } else {
-                *((uint32_t *) &index_array_bytes[3*i + j]) = i + j;
+                *((uint32_t *) &index_array_bytes[patch_num_vertices*i + j]) = i + j;
             }
         }
     }
@@ -301,7 +302,7 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
     GLuint index_buffer;
     glGenBuffers(1, &index_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * index_bytes * num_patches, (const void *) &index_array_bytes[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, patch_num_vertices * index_bytes * num_patches, (const void *) &index_array_bytes[0], GL_DYNAMIC_DRAW);
 
     // Upload 1D texture of knots.
     GLuint knot_texture_buffer;
@@ -317,26 +318,38 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
     // Rendering.
     //------------------------------------------------------------
     graphics.begin_camera_rendering(camera);
+    glDisable(GL_DEPTH_TEST);
     const bool test_primitive_lines = true;
     if (test_primitive_lines) {
         primitive_lines_2D_shader_program->bind();
         glLineWidth(4);
         glDrawArrays(GL_LINE_STRIP, 0, positions.size());
+        glUniform4f(primitive_lines_2D_shader_program->uniform_location("color"), 0.5,0.5,0.5,0.45);
         primitive_lines_2D_shader_program->unbind();
     }
-    auto &program = quadratic_bspline_2D_shader_program;
+    auto &program = bspline_2D_shader_programs[degree];
     program->bind();
 
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    int viewport_width = (int) viewport[2];
+    int viewport_height = (int) viewport[3];
     glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
     glUniform1i(program->uniform_location("knots"), 0);
+    glUniform1f(program->uniform_location("half_width"), 0.5*width);
+    glUniform1f(program->uniform_location("viewport_height_over_width"), camera->aspect_ratio()); //note: Currently aspect ratios are height/width.
+    glUniform1f(program->uniform_location("inv_viewport_width_squared"), 1.0 / (viewport_width * viewport_width));
+    glUniform1f(program->uniform_location("inv_viewport_height_squared"), 1.0 / (viewport_height * viewport_height));
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
 
     glPatchParameteri(GL_PATCH_VERTICES, 3);
-    glLineWidth(4);
+    glLineWidth(10);
     glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);
 
     program->unbind();
+    glEnable(GL_DEPTH_TEST); // note: Assuming this was on before.
     graphics.end_camera_rendering(camera);
 
     // Cleanup.
@@ -349,7 +362,13 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 }
 
 
+void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
+{
+    bspline(camera, 2, positions, knots, width, color);
+}
 
+
+const int Painting::max_bspline_degree = 3;
 void Painting::init()
 {
     spheres_shader_program = world.resources.add<GLShaderProgram>();
@@ -365,12 +384,16 @@ void Painting::init()
     wireframe_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/triangle_wireframe.frag"));
     wireframe_shader_program->link();
 
-    quadratic_bspline_2D_shader_program = world.resources.add<GLShaderProgram>();
-    quadratic_bspline_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
-    quadratic_bspline_2D_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
-    quadratic_bspline_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
-    quadratic_bspline_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
-    quadratic_bspline_2D_shader_program->link();
+    for (int degree = 1; degree <= max_bspline_degree; degree++) {
+        auto program = world.resources.add<GLShaderProgram>();
+        program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
+        program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
+        program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
+        program->add_shader(GLShader(GeometryShader, "resources/painting/bspline_2D.geom"));
+        program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
+        program->link();
+        bspline_2D_shader_programs.push_back(program);
+    }
 
     primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();
     primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/primitive_lines_2D.vert"));

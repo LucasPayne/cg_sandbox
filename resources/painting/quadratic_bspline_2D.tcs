@@ -1,9 +1,18 @@
 #version 420
 layout (vertices = 3) out;
 
+in VS_OUT {
+    vec2 position;
+} tcs_in[];
+
+out TCS_OUT {
+    vec2 position;
+} tcs_out[];
 
 void main(void)
 {
     gl_TessLevelOuter[0] = 1;
-    gl_TessLevelOuter[1] = 10;
+    gl_TessLevelOuter[1] = 50;
+
+    tcs_out[gl_InvocationID].position = tcs_in[gl_InvocationID].position;
 }

@@ -317,22 +317,25 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 
     // Rendering.
     //------------------------------------------------------------
-    // auto &program = quadratic_bspline_2D_shader_program;
-    auto &program = primitive_lines_2D_shader_program;
-    program->bind();
     graphics.begin_camera_rendering(camera);
+    const bool test_primitive_lines = true;
+    if (test_primitive_lines) {
+        primitive_lines_2D_shader_program->bind();
+        glLineWidth(4);
+        glDrawArrays(GL_LINE_STRIP, 0, positions.size());
+        primitive_lines_2D_shader_program->unbind();
+    }
+    auto &program = quadratic_bspline_2D_shader_program;
+    program->bind();
 
-    // glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &color);
-    // glUniform1i(quadratic_bspline_2D_shader_program->uniform_location("knots"), 0);
-    // glPatchParameteri(GL_PATCH_VERTICES, 3);
-    // glLineWidth(4);
-    // glDrawElements(GL_PATCHES, num_patches, index_type, (const void *) 0);
-
+    glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
+    glUniform1i(program->uniform_location("knots"), 0);
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
     glLineWidth(4);
-    glDrawArrays(GL_LINE_STRIP, 0, positions.size());
+    glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);
 
-    graphics.end_camera_rendering(camera);
     program->unbind();
+    graphics.end_camera_rendering(camera);
 
     // Cleanup.
     //------------------------------------------------------------

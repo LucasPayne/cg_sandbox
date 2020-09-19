@@ -60,6 +60,19 @@ void App::window_handler(WindowEvent e)
 void App::keyboard_handler(KeyboardEvent e)
 {
     check_quit_key(e, KEY_Q);
+
+    if (e.action == KEYBOARD_PRESS) {
+        if (e.key.code == KEY_I) {
+            for (int i = 0; i < bspline_knots.size(); i++) {
+                bspline_knots[i] += (2*((i+1)%2)-1)*0.1;
+            }
+        }
+        if (e.key.code == KEY_O) {
+            for (int i = 0; i < bspline_knots.size(); i++) {
+                bspline_knots[i] -= (2*((i+1)%2)-1)*0.1;
+            }
+        }
+    }
 }
 void App::mouse_handler(MouseEvent e)
 {

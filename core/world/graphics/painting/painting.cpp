@@ -311,7 +311,6 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 
     GLuint knot_texture;
     glGenTextures(1, &knot_texture);
-    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
     glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, knot_texture_buffer);
 
@@ -330,6 +329,9 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 
     glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
     glUniform1i(program->uniform_location("knots"), 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
+
     glPatchParameteri(GL_PATCH_VERTICES, 3);
     glLineWidth(4);
     glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);

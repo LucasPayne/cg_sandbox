@@ -361,6 +361,38 @@ struct vec2 {
                     (1-t)*a.y() + t*b.y());
     }
 };
+// vec2-vec2 operations.
+// u + v
+inline vec2 operator+(const vec2 &a, const vec2 &b) {
+    return vec2(a[0]+b[0],a[1]+b[1]);
+}
+// u - v
+inline vec2 operator-(const vec2 &a, const vec2 &b) {
+    return vec2(a[0]-b[0],a[1]-b[1]);
+}
+// u * v
+inline vec2 operator*(const vec2 &a, const vec2 &b) {
+    return vec2(a[0]*b[0],a[1]*b[1]);
+}
+// u / v
+inline vec2 operator/(const vec2 &a, const vec2 &b) {
+    return vec2(a[0]/b[0],a[1]/b[1]);
+}
+// u == v
+inline bool operator==(const vec2 &a, const vec2 &b) {
+    return (a.x()==b.x()) && (a.y()==b.y());
+}
+
+// scalar-vec2 operations.
+inline vec2 operator*(const float &t, const vec2 &v) {
+    return vec2(t*v[0], t*v[1]);
+}
+inline vec2 operator*(const vec2 &v, const float &t) {
+    return vec2(t*v[0], t*v[1]);
+}
+inline vec2 operator/(const vec2 &v, const float &t) {
+    return vec2(v[0]/t, v[1]/t);
+}
 
 
 //--------------------------------------------------------------------------------

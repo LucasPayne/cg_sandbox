@@ -15,12 +15,18 @@ struct BSplineDemo : public IBehaviour {
     std::vector<float> knots;
     float width;
     vec4 color;
+    
+    float point_radius;
+    bool dragging_point;
+    int dragging_point_index;
 
-    BSplineDemo(Aspect<Camera> _main_camera, int n)
+    BSplineDemo(Aspect<Camera> _main_camera, int n) :
+        dragging_point{false}
     {
         main_camera = _main_camera;
         color = vec4(1,0.4,0.4,1);
         width = 0.008;
+        point_radius = 0.005;
         positions = std::vector<vec2>(n);
         knots = std::vector<float>(n + 3);
         for (int i = 0; i < n; i++) {
@@ -32,10 +38,27 @@ struct BSplineDemo : public IBehaviour {
     }
 
     void update() {
-        printf("updating Bspline demo\n");
         world->graphics.paint.quadratic_bspline(main_camera, positions, knots, width, color);
-        
-        world->graphics.paint.circles(main_camera, positions, 0.005, vec4(0,0,0,1));
+        world->graphics.paint.circles(main_camera, positions, point_radius, vec4(1,1,1,1), 0.333, vec4(0,0,0,1));
+        // world->graphics.paint.lines(main_camera, positions, 0.001, vec4(0,0,0,1));
+    }
+
+    void mouse_handler(MouseEvent e) {
+        if (e.action == MOUSE_BUTTON_PRESS) {
+            for (int i = 0; i < positions.size(); i++) {
+                if (vec2::dot(vec2(e.cursor.x, e.cursor.y) - positions[i],
+                              vec2(e.cursor.x, e.cursor.y) - positions[i]) <= point_radius * point_radius) {
+                    dragging_point = true;
+                    dragging_point_index = i;
+                }
+            }
+        } else if (e.action == MOUSE_BUTTON_RELEASE) {
+            dragging_point = false;
+        } else if (e.action == MOUSE_MOVE) {
+            if (dragging_point) {
+                positions[dragging_point_index] = vec2(e.cursor.x, e.cursor.y);
+            }
+        }
     }
 
     void keyboard_handler(KeyboardEvent e) {
@@ -108,7 +131,7 @@ App::App(World &_world) : world{_world}
     cameraman.get<Transform>()->position = vec3(0,0,2);
     
     auto demo = world.entities.add();
-    world.add<BSplineDemo>(demo, cameraman.get<Camera>(), 100);
+    world.add<BSplineDemo>(demo, cameraman.get<Camera>(), 9);
 
     auto dragon = world.entities.add();
     dragon.add<Transform>(vec3(1,0,0));

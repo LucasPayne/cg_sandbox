@@ -40,6 +40,8 @@ struct PaintingCircles {
     int n;
     float radius;
     vec4 color;
+    float outline_width;
+    vec4 outline_color;
 };
 
 struct WireframeRenderData {
@@ -72,7 +74,7 @@ public:
     // 2D painting commands.
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
-    void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color);
+    void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width = 0.f, vec4 outline_color = vec4::zero());
 
 private:
     // 3D painting buffers.

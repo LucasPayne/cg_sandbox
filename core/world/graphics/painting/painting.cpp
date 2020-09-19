@@ -373,13 +373,16 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 }
 
 
-void Painting::circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color)
+void Painting::circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width, vec4 outline_color)
 {
     PaintingCircles circles;
     circles.camera = camera;
     circles.n = positions.size();
     circles.radius = radius;
     circles.color = color;
+    circles.outline_width = outline_width;
+    if (outline_width == 0.f) outline_color = color; //prevent antialiasing artifacts.
+    circles.outline_color = outline_color;
     circle_buffer.push_back(circles);
 
     for (auto &v : positions) {
@@ -418,6 +421,8 @@ void Painting::render_circles()
 
         glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &circles.color);
         glUniform1f(program->uniform_location("radius"), circles.radius);
+        glUniform1f(program->uniform_location("outline_width"), circles.outline_width);
+        glUniform4fv(program->uniform_location("outline_color"), 1, (const GLfloat *) &circles.outline_color);
 
         glDrawArrays(GL_PATCHES, positions_index, circles.n);
 

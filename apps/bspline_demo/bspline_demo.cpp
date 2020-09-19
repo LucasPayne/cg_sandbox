@@ -9,9 +9,84 @@
 #include "mesh_processing/mesh_processing.h"
 
 
-Aspect<Camera> main_camera;
-std::vector<vec2> bspline_positions;
-std::vector<float> bspline_knots;
+struct BSplineDemo : public IBehaviour {
+    Aspect<Camera> main_camera;
+    std::vector<vec2> positions;
+    std::vector<float> knots;
+    float width;
+    vec4 color;
+
+    BSplineDemo(Aspect<Camera> _main_camera, int n)
+    {
+        main_camera = _main_camera;
+        color = vec4(1,0.4,0.4,1);
+        width = 0.008;
+        positions = std::vector<vec2>(n);
+        knots = std::vector<float>(n + 3);
+        for (int i = 0; i < n; i++) {
+            positions[i] = vec2::random(0.1, 0.9);
+        }
+        for (int i = 0; i < n+3; i++) {
+            knots[i] = i;
+        }
+    }
+
+    void update() {
+        printf("updating Bspline demo\n");
+        world->graphics.paint.quadratic_bspline(main_camera, positions, knots, width, color);
+        
+        world->graphics.paint.circles(main_camera, positions, 0.005, vec4(0,0,0,1));
+    }
+
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_I) {
+                for (int i = 0; i < knots.size(); i++) {
+                    knots[i] += (2*((i+1)%2)-1)*0.1;
+                }
+            }
+            if (e.key.code == KEY_O) {
+                for (int i = 0; i < knots.size(); i++) {
+                    knots[i] -= (2*((i+1)%2)-1)*0.1;
+                }
+            }
+            if (e.key.code == KEY_P) {
+                for (int i = 0; i < positions.size(); i++) {
+                    positions[i] = vec2::random(0.1, 0.9);
+                }
+            }
+            float width_grow_factor = 1.25;
+            if (e.key.code == KEY_Y) {
+                width /= width_grow_factor;
+            }
+            if (e.key.code == KEY_U) {
+                width *= width_grow_factor;
+            }
+        }
+    }
+};
+
+
+
+struct WireframeDemo : public IBehaviour {
+    SurfaceGeometry geom;
+
+    WireframeDemo(const std::string &model_path, float scale = 1.f) {
+        auto model = MLModel::load(model_path);
+        geom.add_model(model);
+        for (auto v : geom.vertices()) {
+            geom.vertex_positions[v] *= scale;
+        }
+    }
+
+    void update() {
+        auto t = entity.get<Transform>();
+        t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), 0.2*total_time);
+        world->graphics.paint.wireframe(geom, t->matrix(), 0.001);
+    }
+};
+
+
 
 
 class App : public IGC::Callbacks {
@@ -27,22 +102,17 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
-    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
+    auto obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
     obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
     Entity cameraman = create_object_viewer_cameraman(world, obj);
     cameraman.get<Transform>()->position = vec3(0,0,2);
     
-    main_camera = cameraman.get<Camera>();
+    auto demo = world.entities.add();
+    world.add<BSplineDemo>(demo, cameraman.get<Camera>(), 100);
 
-    int n = 100;
-    bspline_positions = std::vector<vec2>(n);
-    bspline_knots = std::vector<float>(n + 3);
-    for (int i = 0; i < n; i++) {
-        bspline_positions[i] = vec2::random(0.1, 0.9);
-    }
-    for (int i = 0; i < n+3; i++) {
-        bspline_knots[i] = i;
-    }
+    auto dragon = world.entities.add();
+    dragon.add<Transform>(vec3(1,0,0));
+    world.add<WireframeDemo>(dragon, "resources/models/dragon.off");
 }
 
 
@@ -51,9 +121,6 @@ void App::close()
 }
 void App::loop()
 {
-    // float width = 0.1;
-    float width = 0.02;
-    world.graphics.paint.quadratic_bspline(main_camera, bspline_positions, bspline_knots, width, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)
@@ -64,23 +131,6 @@ void App::keyboard_handler(KeyboardEvent e)
 {
     check_quit_key(e, KEY_Q);
 
-    if (e.action == KEYBOARD_PRESS) {
-        if (e.key.code == KEY_I) {
-            for (int i = 0; i < bspline_knots.size(); i++) {
-                bspline_knots[i] += (2*((i+1)%2)-1)*0.1;
-            }
-        }
-        if (e.key.code == KEY_O) {
-            for (int i = 0; i < bspline_knots.size(); i++) {
-                bspline_knots[i] -= (2*((i+1)%2)-1)*0.1;
-            }
-        }
-        if (e.key.code == KEY_P) {
-            for (int i = 0; i < bspline_positions.size(); i++) {
-                bspline_positions[i] = vec2::random(0.1, 0.9);
-            }
-        }
-    }
 }
 void App::mouse_handler(MouseEvent e)
 {

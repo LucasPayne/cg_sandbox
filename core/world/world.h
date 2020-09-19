@@ -30,8 +30,10 @@ public:
     void mouse_handler(MouseEvent e);
 
     // Behaviours.
-    template <typename B>
-    B *add(Entity e);
+    // template <typename B>
+    // B *add(Entity e);
+    template <typename T, typename... Args>
+    T *add(Entity e, Args&&... args);
 
     // Utilities.
     //todo: move this to a picker subsystem.
@@ -44,11 +46,13 @@ REFLECT_STRUCT(World);
 
 
 // Behaviours.
-template <typename T>
-T *World::add(Entity e)
-{   
+// template <typename T>
+// T *World::add(Entity e)
+template <typename T, typename... Args>
+T *World::add(Entity e, Args&&... args)
+{
     auto behaviour = e.add<Behaviour>();
-    behaviour->data = make_owned<T>();
+    behaviour->data = new T(std::forward<Args>(args)...);
     behaviour->enabled = true;
 
     behaviour->object()->world = this;

@@ -1,28 +1,23 @@
 #include "world/standard_aspects/standard_aspects.h"
 
 
-void Transform::init(vec3 _position, Quaternion _rotation)
-{
-    position = _position;
-    rotation = _rotation;
-    scale = 1.f;
-}
+Transform::Transform(vec3 _position, Quaternion _rotation) :
+    position{_position}, rotation{_rotation}, scale{1.f}
+{}
 
 
-void Transform::init(float x, float y, float z)
-{
-    position = vec3(x,y,z);
-    rotation = Quaternion::identity();
-    scale = 1.f;
-}
+Transform::Transform(float x, float y, float z) :
+    position{vec3(x,y,z)},
+    rotation{Quaternion::identity()},
+    scale{1.f}
+{}
 
 
-void Transform::init(vec3 _position)
-{
-    position = _position;
-    rotation = Quaternion::identity();
-    scale = 1.f;
-}
+Transform::Transform(vec3 _position) :
+    position{_position},
+    rotation{Quaternion::identity()},
+    scale{1.f}
+{}
 
 
 void Transform::init_lookat(vec3 position, vec3 target)

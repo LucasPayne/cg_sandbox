@@ -100,8 +100,6 @@ void Painting::render_lines()
 }
 
 
-
-
 void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width)
 {
     struct WireframeVertexAttributes {
@@ -216,6 +214,7 @@ void Painting::render()
     render_spheres();
     render_lines();
     render_wireframes();
+    render_circles();
 }
 
 
@@ -230,6 +229,8 @@ void Painting::clear()
         glDeleteBuffers(1, &render_data.triangle_index_buffer);
     }
     wireframe_render_data.clear();
+    circle_buffer.clear();
+    circle_positions.clear();
 }
 
 
@@ -319,7 +320,7 @@ void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> posi
     //------------------------------------------------------------
     graphics.begin_camera_rendering(camera);
     glDisable(GL_DEPTH_TEST);
-    const bool test_primitive_lines = true;
+    const bool test_primitive_lines = false;
     if (test_primitive_lines) {
         primitive_lines_2D_shader_program->bind();
         glLineWidth(4);
@@ -372,6 +373,62 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
 }
 
 
+void Painting::circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color)
+{
+    PaintingCircles circles;
+    circles.camera = camera;
+    circles.n = positions.size();
+    circles.radius = radius;
+    circles.color = color;
+    circle_buffer.push_back(circles);
+
+    for (auto &v : positions) {
+        circle_positions.push_back(v);
+    }
+}
+
+void Painting::render_circles()
+{
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    GLuint vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * circle_positions.size(), (const void *) &circle_positions[0], GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
+    glEnableVertexAttribArray(0);
+
+    
+    glDisable(GL_DEPTH_TEST);
+    auto &program = circles_2D_shader_program;
+    program->bind();
+    glPatchParameteri(GL_PATCH_VERTICES, 1);
+    size_t positions_index = 0;
+    for (auto &circles : circle_buffer) {
+
+        graphics.begin_camera_rendering(circles.camera);
+
+        glUniform1f(program->uniform_location("viewport_width_over_height"), 1.0 / circles.camera->aspect_ratio());
+        GLint viewport[4];
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        int viewport_width = (int) viewport[2];
+        float antialiasing_extent = 0.5 / (viewport_width * circles.radius);
+        glUniform1f(program->uniform_location("antialiasing_extent"), antialiasing_extent);
+
+        glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &circles.color);
+        glUniform1f(program->uniform_location("radius"), circles.radius);
+
+        glDrawArrays(GL_PATCHES, positions_index, circles.n);
+
+        positions_index += circles.n;
+        graphics.end_camera_rendering(circles.camera);
+    }
+    program->unbind();
+    glEnable(GL_DEPTH_TEST);
+}
+
+
 const int Painting::max_bspline_degree = 3;
 void Painting::init()
 {
@@ -415,4 +472,11 @@ void Painting::init()
     primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/primitive_lines_2D.vert"));
     primitive_lines_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/primitive_lines_2D.frag"));
     primitive_lines_2D_shader_program->link();
+
+    circles_2D_shader_program = world.resources.add<GLShaderProgram>();
+    circles_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/circles_2D.vert"));
+    circles_2D_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/circles_2D.tcs"));
+    circles_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/circles_2D.tes"));
+    circles_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/circles_2D.frag"));
+    circles_2D_shader_program->link();
 }

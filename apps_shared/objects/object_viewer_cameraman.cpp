@@ -174,8 +174,7 @@ Entity create_object_viewer_cameraman(World &world, Entity target)
 {
     Entity cameraman = world.entities.add();
     auto camera = cameraman.add<Camera>(0.1, 300, 0.1, 0.566);
-    auto t = cameraman.add<Transform>();
-    t->init(0,0,0);
+    auto t = cameraman.add<Transform>(0,0,0);
     CameraController *controller = world.add<CameraController>(cameraman);
     Aspect<Behaviour> controller_b = cameraman.get<Behaviour>(); // Since this is the only behaviour, this will be the CameraController.
     controller->init();

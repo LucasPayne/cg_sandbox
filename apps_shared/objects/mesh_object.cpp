@@ -4,8 +4,7 @@ Entity create_mesh_object(World &world,
                           const std::string &mat_path)
 {
     Entity e = world.entities.add();
-    auto t = e.add<Transform>();
-    t->init(0,0,0);
+    auto t = e.add<Transform>(0,0,0);
     Resource<VertexArray> model = world.assets.models.load(model_path);
 
     Resource<GeometricMaterial> gmat = world.graphics.shading.geometric_materials.load("resources/triangle_mesh.gmat");

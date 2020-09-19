@@ -52,11 +52,11 @@ void World::loop()
     printf("--------------------------------------------------------------------------------\n");
 
     graphics.clear();
+    graphics.clear_cameras();
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
-    graphics.clear_cameras();
     graphics.render_drawables();
     graphics.paint.render();
     graphics.paint.clear();

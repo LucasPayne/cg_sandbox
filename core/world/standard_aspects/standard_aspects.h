@@ -21,9 +21,9 @@ struct Transform : public IAspectType {
         position{vec3::zero()}, rotation{Quaternion::identity()}, scale{1.f}
     {}
 
-    void init(float x, float y, float z);
-    void init(vec3 _position);
-    void init(vec3 _position, Quaternion _rotation);
+    Transform(float x, float y, float z);
+    Transform(vec3 _position);
+    Transform(vec3 _position, Quaternion _rotation);
     void init_lookat(vec3 position, vec3 target);
     void lookat(vec3 target);
 
@@ -114,16 +114,26 @@ private:
 REFLECT_STRUCT(IBehaviour);
 
 struct Behaviour : public IAspectType {
-    IBehaviour *object() {
-        return data.as<IBehaviour>();
-    }
-    // Interpet as known IBehaviour-deriving type.
+    // note: Reflection removed for now.
+    // IBehaviour *object() {
+    //     return data.as<IBehaviour>();
+    // }
+    // // Interpet as known IBehaviour-deriving type.
+    // template <typename T>
+    // T *object_as() {
+    //     return reinterpret_cast<T *>(data.as<IBehaviour>());
+    // }
+
     template <typename T>
     T *object_as() {
-        return reinterpret_cast<T *>(data.as<IBehaviour>());
+        return reinterpret_cast<T *>(data);
+    }
+    IBehaviour *object() {
+        return data;
     }
 
-    GenericOwned data;
+    // GenericOwned data;
+    IBehaviour *data;
     bool enabled;
 
     void update();

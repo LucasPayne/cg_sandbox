@@ -34,6 +34,14 @@ struct PaintingLine {
     {}
 };
 
+struct PaintingCircles {
+    // Header struct.
+    Aspect<Camera> camera;
+    int n;
+    float radius;
+    vec4 color;
+};
+
 struct WireframeRenderData {
     GLuint vao;
     GLuint vertex_attribute_buffer;
@@ -64,11 +72,17 @@ public:
     // 2D painting commands.
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
+    void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color);
 
 private:
+    // 3D painting buffers.
     std::vector<PaintingSphere> spheres;
     std::vector<PaintingLine> lines;
     std::vector<WireframeRenderData> wireframe_render_data;
+
+    // 2D painting buffers.
+    std::vector<PaintingCircles> circle_buffer;
+    std::vector<vec2> circle_positions;
 
     // 3D painting programs.
     Resource<GLShaderProgram> spheres_shader_program;
@@ -80,10 +94,12 @@ private:
     std::vector<Resource<GLShaderProgram>> bspline_2D_shader_programs; // The program for degree i+1 is at index i.
     std::vector<Resource<GLShaderProgram>> bspline_2D_fillets_shader_programs;
     Resource<GLShaderProgram> primitive_lines_2D_shader_program;
+    Resource<GLShaderProgram> circles_2D_shader_program;
 
     void render_spheres();
     void render_lines();
     void render_wireframes();
+    void render_circles();
 
     Graphics &graphics;
     World &world;

@@ -25,7 +25,7 @@ END_ENTRIES()
 
 DESCRIPTOR_INSTANCE(Behaviour);
 BEGIN_ENTRIES(Behaviour)
-    ENTRY(data)
+    // ENTRY(data) //removing this for now, since without automatic serialization, it is inconvenient to require serializable Behaviour data...
 END_ENTRIES()
 
 

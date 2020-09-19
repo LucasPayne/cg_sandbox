@@ -247,13 +247,13 @@ void Painting::line(vec3 a, vec3 b, float width, vec4 color)
 void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
 {
     // The B-spline is immediately rendered.
-
     int m = knots.length()-1; // The knot vector is U = { u_0,...,u_m }
     int n = positions.length(); // Number of control points.
     int num_patches = n - 2; // Number of patches to renders == number of index windows to create.
-
     assert(m - 2 == n); // Make sure that the knot vector has the correct length.
 
+    // Data initialization.
+    //------------------------------------------------------------
     // Use the smallest type of index possible.
     int index_bytes;
     GLenum index_type;
@@ -268,15 +268,29 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
         index_bytes = 4;
         index_bytes = GL_UNSIGNED_INT;
     }
-    // Create the index array, consisting of windows of 3 indices.
+    // Create the index array, consisting of windows of three indices.
     // For example, if n == 5, then (012, 123, 234) is created.
-
-    // Convert the knot vector into knot span lengths.
-    std::vector<float> knot_span_lengths(m);
-    for (int i = 0; i < m; i++) {
-        knot_span_lengths[i] = knots[i+1] - knots[i];
+    std::vector<uint8_t> index_array_bytes(3 * index_bytes * num_patches);
+    for (int i = 0; i < num_patches; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (index_bytes == 1) {
+                index_array_bytes[3*i + j] = i + j;
+            } else if (index_bytes == 2) {
+                *((uint16_t *) &index_array_bytes[3*i + j]) = i + j;
+            } else {
+                *((uint32_t *) &index_array_bytes[3*i + j]) = i + j;
+            }
+        }
     }
 
+    // // Convert the knot vector into knot span lengths.
+    // std::vector<float> knot_span_lengths(m);
+    // for (int i = 0; i < m; i++) {
+    //     knot_span_lengths[i] = knots[i+1] - knots[i];
+    // }
+
+    // GPU data upload.
+    //------------------------------------------------------------
     // Create vertex array.
     GLuint vao;
     glCreateVertexArrays(1, &vao);
@@ -287,22 +301,49 @@ void Painting::quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positi
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * n, (const void *) &positions[0], GL_DYNAMIC_DRAW);
 
-    GLuint index_buffer;
-    glGenBuffers(1, &index_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t)
-
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
     glEnableVertexAttribArray(0);
 
+    GLuint index_buffer;
+    glGenBuffers(1, &index_buffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * index_bytes * num_patches, (const void *) &index_array_bytes[0], GL_DYNAMIC_DRAW);
 
+    // Upload 1D texture of knots.
+    GLuint knot_texture_buffer;
+    glGenBuffers(1, &knot_texture_buffer);
+    glBindBuffer(GL_TEXTURE_BUFFER, knot_texture_buffer);
+    glBufferData(GL_TEXTURE_BUFFER, (m+1)*sizeof(float), (const void *) &knots[0], GL_DYNAMIC_DRAW);
 
+    GLuint knot_texture;
+    glGenTextures(1, &knot_texture);
+    glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, knot_texture_buffer);
+    glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_BUFFER, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // Rendering.
+    //------------------------------------------------------------
     quadratic_bspline_2D_shader_program->bind();
+
+    glUniform4fv(quadratic_bspline_2D_shader_program->uniform_location("color"), (const GLfloat *) &color);
+    glUniform1f(quadratic_bspline_2D_shader_program->uniform_location("inv_num_patches"), 1.0 / num_patches);
+
     graphics.begin_camera_rendering(camera);
 
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    glDrawElements(GL_PATCHES, num_patches, index_type, (const void *) 0);
 
     graphics.end_camera_rendering(camera);
     quadratic_bspline_2D_shader_program->unbind();
+
+    // Cleanup.
+    //------------------------------------------------------------
+    glDeleteBuffers(1, &index_buffer);
+    glDeleteBuffers(1, &vertex_buffer);
+    glDeleteVertexArrays(1, &vao);
+    glDeleteTextures(1, &knot_texture);
+    glDeleteBuffers(1, &knot_texture_buffer);
 }
 
 
@@ -326,6 +367,6 @@ void Painting::init()
     quadratic_bspline_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
     quadratic_bspline_2D_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
     quadratic_bspline_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
-    quadratic_bspline_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/quadratic_bspline_2D.frag"));
+    quadratic_bspline_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
     quadratic_bspline_2D_shader_program->link();
 }

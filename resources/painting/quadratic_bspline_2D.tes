@@ -1,0 +1,35 @@
+#version 420
+layout (isolines, equal_spacing) in;
+
+
+uniform sampler1D knots;
+uniform int inv_num_patches;
+
+void main(void)
+{
+    float t = gl_TessCoord.x;
+
+    float knot_window[4];
+    knot_window[0] = sample(knots, float(gl_PrimitiveID) * inv_num_patches);
+    knot_window[1] = sample(knots, float(gl_PrimitiveID + 1) * inv_num_patches);
+    knot_window[2] = sample(knots, float(gl_PrimitiveID + 2) * inv_num_patches);
+    knot_window[3] = sample(knots, float(gl_PrimitiveID + 3) * inv_num_patches);
+    float a[3];
+    a[0] = knot_window[1] - knot_window[0];
+    a[1] = knot_window[2] - knot_window[1];
+    a[2] = knot_window[3] - knot_window[2];
+
+    float alpha = a[0] / a[1];
+    float beta = a[2] / a[1];
+
+    float tmp1 = 1.0 / (1 + alpha);
+    float tmp2 = 1.0 / (1 + beta);
+    float c1 = (1 - t)*(1 - (t + alpha))*tmp1;
+    float c2 = (1 - t)*(t + alpha)*tmp1 + t*(1 - t*tmp2);
+    float c3 = t * t * tmp2;
+
+    vec4 p1 = gl_in[0].gl_Position;
+    vec4 p2 = gl_in[1].gl_Position;
+    vec4 p3 = gl_in[2].gl_Position;
+    gl_Position = c1*p1 + c2*p2 + c3*p3;
+}

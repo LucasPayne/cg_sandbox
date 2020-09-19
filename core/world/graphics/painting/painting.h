@@ -78,6 +78,7 @@ private:
     // 2D painting programs.
     static const int max_bspline_degree;
     std::vector<Resource<GLShaderProgram>> bspline_2D_shader_programs; // The program for degree i+1 is at index i.
+    std::vector<Resource<GLShaderProgram>> bspline_2D_fillets_shader_programs;
     Resource<GLShaderProgram> primitive_lines_2D_shader_program;
 
     void render_spheres();

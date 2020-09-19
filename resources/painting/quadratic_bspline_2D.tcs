@@ -12,7 +12,7 @@ out TCS_OUT {
 void main(void)
 {
     gl_TessLevelOuter[0] = 1;
-    gl_TessLevelOuter[1] = 10;
+    gl_TessLevelOuter[1] = 25;
 
     tcs_out[gl_InvocationID].position = tcs_in[gl_InvocationID].position;
 }

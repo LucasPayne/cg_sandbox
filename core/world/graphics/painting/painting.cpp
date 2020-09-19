@@ -327,28 +327,32 @@ void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> posi
         glUniform4f(primitive_lines_2D_shader_program->uniform_location("color"), 0.5,0.5,0.5,0.45);
         primitive_lines_2D_shader_program->unbind();
     }
-    auto &program = bspline_2D_shader_programs[degree];
-    program->bind();
 
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     int viewport_width = (int) viewport[2];
     int viewport_height = (int) viewport[3];
-    glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
-    glUniform1i(program->uniform_location("knots"), 0);
-    glUniform1f(program->uniform_location("half_width"), 0.5*width);
-    glUniform1f(program->uniform_location("viewport_height_over_width"), camera->aspect_ratio()); //note: Currently aspect ratios are height/width.
-    glUniform1f(program->uniform_location("inv_viewport_width_squared"), 1.0 / (viewport_width * viewport_width));
-    glUniform1f(program->uniform_location("inv_viewport_height_squared"), 1.0 / (viewport_height * viewport_height));
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
+    Resource<GLShaderProgram> programs[2] = {bspline_2D_fillets_shader_programs[degree], bspline_2D_shader_programs[degree]};
+    for (int i = 0; i < 2; i++) {
+        auto &program = programs[i];
+        program->bind();
+        glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
+        glUniform1i(program->uniform_location("knots"), 0);
+        glUniform1f(program->uniform_location("half_width"), 0.5*width);
+        glUniform1f(program->uniform_location("viewport_height_over_width"), camera->aspect_ratio()); //note: Currently aspect ratios are height/width.
+        glUniform1f(program->uniform_location("inv_viewport_width_squared"), 1.0 / (viewport_width * viewport_width));
+        glUniform1f(program->uniform_location("inv_viewport_height_squared"), 1.0 / (viewport_height * viewport_height));
 
-    glPatchParameteri(GL_PATCH_VERTICES, 3);
-    glLineWidth(10);
-    glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
 
-    program->unbind();
+        glPatchParameteri(GL_PATCH_VERTICES, 3);
+        glLineWidth(10);
+        glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);
+        program->unbind();
+    }
+
     glEnable(GL_DEPTH_TEST); // note: Assuming this was on before.
     graphics.end_camera_rendering(camera);
 
@@ -385,6 +389,7 @@ void Painting::init()
     wireframe_shader_program->link();
 
     for (int degree = 1; degree <= max_bspline_degree; degree++) {
+        {
         auto program = world.resources.add<GLShaderProgram>();
         program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
         program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
@@ -393,6 +398,17 @@ void Painting::init()
         program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
         program->link();
         bspline_2D_shader_programs.push_back(program);
+        }
+        {
+        auto program = world.resources.add<GLShaderProgram>();
+        program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
+        program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
+        program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D_point_mode.tes"));
+        program->add_shader(GLShader(GeometryShader, "resources/painting/bspline_2D_fillets.geom"));
+        program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D_fillets.frag"));
+        program->link();
+        bspline_2D_fillets_shader_programs.push_back(program);
+        }
     }
 
     primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();

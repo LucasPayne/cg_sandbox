@@ -1,0 +1,16 @@
+#version 420
+layout (vertices = 9) out;
+
+
+in VS_OUT {
+    vec3 position;
+} tcs_in[];
+
+out TCS_OUT {
+    vec3 position;
+} tcs_out[];
+
+void main(void)
+{
+    tcs_out[gl_InvocationID].position = tcs_in[gl_InvocationID].position;
+}

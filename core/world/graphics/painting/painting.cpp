@@ -2,8 +2,6 @@
 
 
 
-
-
 void Painting::render_spheres()
 {
     GLuint spheres_vao;

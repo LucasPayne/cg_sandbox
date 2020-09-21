@@ -16,31 +16,35 @@ void main(void)
     float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
 
-#if 1
 
-    // gl_Position = mvp_matrix * vec4(mix(mix(tes_in[0].position, tes_in[2].position, u),
-    //                                     mix(tes_in[6].position, tes_in[8].position, u), v), 1);
+    float halpha = 1;
+    float hbeta = 1;
+    float valpha = 1;
+    float vbeta = 1;
+    float tmp1 = 1.0 / (1 + halpha);
+    float tmp2 = 1.0 / (1 + hbeta);
 
-    // gl_Position = mvp_matrix * vec4(mix(tes_in[0].position, tes_in[1].position, u), 1);
+    float c1 = (1 - u)*(1 - (u + halpha)*tmp1);
+    float c2 = (1 - u)*(u + halpha)*tmp1 + u*(1 - u*tmp2);
+    float c3 = u * u * tmp2;
 
-    // Bezier test.
+    // float c1 = 0.5*(1 - u)*(1 - u);
+    // float c2 = 0.5*(1 - u)*(1 + u) + 0.5*u*(1 - u)
+
     vec3 combined[3];
-    float c1 = u*u;
-    float c2 = 2*u*(1-u);
-    float c3 = (1-u)*(1-u);
     for (int i = 0; i < 3; i++) {
         combined[i] = c1*tes_in[3*i + 0].position
                      +c2*tes_in[3*i + 1].position
                      +c3*tes_in[3*i + 2].position;
     }
-    c1 = v*v;
-    c2 = 2*v*(1-v);
-    c3 = (1-v)*(1-v);
+    c1 = (1 - v)*(1 - (v + valpha)*tmp1);
+    c2 = (1 - v)*(v + valpha)*tmp1 + v*(1 - v*tmp2);
+    c3 = v * v * tmp2;
     gl_Position = mvp_matrix * vec4(c1*combined[0] + c2*combined[1] + c3*combined[2], 1);
     
 
 
-#else
+#if 0
     float vertical_knot_window[4];
     vertical_knot_window[0] = texelFetch(knots, gl_PrimitiveID + 0).r;
     vertical_knot_window[1] = texelFetch(knots, gl_PrimitiveID + 1).r;

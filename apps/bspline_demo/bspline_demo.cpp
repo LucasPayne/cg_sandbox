@@ -141,7 +141,11 @@ private:
 
     void update()
     {
-        control_grid[4].z() += 0.5*dt*sin(3*total_time);
+        for (int i = 0; i < control_grid.size(); i++) {
+            control_grid[i].z() += 0.5*dt*sin(3*total_time + 10*control_grid[i].x()*control_grid[i].y());
+        }
+
+
         sync_with_GPU();
 
         // auto t = entity.get<Transform>();
@@ -341,8 +345,8 @@ App::App(World &_world) : world{_world}
 #if 1
     auto nurbs_entity = world.entities.add();
     nurbs_entity.add<Transform>();
-    int m = 3;
-    int n = 3;
+    int m = 10;
+    int n = 10;
     std::vector<vec3> positions;
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {

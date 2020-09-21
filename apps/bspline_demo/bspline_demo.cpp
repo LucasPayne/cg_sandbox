@@ -4,7 +4,7 @@
 #include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 #include "objects/mesh_object.cpp"
-#include "objects/object_viewer_cameraman.cpp"
+#include "objects/cameraman.cpp"
 #include "behaviours/Trackball.cpp"
 #include "mesh_processing/mesh_processing.h"
 
@@ -35,8 +35,12 @@ public:
         nurbs_program.add_shader(GLShader(VertexShader, "shaders/NURBS/quadratic_NURBS.vert"));
         nurbs_program.add_shader(GLShader(TessControlShader, "shaders/NURBS/quadratic_NURBS.tcs"));
         nurbs_program.add_shader(GLShader(TessEvaluationShader, "shaders/NURBS/quadratic_NURBS.tes"));
+        nurbs_program.add_shader(GLShader(GeometryShader, "shaders/NURBS/quadratic_NURBS.geom"));
         nurbs_program.add_shader(GLShader(FragmentShader, "shaders/NURBS/quadratic_NURBS.frag"));
         nurbs_program.link();
+        // nurbs_program.add_shader(GLShader(VertexShader, "shaders/NURBS/TEST.vert"));
+        // nurbs_program.add_shader(GLShader(FragmentShader, "shaders/NURBS/quadratic_NURBS.frag"));
+        // nurbs_program.link();
     }
 
 private:
@@ -46,7 +50,6 @@ private:
 
         // Create index windows.
         int index_bytes;
-        GLenum index_type;
         if (num_control_points-1 <= 0xFF) {
             index_bytes = 1;
             index_type = GL_UNSIGNED_BYTE;
@@ -59,10 +62,11 @@ private:
             index_bytes = GL_UNSIGNED_INT;
         }
 
-        int num_horizontal_patches = n - degree;
         int num_vertical_patches = m - degree;
+        int num_horizontal_patches = n - degree;
         int num_patches = num_horizontal_patches * num_vertical_patches;
-        std::vector<uint8_t> index_array_bytes((degree + 1)*(degree + 1) * index_bytes * num_patches);
+        num_indices = (degree + 1) * (degree + 1) * num_patches;
+        std::vector<uint8_t> index_array_bytes(index_bytes * num_indices);
         int pos = 0;
         for (uint32_t i = 0; i < num_vertical_patches; i++) {
             for (uint32_t j = 0; j < num_horizontal_patches; j++) {
@@ -77,19 +81,36 @@ private:
                             *((uint32_t *) &index_array_bytes[pos]) = index;
                         }
                         pos ++;
+                        printf("%u ", index);
                     }
+                    printf("\n");
                 }
+                printf("=====\n");
             }
         }
+        // getchar();
 
         // GPU data upload.
         //------------------------------------------------------------
+
+
+        // printf("%u\n", control_grid.size());
+        // for (auto v : control_grid) std::cout << v << "\n";
+        // getchar();
+
+        // for (uint8_t i : index_array_bytes) {
+        //     printf("%u ", i);
+        // }
+        // printf("\n");getchar();
+
+
         // Upload vertex data.
         glCreateVertexArrays(1, &vao);
         glBindVertexArray(vao);
+
         glGenBuffers(1, &vertex_buffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * num_control_points, (const void *) &control_grid[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * control_grid.size(), (const void *) &control_grid[0], GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -104,7 +125,7 @@ private:
         // Upload 1D texture of knots.
         glGenBuffers(1, &knot_texture_buffer);
         glBindBuffer(GL_TEXTURE_BUFFER, knot_texture_buffer);
-        glBufferData(GL_TEXTURE_BUFFER, knots.size(), (const void *) &knots[0], GL_STATIC_DRAW);
+        glBufferData(GL_TEXTURE_BUFFER, sizeof(float)*knots.size(), (const void *) &knots[0], GL_STATIC_DRAW);
         glGenTextures(1, &knot_texture);
         glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
         glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, knot_texture_buffer);
@@ -112,25 +133,56 @@ private:
         glBindBuffer(GL_TEXTURE_BUFFER, 0);
     }
 
+    void sync_with_GPU()
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vec3) * control_grid.size(), (const void *) &control_grid[0]);
+    }
+
     void update()
     {
+        control_grid[4].z() += 0.5*dt*sin(3*total_time);
+        sync_with_GPU();
+
+        // auto t = entity.get<Transform>();
+        // t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), 0.2*total_time);
+
+
         mat4x4 matrix = entity.get<Transform>()->matrix();
 
         nurbs_program.bind();
         glPatchParameteri(GL_PATCH_VERTICES, 9);
+        glBindVertexArray(vao);
+
+        glUniform1i(nurbs_program.uniform_location("num_vertical_knots"), num_vertical_knots);
+        glUniform1i(nurbs_program.uniform_location("knots"), 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer); //-----probably don't need this.
+
+
         for (auto camera : world->entities.aspects<Camera>()) {
-            mat4x4 mvp_matrix = 
-
+            printf("Rendering NURBS...\n");
             world->graphics.begin_camera_rendering(camera);
+            mat4x4 mvp_matrix = camera->view_projection_matrix() * matrix;
 
-            
-            
-            glBindVertexArray(vao);
-            glDrawElements
+            glUniformMatrix4fv(nurbs_program.uniform_location("mvp_matrix"), 1, GL_FALSE, (const GLfloat *) &mvp_matrix);
+
+
+            glPointSize(10);
+            glLineWidth(1);
+            glDrawElements(GL_PATCHES, num_indices, index_type, (const void *) 0);
+            // glDrawArrays(GL_POINTS, 0, control_grid.size());
 
             world->graphics.end_camera_rendering(camera);
         }
         nurbs_program.unbind();
+
+        for (auto v : control_grid) world->graphics.paint.sphere((matrix * vec4(v, 1)).xyz(), 0.006, vec4(1,1,1,1));
+        // world->graphics.paint.sphere(vec3(0,0,0), 0.01, vec4(0,0,0,1));
+        // world->graphics.paint.sphere(vec3(0.05,0,0), 0.01, vec4(1,0,0,1));
+        // world->graphics.paint.sphere(vec3(0,0.05,0), 0.01, vec4(0,1,0,1));
+        // world->graphics.paint.sphere(vec3(0,0,0.05), 0.01, vec4(0,0,1,1));
     }
 
     int degree;
@@ -138,6 +190,8 @@ private:
     int n;
     int num_vertical_knots;
     int num_horizontal_knots;
+    GLenum index_type;
+    int num_indices; // Number of indices in the list of index windows.
     std::vector<vec3> control_grid;
     std::vector<float> weights;
     std::vector<float> knots;
@@ -270,29 +324,35 @@ public:
 };
 App::App(World &_world) : world{_world}
 {
-    auto obj = create_mesh_object(world, "resources/models/large/buddha.obj", "resources/model_test/model_test.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
-    Entity cameraman = create_object_viewer_cameraman(world, obj);
+    Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,0,2);
     
+#if 0
     auto demo = world.entities.add();
     world.add<BSplineDemo>(demo, cameraman.get<Camera>(), 9);
+#endif
 
+#if 0
     auto dragon = world.entities.add();
     dragon.add<Transform>(vec3(1,0,0));
     world.add<WireframeDemo>(dragon, "resources/models/dragon.off");
+#endif
 
+#if 1
     auto nurbs_entity = world.entities.add();
     nurbs_entity.add<Transform>();
-    int m = 6;
-    int n = 5;
-    std::vector<vec3> positions(m * n);
+    int m = 3;
+    int n = 3;
+    std::vector<vec3> positions;
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
-            positions.push_back(vec3(0.2*i, 0, 0.2*j));
+            // positions.push_back(vec3(0.2*i - 0.32, 0.2*j - 0.32, sin(i*0.08)));
+
+            positions.push_back(vec3(0.2*j, 0.8-0.2*i, 0));
         }
     }
     world.add<DrawableNURBS>(nurbs_entity, 2, m, n, positions);
+#endif
 }
 
 

@@ -1,5 +1,5 @@
 #version 420
-layout (vertices = 9) out;
+layout(vertices = 9) out;
 
 
 in VS_OUT {
@@ -12,5 +12,12 @@ out TCS_OUT {
 
 void main(void)
 {
+    gl_TessLevelOuter[0] = 15;
+    gl_TessLevelOuter[1] = 15;
+    gl_TessLevelOuter[2] = 15;
+    gl_TessLevelOuter[3] = 15;
+    gl_TessLevelInner[0] = 15;
+    gl_TessLevelInner[1] = 15;
+
     tcs_out[gl_InvocationID].position = tcs_in[gl_InvocationID].position;
 }

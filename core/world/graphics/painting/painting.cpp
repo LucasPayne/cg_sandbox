@@ -262,11 +262,11 @@ void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> posi
         index_type = GL_UNSIGNED_BYTE;
     } else if (n-1 <= 0xFFFF) {
         index_bytes = 2;
-        index_bytes = GL_UNSIGNED_SHORT;
+        index_type = GL_UNSIGNED_SHORT;
     } else {
         // It is assumed that 32 bits will be sufficient, so no check is made.
         index_bytes = 4;
-        index_bytes = GL_UNSIGNED_INT;
+        index_type = GL_UNSIGNED_INT;
     }
     // Create the index array, consisting of windows of patch_num_vertices indices.
     // For example, if n == 5 and degree == 2, then (012, 123, 234) is created.

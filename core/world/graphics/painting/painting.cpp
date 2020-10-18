@@ -54,47 +54,38 @@ void Painting::render_spheres()
 
 void Painting::render_lines()
 {
-    /*
-    GLuint vao;
-    glCreateVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    GLuint vertex_buffer;
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(PaintingLine) * lines.size(), (const void *) &lines[0], GL_DYNAMIC_DRAW);
-
-    struct LineVertexAttributes {
-        vec3 position;
-        
-    };
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(PaintingSphere), (const void *) 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(PaintingSphere), (const void *) offsetof(PaintingLine, b));
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(PaintingSphere), (const void *) offsetof(PaintingLine, width));
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(PaintingSphere), (const void *) offsetof(PaintingLine, color));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-    glEnableVertexAttribArray(3);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    lines_shader_program->bind();
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);
 
-        mat4x4 view_matrix = camera->view_matrix();
-        glUniformMatrix4fv(lines_shader_program->uniform_location("view_matrix"), 1, GL_FALSE, (const GLfloat *) &view_matrix);
-        glUniformMatrix4fv(lines_shader_program->uniform_location("projection_matrix"), 1, GL_FALSE, (const GLfloat *) &camera->projection_matrix);
-        glUniform1f(lines_shader_program->uniform_location("aspect_ratio"), camera->aspect_ratio());
+        lines_shader_program->bind();
+
+        mat4x4 vp_matrix = camera->view_projection_matrix();
+        glUniformMatrix4fv(lines_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
+
+        for (auto &line_chain : lines) {
+            glUniform4fv(lines_shader_program->uniform_location("color"), 1, (const GLfloat *) &line_chain.color);
+    
+            GLuint vao;
+            glCreateVertexArrays(1, &vao);
+            glBindVertexArray(vao);
+
+            GLuint vertex_buffer;
+            glGenBuffers(1, &vertex_buffer);
+            glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * line_chain.points.size(), (const void *) &line_chain.points[0], GL_DYNAMIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
+            glEnableVertexAttribArray(0);
+
+            glLineWidth(line_chain.width);
+            glDrawArrays(GL_LINE_STRIP, 0, line_chain.points.size());
+
+            glDeleteVertexArrays(1, &vao);
+            glDeleteBuffers(1, &vertex_buffer);
+        }
 
         graphics.end_camera_rendering(camera);
     }
-
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vertex_buffer);
-    */
 }
 
 
@@ -237,11 +228,10 @@ void Painting::sphere(vec3 position, float radius, vec4 color)
     spheres.push_back(PaintingSphere(position, radius, color));
 }
 
-void Painting::line(vec3 a, vec3 b, float width, vec4 color)
+void Painting::chain(std::vector<vec3> &points, float width, vec4 color)
 {
-    lines.push_back(PaintingLine(a, b, width, color));
+    lines.push_back(PaintingLines(points, width, color));
 }
-
 
 void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
 {
@@ -470,6 +460,11 @@ void Painting::init()
         bspline_2D_fillets_shader_programs.push_back(program);
         }
     }
+
+    lines_shader_program = world.resources.add<GLShaderProgram>();
+    lines_shader_program->add_shader(GLShader(VertexShader, "resources/painting/lines.vert"));
+    lines_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/lines.frag"));
+    lines_shader_program->link();
 
     primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();
     primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/primitive_lines_2D.vert"));

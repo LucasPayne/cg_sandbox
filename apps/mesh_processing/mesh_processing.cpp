@@ -148,6 +148,9 @@ void App::close()
 }
 void App::loop()
 {
+    std::vector<vec3> points = {vec3(0,0,0), vec3(1,1,1), vec3(0,0,1), vec3(1,0,0)};
+    world.graphics.paint.chain(points, 10, vec4(1,0,0.5,1));
+    
     for (int i = 0; i < 40; i++) {
         float y = -0.5 + 1.0/40.0 * i;
         float x = 0.2*cos(0.6*total_time + 6*y);

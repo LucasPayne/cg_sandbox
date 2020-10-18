@@ -21,14 +21,12 @@ struct PaintingSphere {
     {}
 };
 
-struct PaintingLine {
-    vec3 a;
-    vec3 b;
+struct PaintingLines {
+    std::vector<vec3> points;
     float width;
     vec4 color;
-    PaintingLine(vec3 _a, vec3 _b, float _width, vec4 _color) :
-        a{_a},
-        b{_b},
+    PaintingLines(std::vector<vec3> _points, float _width, vec4 _color) :
+        points{_points},
         width{_width},
         color{_color}
     {}
@@ -70,6 +68,7 @@ public:
     void sphere(vec3 position, float radius, vec4 color);
     void line(vec3 a, vec3 b, float width, vec4 color);
     void wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width);
+    void chain(std::vector<vec3> &points, float width, vec4 color);
 
     // 2D painting commands.
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
@@ -79,7 +78,7 @@ public:
 private:
     // 3D painting buffers.
     std::vector<PaintingSphere> spheres;
-    std::vector<PaintingLine> lines;
+    std::vector<PaintingLines> lines;
     std::vector<WireframeRenderData> wireframe_render_data;
 
     // 2D painting buffers.

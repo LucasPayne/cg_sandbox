@@ -99,6 +99,9 @@ add_subdirectory(lib/model_loader)
 target_link_libraries(cg_sandbox model_loader)
 # target_link_libraries(cg_sandbox STATIC libmodel_loader.a)
 
+add_subdirectory(lib/ray_tracer)
+target_link_libraries(cg_sandbox ray_tracer)
+
 
 # add_subdirectory(lib/mesh_processing)
 # target_link_libraries(cg_sandbox mesh_processing)

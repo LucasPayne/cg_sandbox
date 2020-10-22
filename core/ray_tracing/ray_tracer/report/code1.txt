@@ -1,0 +1,6 @@
+RGB CheckerTexture::rgb_lookup(const LocalGeometry &geom)
+{
+    float u, v;
+    get_uv(geom, &u, &v);
+    return textures[((int)(u*grid_x) + (int)(v*grid_y)) % 2]->rgb_lookup(geom);
+}

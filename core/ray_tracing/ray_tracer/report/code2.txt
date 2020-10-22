@@ -1,0 +1,11 @@
+Model *bunny = load_OFF_model("models/bunny.off", 1.5, Point(0,1,0), true, true);
+primitives.push_back(new GeometricPrimitive(
+                     new TriangleMesh(Transform::translate(3.5,0,4) * Transform::y_rotation(1.5*M_PI/2),
+                     bunny),
+                     new CheckerTexture(32,4,
+                         new ConstantTextureRGB(0.1,0.1,0.1),
+                         new ConstantTextureRGB(0.9,0.9,0.9),
+                         new CylinderMapper()),
+                     NULL,
+                     0.3
+                     ));

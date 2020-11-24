@@ -1,5 +1,6 @@
 #version 420
 uniform vec3 direction;
+uniform vec3 light_color;
 uniform float width;
 
 uniform sampler2D position;
@@ -12,5 +13,7 @@ out vec4 color;
 
 void main(void)
 {
-    color = vec4(texture(albedo, uv).rgb, 1);
+    vec3 f_albedo = texture(albedo, uv).rgb;
+    vec3 f_normal = texture(normal, uv).rgb;
+    color = vec4(max(0, dot(f_normal, -normalize(direction)))*f_albedo*light_color, 1);
 }

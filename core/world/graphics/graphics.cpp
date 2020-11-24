@@ -52,22 +52,15 @@ void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
 
 
 
-void Graphics::clear()
+void Graphics::clear(vec4 bg_color, vec4 fg_color)
 {
-    float bg_color[4] = {0,0,0,0};
-    float fg_color[4] = {1,1,1,1};
-
     // Clearing: window clear to background color, viewport clear to the foreground color.
-    glClearColor(bg_color[0],bg_color[1],bg_color[2],bg_color[3]);
     glDisable(GL_SCISSOR_TEST);
+    glClearColor(bg_color.x(),bg_color.y(),bg_color.z(),bg_color.w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
     glEnable(GL_SCISSOR_TEST);
-    glScissor(viewport[0], viewport[1], viewport[2], viewport[3]);
-    glClearColor(fg_color[0],fg_color[1],fg_color[2],fg_color[3]);
+    glClearColor(fg_color.x(),fg_color.y(),fg_color.z(),fg_color.w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_SCISSOR_TEST);
 }
 
 
@@ -93,31 +86,45 @@ void Graphics::clear_cameras()
     }
 }
 
-GLint g_saved_viewport[4]; //horrible global...
-void Graphics::begin_camera_rendering(Aspect<Camera> &camera, bool clear)
+
+void Graphics::set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height)
 {
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    GLint viewport_x = viewport[0];
-    GLint viewport_y = viewport[1];
-    GLint viewport_width = viewport[2];
-    GLint viewport_height = viewport[3];
-    float bl_x = viewport_x + floor(viewport_width * camera->bottom_left[0]);
-    float bl_y = viewport_y + floor(viewport_height * camera->bottom_left[1]);
-    float width = floor(viewport_width * (camera->top_right[0] - camera->bottom_left[0]));
-    float height = floor(viewport_height * (camera->top_right[1] - camera->bottom_left[1]));
+    // Set the default viewport. This will be, for example, the fixed-aspect-ratio subrectangle of the window.
+    viewport_x = _viewport_x;
+    viewport_y = _viewport_y;
+    viewport_width = _viewport_width;
+    viewport_height = _viewport_height;
+    glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
+}
+
+void Graphics::subviewport_begin(vec2 bottom_left, vec2 top_right)
+{
+    // Begin a subviewport, given in terms of screen coordinates ((0,0) bottom-left) of the default viewport.
+    // After rendering into this subviewport, subviewport_end() must be called to restore the default viewport.
+    float bl_x = viewport_x + floor(viewport_width * bottom_left.x());
+    float bl_y = viewport_y + floor(viewport_height * bottom_left.y());
+    float width = floor(viewport_width * (top_right.x() - bottom_left.x()));
+    float height = floor(viewport_height * (top_right.y() - bottom_left.y()));
     glViewport(bl_x, bl_y, width, height);
     glScissor(bl_x, bl_y, width, height);
-    glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
-    glEnable(GL_SCISSOR_TEST);
-    if (clear) glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    for (int i = 0; i < 4; i++) g_saved_viewport[i] = viewport[i]; //-Lazily using a global to restore the last viewport dimensions.
+}
+void Graphics::subviewport_end()
+{
+    glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
+    glScissor(viewport_x, viewport_y, viewport_width, viewport_height);
+}
 
+void Graphics::begin_camera_rendering(Aspect<Camera> &camera, bool clear)
+{
+    subviewport_begin(camera->bottom_left, camera->top_right);
+    if (clear) {
+        glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 }
 void Graphics::end_camera_rendering(Aspect<Camera> &camera)
 {
-    glDisable(GL_SCISSOR_TEST);
-    glViewport(g_saved_viewport[0], g_saved_viewport[1], g_saved_viewport[2], g_saved_viewport[3]);
+    subviewport_end();
 }
 
 
@@ -217,6 +224,10 @@ END_ENTRIES()
 
 void Graphics::refresh_gbuffer_textures()
 {
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    
     for (auto &component : gbuffer_components) {
         glBindTexture(GL_TEXTURE_2D, component.texture);
         glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, world.screen_width, world.screen_height, 0, component.external_format, component.type, NULL);
@@ -237,22 +248,28 @@ void Graphics::unbind_gbuffer()
 void Graphics::deferred_lighting()
 {
     // Activate additive blending.
-    glBlendFunc(GL_ONE, GL_ONE);
-    
+    // glBlendFunc(GL_ONE, GL_ONE);
+
     glBindVertexArray(postprocessing_quad_vao);
     auto &program = directional_light_shader_program;
     program->bind();
-    // for (int i = 0; i < gbuffer_components.size(); i++) {
-    //     auto &component = gbuffer_components[i];
-    //     glActiveTexture(GL_TEXTURE0 + i);
-    //     glBindTexture(GL_TEXTURE_2D, component.texture);
-    //     glUniform1i(program->uniform_location(component.name), i);
-    // }
-    // for (auto light : world.entities.aspects<DirectionalLight>()) {
-    //     glUniform3f(program->uniform_location("direction"), 1, (GLfloat *) &light.direction);
-    //     glUniform3f(program->uniform_location("width"), 1, (GLfloat *) &light.width);
-    //     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    // }
+    for (auto camera : world.entities.aspects<Camera>()) {
+        if (!camera->rendering_to_framebuffer) continue;
+        begin_camera_rendering(camera);
+        for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
+            auto &component = gbuffer_components[i];
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, component.texture);
+            glUniform1i(program->uniform_location(component.name), i);
+        }
+        for (auto light : world.entities.aspects<DirectionalLight>()) {
+            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
+            glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+            glUniform1f(program->uniform_location("width"), light->width);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
+        end_camera_rendering(camera);
+    }
     program->unbind();
     glBindVertexArray(0);
 
@@ -313,7 +330,6 @@ void Graphics::init()
     }
     glDrawBuffers(3, buffer_enums);
 
-    GLuint depth_rbo;
     glGenRenderbuffers(1, &depth_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
@@ -333,10 +349,10 @@ void Graphics::init()
 
     // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
     // any time for post-processing effects or deferred rendering.
-    vec2 ppq_data[8] = {vec2(-1,1),vec2(0,0),
-                        vec2(-1,-1),vec2(0,1),
-                        vec2(1,-1),vec2(1,1),
-                        vec2(1,1),vec2(1,0)};
+    vec2 ppq_data[8] = {vec2(-1,-1),vec2(0,0),
+                        vec2(-1,1),vec2(0,1),
+                        vec2(1,1),vec2(1,1),
+                        vec2(1,-1),vec2(1,0)}; // y is flipped since the framebuffer is flipped vertically.
     glGenVertexArrays(1, &postprocessing_quad_vao);
     glBindVertexArray(postprocessing_quad_vao);
     GLuint ppq_vbo;

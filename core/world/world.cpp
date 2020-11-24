@@ -38,6 +38,7 @@ World::World() :
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
+    REGISTER_ASPECT_TYPE(DirectionalLight);
     printf("[world] Entity system initialized.\n");
 
     // Order-sensitive subsystem initialization.
@@ -52,27 +53,22 @@ void World::loop()
     printf("[world] Frame start.\n");
     printf("--------------------------------------------------------------------------------\n");
 
-    graphics.clear();
+
+
+    graphics.clear(vec4(0,0,0,1), vec4(1,1,1,1));
     graphics.clear_cameras();
+    graphics.bind_gbuffer();
+    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
+    graphics.unbind_gbuffer();
+    // graphics.deferred_lighting();
+
+
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
-
-    if (screen_has_resized_this_frame) {
-        graphics.refresh_gbuffer_textures();
-        screen_has_resized_this_frame = false;
-    }
-    graphics.bind_gbuffer();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
-    graphics.unbind_gbuffer();
-    graphics.deferred_lighting();
-
     graphics.paint.render();
     graphics.paint.clear();
-
-    printf("%d %d\n", screen_width, screen_height);
 }
 
 void World::close()
@@ -100,9 +96,17 @@ void World::mouse_handler(MouseEvent e)
 void World::window_handler(WindowEvent e)
 {
     if (e.type == WINDOW_EVENT_FRAMEBUFFER_SIZE) {
-        screen_has_resized_this_frame = true;
-        screen_width = e.framebuffer.width;
-        screen_height = e.framebuffer.height;
+        const float wanted_aspect_ratio = 0.566;
+        float width = e.framebuffer.width;
+        float height = e.framebuffer.height;
+        double aspect_ratio = ((double) height) / width;
+        if (aspect_ratio > wanted_aspect_ratio) {
+            graphics.set_viewport(0, (height - wanted_aspect_ratio * width)/2.0, width, wanted_aspect_ratio * width);
+        }
+        else {
+            graphics.set_viewport((width - height / wanted_aspect_ratio)/2.0, 0, height / wanted_aspect_ratio,  height);
+        }
+        graphics.refresh_gbuffer_textures();
     }
 }
 

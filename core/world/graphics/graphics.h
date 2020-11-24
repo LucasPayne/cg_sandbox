@@ -65,7 +65,7 @@ public:
               ShadingModelInstance &sm_instance);
 
     // Clear to the default screen.
-    void clear();
+    void clear(vec4 bg_color, vec4 fg_color);
     // Render the Drawables into each camera, using the given shading model.
     void render_drawables(std::string sm_name);
 
@@ -89,7 +89,8 @@ public:
     void unbind_gbuffer();
     GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
-    GLuint gbuffer_fb;
+    GLuint gbuffer_fb; // G-buffer framebuffer
+    GLuint depth_rbo; // Depth renderbuffer
     std::vector<GBufferComponent> gbuffer_components;
 
     // Deferred rendering using the G-buffer.
@@ -98,8 +99,17 @@ public:
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
+
+    void set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height);
+    void subviewport_begin(vec2 bottom_left, vec2 top_right);
+    void subviewport_end();
 private:
     World &world;
+
+    GLint viewport_x;
+    GLint viewport_y;
+    GLsizei viewport_width;
+    GLsizei viewport_height;
 };
 
 

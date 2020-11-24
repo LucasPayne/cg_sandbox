@@ -44,8 +44,8 @@ struct Camera : public IAspectType {
     vec4 background_color;
 
     // Viewport extents (in terms of the application subrectangle).
-    float bottom_left[2];
-    float top_right[2];
+    vec2 bottom_left;
+    vec2 top_right;
         // If cameras rendering to the framebuffer have different layers, then the one with the lowest layer has priority for,
         // e.g., ray picking.
     int layer;
@@ -142,6 +142,22 @@ struct Behaviour : public IAspectType {
     
 };
 REFLECT_STRUCT(Behaviour);
+
+/*--------------------------------------------------------------------------------
+DirectionalLight aspect
+--------------------------------------------------------------------------------*/
+struct DirectionalLight : public IAspectType {
+    vec3 direction;
+    vec3 color;
+    float width; // Influences soft shadows.
+
+    DirectionalLight() {}
+    DirectionalLight(vec3 _direction, vec3 _color, float _width) :
+        direction{_direction}, color{_color}, width{_width}
+    {}
+};
+REFLECT_STRUCT(DirectionalLight);
+
 
 
 #endif // STANDARD_ASPECTS_H

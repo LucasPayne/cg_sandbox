@@ -1,7 +1,6 @@
 #include <time.h>
 #include "cg_sandbox.h"
 #include "opengl_utilities/gl.h"
-#include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 #include "objects/mesh_object.cpp"
 #include "objects/cameraman.cpp"
@@ -306,6 +305,13 @@ struct WireframeDemo : public IBehaviour {
     }
 };
 
+struct LightRotate : public IBehaviour {
+    Aspect<DirectionalLight> light;
+    LightRotate(Aspect<DirectionalLight> _light) : light{_light} {}
+    void update() {
+        light->direction = vec3(cos(total_time), sin(total_time), 0);
+    }
+};
 
 
 
@@ -332,8 +338,14 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     
-    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+    // Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
+    Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+    obj.get<Transform>()->scale = 5;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0,0,1,1);
+    
+    Entity light = world.entities.add();
+    light.add<DirectionalLight>(vec3(1,0,0), vec3(1,1,1), 1.5);
+    world.add<LightRotate>(light, light.get<DirectionalLight>());
 
     
 #if 1
@@ -384,7 +396,6 @@ void App::loop()
 
 void App::window_handler(WindowEvent e)
 {
-    force_aspect_ratio(e);
 }
 void App::keyboard_handler(KeyboardEvent e)
 {

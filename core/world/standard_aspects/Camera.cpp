@@ -18,10 +18,8 @@ Camera::Camera(float near_plane_distance, float far_plane_distance, float near_h
                                0,0, -1, 0);
     // The default is the full viewport.
     rendering_to_framebuffer = true;
-    bottom_left[0] = 0.0;
-    bottom_left[1] = 0.0;
-    top_right[0] = 1.0;
-    top_right[1] = 1.0;
+    bottom_left = vec2(0,0);
+    top_right = vec2(1,1);
     layer = 0; // Default to highest-priority layer.
 
     background_color = vec4(0.9,0.9,0.9,1);
@@ -30,22 +28,22 @@ Camera::Camera(float near_plane_distance, float far_plane_distance, float near_h
 bool Camera::in_viewport(float screen_x, float screen_y)
 {
     if (!rendering_to_framebuffer) return false;
-    return screen_x >= bottom_left[0] && screen_x <= top_right[0] &&
-           screen_y >= bottom_left[1] && screen_y <= top_right[1];
+    return screen_x >= bottom_left.x() && screen_x <= top_right.x() &&
+           screen_y >= bottom_left.y() && screen_y <= top_right.y();
 }
 
 float Camera::aspect_ratio() const
 {
     // width over height
     float global_aspect_ratio = 0.566; //----This is just the current aspect ratio of the window subrectangle.
-    float sub_aspect_ratio = (top_right[1] - bottom_left[1]) / (top_right[0] - bottom_left[0]);
+    float sub_aspect_ratio = (top_right.y() - bottom_left.y()) / (top_right.x() - bottom_left.x());
     return global_aspect_ratio * sub_aspect_ratio;
 }
 
 void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y)
 {
-    *camera_x = (screen_x - bottom_left[0]) / (top_right[0] - bottom_left[0]);
-    *camera_y = (screen_y - bottom_left[1]) / (top_right[1] - bottom_left[1]);
+    *camera_x = (screen_x - bottom_left.x()) / (top_right.x() - bottom_left.x());
+    *camera_y = (screen_y - bottom_left.y()) / (top_right.y() - bottom_left.y());
 }
 
 mat4x4 Camera::view_matrix()

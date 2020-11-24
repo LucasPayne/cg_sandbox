@@ -1,7 +1,7 @@
 #ifndef MODELS_H
 #define MODELS_H
-#include "core.hpp"
-#include "primitives.hpp"
+#include "src/core.hpp"
+#include "src/primitives.hpp"
 
 // Model with a mesh, vertex attributes (UV coordinates, normals).
 struct Model {

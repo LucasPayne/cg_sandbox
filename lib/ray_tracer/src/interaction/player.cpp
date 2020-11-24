@@ -1,6 +1,6 @@
-#include "player.hpp"
-#include "interaction.hpp"
-#include "gl.hpp"
+#include "src/player.hpp"
+#include "src/interaction.hpp"
+#include "src/gl.hpp"
 
 void Player::lock_altitude()
 {

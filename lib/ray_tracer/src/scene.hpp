@@ -1,9 +1,9 @@
 #ifndef SCENE_H
 #define SCENE_H
-#include "core.hpp"
-#include "illumination.hpp"
-#include "primitives.hpp"
-#include "aggregates.hpp"
+#include "src/core.hpp"
+#include "src/illumination.hpp"
+#include "src/primitives.hpp"
+#include "src/aggregates.hpp"
 
 /*--------------------------------------------------------------------------------
     A scene is itself an aggregate primitive. In this way, rendering code

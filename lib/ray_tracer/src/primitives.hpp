@@ -1,8 +1,8 @@
 #ifndef PRIMITIVES_H
 #define PRIMITIVES_H
-#include "core.hpp"
-#include "shapes.hpp"
-#include "textures.hpp"
+#include "src/core.hpp"
+#include "src/shapes.hpp"
+#include "src/textures.hpp"
 // #include "materials.hpp"
 
 class Primitive;

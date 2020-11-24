@@ -1,4 +1,4 @@
-#include "mathematics/numerics.hpp"
+#include "src/mathematics/numerics.hpp"
 
 std::ostream &operator<<(std::ostream &os, const Vec &v)
 {

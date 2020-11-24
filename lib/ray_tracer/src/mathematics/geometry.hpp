@@ -1,6 +1,6 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
-#include "core.hpp"
+#include "src/core.hpp"
 
 // Print a glm::mat4x4.
 std::ostream &operator<<(std::ostream &os, const mat4x4 &m);

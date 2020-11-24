@@ -121,9 +121,10 @@ void Graphics::end_camera_rendering(Aspect<Camera> &camera)
 }
 
 
-void Graphics::render_drawables()
+void Graphics::render_drawables(std::string &sm_name)
 {
-    auto sm = world.graphics.shading.shading_models.load("resources/model_test/model_test.sm");
+    // auto sm = world.graphics.shading.shading_models.load("resources/model_test/model_test.sm");
+    auto sm = world.graphics.shading.shading_models.load(sm_name);
     auto shading_model = ShadingModelInstance(sm);
 
     // Render.
@@ -216,6 +217,14 @@ END_ENTRIES()
 
 
 
+void Graphics::refresh_gbuffer_textures()
+{
+    int w, h;
+    Platform::get_screen_size(&w, &h);
+    for (
+}
+
+
 void Graphics::init()
 {
     glDisable(GL_CULL_FACE);
@@ -226,4 +235,23 @@ void Graphics::init()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     paint.init();
+
+    // Set up G-buffer.
+    GLuint gbuffer_fb;
+    glGenFramebuffers(1, &gbuffer_fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
+    
+    std::vector<std::string> buffer_names = {"position", "normal", "albedo"};
+    std::vector<std::string> buffer_internal_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA};
+    for (int i = 0; i < buffer_names.size(); i++) {
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], screen_width, screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, i);
+    }
+    GLenum buffer_enums[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, buffer_enums);
 }

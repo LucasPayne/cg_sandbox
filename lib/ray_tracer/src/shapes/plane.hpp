@@ -1,6 +1,6 @@
 #ifndef PRIMITIVES_PLANE_H
 #define PRIMITIVES_PLANE_H
-#include "shapes.hpp"
+#include "src/shapes.hpp"
 
 class Plane : public Shape {
 public:

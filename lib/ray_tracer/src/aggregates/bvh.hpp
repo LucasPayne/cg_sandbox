@@ -1,6 +1,6 @@
 #ifndef PRIMITIVE_AGGREGATE_BVH_H
 #define PRIMITIVE_AGGREGATE_BVH_H
-#include "primitives.hpp"
+#include "src/primitives.hpp"
 
 // Set this flag if a non-compacted (linked tree structure, probably inefficient) data structure is wanted.
 // This is so I can benchmark and see how much better the compacted data structure is.

@@ -1,4 +1,4 @@
-#include "primitives.hpp"
+#include "src/primitives.hpp"
 
 static bool g_initialized_default_textures = false;
 static Texture *g_default_diffuse_texture = NULL;

@@ -1,7 +1,7 @@
 #ifndef SHAPES_H
 #define SHAPES_H
-#include "core.hpp"
-#include "mathematics.hpp"
+#include "src/core.hpp"
+#include "src/mathematics.hpp"
 
 // Local "differential geometry" of a shape, given by Shape::intersect().
 class LocalGeometry;

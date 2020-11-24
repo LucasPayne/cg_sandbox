@@ -1,4 +1,4 @@
-#include "models.hpp"
+#include "src/models.hpp"
 
 // Read OFF models with triangle faces. Comments are allowed.
 // -

@@ -318,17 +318,22 @@ public:
     void mouse_handler(MouseEvent e);
     void window_handler(WindowEvent e);
 };
+
+
+std::vector<vec3> points;
+float omega = 0.25;
+
 App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,0,2);
     
-#if 0
+#if 1
     auto demo = world.entities.add();
     world.add<BSplineDemo>(demo, cameraman.get<Camera>(), 9);
 #endif
 
-#if 0
+#if 1
     auto dragon = world.entities.add();
     dragon.add<Transform>(vec3(1,0,0));
     world.add<WireframeDemo>(dragon, "resources/models/dragon.off");
@@ -348,6 +353,12 @@ App::App(World &_world) : world{_world}
         }
     }
     world.add<DrawableNURBS>(nurbs_entity, 2, m, n, positions);
+
+    points = std::vector<vec3>(10);
+    for (int i = 0; i < 10; i++) {
+        points[i] = vec3::random(-1,1);
+    }
+
 #endif
 }
 
@@ -357,6 +368,7 @@ void App::close()
 }
 void App::loop()
 {
+    world.graphics.paint.chain(points, points.size(), vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)
@@ -367,6 +379,29 @@ void App::keyboard_handler(KeyboardEvent e)
 {
     check_quit_key(e, KEY_Q);
 
+    if (e.action == KEYBOARD_PRESS) {
+        if (e.key.code == KEY_C) {
+            std::vector<vec3> new_points;
+            new_points.clear();
+            for (int j = 0; j < points.size()-1; j++) {
+                new_points.push_back(vec3::lerp(points[j], points[j+1], omega));
+                new_points.push_back(vec3::lerp(points[j], points[j+1], 1-omega));
+            }
+            points.clear();
+            for (auto p : new_points) points.push_back(p);
+        }
+        if (e.key.code == KEY_V) {
+            points.clear();
+            for (int i = 0; i < 10; i++) points.push_back(vec3::random(-1,1));
+        }
+        if (e.key.code == KEY_X) {
+            omega += 0.01;
+        }
+        if (e.key.code == KEY_Z) {
+            omega -= 0.01;
+        }
+    }
+    
 }
 void App::mouse_handler(MouseEvent e)
 {

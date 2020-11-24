@@ -457,8 +457,10 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
         "#version 420\n"
     );
     // Output rendertargets. These are what frag-post outputs. All outputs are used.
+    int counter = 0;
     for (ShadingOutput &output : sm.frag_post_dataflow.outputs) {
-        fragment_shader += "out " + output.output.type + " " + output.output.name + ";\n";
+        fragment_shader += "layout (location = " << counter << ") out " + output.output.type + " " + output.output.name + ";\n";
+        counter ++;
     }
     fragment_shader += "\n";
     // Input interpolators.

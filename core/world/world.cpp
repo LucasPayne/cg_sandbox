@@ -8,6 +8,7 @@ World::World() :
     assets(*this),
     graphics(*this),
     input()
+    screen_has_resized_this_frame{false},
 {
     printf("[world] Creating world...\n");
 
@@ -41,6 +42,9 @@ World::World() :
 
     // Order-sensitive subsystem initialization.
     graphics.init();
+
+    // Initialize context information.
+    IGC::get_screen_size(&width, &height);
 }
 
 
@@ -57,9 +61,17 @@ void World::loop()
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
-    graphics.render_drawables();
+    graphics.bind_gbuffer();
+    graphics.render_drawables("shaders/gbuffer_position_normal_diffuse.sm");
+    graphics.unbind_gbuffer();
+
     graphics.paint.render();
     graphics.paint.clear();
+
+    if (screen_has_resized_this_frame) {
+        graphics.refresh_gbuffer_textures();
+        screen_has_resized_this_frame = false;
+    }
 }
 
 void World::close()
@@ -80,6 +92,16 @@ void World::mouse_handler(MouseEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->mouse_handler(e);
+    }
+}
+
+
+void World::window_handler(WindowEvent e)
+{
+    if (e.type == WINDOW_EVENT_FRAMEBUFFER_SIZE) {
+        screen_has_resized_this_frame = true;
+        screen_width = e.framebuffer.width;
+        screen_height = e.framebuffer.height;
     }
 }
 

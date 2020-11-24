@@ -1,6 +1,6 @@
 #ifndef PRIMITIVES_AGGREGATES_PRIMITIVELIST_H
 #define PRIMITIVES_AGGREGATES_PRIMITIVELIST_H
-#include "primitives.hpp"
+#include "src/primitives.hpp"
 
 /*--------------------------------------------------------------------------------
     A PrimitiveList just holds a list, and passes calls down to all primitives

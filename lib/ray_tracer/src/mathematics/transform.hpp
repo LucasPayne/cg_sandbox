@@ -1,7 +1,7 @@
 #ifndef CORE_TRANSFORM_H
 #define CORE_TRANSFORM_H
-#include "core.hpp"
-#include "mathematics/geometry.hpp"
+#include "src/core.hpp"
+#include "src/mathematics/geometry.hpp"
 
 /*================================================================================
     A Transform stores a matrix and its inverse.

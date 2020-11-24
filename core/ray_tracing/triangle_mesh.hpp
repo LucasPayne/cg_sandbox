@@ -1,6 +1,14 @@
-#ifndef PRIMITIVES_TRIANGLE_MESH_H
-#define PRIMITIVES_TRIANGLE_MESH_H
-#include "src/core.hpp"
+/*
+BoundingBox
+Point
+Model
+Ray
+LocalGeometry
+BVH
+*/
+
+#ifndef RAY_TRACING_TRIANGLE_MESH_H
+#define RAY_TRACING_TRIANGLE_MESH_H
 #include "src/shapes.hpp"
 #include "src/primitives.hpp"
 #include "src/models.hpp"
@@ -22,7 +30,7 @@ struct TriangleNode {
 class TriangleMesh;
 
 // This class is specifically for a triangle of a mesh.
-class MeshTriangle : public Shape {
+class MeshTriangle {
 public:
     uint16_t indices[3];
     Point operator[](int index) const;
@@ -59,7 +67,7 @@ private:
     BoundingBox m_box;
 };
 
-class TriangleMesh : public Shape {
+class TriangleMesh {
 public:
     Model *model;
 
@@ -72,7 +80,7 @@ public:
     // This is a specialized data structure, processed after using the usual BVH constructor on the mesh.
     // There is then specific BVH traversal code for using this specialized data structure.
     // (hopefully so mesh intersection is faster.)
-    vector<TriangleNode> triangles_bvh;
+    std::vector<TriangleNode> triangles_bvh;
     BoundingBox m_world_bound;
     int triangles_bvh_length;
 private:

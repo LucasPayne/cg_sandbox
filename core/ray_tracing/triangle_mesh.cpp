@@ -1,16 +1,16 @@
-#include "src/shapes/triangle_mesh.hpp"
+#include "ray_tracing/triangle_mesh.hpp"
 
-Point MeshTriangle::operator[](int index) const
+vec3 MeshTriangle::operator[](int index) const
 {
     return mesh->model->vertices[indices[index]];
 }
-Point MeshTriangle::a() const {
+vec3 MeshTriangle::a() const {
     return (*this)[0];
 }
-Point MeshTriangle::b() const {
+vec3 MeshTriangle::b() const {
     return (*this)[1];
 }
-Point MeshTriangle::c() const {
+vec3 MeshTriangle::c() const {
     return (*this)[2];
 }
 
@@ -42,20 +42,20 @@ bool MeshTriangle::intersect(Ray &ray, LocalGeometry *geom) const
     return true;
 */
 
-    Vector n = glm::cross(c()-a(), b()-a());
-    float denom = glm::dot(ray.d, n);
+    vec3 n = vec3::cross(c()-a(), b()-a());
+    float denom = vec3::dot(ray.d, n);
     const float epsilon = 1e-4;
     if (fabs(denom) < epsilon) {
         // The ray is almost parallel to the triangle.
         return false;
     }
-    float t = -glm::dot(ray.o - a(), n)/denom;
+    float t = -vec3::dot(ray.o - a(), n)/denom;
     if (t < ray.min_t || t > ray.max_t) return false;
-    Point p = ray(t);
+    vec3 p = ray(t);
 
-    float wa = glm::dot(ray.d, glm::cross(b()-ray.o, c()-ray.o));
-    float wb = glm::dot(ray.d, glm::cross(c()-ray.o, a()-ray.o));
-    float wc = glm::dot(ray.d, glm::cross(a()-ray.o, b()-ray.o));
+    float wa = vec3::dot(ray.d, vec3::cross(b()-ray.o, c()-ray.o));
+    float wb = vec3::dot(ray.d, vec3::cross(c()-ray.o, a()-ray.o));
+    float wc = vec3::dot(ray.d, vec3::cross(a()-ray.o, b()-ray.o));
     if (((wa > 0) != (wb > 0)) || ((wb > 0) != (wc > 0))) return false;
     float winv = 1.0 / (wa + wb + wc);
     wa *= winv;
@@ -65,9 +65,9 @@ bool MeshTriangle::intersect(Ray &ray, LocalGeometry *geom) const
     ray.max_t = t;
     if (mesh->model->has_normals) {
         // Compute a shading normal instead.
-        Vector &na = mesh->model->normals[indices[0]];
-        Vector &nb = mesh->model->normals[indices[1]];
-        Vector &nc = mesh->model->normals[indices[2]];
+        vec3 &na = mesh->model->normals[indices[0]];
+        vec3 &nb = mesh->model->normals[indices[1]];
+        vec3 &nc = mesh->model->normals[indices[2]];
         // geom->n = glm::normalize(wa*na + wb*nb + wc*nc);
         geom->n = wa*na + wb*nb + wc*nc; // normalizing here seems to be expensive. Will this be good enough?
     } else {
@@ -85,20 +85,20 @@ static inline bool barycentric_triangle_convex(float wa, float wb, float wc)
 }
 bool MeshTriangle::does_intersect(Ray &ray) const
 {
-    Vector n = glm::cross(c()-a(), b()-a());
-    float denom = glm::dot(ray.d, n);
+    vec3 n = vec3::cross(c()-a(), b()-a());
+    float denom = vec3::dot(ray.d, n);
     const float epsilon = 1e-4;
     if (fabs(denom) < epsilon) {
         // The ray is almost parallel to the triangle.
         return false;
     }
-    float t = -glm::dot(ray.o - a(), n)/denom;
+    float t = -vec3::dot(ray.o - a(), n)/denom;
     if (t < ray.min_t || t > ray.max_t) return false;
-    Point p = ray(t);
+    vec3 p = ray(t);
 
-    float wa = glm::dot(ray.d, glm::cross(b()-ray.o, c()-ray.o));
-    float wb = glm::dot(ray.d, glm::cross(c()-ray.o, a()-ray.o));
-    float wc = glm::dot(ray.d, glm::cross(a()-ray.o, b()-ray.o));
+    float wa = vec3::dot(ray.d, vec3::cross(b()-ray.o, c()-ray.o));
+    float wb = vec3::dot(ray.d, vec3::cross(c()-ray.o, a()-ray.o));
+    float wc = vec3::dot(ray.d, vec3::cross(a()-ray.o, b()-ray.o));
     return (((wa > 0) == (wb > 0)) && ((wb > 0) == (wc > 0)));
 }
 BoundingBox MeshTriangle::object_bound() const
@@ -196,20 +196,20 @@ static inline bool triangle_intersect(const TriangleMesh *mesh,
                                       uint16_t index_a, uint16_t index_b, uint16_t index_c, 
                                       Ray &ray, LocalGeometry *geom)
 {
-    Vector n = glm::cross(c-a, b-a);
-    float denom = glm::dot(ray.d, n);
+    vec3 n = vec3::cross(c-a, b-a);
+    float denom = vec3::dot(ray.d, n);
     const float epsilon = 1e-4;
     if (fabs(denom) < epsilon) {
         // The ray is almost parallel to the triangle.
         return false;
     }
-    float t = -glm::dot(ray.o - a, n)/denom;
+    float t = -vec3::dot(ray.o - a, n)/denom;
     if (t < ray.min_t || t > ray.max_t) return false;
-    Point p = ray(t);
+    vec3 p = ray(t);
 
-    float wa = glm::dot(ray.d, glm::cross(b-ray.o, c-ray.o));
-    float wb = glm::dot(ray.d, glm::cross(c-ray.o, a-ray.o));
-    float wc = glm::dot(ray.d, glm::cross(a-ray.o, b-ray.o));
+    float wa = vec3::dot(ray.d, vec3::cross(b-ray.o, c-ray.o));
+    float wb = vec3::dot(ray.d, vec3::cross(c-ray.o, a-ray.o));
+    float wc = vec3::dot(ray.d, vec3::cross(a-ray.o, b-ray.o));
     if (((wa > 0) != (wb > 0)) || ((wb > 0) != (wc > 0))) return false;
     float winv = 1.0 / (wa + wb + wc);
     wa *= winv;
@@ -234,20 +234,20 @@ static inline bool triangle_does_intersect(const TriangleMesh *mesh,
                                            const Point &a, const Point &b, const Point &c,
                                            Ray &ray)
 {
-    Vector n = glm::cross(c-a, b-a);
-    float denom = glm::dot(ray.d, n);
+    Vector n = vec3::cross(c-a, b-a);
+    float denom = vec3::dot(ray.d, n);
     const float epsilon = 1e-4;
     if (fabs(denom) < epsilon) {
         // The ray is almost parallel to the triangle.
         return false;
     }
-    float t = -glm::dot(ray.o - a, n)/denom;
+    float t = -vec3::dot(ray.o - a, n)/denom;
     if (t < ray.min_t || t > ray.max_t) return false;
     Point p = ray(t);
 
-    float wa = glm::dot(ray.d, glm::cross(b-ray.o, c-ray.o));
-    float wb = glm::dot(ray.d, glm::cross(c-ray.o, a-ray.o));
-    float wc = glm::dot(ray.d, glm::cross(a-ray.o, b-ray.o));
+    float wa = vec3::dot(ray.d, vec3::cross(b-ray.o, c-ray.o));
+    float wb = vec3::dot(ray.d, vec3::cross(c-ray.o, a-ray.o));
+    float wc = vec3::dot(ray.d, vec3::cross(a-ray.o, b-ray.o));
     return (((wa > 0) == (wb > 0)) && ((wb > 0) == (wc > 0)));
 }
 static inline bool triangles_bvh_intersect(const TriangleMesh *mesh, const vector<TriangleNode> &triangles_bvh, Ray &ray, LocalGeometry *geom)
@@ -301,7 +301,7 @@ static inline bool triangles_bvh_intersect(const TriangleMesh *mesh, const vecto
         geom->shape = mesh;
         // already should be at least approximately normal if using Phong normals.
         // If not, save some computation (?) by normalizing once the final LocalGeometry is found.
-        if (mesh->model->has_normals) geom->n = glm::normalize(geom->n);
+        if (mesh->model->has_normals) geom->n = vec3::normalize(geom->n);
     }
     return any_intersection;
 }

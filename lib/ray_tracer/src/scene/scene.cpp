@@ -1,4 +1,4 @@
-#include "scene.hpp"
+#include "src/scene.hpp"
 
 // Just pass down these routines to whatever aggregate primitive holds the primitives.
 BoundingBox Scene::world_bound() const

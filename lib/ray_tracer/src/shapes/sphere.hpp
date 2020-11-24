@@ -1,6 +1,6 @@
 #ifndef SHAPES_SPHERE_H
 #define SHAPES_SPHERE_H
-#include "shapes.hpp"
+#include "src/shapes.hpp"
 
 class Sphere : public Shape {
 private:

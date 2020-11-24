@@ -1,9 +1,9 @@
 #ifndef MATHEMATICS_H
 #define MATHEMATICS_H
 
-#include "mathematics/geometry.hpp"
-#include "mathematics/transform.hpp"
-#include "mathematics/numerics.hpp"
+#include "src/mathematics/geometry.hpp"
+#include "src/mathematics/transform.hpp"
+#include "src/mathematics/numerics.hpp"
 
 #endif // MATHEMATICS_H
 

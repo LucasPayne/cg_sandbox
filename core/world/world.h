@@ -41,6 +41,8 @@ public:
 
 private:
     World(const World &); // Delete the copy constructor.
+
+    bool screen_has_resized_this_frame;
 };
 REFLECT_STRUCT(World);
 

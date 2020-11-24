@@ -1,9 +1,9 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
-#include "core.hpp"
-#include "shapes.hpp"
+#include "src/core.hpp"
+#include "src/shapes.hpp"
 
-#include "ext/TextureBMP.h"
+#include "src/ext/TextureBMP.h"
 
 class TextureMapper {
 public:

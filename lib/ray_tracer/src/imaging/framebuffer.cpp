@@ -1,4 +1,4 @@
-#include "imaging/framebuffer.hpp"
+#include "src/imaging/framebuffer.hpp"
 
 void FrameBuffer::write_to_ppm(std::string const &filename)
 {

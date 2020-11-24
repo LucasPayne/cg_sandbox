@@ -1,7 +1,7 @@
 #ifndef IMAGING_CAMERA_H
 #define IMAGING_CAMERA_H
-#include "core.hpp"
-#include "mathematics.hpp"
+#include "src/core.hpp"
+#include "src/mathematics.hpp"
 
 class Camera {
 private:

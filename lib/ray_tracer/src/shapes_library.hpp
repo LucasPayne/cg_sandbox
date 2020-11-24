@@ -3,8 +3,8 @@
 // Had header include problems when these were included in the core.
 // They really should not be.
 
-#include "shapes/sphere.hpp"
-#include "shapes/plane.hpp"
-#include "shapes/triangle_mesh.hpp"
+#include "src/shapes/sphere.hpp"
+#include "src/shapes/plane.hpp"
+#include "src/shapes/triangle_mesh.hpp"
 
 #endif // SHAPE_LIBRARY_H

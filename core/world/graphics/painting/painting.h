@@ -32,6 +32,20 @@ struct PaintingLines {
     {}
 };
 
+struct PaintingLines2D {
+    std::vector<vec2> points;
+    float width;
+    vec4 color;
+    Aspect<Camera> camera;
+    PaintingLines2D(Aspect<Camera> _camera, std::vector<vec2> _points, float _width, vec4 _color) :
+        points{_points},
+        width{_width},
+        color{_color},
+        camera{_camera}
+    {}
+};
+
+
 struct PaintingCircles {
     // Header struct.
     Aspect<Camera> camera;
@@ -74,6 +88,7 @@ public:
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width = 0.f, vec4 outline_color = vec4::zero());
+    void chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float width, vec4 color);
 
 private:
     // 3D painting buffers.
@@ -84,6 +99,7 @@ private:
     // 2D painting buffers.
     std::vector<PaintingCircles> circle_buffer;
     std::vector<vec2> circle_positions;
+    std::vector<PaintingLines2D> lines_2D;
 
     // 3D painting programs.
     Resource<GLShaderProgram> spheres_shader_program;
@@ -101,6 +117,7 @@ private:
     void render_lines();
     void render_wireframes();
     void render_circles();
+    void render_lines_2D();
 
     Graphics &graphics;
     World &world;

@@ -1,6 +1,6 @@
 #ifndef ILLUMINATION_LIGHT_H
 #define ILLUMINATION_LIGHT_H
-#include "primitives.hpp"
+#include "src/primitives.hpp"
 
 /*--------------------------------------------------------------------------------
     A VisibilityTester is a closure encapsulating what should be done to test light

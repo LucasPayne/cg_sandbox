@@ -300,6 +300,11 @@ struct vec2 {
     inline float &operator[](int index) { return entries[index]; }
     inline float operator[](int index) const { return entries[index]; }
 
+    // 2D transformations. Angle theta gives the positive X axis anti-clockwise from the global X axis.
+    inline vec2 rotate(float theta);
+    inline vec2 transform(vec2 origin, float theta);
+    inline vec2 inverse_transform(vec2 origin, float theta);
+
     // Operation and reassignment, e.g.
     //    u += vec2(1,1);
     inline vec2 &operator+=(const vec2 &b) {
@@ -394,6 +399,18 @@ inline vec2 operator/(const vec2 &v, const float &t) {
     return vec2(v[0]/t, v[1]/t);
 }
 
+inline vec2 vec2::rotate(float theta) {
+    float s = sin(theta);
+    float c = cos(theta);
+    return vec2(c*x() + s*y(), -s*x() + c*y());
+}
+
+inline vec2 vec2::transform(vec2 origin, float theta) {
+    return origin + rotate(theta);
+}
+inline vec2 vec2::inverse_transform(vec2 origin, float theta) {
+    return (*this - origin).rotate(-theta);
+}
 
 //--------------------------------------------------------------------------------
 

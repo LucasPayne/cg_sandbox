@@ -1,4 +1,4 @@
-#include "shapes.hpp"
+#include "src/shapes.hpp"
 
 // The default world-space bounding box is the bounding box of the transformed object-space
 // bounding box (The Transform::operator() method transforms bounding boxes this way).

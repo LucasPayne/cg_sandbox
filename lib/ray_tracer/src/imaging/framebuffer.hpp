@@ -1,6 +1,6 @@
 #ifndef IMAGING_FRAMEBUFFER_H
 #define IMAGING_FRAMEBUFFER_H
-#include "core.hpp"
+#include "src/core.hpp"
 
 class FrameBuffer {
 private:

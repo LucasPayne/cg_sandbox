@@ -3,7 +3,7 @@
 // Everything using the OpenGL/GLFW classes should include this.
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "core.hpp"
+#include "src/core.hpp"
 
 // The active OpenGLContext updates these global values.
 // This is for convenience, so that having things with time-dependence doesn't require

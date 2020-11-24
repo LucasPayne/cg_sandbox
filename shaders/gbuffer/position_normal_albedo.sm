@@ -1,0 +1,29 @@
+#type shading_model
+
+block properties {
+    mat4x4 vp_matrix;
+}
+section geom_post {
+    out vec4 gl_Position(in vec4 world_position) {
+    GLSL
+        return vp_matrix * world_position;
+    END
+    }
+}
+section frag_post {
+    out vec4 gbuffer_position(in vec3 position) {
+    GLSL
+        return position;
+    END
+    }
+    out vec4 gbuffer_normal(in vec3 normal) {
+    GLSL
+        return normal;
+    END
+    }
+    out vec4 gbuffer_albedo(in vec4 albedo) {
+    GLSL
+        return albedo;
+    END
+    }
+}

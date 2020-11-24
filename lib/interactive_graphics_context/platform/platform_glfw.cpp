@@ -38,6 +38,12 @@ float time()
 }
 
 
+void get_screen_size(int *width, int *height)
+{
+    glfwGetScreenSize(width, height);
+}
+
+
 static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     WindowEvent e;

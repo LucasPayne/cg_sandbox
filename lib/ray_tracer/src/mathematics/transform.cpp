@@ -1,7 +1,7 @@
 /*================================================================================
     Transform
 ================================================================================*/
-#include "mathematics/transform.hpp"
+#include "src/mathematics/transform.hpp"
 
 // Use a macro, since the translate function variants only vary in
 // where x,y,z come from.

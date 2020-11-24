@@ -1,8 +1,8 @@
 #ifndef RENDERER_H
 #define RENDERER_H
-#include "core.hpp"
-#include "imaging.hpp"
-#include "scene.hpp"
+#include "src/core.hpp"
+#include "src/imaging.hpp"
+#include "src/scene.hpp"
 
 // The Renderer can act as a coroutine, allowing for example progressive viewing.
 struct RenderingState {

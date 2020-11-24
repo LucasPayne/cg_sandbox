@@ -2,7 +2,7 @@
     The bounding volume heirarchy implementation is very much based off of
     pbrt 2e's description and code for bvh construction.
 --------------------------------------------------------------------------------*/
-#include "aggregates/bvh.hpp"
+#include "src/aggregates/bvh.hpp"
 #include <algorithm>
 
 struct PrimitiveInfo {

@@ -133,8 +133,6 @@ void Graphics::render_drawables(std::string sm_name)
         if (!camera->rendering_to_framebuffer) continue;
         any_camera = true;
         printf("[graphics] Camera rendering...\n");
-        // print_entity(camera->entity());
-
 
         // Set up viewport.
         begin_camera_rendering(camera);
@@ -219,10 +217,11 @@ END_ENTRIES()
 
 void Graphics::refresh_gbuffer_textures()
 {
-    int w, h;
-    for (auto iter : gbuffer_textures) {
-        GLuint tex = iter.second;
+    for (auto &component : gbuffer_components) {
+        glBindTexture(GL_TEXTURE_2D, component.texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, world.screen_width, world.screen_height, 0, component.external_format, component.type, NULL);
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Graphics::bind_gbuffer()
@@ -235,6 +234,43 @@ void Graphics::unbind_gbuffer()
 }
 
 
+void Graphics::deferred_lighting()
+{
+    // Activate additive blending.
+    glBlendFunc(GL_ONE, GL_ONE);
+    
+    glBindVertexArray(postprocessing_quad_vao);
+    auto &program = directional_light_shader_program;
+    program->bind();
+    // for (int i = 0; i < gbuffer_components.size(); i++) {
+    //     auto &component = gbuffer_components[i];
+    //     glActiveTexture(GL_TEXTURE0 + i);
+    //     glBindTexture(GL_TEXTURE_2D, component.texture);
+    //     glUniform1i(program->uniform_location(component.name), i);
+    // }
+    // for (auto light : world.entities.aspects<DirectionalLight>()) {
+    //     glUniform3f(program->uniform_location("direction"), 1, (GLfloat *) &light.direction);
+    //     glUniform3f(program->uniform_location("width"), 1, (GLfloat *) &light.width);
+    //     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    // }
+    program->unbind();
+    glBindVertexArray(0);
+
+    // Reset to the standard blending mode.
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+GBufferComponent &Graphics::gbuffer_component(std::string name)
+{
+    for (auto &component : gbuffer_components) {
+        std::cout << component.name << "\n";
+        if (component.name == name) return component;
+    }
+    fprintf(stderr, "\"%s\" is not the name of a G-buffer component.\n", name.c_str());
+    exit(EXIT_FAILURE);
+}
+
 void Graphics::init()
 {
     glDisable(GL_CULL_FACE);
@@ -242,11 +278,13 @@ void Graphics::init()
     glDepthFunc(GL_LESS);
 
     glEnable(GL_BLEND);
+    // The standard blending mode. Remember to reset to this if changed!
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Initialize the painting module, for 2D and 3D vector graphics.
     paint.init();
 
-    // Set up G-buffer.
+    // Set up the G-buffer.
     // The viewport at initialization should have the dimensions of the screen, so it is used to initialize gbuffer texture size.
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -255,22 +293,23 @@ void Graphics::init()
 
     glGenFramebuffers(1, &gbuffer_fb);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
-    
-    std::vector<std::string> buffer_names = {"position", "normal", "albedo"};
-    std::vector<GLenum> buffer_internal_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA};
-    std::vector<GLenum> buffer_external_formats = {GL_RGBA, GL_RGBA, GL_RGBA};
-    std::vector<GLenum> buffer_types = {GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE};
+
+    gbuffer_components = {GBufferComponent("position", GL_RGBA16F, GL_RGBA, GL_FLOAT),
+                          GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT),
+                          GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)};
     GLenum buffer_enums[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    for (unsigned int i = 0; i < buffer_names.size(); i++) {
+    int i = 0;
+    for (auto &component : gbuffer_components) {
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], world.screen_width, world.screen_height, 0, buffer_external_formats[i], buffer_types[i], NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, world.screen_width, world.screen_height, 0, component.external_format, component.type, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, buffer_enums[i], GL_TEXTURE_2D, texture, 0);
-        gbuffer_textures[buffer_names[i]] = texture;
+        component.texture = texture;
+        i += 1;
     }
     glDrawBuffers(3, buffer_enums);
 
@@ -285,6 +324,29 @@ void Graphics::init()
         fprintf(stderr, "G-buffer framebuffer incomplete.\n");
         exit(EXIT_FAILURE);
     }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    directional_light_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
+    directional_light_shader_program->link();
+
+    // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
+    // any time for post-processing effects or deferred rendering.
+    vec2 ppq_data[8] = {vec2(-1,1),vec2(0,0),
+                        vec2(-1,-1),vec2(0,1),
+                        vec2(1,-1),vec2(1,1),
+                        vec2(1,1),vec2(1,0)};
+    glGenVertexArrays(1, &postprocessing_quad_vao);
+    glBindVertexArray(postprocessing_quad_vao);
+    GLuint ppq_vbo;
+    glGenBuffers(1, &ppq_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, ppq_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * 8, (const void *) &ppq_data[0], GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) sizeof(vec2));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

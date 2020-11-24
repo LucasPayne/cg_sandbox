@@ -67,9 +67,12 @@ void World::loop()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
     graphics.unbind_gbuffer();
+    graphics.deferred_lighting();
 
     graphics.paint.render();
     graphics.paint.clear();
+
+    printf("%d %d\n", screen_width, screen_height);
 }
 
 void World::close()

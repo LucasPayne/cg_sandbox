@@ -24,6 +24,22 @@ REFLECT_STRUCT(GLShaderProgram);
 /*--------------------------------------------------------------------------------
 Graphics
 --------------------------------------------------------------------------------*/
+struct GBufferComponent {
+    std::string name;
+    GLenum internal_format;
+    GLenum external_format;
+    GLenum type;
+    GLuint texture; // The texture is initialized later.
+    GBufferComponent(std::string _name, 
+                     GLenum _internal_format,
+                     GLenum _external_format,
+                     GLenum _type)
+        : name{_name}, internal_format{_internal_format}, external_format{_external_format}, type{_type}
+    {}
+    GBufferComponent() {}
+};
+
+
 class World;
 class Graphics {
 public:
@@ -38,7 +54,7 @@ public:
 
 
     void clear_cameras();
-    // When rendering into a camera (whether it attached to a framebuffer or a texture),
+    // When rendering into a camera (whether it is attached to a framebuffer or a texture),
     // use these draw calls at the start and end.
     void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false);
     void end_camera_rendering(Aspect<Camera> &camera);
@@ -62,23 +78,28 @@ public:
     };
     ShaderCache shaders;
 
-    // "Shading" is the term for the model-shading system with geometric materials, materials, and shading models.
+    // "Shading" is the term for the surface-shading system with geometric materials, materials, and shading models.
     ShadingAssets shading;
-    // Immediate-mode drawing of vector graphics in 2D and 3D.
+    // The painting module is for immediate-mode drawing of vector graphics in 2D and 3D.
     Painting paint;
 
     // G-buffer
     void refresh_gbuffer_textures();
     void bind_gbuffer();
     void unbind_gbuffer();
+    GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
     GLuint gbuffer_fb;
-    std::map<std::string, GLuint> gbuffer_textures;
+    std::vector<GBufferComponent> gbuffer_components;
 
+    // Deferred rendering using the G-buffer.
+    void deferred_lighting();
+    Resource<GLShaderProgram> directional_light_shader_program;
+
+    // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
+    GLuint postprocessing_quad_vao;
 private:
     World &world;
-
-
 };
 
 

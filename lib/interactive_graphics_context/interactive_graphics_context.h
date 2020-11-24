@@ -28,7 +28,7 @@ namespace Platform {
     bool poll(WindowReference window); // Returns false if the platform is terminating.
     void present(WindowReference window);
     void close(WindowReference window);
-    void get_screen_size(int *width, int *height);
+    void get_screen_size(WindowReference window, int *width, int *height);
     float time();
 } // end namespace Platform
 

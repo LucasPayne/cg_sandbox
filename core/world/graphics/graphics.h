@@ -51,7 +51,7 @@ public:
     // Clear to the default screen.
     void clear();
     // Render the Drawables into each camera, using the given shading model.
-    void render_drawables(std::string &sm_name);
+    void render_drawables(std::string sm_name);
 
 
     // All raw OpenGL shader objects should be stored in this cache.
@@ -66,6 +66,11 @@ public:
     ShadingAssets shading;
     // Immediate-mode drawing of vector graphics in 2D and 3D.
     Painting paint;
+
+    // G-buffer
+    void refresh_gbuffer_textures();
+    void bind_gbuffer();
+    void unbind_gbuffer();
 
 private:
     World &world;

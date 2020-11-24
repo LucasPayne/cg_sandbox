@@ -11,19 +11,19 @@ section geom_post {
     }
 }
 section frag_post {
-    out vec4 gbuffer_position(in vec3 position) {
+    out vec4 gbuffer_position(in vec3 f_position) {
     GLSL
-        return position;
+        return vec4(f_position, 1);
     END
     }
-    out vec4 gbuffer_normal(in vec3 normal) {
+    out vec4 gbuffer_normal(in vec3 f_normal) {
     GLSL
-        return normal;
+        return vec4(f_normal,1);
     END
     }
-    out vec4 gbuffer_albedo(in vec4 albedo) {
+    out vec4 gbuffer_albedo(in vec4 f_albedo) {
     GLSL
-        return albedo;
+        return f_albedo;
     END
     }
 }

@@ -38,9 +38,9 @@ float time()
 }
 
 
-void get_screen_size(int *width, int *height)
+void get_screen_size(WindowReference window, int *width, int *height)
 {
-    glfwGetScreenSize(width, height);
+    glfwGetWindowSize((GLFWwindow *) window, width, height);
 }
 
 

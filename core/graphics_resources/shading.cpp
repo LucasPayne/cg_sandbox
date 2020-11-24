@@ -249,7 +249,7 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
             auto found_for_frag_post = std::find(std::begin(m.dataflow.outputs), std::end(m.dataflow.outputs), frag_post_requires);
             if (found_for_frag_post == std::end(m.dataflow.outputs)) {
                 // Not found. The Material doesn't provide the wanted output.
-                fprintf(stderr, "ERROR: Material does not provide the wanted output.\n");
+                fprintf(stderr, "ERROR: Material does not provide the wanted output \"%s\".\n", frag_post_requires.name.c_str());
                 exit(EXIT_FAILURE);
             }
             // Flag this output as being required by frag-post. This might be useful during code generation.
@@ -459,7 +459,7 @@ ShadingProgram ShadingFileDetails::new_shading_program(GeometricMaterial &g,
     // Output rendertargets. These are what frag-post outputs. All outputs are used.
     int counter = 0;
     for (ShadingOutput &output : sm.frag_post_dataflow.outputs) {
-        fragment_shader += "layout (location = " << counter << ") out " + output.output.type + " " + output.output.name + ";\n";
+        fragment_shader += "layout (location = " + std::to_string(counter) + ") out " + output.output.type + " " + output.output.name + ";\n";
         counter ++;
     }
     fragment_shader += "\n";

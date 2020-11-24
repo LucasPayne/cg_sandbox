@@ -121,7 +121,7 @@ void Graphics::end_camera_rendering(Aspect<Camera> &camera)
 }
 
 
-void Graphics::render_drawables(std::string &sm_name)
+void Graphics::render_drawables(std::string sm_name)
 {
     // auto sm = world.graphics.shading.shading_models.load("resources/model_test/model_test.sm");
     auto sm = world.graphics.shading.shading_models.load(sm_name);
@@ -220,8 +220,18 @@ END_ENTRIES()
 void Graphics::refresh_gbuffer_textures()
 {
     int w, h;
-    Platform::get_screen_size(&w, &h);
-    for (
+    for (auto iter : gbuffer_textures) {
+        GLuint tex = iter.second;
+    }
+}
+
+void Graphics::bind_gbuffer()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
+}
+void Graphics::unbind_gbuffer()
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -237,21 +247,29 @@ void Graphics::init()
     paint.init();
 
     // Set up G-buffer.
+    // The viewport at initialization should have the dimensions of the screen, so it is used to initialize gbuffer texture size.
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    world.screen_width = viewport[2];
+    world.screen_height = viewport[3];
+
     GLuint gbuffer_fb;
     glGenFramebuffers(1, &gbuffer_fb);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
     
     std::vector<std::string> buffer_names = {"position", "normal", "albedo"};
-    std::vector<std::string> buffer_internal_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA};
-    for (int i = 0; i < buffer_names.size(); i++) {
+    std::vector<GLenum> buffer_internal_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA};
+    for (unsigned int i = 0; i < buffer_names.size(); i++) {
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], screen_width, screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], world.screen_width, world.screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, i);
     }
     GLenum buffer_enums[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(3, buffer_enums);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

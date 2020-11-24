@@ -327,6 +327,11 @@ App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,0,2);
+
+    
+    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
+    obj.get<Drawable>()->material.properties.set_vec4("diffuse", frand(),frand(),frand(),1);
+
     
 #if 1
     auto demo = world.entities.add();

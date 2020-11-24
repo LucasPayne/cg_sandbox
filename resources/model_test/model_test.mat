@@ -4,7 +4,7 @@ block properties {
     vec4 color;
 }
 section frag {
-    out vec4 diffuse(in vec3 f_position) {
+    out vec4 albedo(in vec3 f_position) {
     GLSL
         vec4 ambient = vec4(0.2,0.2,0.2,0);
         const float factor = 12;

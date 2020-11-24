@@ -7,8 +7,8 @@ World::World() :
     resources(),
     assets(*this),
     graphics(*this),
-    input()
-    screen_has_resized_this_frame{false},
+    input(),
+    screen_has_resized_this_frame{false}
 {
     printf("[world] Creating world...\n");
 
@@ -42,9 +42,6 @@ World::World() :
 
     // Order-sensitive subsystem initialization.
     graphics.init();
-
-    // Initialize context information.
-    IGC::get_screen_size(&width, &height);
 }
 
 
@@ -61,8 +58,11 @@ void World::loop()
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
+
     graphics.bind_gbuffer();
-    graphics.render_drawables("shaders/gbuffer_position_normal_diffuse.sm");
+    glDisable(GL_SCISSOR_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
     graphics.unbind_gbuffer();
 
     graphics.paint.render();

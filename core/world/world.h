@@ -28,6 +28,7 @@ public:
     void loop();
     void keyboard_handler(KeyboardEvent e);
     void mouse_handler(MouseEvent e);
+    void window_handler(WindowEvent e);
 
     // Behaviours.
     // template <typename B>
@@ -38,6 +39,9 @@ public:
     // Utilities.
     //todo: move this to a picker subsystem.
     bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
+
+    int screen_width;
+    int screen_height;
 
 private:
     World(const World &); // Delete the copy constructor.

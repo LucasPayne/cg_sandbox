@@ -8,6 +8,8 @@
 #include "behaviours/Trackball.cpp"
 #include "mesh_processing/mesh_processing.h"
 
+Aspect<Camera> main_camera;
+
 
 class DrawableNURBS : public IBehaviour {
 public:
@@ -327,6 +329,7 @@ App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,0,2);
+    main_camera = cameraman.get<Camera>();
 
     
     Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
@@ -374,6 +377,7 @@ void App::close()
 void App::loop()
 {
     world.graphics.paint.chain(points, points.size(), vec4(0,0,0,1));
+    world.graphics.paint.sprite(main_camera, world.graphics.gbuffer_textures["position"], vec2(0.1,0.1), 0.5,0.5);
 }
 
 void App::window_handler(WindowEvent e)

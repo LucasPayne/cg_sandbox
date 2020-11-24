@@ -253,23 +253,38 @@ void Graphics::init()
     world.screen_width = viewport[2];
     world.screen_height = viewport[3];
 
-    GLuint gbuffer_fb;
     glGenFramebuffers(1, &gbuffer_fb);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
     
     std::vector<std::string> buffer_names = {"position", "normal", "albedo"};
     std::vector<GLenum> buffer_internal_formats = {GL_RGBA16F, GL_RGBA16F, GL_RGBA};
+    std::vector<GLenum> buffer_external_formats = {GL_RGBA, GL_RGBA, GL_RGBA};
+    std::vector<GLenum> buffer_types = {GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE};
+    GLenum buffer_enums[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     for (unsigned int i = 0; i < buffer_names.size(); i++) {
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], world.screen_width, world.screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, buffer_internal_formats[i], world.screen_width, world.screen_height, 0, buffer_external_formats[i], buffer_types[i], NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, buffer_enums[i], GL_TEXTURE_2D, texture, 0);
+        gbuffer_textures[buffer_names[i]] = texture;
     }
-    GLenum buffer_enums[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(3, buffer_enums);
+
+    GLuint depth_rbo;
+    glGenRenderbuffers(1, &depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "G-buffer framebuffer incomplete.\n");
+        exit(EXIT_FAILURE);
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

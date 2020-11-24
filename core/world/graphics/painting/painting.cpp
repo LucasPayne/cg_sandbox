@@ -208,6 +208,7 @@ void Painting::render()
     render_wireframes();
     render_circles();
     render_lines_2D();
+    render_sprites();
 }
 
 
@@ -225,6 +226,7 @@ void Painting::clear()
     circle_buffer.clear();
     circle_positions.clear();
     lines_2D.clear();
+    sprites.clear();
 }
 
 
@@ -388,6 +390,18 @@ void Painting::chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float 
     lines_2D.push_back(PaintingLines2D(camera, points, width, color));
 }
 
+void Painting::sprite(Aspect<Camera> camera, GLuint texture, vec2 top_left, float width, float height)
+{
+    SpriteRenderData sp;
+    sp.camera = camera;
+    sp.texture = texture;
+    sp.top_left = top_left;
+    sp.width = width;
+    sp.height = height;
+    sprites.push_back(sp);
+}
+
+
 void Painting::render_lines_2D()
 {
     primitive_lines_2D_shader_program->bind();
@@ -430,6 +444,7 @@ void Painting::render_circles()
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * circle_positions.size(), (const void *) &circle_positions[0], GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     
     glDisable(GL_DEPTH_TEST);
@@ -463,59 +478,117 @@ void Painting::render_circles()
 }
 
 
+void Painting::render_sprites()
+{
+    std::vector<vec2> vertex_data(8 * sprites.size());
+    for (unsigned int i = 0; i < sprites.size(); i++) {
+        auto &sp = sprites[i];
+        vertex_data[8*i + 0] = sp.top_left;
+        vertex_data[8*i + 2] = vec2(sp.top_left.x() + sp.width, sp.top_left.y());
+        vertex_data[8*i + 4] = vec2(sp.top_left.x() + sp.width, sp.top_left.y() + sp.height);
+        vertex_data[8*i + 6] = vec2(sp.top_left.x(), sp.top_left.y() + sp.height);
+        vertex_data[8*i + 1] = vec2(0,0);
+        vertex_data[8*i + 3] = vec2(1,0);
+        vertex_data[8*i + 5] = vec2(1,1);
+        vertex_data[8*i + 7] = vec2(0,1);
+    }
+
+    for (auto v : vertex_data) std::cout << v << "\n";
+    printf("!^!\n");
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    GLuint vertex_buffer;
+    glGenBuffers(1, &vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * vertex_data.size(), (const void *) &vertex_data[0], GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) sizeof(vec2));
+    glEnableVertexAttribArray(1);
+
+    sprite_shader_program->bind();
+    for (unsigned int i = 0; i < sprites.size(); i++) {
+        auto &sp = sprites[i];
+
+        graphics.begin_camera_rendering(sp.camera);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sp.texture);
+        glUniform1i(sprite_shader_program->uniform_location("sprite"), 0);
+        glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
+
+        graphics.end_camera_rendering(sp.camera);
+    }
+
+    sprite_shader_program->unbind();
+    glDeleteBuffers(1, &vertex_buffer);
+    glDeleteVertexArrays(1, &vao);
+}
+
+
+
+
+
 const int Painting::max_bspline_degree = 3;
 void Painting::init()
 {
     spheres_shader_program = world.resources.add<GLShaderProgram>();
-    spheres_shader_program->add_shader(GLShader(VertexShader, "resources/painting/spheres.vert"));
-    spheres_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/spheres.tcs"));
-    spheres_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/spheres.tes"));
-    spheres_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/spheres.frag"));
+    spheres_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/spheres.vert"));
+    spheres_shader_program->add_shader(GLShader(TessControlShader, "shaders/painting/spheres.tcs"));
+    spheres_shader_program->add_shader(GLShader(TessEvaluationShader, "shaders/painting/spheres.tes"));
+    spheres_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/spheres.frag"));
     spheres_shader_program->link();
 
     wireframe_shader_program = world.resources.add<GLShaderProgram>();
-    wireframe_shader_program->add_shader(GLShader(VertexShader, "resources/painting/triangle_wireframe.vert"));
-    wireframe_shader_program->add_shader(GLShader(GeometryShader, "resources/painting/triangle_wireframe.geom"));
-    wireframe_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/triangle_wireframe.frag"));
+    wireframe_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/triangle_wireframe.vert"));
+    wireframe_shader_program->add_shader(GLShader(GeometryShader, "shaders/painting/triangle_wireframe.geom"));
+    wireframe_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/triangle_wireframe.frag"));
     wireframe_shader_program->link();
 
     for (int degree = 1; degree <= max_bspline_degree; degree++) {
         {
         auto program = world.resources.add<GLShaderProgram>();
-        program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
-        program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
-        program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D.tes"));
-        program->add_shader(GLShader(GeometryShader, "resources/painting/bspline_2D.geom"));
-        program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D.frag"));
+        program->add_shader(GLShader(VertexShader, "shaders/painting/bspline_2D.vert"));
+        program->add_shader(GLShader(TessControlShader, "shaders/painting/quadratic_bspline_2D.tcs"));
+        program->add_shader(GLShader(TessEvaluationShader, "shaders/painting/quadratic_bspline_2D.tes"));
+        program->add_shader(GLShader(GeometryShader, "shaders/painting/bspline_2D.geom"));
+        program->add_shader(GLShader(FragmentShader, "shaders/painting/bspline_2D.frag"));
         program->link();
         bspline_2D_shader_programs.push_back(program);
         }
         {
         auto program = world.resources.add<GLShaderProgram>();
-        program->add_shader(GLShader(VertexShader, "resources/painting/bspline_2D.vert"));
-        program->add_shader(GLShader(TessControlShader, "resources/painting/quadratic_bspline_2D.tcs"));
-        program->add_shader(GLShader(TessEvaluationShader, "resources/painting/quadratic_bspline_2D_point_mode.tes"));
-        program->add_shader(GLShader(GeometryShader, "resources/painting/bspline_2D_fillets.geom"));
-        program->add_shader(GLShader(FragmentShader, "resources/painting/bspline_2D_fillets.frag"));
+        program->add_shader(GLShader(VertexShader, "shaders/painting/bspline_2D.vert"));
+        program->add_shader(GLShader(TessControlShader, "shaders/painting/quadratic_bspline_2D.tcs"));
+        program->add_shader(GLShader(TessEvaluationShader, "shaders/painting/quadratic_bspline_2D_point_mode.tes"));
+        program->add_shader(GLShader(GeometryShader, "shaders/painting/bspline_2D_fillets.geom"));
+        program->add_shader(GLShader(FragmentShader, "shaders/painting/bspline_2D_fillets.frag"));
         program->link();
         bspline_2D_fillets_shader_programs.push_back(program);
         }
     }
 
     lines_shader_program = world.resources.add<GLShaderProgram>();
-    lines_shader_program->add_shader(GLShader(VertexShader, "resources/painting/lines.vert"));
-    lines_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/lines.frag"));
+    lines_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/lines.vert"));
+    lines_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/lines.frag"));
     lines_shader_program->link();
 
     primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();
-    primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/primitive_lines_2D.vert"));
-    primitive_lines_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/primitive_lines_2D.frag"));
+    primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/primitive_lines_2D.vert"));
+    primitive_lines_2D_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/primitive_lines_2D.frag"));
     primitive_lines_2D_shader_program->link();
 
     circles_2D_shader_program = world.resources.add<GLShaderProgram>();
-    circles_2D_shader_program->add_shader(GLShader(VertexShader, "resources/painting/circles_2D.vert"));
-    circles_2D_shader_program->add_shader(GLShader(TessControlShader, "resources/painting/circles_2D.tcs"));
-    circles_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "resources/painting/circles_2D.tes"));
-    circles_2D_shader_program->add_shader(GLShader(FragmentShader, "resources/painting/circles_2D.frag"));
+    circles_2D_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/circles_2D.vert"));
+    circles_2D_shader_program->add_shader(GLShader(TessControlShader, "shaders/painting/circles_2D.tcs"));
+    circles_2D_shader_program->add_shader(GLShader(TessEvaluationShader, "shaders/painting/circles_2D.tes"));
+    circles_2D_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/circles_2D.frag"));
     circles_2D_shader_program->link();
+
+    sprite_shader_program = world.resources.add<GLShaderProgram>();
+    sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
+    sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite.frag"));
+    sprite_shader_program->link();
 }

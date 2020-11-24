@@ -59,19 +59,17 @@ void World::loop()
         if (b->enabled) b->update();
     }
 
+    if (screen_has_resized_this_frame) {
+        graphics.refresh_gbuffer_textures();
+        screen_has_resized_this_frame = false;
+    }
     graphics.bind_gbuffer();
-    glDisable(GL_SCISSOR_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
     graphics.unbind_gbuffer();
 
     graphics.paint.render();
     graphics.paint.clear();
-
-    if (screen_has_resized_this_frame) {
-        graphics.refresh_gbuffer_textures();
-        screen_has_resized_this_frame = false;
-    }
 }
 
 void World::close()

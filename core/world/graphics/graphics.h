@@ -71,14 +71,14 @@ public:
     void refresh_gbuffer_textures();
     void bind_gbuffer();
     void unbind_gbuffer();
+    // G-buffer data
+    GLuint gbuffer_fb;
+    std::map<std::string, GLuint> gbuffer_textures;
 
 private:
     World &world;
 
 
-    // G-buffer data
-    GLuint gbuffer_fb;
-    std::map<std::string, GLuint> gbuffer_textures;
 };
 
 

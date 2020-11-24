@@ -70,7 +70,7 @@ struct WireframeRenderData {
 struct SpriteRenderData {
     Aspect<Camera> camera;
     GLuint texture;
-    vec2 top_left;
+    vec2 bottom_left;
     float width;
     float height;
 };
@@ -98,7 +98,8 @@ public:
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width = 0.f, vec4 outline_color = vec4::zero());
     void chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float width, vec4 color);
-    void sprite(Aspect<Camera> camera, GLuint texture, vec2 top_left, float width, float height);
+    void sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height);
+    void bordered_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
 
 private:
     // 3D painting buffers.

@@ -377,7 +377,9 @@ void App::close()
 void App::loop()
 {
     world.graphics.paint.chain(points, points.size(), vec4(0,0,0,1));
-    world.graphics.paint.sprite(main_camera, world.graphics.gbuffer_textures["position"], vec2(0.1,0.1), 0.5,0.5);
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_textures["position"], vec2(0.06,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_textures["normal"], vec2(0.36,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_textures["albedo"], vec2(0.66,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)

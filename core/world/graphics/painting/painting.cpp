@@ -390,15 +390,26 @@ void Painting::chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float 
     lines_2D.push_back(PaintingLines2D(camera, points, width, color));
 }
 
-void Painting::sprite(Aspect<Camera> camera, GLuint texture, vec2 top_left, float width, float height)
+void Painting::sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height)
 {
     SpriteRenderData sp;
     sp.camera = camera;
     sp.texture = texture;
-    sp.top_left = top_left;
+    sp.bottom_left = bottom_left;
     sp.width = width;
     sp.height = height;
     sprites.push_back(sp);
+}
+
+void Painting::bordered_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color)
+{
+    std::vector<vec2> points = {bottom_left,
+                                vec2(bottom_left.x()+width, bottom_left.y()),
+                                vec2(bottom_left.x()+width, bottom_left.y()+height),
+                                vec2(bottom_left.x(), bottom_left.y()+height),
+                                bottom_left};
+    chain_2D(camera, points, border_width, border_color);
+    sprite(camera, texture, bottom_left, width, height);
 }
 
 
@@ -483,10 +494,10 @@ void Painting::render_sprites()
     std::vector<vec2> vertex_data(8 * sprites.size());
     for (unsigned int i = 0; i < sprites.size(); i++) {
         auto &sp = sprites[i];
-        vertex_data[8*i + 0] = sp.top_left;
-        vertex_data[8*i + 2] = vec2(sp.top_left.x() + sp.width, sp.top_left.y());
-        vertex_data[8*i + 4] = vec2(sp.top_left.x() + sp.width, sp.top_left.y() + sp.height);
-        vertex_data[8*i + 6] = vec2(sp.top_left.x(), sp.top_left.y() + sp.height);
+        vertex_data[8*i + 0] = sp.bottom_left;
+        vertex_data[8*i + 2] = vec2(sp.bottom_left.x() + sp.width, sp.bottom_left.y());
+        vertex_data[8*i + 4] = vec2(sp.bottom_left.x() + sp.width, sp.bottom_left.y() + sp.height);
+        vertex_data[8*i + 6] = vec2(sp.bottom_left.x(), sp.bottom_left.y() + sp.height);
         vertex_data[8*i + 1] = vec2(0,0);
         vertex_data[8*i + 3] = vec2(1,0);
         vertex_data[8*i + 5] = vec2(1,1);

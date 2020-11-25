@@ -62,13 +62,22 @@ void World::loop()
     graphics.clear_cameras();
     glBindFramebuffer(GL_FRAMEBUFFER, graphics.gbuffer_fb);
     graphics.clear(vec4(0,0,0,0), vec4(0,0,0,0));
+    int x, y, w, h;
+    x = graphics.viewport_x;
+    y = graphics.viewport_y;
+    w = graphics.viewport_width;
+    h = graphics.viewport_height;
+    graphics.set_viewport(0,0, graphics.viewport_width, graphics.viewport_height); //---
     graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
+    graphics.set_viewport(x, y, w, h);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     graphics.deferred_lighting();
     // Blit the G-buffer depth-buffer over to the default framebuffer.
     glBindFramebuffer(GL_READ_FRAMEBUFFER, graphics.gbuffer_fb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0, screen_width, screen_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, w, h,
+                      x, y, x+w, y+h,
+                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     graphics.paint.render();
     graphics.paint.clear();

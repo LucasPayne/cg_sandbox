@@ -145,8 +145,6 @@ void Graphics::render_drawables(std::string sm_name)
         begin_camera_rendering(camera);
 
         log_render("Calculating view-projection matrix...");
-        // mat4x4 view_matrix = camera_transform->inverse_matrix();
-        // mat4x4 vp_matrix = camera->projection_matrix * view_matrix;
         mat4x4 vp_matrix = camera->view_projection_matrix();
         log_render("Uploading view-projection matrix...");
         shading_model.properties.set_mat4x4("vp_matrix", vp_matrix);
@@ -162,7 +160,6 @@ void Graphics::render_drawables(std::string sm_name)
             log_render("    Draw.");
             draw(drawable->geometric_material, drawable->material, shading_model);
         }
-
         end_camera_rendering(camera);
     }
     if (!any_camera) printf("[graphics] No camera.\n"); // Make it easier to tell when the camera is not working.
@@ -224,14 +221,14 @@ END_ENTRIES()
 
 void Graphics::refresh_gbuffer_textures()
 {
-    // When the window is resized, the G-buffer texture/renderbuffer storage needs to be updated to match the default framebuffer.
+    // When the window is resized, the G-buffer texture/renderbuffer storage needs to be updated to match the default viewport.
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, viewport_width, viewport_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
     for (auto &component : gbuffer_components) {
         glBindTexture(GL_TEXTURE_2D, component.texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, world.screen_width, world.screen_height, 0, component.external_format, component.type, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, viewport_width, viewport_height, 0, component.external_format, component.type, NULL);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
 }

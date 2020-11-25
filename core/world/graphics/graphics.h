@@ -100,14 +100,14 @@ public:
 
     void set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height);
     void subviewport_begin(vec2 bottom_left, vec2 top_right);
-    void subviewport_end();
-private:
-    World &world;
-
     GLint viewport_x;
     GLint viewport_y;
     GLsizei viewport_width;
     GLsizei viewport_height;
+    void subviewport_end();
+private:
+    World &world;
+
 };
 
 

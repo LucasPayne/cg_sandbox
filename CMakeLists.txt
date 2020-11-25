@@ -69,6 +69,13 @@ add_library(cg_sandbox
     core/world/graphics/drawing.cpp
     core/world/graphics/shading_assets.cpp
     core/world/graphics/painting/painting.cpp
+    core/world/graphics/painting/2D/curves.cpp
+    core/world/graphics/painting/2D/circles.cpp
+    core/world/graphics/painting/2D/lines.cpp
+    core/world/graphics/painting/2D/sprites.cpp
+    core/world/graphics/painting/3D/wireframes.cpp
+    core/world/graphics/painting/3D/spheres.cpp
+    core/world/graphics/painting/3D/lines.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g -Wno-invalid-offsetof)
     # no-invalid-offsetof: Ignoring this warning could break things! However, currently with the reflection system,

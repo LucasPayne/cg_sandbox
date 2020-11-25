@@ -1,12 +1,16 @@
 #include "world/standard_aspects/standard_aspects.h"
 
 
-Camera::Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio)
+Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _near_half_width, float _aspect_ratio) :
+    near_plane_distance{_near_plane_distance},
+    far_plane_distance{_far_plane_distance},
+    near_half_width{_near_half_width},
+    m_aspect_ratio{_aspect_ratio}
 {
     float n = near_plane_distance;
     float f = far_plane_distance;
     float w = near_half_width;
-    float h = aspect_ratio * near_half_width;
+    float h = m_aspect_ratio * near_half_width;
 
     // The projection matrix maps the frustum defined by the four parameters into the canonical view volume, -1 <= x,y <= 1, 0 <= z <= 1.
     // This was derived with matrix algebra, proven correct!
@@ -34,10 +38,13 @@ bool Camera::in_viewport(float screen_x, float screen_y)
 
 float Camera::aspect_ratio() const
 {
+    return m_aspect_ratio;
+
+    //----
     // width over height
-    float global_aspect_ratio = 0.566; //----This is just the current aspect ratio of the window subrectangle.
-    float sub_aspect_ratio = (top_right.y() - bottom_left.y()) / (top_right.x() - bottom_left.x());
-    return global_aspect_ratio * sub_aspect_ratio;
+    // float global_aspect_ratio = 0.566; //----This is just the current aspect ratio of the window subrectangle.
+    // float sub_aspect_ratio = (top_right.y() - bottom_left.y()) / (top_right.x() - bottom_left.x());
+    // return global_aspect_ratio * sub_aspect_ratio;
 }
 
 void Camera::to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y)
@@ -53,6 +60,14 @@ mat4x4 Camera::view_matrix()
 mat4x4 Camera::view_projection_matrix()
 {
     return projection_matrix * view_matrix();
+}
+
+
+vec3 Camera::frustum_point(float x, float y, float z)
+{
+    auto transform = entity.get<Transform>();
+    float local_z = near_plane_distance + z*(far_plane_distance - near_plane_distance);
+    return (transform->matrix() * vec4(local_z * vec3(x*near_half_width, y*near_half_width*m_aspect_ratio, 1), 1)).xyz();
 }
 
 

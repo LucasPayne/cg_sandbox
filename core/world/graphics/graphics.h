@@ -43,17 +43,17 @@ struct GBufferComponent {
 /*--------------------------------------------------------------------------------
 Lighting data
 --------------------------------------------------------------------------------*/
+struct DirectionalLightShadowMap {
+    GLuint fbo;
+    GLuint texture;
+    int width;
+    int height;
+};
 struct DirectionalLightData {
-    struct DirectionalLightShadowMap {
-        GLuint fbo;
-        GLuint texture;
-        int width;
-        int height;
-    };
     // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.
     std::map<uint64_t, DirectionalLightShadowMap> shadow_maps;
-
-    DirectionalLightShadowMap new_shadow_map();
+    // Retrieve this light's shadow map for a certain camera. If there isn't one, initialize it.
+    DirectionalLightShadowMap &shadow_map(Aspect<Camera> camera);
 };
 
 
@@ -127,14 +127,14 @@ public:
     void subviewport_end();
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
-    std::map<uint64_t, DirectionalLightData> directional_light_data;
-    DirectionalLightData new_directional_light();
+    DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
 
     void update_lights();
 
 private:
     World &world;
 
+    std::map<uint64_t, DirectionalLightData> directional_light_data_map;
 };
 
 

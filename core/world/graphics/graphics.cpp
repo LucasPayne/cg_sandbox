@@ -361,9 +361,25 @@ void Graphics::init()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-
-DirectionalLightData Graphics::new_directional_light()
+DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
 {
+    auto iter = directional_light_data_map.find(light.ID());
+    if (iter != directional_light_data_map.end()) {
+        return directional_light_data_map[light.ID()];
+    }
+    DirectionalLightData data;
+    // Initialize ...
+    //-
+    directional_light_data_map[light.ID()] = data;
+    return directional_light_data_map[light.ID()];
+}
+
+DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camera)
+{
+    auto iter = shadow_maps.find(camera.ID());
+    if (iter != shadow_maps.end()) {
+        return shadow_maps[camera.ID()];
+    }
     int width = 512;
     int height = 512;
     GLuint tex;
@@ -385,34 +401,47 @@ DirectionalLightData Graphics::new_directional_light()
         exit(EXIT_FAILURE);
     }
 
-    DirectionalLightData data;
-    data.shadow_map.width = width;
-    data.shadow_map.height = height;
-    data.shadow_map.texture = tex;
-    data.shadow_map.fbo = fbo;
+    DirectionalLightShadowMap sm;
+    sm.width = width;
+    sm.height = height;
+    sm.texture = tex;
+    sm.fbo = fbo;
 
-    return data;
+    shadow_maps[camera.ID()] = sm;
+    return shadow_maps[camera.ID()];
 }
+
+
 
 void Graphics::update_lights()
 {
-    // Lighting data such as shadow maps is stored in the graphics module, rather than in the light aspect itself.
-    // To do this, each active light in the scene is connected to its rendering data through a hash table.
-    for (auto light : world.entities.aspects<DirectionalLight>()) {
-        uint64_t id = light.ID();
-        auto iter = directional_light_data.find(id);
-        if (iter == directional_light_data.end()) {
-            directional_light_data[id] = new_directional_light();
-        } else {
-            auto &data = iter->second;
-        }
-    }
-    //---detect when directional lights are no longer being used, and free their data.
-
     // Render shadow maps.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         for (auto camera : world.entities.aspects<Camera>()) {
+            auto &sm = directional_light_data(light).shadow_map(camera);
+            
+            // Bound the camera frustum section.
+            // This bound is the box which will is oriented in the direction of the light,
+            // and has the minimum local X and Y extents, giving higher shadow map density.
+
+            vec3 frustum_points[8] = {
+                camera->frustum_point(-1,-1,0),
+                camera->frustum_point(1,-1,0),
+                camera->frustum_point(1,1,0),
+                camera->frustum_point(-1,1,0),
+                camera->frustum_point(-1,-1,1),
+                camera->frustum_point(1,-1,1),
+                camera->frustum_point(1,1,1),
+                camera->frustum_point(-1,1,1),
+            };
+            for (int i = 0; i < 8; i++) {
+                paint.sphere(frustum_points[i], 2, vec4(0,1,1,1));
+                std::cout << frustum_points[i] << "\n";
+            }
+            
 
         }
     }
+
+    //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.
 }

@@ -19,6 +19,20 @@ Transform::Transform(vec3 _position) :
     scale{1.f}
 {}
 
+vec3 Transform::forward()
+{
+    return rotation * vec3(0,0,1);
+}
+
+vec3 Transform::up()
+{
+    return rotation * vec3(0,1,0);
+}
+vec3 Transform::right()
+{
+    return rotation * vec3(1,0,0);
+}
+
 
 void Transform::init_lookat(vec3 position, vec3 target)
 {

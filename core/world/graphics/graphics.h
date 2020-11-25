@@ -47,7 +47,9 @@ struct DirectionalLightShadowMap {
     GLuint fbo;
     GLuint texture;
     int width;
-    int height;
+    int height; // resolution
+    mat4x4 shadow_matrix; // Transforms points in world space into shadow coordinates (X and Y as texture coordinates, Z as the depth in the range
+                          // of the shadow map).
 };
 struct DirectionalLightData {
     // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.
@@ -87,7 +89,8 @@ public:
     // Clear to the default screen.
     void clear(vec4 bg_color, vec4 fg_color);
     // Render the Drawables into each camera, using the given shading model.
-    void render_drawables(std::string sm_name);
+    void render_drawables_to_cameras(std::string sm_name);
+    void render_drawables(ShadingModelInstance shading_model);
 
 
     // All raw OpenGL shader objects should be stored in this cache.

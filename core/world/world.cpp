@@ -75,7 +75,7 @@ void World::loop()
     w = graphics.viewport_width;
     h = graphics.viewport_height;
     graphics.set_viewport(0,0, w,h);
-    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
+    graphics.render_drawables_to_cameras("shaders/gbuffer/position_normal_albedo.sm");
     graphics.set_viewport(x,y, w,h);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

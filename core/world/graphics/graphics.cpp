@@ -127,10 +127,8 @@ void Graphics::end_camera_rendering(Aspect<Camera> &camera)
     subviewport_end();
 }
 
-
-void Graphics::render_drawables(std::string sm_name)
+void Graphics::render_drawables_to_cameras(std::string sm_name)
 {
-    // auto sm = world.graphics.shading.shading_models.load("resources/model_test/model_test.sm");
     auto sm = world.graphics.shading.shading_models.load(sm_name);
     auto shading_model = ShadingModelInstance(sm);
 
@@ -139,27 +137,13 @@ void Graphics::render_drawables(std::string sm_name)
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
         any_camera = true;
-        printf("[graphics] Camera rendering...\n");
 
         // Set up viewport.
         begin_camera_rendering(camera);
-
-        log_render("Calculating view-projection matrix...");
         mat4x4 vp_matrix = camera->view_projection_matrix();
-        log_render("Uploading view-projection matrix...");
         shading_model.properties.set_mat4x4("vp_matrix", vp_matrix);
 
-        log_render("Rendering Drawables:");
-        for (auto drawable : world.entities.aspects<Drawable>()) {
-            log_render("  Rendering drawable.");
-            log_render("    Calculating model matrix...");
-            mat4x4 model_matrix = drawable->model_matrix();
-            log_render("    Uploading model matrix...");
-            drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
-
-            log_render("    Draw.");
-            draw(drawable->geometric_material, drawable->material, shading_model);
-        }
+        render_drawables(shading_model);
         end_camera_rendering(camera);
     }
     if (!any_camera) printf("[graphics] No camera.\n"); // Make it easier to tell when the camera is not working.
@@ -167,6 +151,16 @@ void Graphics::render_drawables(std::string sm_name)
 
     // Free the buffer holding shading model parameters (such as the projection matrix).
     shading_model.properties.destroy();
+}
+
+
+void Graphics::render_drawables(ShadingModelInstance shading_model)
+{
+    for (auto drawable : world.entities.aspects<Drawable>()) {
+        mat4x4 model_matrix = drawable->model_matrix();
+        drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
+        draw(drawable->geometric_material, drawable->material, shading_model);
+    }
 }
 
 
@@ -275,7 +269,6 @@ void Graphics::deferred_lighting()
 GBufferComponent &Graphics::gbuffer_component(std::string name)
 {
     for (auto &component : gbuffer_components) {
-        std::cout << component.name << "\n";
         if (component.name == name) return component;
     }
     fprintf(stderr, "\"%s\" is not the name of a G-buffer component.\n", name.c_str());
@@ -417,13 +410,11 @@ void Graphics::update_lights()
 {
     // Render shadow maps.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
+        auto light_transform = light.sibling<Transform>();
         for (auto camera : world.entities.aspects<Camera>()) {
             auto &sm = directional_light_data(light).shadow_map(camera);
             
-            // Bound the camera frustum section.
-            // This bound is the box which will is oriented in the direction of the light,
-            // and has the minimum local X and Y extents, giving higher shadow map density.
-
+            // Bound the camera frustum section with a box, elongated in the direction of the light.
             vec3 frustum_points[8] = {
                 camera->frustum_point(-1,-1,0),
                 camera->frustum_point(1,-1,0),
@@ -434,11 +425,54 @@ void Graphics::update_lights()
                 camera->frustum_point(1,1,1),
                 camera->frustum_point(-1,1,1),
             };
+            vec3 Z = light->direction.normalized();
+            vec3 X = light_transform->right();
+            vec3 Y = vec3::cross(X, Z);
+            vec3 transformed_frustum[8];
             for (int i = 0; i < 8; i++) {
-                paint.sphere(frustum_points[i], 2, vec4(0,1,1,1));
-                std::cout << frustum_points[i] << "\n";
+                vec3 d = frustum_points[i] - light_transform->position;
+                transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
             }
-            
+            vec3 mins = transformed_frustum[0];
+            vec3 maxs = transformed_frustum[0];
+            for (int i = 1; i < 8; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (transformed_frustum[i][j] < mins[j]) {
+                        mins[j] = transformed_frustum[i][j];
+                    } else if (transformed_frustum[i][j] > maxs[j]) {
+                        maxs[j] = transformed_frustum[i][j];
+                    }
+                }
+            }
+            float width = maxs.x() - mins.x();
+            float height = maxs.y() - mins.y();
+            float depth = maxs.z() - mins.z();
+            vec3 bottom_left = light_transform->position + X*mins.x() + Y*mins.y();
+            float inv_w = 1.0 / width;
+            float inv_h = 1.0 / height;
+            float inv_d = 1.0 / depth;
+            // Compute the shadow coordinate matrix. This transforms points in world space to texture space of the shadow map,
+            // with depth being in the range of the box.
+            sm.shadow_matrix = mat4x4(
+                X.x() * inv_w, X.y() * inv_w, X.z() * inv_w, 0,
+                Y.x() * inv_h, Y.y() * inv_h, Y.z() * inv_h, 0,
+                Z.x() * inv_d, Z.y() * inv_d, Z.z() * inv_d, 0,
+                0,0,0, 1
+            ) * mat4x4(
+                1,0,0,-bottom_left.x(),
+                0,1,0,-bottom_left.y(),
+                0,0,1,-bottom_left.z(),
+                0,0,0,1
+            );
+            // Render surfaces into the shadow map.
+            // When rendering, the rectangle projected to needs to range from [-1,-1] to [1,1].
+            // The shadow matrix maps to the shadow map's texture space, so just affine transform these space.
+            mat4x4 shadow_mvp_matrix = mat4x4(
+                2,0,0,-1,
+                0,2,0,-1,
+                0,0,2,-1,
+                0,0,0,1
+            ) * sm.shadow_matrix;
 
         }
     }

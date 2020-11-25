@@ -67,7 +67,7 @@ vec3 Camera::frustum_point(float x, float y, float z)
 {
     auto transform = entity.get<Transform>();
     float local_z = near_plane_distance + z*(far_plane_distance - near_plane_distance);
-    return (transform->matrix() * vec4(local_z * vec3(x*near_half_width, y*near_half_width*m_aspect_ratio, 1), 1)).xyz();
+    return (transform->matrix() * vec4(local_z * vec3(x*near_half_width/near_plane_distance, y*near_half_width*m_aspect_ratio/near_plane_distance, -1), 1)).xyz();
 }
 
 

@@ -358,11 +358,13 @@ App::App(World &_world) : world{_world}
     
 {
     Entity light = world.entities.add();
+    light.add<Transform>(0,0,0);
     light.add<DirectionalLight>(vec3(1,0,0), vec3(1,1,1), 1.5);
     world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,1,0));
 }
 {
     Entity light = world.entities.add();
+    light.add<Transform>(0,0,0);
     light.add<DirectionalLight>(vec3(1,0,0), vec3(1,0,1), 1);
     world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,0,1));
 }
@@ -414,8 +416,14 @@ void App::loop()
     world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.36,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
     world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.66,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
 
-    std::vector<vec3> plane_points = {frustum_points[0],frustum_points[1],frustum_points[2],frustum_points[3],frustum_points[0]};
-    world.graphics.paint.chain(plane_points, plane_points.size(), vec4(0,1,1,1));
+    for (int i = 0; i < 2; i++) {
+        std::vector<vec3> plane_points = {frustum_points[4*i+0],frustum_points[4*i+1],frustum_points[4*i+2],frustum_points[4*i+3],frustum_points[4*i+0]};
+        world.graphics.paint.chain(plane_points, plane_points.size(), vec4(0,0,0,1));
+    }
+    for (int i = 0; i < 4; i++) {
+        std::vector<vec3> ps = {frustum_points[i], frustum_points[i+4]};
+        world.graphics.paint.chain(ps, ps.size(), vec4(0,0,0,1));
+    }
 }
 
 void App::window_handler(WindowEvent e)
@@ -452,10 +460,10 @@ void App::keyboard_handler(KeyboardEvent e)
                 main_camera->frustum_point(1,-1,0),
                 main_camera->frustum_point(1,1,0),
                 main_camera->frustum_point(-1,1,0),
-                main_camera->frustum_point(-1,-1,1),
-                main_camera->frustum_point(1,-1,1),
-                main_camera->frustum_point(1,1,1),
-                main_camera->frustum_point(-1,1,1),
+                main_camera->frustum_point(-1,-1,0.05),
+                main_camera->frustum_point(1,-1,0.05),
+                main_camera->frustum_point(1,1,0.05),
+                main_camera->frustum_point(-1,1,0.05),
             };
             for (int i = 0; i < 8; i++) {
                 frustum_points[i] = _frustum_points[i];

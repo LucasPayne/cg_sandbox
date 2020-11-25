@@ -92,6 +92,16 @@ struct mat4x4 {
               e01,e11,e21,e31,
               e02,e12,e22,e32,
               e03,e13,e23,e33} {};
+    static mat4x4 row_major(float e00, float e01, float e02, float e03,
+                            float e10, float e11, float e12, float e13,
+                            float e20, float e21, float e22, float e23,
+                            float e30, float e31, float e32, float e33)
+    {
+        return mat4x4(e00,e10,e20,e30,
+                      e01,e11,e21,e31,
+                      e02,e12,e22,e32,
+                      e03,e13,e23,e33);
+    }
     // Constructor with column-major float array.
     mat4x4(float _entries[/*16*/]) {
         memcpy(entries, _entries, sizeof(entries));

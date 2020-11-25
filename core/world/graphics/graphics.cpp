@@ -248,6 +248,13 @@ void Graphics::deferred_lighting()
             glUniform1i(program->uniform_location(component.name), i);
         }
         for (auto light : world.entities.aspects<DirectionalLight>()) {
+            auto &shadow_map = directional_light_data(light).shadow_map(camera);
+            GLenum shadow_map_slot = gbuffer_components.size();
+            glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
+            glBindTexture(GL_TEXTURE_2D, shadow_map.texture);
+            glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
+            glUniformMatrix4fv(program->uniform_location("shadow_matrix"), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrix);
+
             vec3 direction = light.sibling<Transform>()->forward();
             glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &direction);
             glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
@@ -455,32 +462,34 @@ void Graphics::update_lights()
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
             float depth = maxs.z() - mins.z();
-            vec3 bottom_left = light_transform->position + X*mins.x() + Y*mins.y();
+            vec3 bottom_left = light_transform->position + X*mins.x() + Y*mins.y() + Z*mins.z();
             float inv_w = 1.0 / width;
             float inv_h = 1.0 / height;
             float inv_d = 1.0 / depth;
             // Compute the shadow coordinate matrix. This transforms points in world space to texture space of the shadow map,
             // with depth being in the range of the box.
-            sm.shadow_matrix = mat4x4(
+            sm.shadow_matrix = mat4x4::row_major(
                 X.x() * inv_w, X.y() * inv_w, X.z() * inv_w, 0,
                 Y.x() * inv_h, Y.y() * inv_h, Y.z() * inv_h, 0,
                 Z.x() * inv_d, Z.y() * inv_d, Z.z() * inv_d, 0,
                 0,0,0, 1
-            ) * mat4x4(
+            ) * mat4x4::row_major(
                 1,0,0,-bottom_left.x(),
                 0,1,0,-bottom_left.y(),
                 0,0,1,-bottom_left.z(),
                 0,0,0,1
             );
+            std::cout << sm.shadow_matrix << "\n";
             // Render surfaces into the shadow map.
             // When rendering, the rectangle projected to needs to range from [-1,-1] to [1,1].
             // The shadow matrix maps to the shadow map's texture space, so just affine transform these space.
-            mat4x4 shadow_vp_matrix = mat4x4(
+            mat4x4 shadow_vp_matrix = mat4x4::row_major(
                 2,0,0,-1,
                 0,2,0,-1,
                 0,0,2,-1,
                 0,0,0,1
             ) * sm.shadow_matrix;
+            std::cout << shadow_vp_matrix << "\n";
             shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_vp_matrix);
 
             vec3 bounding_box[8];

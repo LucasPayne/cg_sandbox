@@ -34,7 +34,7 @@ void Painting::render_sprites()
     sprite_shader_program->bind();
     for (unsigned int i = 0; i < sprites.size(); i++) {
         auto &sp = sprites[i];
-
+        if (sp.is_depth) continue;
         graphics.begin_camera_rendering(sp.camera);
 
         glActiveTexture(GL_TEXTURE0);
@@ -44,8 +44,23 @@ void Painting::render_sprites()
 
         graphics.end_camera_rendering(sp.camera);
     }
-
     sprite_shader_program->unbind();
+
+    depth_sprite_shader_program->bind();
+    for (unsigned int i = 0; i < sprites.size(); i++) {
+        auto &sp = sprites[i];
+        if (!sp.is_depth) continue;
+        graphics.begin_camera_rendering(sp.camera);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sp.texture);
+        glUniform1i(sprite_shader_program->uniform_location("depth_map"), 0);
+        glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
+
+        graphics.end_camera_rendering(sp.camera);
+    }
+    depth_sprite_shader_program->unbind();
+
     glDeleteBuffers(1, &vertex_buffer);
     glDeleteVertexArrays(1, &vao);
 }
@@ -60,15 +75,22 @@ void Painting::bordered_sprite(Aspect<Camera> camera, GLuint texture, vec2 botto
     chain_2D(camera, points, border_width, border_color);
     sprite(camera, texture, bottom_left, width, height);
 }
-
+void Painting::bordered_depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color)
+{
+    std::vector<vec2> points = {bottom_left,
+                                vec2(bottom_left.x()+width, bottom_left.y()),
+                                vec2(bottom_left.x()+width, bottom_left.y()+height),
+                                vec2(bottom_left.x(), bottom_left.y()+height),
+                                bottom_left};
+    chain_2D(camera, points, border_width, border_color);
+    depth_sprite(camera, texture, bottom_left, width, height);
+}
 
 void Painting::sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height)
 {
-    SpriteRenderData sp;
-    sp.camera = camera;
-    sp.texture = texture;
-    sp.bottom_left = bottom_left;
-    sp.width = width;
-    sp.height = height;
-    sprites.push_back(sp);
+    sprites.push_back(SpriteRenderData(camera, texture, bottom_left, width, height, false));
+}
+void Painting::depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height)
+{
+    sprites.push_back(SpriteRenderData(camera, texture, bottom_left, width, height, true));
 }

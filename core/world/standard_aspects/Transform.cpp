@@ -21,15 +21,18 @@ Transform::Transform(vec3 _position) :
 
 vec3 Transform::forward()
 {
+    // return (matrix() * vec4(0,0,1,1)).xyz() - position;
     return rotation * vec3(0,0,1);
 }
 
 vec3 Transform::up()
 {
+    // return (matrix() * vec4(0,1,0,1)).xyz() - position;
     return rotation * vec3(0,1,0);
 }
 vec3 Transform::right()
 {
+    // return (matrix() * vec4(1,0,0,1)).xyz() - position;
     return rotation * vec3(1,0,0);
 }
 

@@ -73,6 +73,10 @@ struct SpriteRenderData {
     vec2 bottom_left;
     float width;
     float height;
+    bool is_depth;
+    SpriteRenderData(Aspect<Camera> _camera, GLuint _texture, vec2 _bottom_left, float _width, float _height, bool _is_depth) :
+        camera{_camera}, texture{_texture}, bottom_left{_bottom_left}, width{_width}, height{_height}, is_depth{_is_depth}
+    {}
 };
 
 
@@ -99,7 +103,9 @@ public:
     void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width = 0.f, vec4 outline_color = vec4::zero());
     void chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float width, vec4 color);
     void sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height);
+    void depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height);
     void bordered_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
+    void bordered_depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
 
 private:
     // 3D painting buffers.
@@ -125,6 +131,7 @@ private:
     Resource<GLShaderProgram> primitive_lines_2D_shader_program;
     Resource<GLShaderProgram> circles_2D_shader_program;
     Resource<GLShaderProgram> sprite_shader_program;
+    Resource<GLShaderProgram> depth_sprite_shader_program;
 
     void render_spheres();
     void render_lines();

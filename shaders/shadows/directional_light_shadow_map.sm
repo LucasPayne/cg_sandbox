@@ -1,0 +1,19 @@
+#type shading_model
+
+block properties {
+    mat4x4 vp_matrix;
+}
+section geom_post {
+    out vec4 gl_Position(in vec4 world_position) {
+    GLSL
+        return vp_matrix * world_position;
+    END
+    }
+}
+section frag_post {
+    out vec4 dummy(in vec3 f_position) {
+    GLSL
+        return vec4(f_position, 1);
+    END
+    }
+}

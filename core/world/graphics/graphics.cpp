@@ -248,7 +248,8 @@ void Graphics::deferred_lighting()
             glUniform1i(program->uniform_location(component.name), i);
         }
         for (auto light : world.entities.aspects<DirectionalLight>()) {
-            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
+            vec3 direction = light.sibling<Transform>()->forward();
+            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &direction);
             glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
             glUniform1f(program->uniform_location("width"), light->width);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -408,6 +409,12 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
 void Graphics::update_lights()
 {
+    /*--------------------------------------------------------------------------------
+        Directional lights
+    --------------------------------------------------------------------------------*/
+    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/directional_light_shadow_map.sm");
+    auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
+
     // Render shadow maps.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         auto light_transform = light.sibling<Transform>();
@@ -425,9 +432,9 @@ void Graphics::update_lights()
                 camera->frustum_point(1,1,1),
                 camera->frustum_point(-1,1,1),
             };
-            vec3 Z = light->direction.normalized();
             vec3 X = light_transform->right();
-            vec3 Y = vec3::cross(X, Z);
+            vec3 Y = light_transform->up();
+            vec3 Z = light_transform->forward();
             vec3 transformed_frustum[8];
             for (int i = 0; i < 8; i++) {
                 vec3 d = frustum_points[i] - light_transform->position;
@@ -444,6 +451,7 @@ void Graphics::update_lights()
                     }
                 }
             }
+
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
             float depth = maxs.z() - mins.z();
@@ -467,13 +475,30 @@ void Graphics::update_lights()
             // Render surfaces into the shadow map.
             // When rendering, the rectangle projected to needs to range from [-1,-1] to [1,1].
             // The shadow matrix maps to the shadow map's texture space, so just affine transform these space.
-            mat4x4 shadow_mvp_matrix = mat4x4(
+            mat4x4 shadow_vp_matrix = mat4x4(
                 2,0,0,-1,
                 0,2,0,-1,
                 0,0,2,-1,
                 0,0,0,1
             ) * sm.shadow_matrix;
+            shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_vp_matrix);
 
+            vec3 bounding_box[8];
+            vec3 minsmaxs[2] = {mins, maxs};
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 2; j++) {
+                    for (int k = 0; k < 2; k++) {
+                        vec3 p = light_transform->position + X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
+                        bounding_box[4*i + 2*j + k] = p;
+                    }
+                }
+            }
+
+            glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+            glViewport(0, 0, sm.width, sm.height);
+            render_drawables(shadow_map_shading_model);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glViewport(viewport_x, viewport_y, viewport_width, viewport_height); // Restore the previous viewport.
         }
     }
 

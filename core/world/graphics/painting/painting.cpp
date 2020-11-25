@@ -90,4 +90,9 @@ void Painting::init()
     sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
     sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite.frag"));
     sprite_shader_program->link();
+
+    depth_sprite_shader_program = world.resources.add<GLShaderProgram>();
+    depth_sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
+    depth_sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/depth_sprite.frag"));
+    depth_sprite_shader_program->link();
 }

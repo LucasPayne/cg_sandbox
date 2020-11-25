@@ -166,13 +166,12 @@ REFLECT_STRUCT(Behaviour);
 DirectionalLight aspect
 --------------------------------------------------------------------------------*/
 struct DirectionalLight : public IAspectType {
-    vec3 direction;
     vec3 color;
     float width; // Influences soft shadows.
 
     DirectionalLight() {}
-    DirectionalLight(vec3 _direction, vec3 _color, float _width) :
-        direction{_direction}, color{_color}, width{_width}
+    DirectionalLight(vec3 _color, float _width) :
+        color{_color}, width{_width}
     {}
 };
 REFLECT_STRUCT(DirectionalLight);

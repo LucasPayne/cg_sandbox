@@ -71,6 +71,12 @@ public:
         
     Aspect(GenericAspect generic_aspect) : GenericAspect(generic_aspect) {}
 
+    inline uint64_t ID() const {
+        // Returns a unique ID for this certain type of aspect.
+        // This ID is unique over the lifetime of the entity system.
+        return static_cast<uint64_t>(table_collection_element.ID());
+    }
+
     Aspect(Entities *entities, TableCollectionElement table_collection_element) :
         GenericAspect(entities, table_collection_element)
     {}

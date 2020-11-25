@@ -22,7 +22,7 @@ REFLECT_STRUCT(GLShaderProgram);
 
 
 /*--------------------------------------------------------------------------------
-Graphics
+    G-buffer
 --------------------------------------------------------------------------------*/
 struct GBufferComponent {
     std::string name;
@@ -40,6 +40,26 @@ struct GBufferComponent {
 };
 
 
+/*--------------------------------------------------------------------------------
+Lighting data
+--------------------------------------------------------------------------------*/
+struct DirectionalLightData {
+    struct DirectionalLightShadowMap {
+        GLuint fbo;
+        GLuint texture;
+        int width;
+        int height;
+    };
+    // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.
+    std::map<uint64_t, DirectionalLightShadowMap> shadow_maps;
+
+    DirectionalLightShadowMap new_shadow_map();
+};
+
+
+/*--------------------------------------------------------------------------------
+Graphics
+--------------------------------------------------------------------------------*/
 class World;
 class Graphics {
 public:
@@ -88,7 +108,7 @@ public:
     GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
     GLuint gbuffer_fb; // G-buffer framebuffer
-    GLuint depth_rbo; // Depth renderbuffer
+    GLuint gbuffer_depth_rbo; // Depth renderbuffer
     std::vector<GBufferComponent> gbuffer_components;
 
     // Deferred rendering using the G-buffer.
@@ -105,6 +125,13 @@ public:
     GLsizei viewport_width;
     GLsizei viewport_height;
     void subviewport_end();
+
+    // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
+    std::map<uint64_t, DirectionalLightData> directional_light_data;
+    DirectionalLightData new_directional_light();
+
+    void update_lights();
+
 private:
     World &world;
 

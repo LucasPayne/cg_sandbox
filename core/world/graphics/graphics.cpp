@@ -222,7 +222,7 @@ END_ENTRIES()
 void Graphics::refresh_gbuffer_textures()
 {
     // When the window is resized, the G-buffer texture/renderbuffer storage needs to be updated to match the default viewport.
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, viewport_width, viewport_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     
@@ -324,11 +324,11 @@ void Graphics::init()
     }
     glDrawBuffers(3, buffer_enums);
 
-    glGenRenderbuffers(1, &depth_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glGenRenderbuffers(1, &gbuffer_depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gbuffer_depth_rbo);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "G-buffer framebuffer incomplete.\n");
@@ -359,4 +359,60 @@ void Graphics::init()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+
+DirectionalLightData Graphics::new_directional_light()
+{
+    int width = 512;
+    int height = 512;
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Incomplete framebuffer when initializing shadow maps.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    DirectionalLightData data;
+    data.shadow_map.width = width;
+    data.shadow_map.height = height;
+    data.shadow_map.texture = tex;
+    data.shadow_map.fbo = fbo;
+
+    return data;
+}
+
+void Graphics::update_lights()
+{
+    // Lighting data such as shadow maps is stored in the graphics module, rather than in the light aspect itself.
+    // To do this, each active light in the scene is connected to its rendering data through a hash table.
+    for (auto light : world.entities.aspects<DirectionalLight>()) {
+        uint64_t id = light.ID();
+        auto iter = directional_light_data.find(id);
+        if (iter == directional_light_data.end()) {
+            directional_light_data[id] = new_directional_light();
+        } else {
+            auto &data = iter->second;
+        }
+    }
+    //---detect when directional lights are no longer being used, and free their data.
+
+    // Render shadow maps.
+    for (auto light : world.entities.aspects<DirectionalLight>()) {
+        for (auto camera : world.entities.aspects<Camera>()) {
+
+        }
+    }
 }

@@ -55,19 +55,24 @@ add_library(cg_sandbox
     lib/mesh_processing/surface_mesh/surface_mesh.cpp
     lib/mesh_processing/surface_geometry/surface_geometry.cpp
 
+    # Core source files.
     core/world/world.cpp
     core/world/entities/entities.cpp
     core/world/resources/resources.cpp
+
     core/world/standard_aspects/Transform.cpp
     core/world/standard_aspects/Camera.cpp
     core/world/standard_aspects/Drawable.cpp
     core/world/standard_aspects/Behaviour.cpp
     core/world/standard_aspects/DirectionalLight.cpp
+
     core/world/assets/assets.cpp
     core/world/assets/model_assets.cpp
+
     core/world/graphics/graphics.cpp
     core/world/graphics/drawing.cpp
     core/world/graphics/shading_assets.cpp
+
     core/world/graphics/painting/painting.cpp
     core/world/graphics/painting/2D/curves.cpp
     core/world/graphics/painting/2D/circles.cpp

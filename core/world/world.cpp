@@ -53,22 +53,30 @@ void World::loop()
     printf("[world] Frame start.\n");
     printf("--------------------------------------------------------------------------------\n");
 
-
-
-    graphics.clear(vec4(0,0,0,1), vec4(1,1,1,1));
-    graphics.clear_cameras();
-    graphics.bind_gbuffer();
-    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
-    graphics.unbind_gbuffer();
-    // graphics.deferred_lighting();
-
-
     // Update entity behaviours.
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->update();
     }
+
+    graphics.clear(vec4(1,0,0,1), vec4(1,1,1,1));
+    graphics.clear_cameras();
+    glBindFramebuffer(GL_FRAMEBUFFER, graphics.gbuffer_fb);
+    graphics.clear(vec4(0,0,0,0), vec4(0,0,0,0));
+    graphics.render_drawables("shaders/gbuffer/position_normal_albedo.sm");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    graphics.deferred_lighting();
+    // Blit the G-buffer depth-buffer over to the default framebuffer.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, graphics.gbuffer_fb);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, screen_width, screen_height, 0, 0, screen_width, screen_height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     graphics.paint.render();
     graphics.paint.clear();
+
+    // Post-render update entities.
+    for (auto b : entities.aspects<Behaviour>()) {
+        if (b->enabled) b->post_render_update();
+    }
 }
 
 void World::close()
@@ -106,6 +114,8 @@ void World::window_handler(WindowEvent e)
         else {
             graphics.set_viewport((width - height / wanted_aspect_ratio)/2.0, 0, height / wanted_aspect_ratio,  height);
         }
+        screen_width = width;
+        screen_height = height;
         graphics.refresh_gbuffer_textures();
     }
 }

@@ -85,8 +85,6 @@ public:
 
     // G-buffer
     void refresh_gbuffer_textures();
-    void bind_gbuffer();
-    void unbind_gbuffer();
     GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
     GLuint gbuffer_fb; // G-buffer framebuffer

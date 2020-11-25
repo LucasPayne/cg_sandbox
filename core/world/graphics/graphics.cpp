@@ -224,6 +224,7 @@ END_ENTRIES()
 
 void Graphics::refresh_gbuffer_textures()
 {
+    // When the window is resized, the G-buffer texture/renderbuffer storage needs to be updated to match the default framebuffer.
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -235,20 +236,13 @@ void Graphics::refresh_gbuffer_textures()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Graphics::bind_gbuffer()
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
-}
-void Graphics::unbind_gbuffer()
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 
 void Graphics::deferred_lighting()
 {
-    // Activate additive blending.
-    // glBlendFunc(GL_ONE, GL_ONE);
+    glDisable(GL_DEPTH_TEST);
+    // The alpha of the default framebuffer is all one.
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
+                        GL_ZERO, GL_ONE);                     // Alpha
 
     glBindVertexArray(postprocessing_quad_vao);
     auto &program = directional_light_shader_program;
@@ -267,6 +261,8 @@ void Graphics::deferred_lighting()
             glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
             glUniform1f(program->uniform_location("width"), light->width);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
+                                GL_ZERO, GL_ONE);     // Alpha
         }
         end_camera_rendering(camera);
     }
@@ -275,6 +271,7 @@ void Graphics::deferred_lighting()
 
     // Reset to the standard blending mode.
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_DEPTH_TEST);
 }
 
 

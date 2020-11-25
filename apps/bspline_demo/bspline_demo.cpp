@@ -134,7 +134,7 @@ private:
         glBufferSubData(GL_TEXTURE_BUFFER, 0, sizeof(float)*knots.size(), (const void *) &knots[0]);
     }
 
-    void update()
+    void post_render_update()
     {
         for (int i = 0; i < control_grid.size(); i++) {
             control_grid[i].y() += 0.5*dt*sin(3*total_time + 10*control_grid[i].x()*control_grid[i].z())*cos(2*total_time + control_grid[i].x()*control_grid[i].x());
@@ -307,9 +307,19 @@ struct WireframeDemo : public IBehaviour {
 
 struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
-    LightRotate(Aspect<DirectionalLight> _light) : light{_light} {}
+    vec3 axis;
+    vec3 X;
+    vec3 Z;
+    LightRotate(Aspect<DirectionalLight> _light, vec3 _axis) :
+        light{_light},
+        axis{_axis.normalized()}
+    {
+        X = light->direction + vec3::random(-2,2);
+        X -= vec3::dot(X, axis)*axis;
+        Z = vec3::cross(X, axis);
+    }
     void update() {
-        light->direction = vec3(cos(total_time), sin(total_time), 0);
+        light->direction = cos(total_time)*X + sin(total_time)*Z;
     }
 };
 
@@ -338,14 +348,27 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     
-    // Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
+{
+    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position = vec3(0.7,0,0);
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
+}
+{
     Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->scale = 5;
-    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0,0,1,1);
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
+}
     
+{
     Entity light = world.entities.add();
     light.add<DirectionalLight>(vec3(1,0,0), vec3(1,1,1), 1.5);
-    world.add<LightRotate>(light, light.get<DirectionalLight>());
+    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,1,0));
+}
+{
+    Entity light = world.entities.add();
+    light.add<DirectionalLight>(vec3(1,0,0), vec3(1,0,1), 1);
+    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,0,1));
+}
 
     
 #if 1

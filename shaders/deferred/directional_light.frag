@@ -13,7 +13,7 @@ out vec4 color;
 
 void main(void)
 {
-    vec3 f_albedo = texture(albedo, uv).rgb;
+    vec4 f_albedo = texture(albedo, uv);
     vec3 f_normal = texture(normal, uv).rgb;
-    color = vec4(max(0, dot(f_normal, -normalize(direction)))*f_albedo*light_color, 1);
+    color = vec4(max(0, dot(f_normal, -normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
 }

@@ -7,6 +7,10 @@ void Behaviour::update()
 {
     object()->update();
 }
+void Behaviour::post_render_update()
+{
+    object()->post_render_update();
+}
 void Behaviour::mouse_handler(MouseEvent e)
 {
     object()->mouse_handler(e);

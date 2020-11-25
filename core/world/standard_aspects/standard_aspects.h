@@ -102,6 +102,9 @@ private:
     virtual void update() {
         //no-op
     }
+    virtual void post_render_update() {
+        //no-op
+    }
     virtual void mouse_handler(MouseEvent e) {
         //no-op
     }
@@ -137,6 +140,7 @@ struct Behaviour : public IAspectType {
     bool enabled;
 
     void update();
+    void post_render_update();
     void mouse_handler(MouseEvent e);
     void keyboard_handler(KeyboardEvent e);
     

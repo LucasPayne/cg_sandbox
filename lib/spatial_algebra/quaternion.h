@@ -102,6 +102,13 @@ inline Quaternion operator*(const Quaternion &A, const Quaternion &B) {
 }
 std::ostream &operator<<(std::ostream &os, const Quaternion &q);
 
+inline vec3 operator*(const Quaternion &q, const vec3 &v)
+{
+    //---- check this.
+    Quaternion vpq = q * Quaternion(0, v.x(), v.y(), v.z()) * q.inverse();
+    return vec3(vpq.i(), vpq.j(), vpq.k());
+}
+
 
 
 #endif // SPATIAL_ALGEBRA_QUATERNION_H

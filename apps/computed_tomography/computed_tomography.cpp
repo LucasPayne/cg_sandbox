@@ -1,11 +1,39 @@
 #include <time.h>
+#include <assert.h>
 #include "cg_sandbox.h"
 #include "opengl_utilities/gl.h"
 #include "utils/check_quit_key.cpp"
-#include "objects/mesh_object.cpp"
 #include "objects/cameraman.cpp"
-#include "behaviours/Trackball.cpp"
-#include "mesh_processing/mesh_processing.h"
+
+
+Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_directions)
+{
+    assert(image.width() == image.height());
+    Image<float> sinogram(num_parallel_rays, num_directions);
+
+    /* float inv_num_directions = 1.0 / num_directions; */
+    /* float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1); */
+    /* for (int i = 0; i < num_directions; i++) { */
+    /*     float theta = M_PI * i * inv_num_directions; */
+    /*     float sin_theta = sin(theta); */
+    /*     float cos_theta = cos(theta); */
+    /*     vec2 p(s * sin(theta), s * cos(theta)); */
+    /*     for (int j = 0; j < num_parallel_rays; j++) { */
+    /*         float s = -1 + 2*i*inv_num_parallel_rays_minus_one; */
+            
+    /*         float height = asin(fabs(s)); */
+    /*         vec2 from = p + height*vec2(-sin_theta, cos_theta); */
+    /*         vec2 to = p - height*vec2(-sin_theta, cos_theta); */
+
+	    /* std::vector<vec2> points = {from, to}; */
+	    /* world.graphics.paint.circles(main_camera, points, 0.01, vec4(0,0,1,1), 0.01, vec4(1,0,0,1)); */
+    /*     } */
+    /* } */
+}
+
+
+
+
 
 Aspect<Camera> main_camera;
 
@@ -54,6 +82,7 @@ void App::loop()
     // std::vector<vec2> points = {vec2(0.2,0.2)};
     // world.graphics.paint.circles(main_camera, points, 0.2, vec4(0,0,1,1), 0.03, vec4(1,0,0,1));
 
+/*
     struct ellipse {
         vec2 origin;
         float theta;
@@ -110,7 +139,27 @@ void App::loop()
             }
         }
     }
+*/
+    int num_parallel_rays = 10;
+    int num_directions = 10;
+    float inv_num_directions = 1.0 / num_directions;
+    float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
+    for (int i = 0; i < num_directions; i++) {
+        float theta = M_PI * i * inv_num_directions;
+        float sin_theta = sin(theta);
+        float cos_theta = cos(theta);
+        for (int j = 0; j < num_parallel_rays; j++) {
+            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
+            vec2 p(s * sin(theta), s * cos(theta));
+            
+            float height = asin(fabs(s));
+            vec2 from = p + height*vec2(-sin_theta, cos_theta);
+            vec2 to = p - height*vec2(-sin_theta, cos_theta);
 
+	    std::vector<vec2> points = {0.5*(from + vec2(1,1)), 0.5*(to + vec2(1,1))};
+            world.graphics.paint.chain_2D(main_camera, points, 1, vec4(0,0,1,1));
+        }
+    }
 }
 
 void App::window_handler(WindowEvent e)

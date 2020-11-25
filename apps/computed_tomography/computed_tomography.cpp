@@ -1,7 +1,6 @@
 #include <time.h>
 #include "cg_sandbox.h"
 #include "opengl_utilities/gl.h"
-#include "utils/force_aspect_ratio.cpp"
 #include "utils/check_quit_key.cpp"
 #include "objects/mesh_object.cpp"
 #include "objects/cameraman.cpp"
@@ -9,6 +8,19 @@
 #include "mesh_processing/mesh_processing.h"
 
 Aspect<Camera> main_camera;
+
+
+struct Test : public IBehaviour {
+    Image<vec3> image;
+    Test(int m, int n) : image(m, n)
+    {
+    }
+
+    void update() {
+        image(rand() % image.height(), rand() % image.width()) = vec3::random(0,1);
+        world->graphics.paint.bordered_sprite(main_camera, image.texture(), vec2(0.06,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
+    }
+};
 
 
 class App : public IGC::Callbacks {
@@ -28,6 +40,9 @@ App::App(World &_world) : world{_world}
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,0,2);
     main_camera = cameraman.get<Camera>();
+
+    Entity test = world.entities.add();
+    world.add<Test>(test, 28, 28);
 }
 
 
@@ -100,7 +115,6 @@ void App::loop()
 
 void App::window_handler(WindowEvent e)
 {
-    force_aspect_ratio(e);
 }
 void App::keyboard_handler(KeyboardEvent e)
 {

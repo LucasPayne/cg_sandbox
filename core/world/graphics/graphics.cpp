@@ -66,7 +66,7 @@ void Graphics::clear(vec4 bg_color, vec4 fg_color)
 
 
 static const bool logging_rendering = false;
-static void log_render(const char *format, ...)
+[[maybe_unused]] static void log_render(const char *format, ...)
 {
     if (!logging_rendering) return;
     va_list args;
@@ -379,6 +379,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 {
     auto iter = shadow_maps.find(camera.ID());
     if (iter != shadow_maps.end()) {
+        // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
     int width = 512;

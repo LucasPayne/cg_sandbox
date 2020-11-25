@@ -81,6 +81,7 @@ add_library(cg_sandbox
     core/world/graphics/painting/3D/wireframes.cpp
     core/world/graphics/painting/3D/spheres.cpp
     core/world/graphics/painting/3D/lines.cpp
+    core/world/graphics/image.cpp
 )
 target_compile_options(cg_sandbox PRIVATE -Wall -g -Wno-invalid-offsetof)
     # no-invalid-offsetof: Ignoring this warning could break things! However, currently with the reflection system,

@@ -11,6 +11,7 @@ The Graphics component also holds render loops.
 #include "world/resources/resources.h"
 #include "world/graphics/drawing.h"
 #include "world/graphics/painting/painting.h"
+#include "world/graphics/image.h"
 #include "world/graphics/shading_assets.h"
 #include "world/standard_aspects/standard_aspects.h"
 

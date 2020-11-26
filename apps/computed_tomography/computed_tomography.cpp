@@ -96,9 +96,13 @@ struct Reconstructor {
         inv_num_directions_minus_one = 1.f / (num_directions - 1);
         inv_num_parallel_rays = 1.f / num_parallel_rays;
 
-        theta = 0;
-        cos_theta = 1;
-        sin_theta = 0;
+        // theta = 0;
+        // cos_theta = 1;
+        // sin_theta = 0;
+        cyclic_counter_theta = rand() % num_directions;
+        theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+        cos_theta = cos(theta);
+        sin_theta = sin(theta);
     }
     Reconstructor() {}
 
@@ -109,13 +113,18 @@ struct Reconstructor {
     float theta;
     float cos_theta;
     float sin_theta;
-    std::vector<float> square_row_lengths; // pre-computed for weighting the residual.
 
     void iterate();
 };
 
 void Reconstructor::iterate()
 {
+    // cyclic_counter_s = rand() % num_parallel_rays;
+    // cyclic_counter_theta = rand() % num_directions;
+    // theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+    // cos_theta = cos(theta);
+    // sin_theta = sin(theta);
+
     float val = sinogram(cyclic_counter_s, cyclic_counter_theta);
     float s = -1 + 2*cyclic_counter_s*inv_num_directions_minus_one;
     // Compute the approximate line integral of the current guess through this line, corresponding to the point in the sinogram.
@@ -123,22 +132,21 @@ void Reconstructor::iterate()
     float residual = val - integral;
 
     float square_row_length = 0.f;
-
-    trace_line(reconstruction, theta, s, [&](LinePoint p) {
+    trace_line(reconstruction, cos_theta, sin_theta, s, [&](LinePoint p) {
         square_row_length += p.weight * p.weight;
     });
-
     float lambda = 1.f; // relaxation coefficient.
     float weighted_residual = lambda * (residual / square_row_length);
     
-    trace_line(reconstruction, theta, s, [&](LinePoint p) {
+    trace_line(reconstruction, cos_theta, sin_theta, s, [&](LinePoint p) {
         reconstruction(p.y, p.x) += weighted_residual * p.weight;
     });
 
     cyclic_counter_s += 1;
     if (cyclic_counter_s == num_parallel_rays) {
         cyclic_counter_s = 0;
-        cyclic_counter_theta = (cyclic_counter_theta+1) % num_directions;
+        // cyclic_counter_theta = (cyclic_counter_theta+1) % num_directions;
+        cyclic_counter_theta = rand() % num_directions;
         theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
         cos_theta = cos(theta);
         sin_theta = sin(theta);
@@ -177,6 +185,7 @@ Aspect<Camera> main_camera;
 struct Test : public IBehaviour {
     Image<float> image;
     Image<float> sinogram;
+    Image<float> reconstruction_sinogram;
     Reconstructor reconstructor;
 
     void refresh() {
@@ -239,7 +248,10 @@ struct Test : public IBehaviour {
                 refresh();
             }
             if (e.key.code == KEY_P) {
-                reconstructor.iterate();
+                for (int i = 0; i < 28; i++) reconstructor.iterate();
+            }
+            if (e.key.code == KEY_I) {
+                // reconstruction_sinogram = create_sinogram(reconstructor.reconstruction, 128, 128);
             }
         }
     }
@@ -248,6 +260,7 @@ struct Test : public IBehaviour {
         world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
         world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
         world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor.reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
+        // world->graphics.paint.bordered_depth_sprite(main_camera, reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
     }
 };
 

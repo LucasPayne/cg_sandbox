@@ -12,7 +12,7 @@ public:
     Image(int m, int n);
     Image(int m, int n, ImageType image_type);
 
-    Image() {}
+    Image() : invalid{true} {}
 
     inline T &operator()(int i, int j) {
         if (i < 0 || i >= _height || j < 0 || j >= _width) return dummy;
@@ -30,6 +30,8 @@ public:
     void clear(T clear_value);
 
 private:
+    bool invalid;
+
     int _height;
     int _width;
     ImageType _image_type;
@@ -44,7 +46,7 @@ private:
 
 template <typename T>
 Image<T>::Image(int m, int n, ImageType image_type) :
-    _height{m}, _width{n}, _image_type{image_type}, dirty{true}
+    invalid{false}, _height{m}, _width{n}, _image_type{image_type}, dirty{true}
 {
     pixels = std::vector<T>(_height * _width);
     
@@ -64,6 +66,8 @@ Image<T>::Image(int m, int n, ImageType image_type) :
 template <typename T>
 GLuint Image<T>::texture()
 {
+    if (invalid) return 0;
+
     // if (!dirty) return _texture; //----
     glBindTexture(GL_TEXTURE_2D, _texture);
     if (_image_type == IMAGE_RGB) {

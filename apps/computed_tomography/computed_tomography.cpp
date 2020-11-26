@@ -26,27 +26,38 @@ Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_
             float height = sqrt(1 - fabs(s)*fabs(s));
             vec2 from = 0.5*(p + height*vec2(-sin_theta, cos_theta) + vec2(1,1));
             vec2 to = 0.5*(p - height*vec2(-sin_theta, cos_theta) + vec2(1,1));
-            int a_x = floor(from.x() * image.width());
-            int a_y = floor(from.y() * image.height());
-            int b_x = floor(to.x() * image.width());
-            int b_y = floor(to.y() * image.height());
+            float full_length = (to - from).length();
+            int a_x = floor(from.x() * n);
+            int a_y = floor(from.y() * n);
+            int b_x = floor(to.x() * n);
+            int b_y = floor(to.y() * n);
             // Bresenham's line algorithm.
-            float dx = 1.f/(n*(to.x() - from.x()));
-            float dy = 1.f/(n*(to.y() - from.y()));
-            float next_x = (1 - (n*from.x() - floor(n*from.x())))*dx;
-            float next_y = (1 - (n*from.y() - floor(n*from.y())))*dy;
-            float t = 0;
+            int x_dir = to.x() > from.x() ? 1 : -1;
+            int y_dir = to.y() > from.y() ? 1 : -1;
+            float dx = fabs(1.f/(n*(to.x() - from.x())));
+            float dy = fabs(1.f/(n*(to.y() - from.y())));
+            float next_x = x_dir > 0 ? (1 - (n*from.x() - floor(n*from.x())))*dx
+                                     : (n*from.x() - floor(n*from.x()))*dx;
+            float next_y = y_dir > 0 ? (1 - (n*from.y() - floor(n*from.y())))*dy
+                                     : (n*from.y() - floor(n*from.y()))*dy;
             int cell_x = a_x;
             int cell_y = a_y;
-            while (!(cell_x == b_x && cell_y == b_y)) {
+            float t = 0;
+            while (x_dir*cell_x <= x_dir*b_x && y_dir*cell_y <= y_dir*b_y && cell_x >= 0 && cell_x < n && cell_y >= 0 && cell_y < n) {
+                float next_t;
                 if (next_x < next_y) {
-                    cell_x += 1;
+                    cell_x += x_dir;
+                    next_t = next_x;
                     next_x += dx;
                 } else {
-                    cell_y += 1;
+                    cell_y += y_dir;
+                    next_t = next_y;
                     next_y += dy;
                 }
-            }
+                float val = image(cell_y, cell_x);
+                float length = full_length * (next_t - t);
+                t = next_t;
+            } 
         }
     }
     
@@ -112,7 +123,7 @@ struct Test : public IBehaviour {
         // image(rand() % image.height(), rand() % image.width()) = vec3::random(0,1);
                 draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
                           vec2(0.5,0.5));
-        world->graphics.paint.bordered_sprite(main_camera, image.texture(), vec2(0.06,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
+        world->graphics.paint.bordered_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.8,0.8, 3, vec4(0.5,0.5,0.5,1));
     }
 };
 

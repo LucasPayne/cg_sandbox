@@ -7,6 +7,55 @@
 #include "world/graphics/image.h"
 
 
+float line_integral(Image<float> &image, float theta, float s)
+{
+
+}
+
+
+
+struct Reconstructor {
+    int num_parallel_rays;
+    int num_directions;
+    Image<float> sinogram;
+    int n;
+    Image<float> reconstruction;
+    Reconstructor(Image<float> _sinogram, int _n) :
+        num_parallel_rays{_sinogram.height()},
+        num_directions{_sinogram.width()},
+        sinogram{_sinogram},
+        n{_n},
+        reconstruction(_n, _n),
+    {
+        reconstruction.clear(0);
+
+        cyclic_counter_s = 0;
+        cyclic_counter_theta = 0;
+        inv_num_directions_minus_one = 1.f / (num_directions - 1);
+        inv_num_parallel_rays = 1.f / num_parallel_rays;
+    }
+
+    int cyclic_counter_s;
+    int cyclic_counter_theta;
+    float inv_num_directions_minus_one;
+    float inv_num_parallel_rays;
+    void iterate();
+};
+
+void Reconstructor::iterate()
+{
+    float val = sinogram(cyclic_counter_j, cyclic_counter_i);
+    float theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+    float s = -1 + 2*cyclic_counter_s*inv_num_directions_minus_one;
+    // Compute the approximate line integral of the current guess through this line, corresponding to the point in the sinogram.
+    float integral = line_integral(reconstruction, theta, s);
+
+
+    cyclic_counter_s = (cylic_counter_s + 1) % num_directions;
+    cyclic_counter_theta = (cylic_counter_theta + 1) % num_parallel_rays;
+}
+
+
 Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_directions)
 {
     assert(image.width() == image.height());
@@ -73,11 +122,17 @@ Aspect<Camera> main_camera;
 struct Test : public IBehaviour {
     Image<float> image;
     Image<float> sinogram;
+
+
+    void refresh() {
+        image.clear(0);
+        for (int i = 0; i < 20; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
+        sinogram = create_sinogram(image, 128, 128);
+    }
+
     Test(int n) : image(n, n)
     {
-        image.clear(0);
-        for (int i = 0; i < 5; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
-        sinogram = create_sinogram(image, 128, 128);
+        refresh();
     }
 
     void draw_line(vec2 from, vec2 to) {
@@ -125,9 +180,7 @@ struct Test : public IBehaviour {
     void keyboard_handler(KeyboardEvent e) {
         if (e.action == KEYBOARD_PRESS) {
             if (e.key.code == KEY_O) {
-                image.clear(0);
-	        for (int i = 0; i < 5; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
-                sinogram = create_sinogram(image, 128, 128);
+                refresh();
             }
         }
     }

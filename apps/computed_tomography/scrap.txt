@@ -1,0 +1,37 @@
+
+struct LineTracerPoint {
+    int x;
+    int y;
+    float weight;
+};
+
+struct LineTracerIterator {
+    int n;
+    float theta;
+    float s;
+    LineTracerPoint point;
+
+    LineTracerPoint &operator*() {
+        return point;
+    }
+    LineTracerPoint *operator->() {
+        return &(operator*());
+    }
+    LineTracerIterator &operator++();
+    bool operator==(const LineTracerIterator &other) {
+        return aspect == other.aspect;
+    }
+    bool operator!=(const LineTracerIterator &other) {
+        return !(*this == other);
+    }
+    LineTracerIterator(Image<float> &image, float _theta, float _s) :
+        n{image.width()},
+        theta{_theta},
+        s{_s},
+    {}
+};
+
+struct LineTracer {
+    
+};
+

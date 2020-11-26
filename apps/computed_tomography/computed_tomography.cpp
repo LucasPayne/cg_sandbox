@@ -7,9 +7,71 @@
 #include "world/graphics/image.h"
 
 
-float line_integral(Image<float> &image, float theta, float s)
-{
 
+struct LinePoint {
+    int x;
+    int y;
+    float weight;
+    LinePoint(int _x, int _y, float _weight) :
+        x{_x}, y{_y}, weight{_weight}
+    {}
+};
+
+
+void trace_line(Image<float> &image, float theta, float s, std::function<void(LinePoint)> function)
+{
+    trace_line(image, cos(theta), sin(theta), function);
+}
+void trace_line(Image<float> &image, float cos_theta, float sin_theta, float s, std::function<void(LinePoint)> function)
+{
+    int n = image.width();
+    vec2 p(s * cos_theta, s * sin_theta);
+
+    float height = sqrt(1 - fabs(s)*fabs(s));
+    vec2 from = 0.5*(p + height*vec2(-sin_theta, cos_theta) + vec2(1,1));
+    vec2 to = 0.5*(p - height*vec2(-sin_theta, cos_theta) + vec2(1,1));
+    int a_x = floor(from.x() * n);
+    int a_y = floor(from.y() * n);
+    int b_x = floor(to.x() * n);
+    int b_y = floor(to.y() * n);
+    // Bresenham's line algorithm.
+    int x_dir = to.x() > from.x() ? 1 : -1;
+    int y_dir = to.y() > from.y() ? 1 : -1;
+    float dx = fabs(1.f/(n*(to.x() - from.x())));
+    float dy = fabs(1.f/(n*(to.y() - from.y())));
+    float next_x = x_dir > 0 ? (1 - (n*from.x() - floor(n*from.x())))*dx
+                             : (n*from.x() - floor(n*from.x()))*dx;
+    float next_y = y_dir > 0 ? (1 - (n*from.y() - floor(n*from.y())))*dy
+                             : (n*from.y() - floor(n*from.y()))*dy;
+    int cell_x = a_x;
+    int cell_y = a_y;
+    float t = 0;
+    float integral = 0.f;
+    while (x_dir*cell_x <= x_dir*b_x && y_dir*cell_y <= y_dir*b_y && cell_x >= 0 && cell_x < n && cell_y >= 0 && cell_y < n) {
+        float next_t;
+        if (next_x < next_y) {
+            cell_x += x_dir;
+            next_t = next_x;
+            next_x += dx;
+        } else {
+            cell_y += y_dir;
+            next_t = next_y;
+            next_y += dy;
+        }
+        function(LinePoint(cell_x, cell_y, next_t - t));
+        t = next_t;
+    }
+}
+
+
+
+float line_integral(Image<float> &image, float cos_theta, float sin_theta, float s)
+{
+    float integral = 0.f;
+    trace_line(image, cos_theta, sin_theta, s, [&](LinePoint p) {
+        integral += p.weight * image(p.y, p.x);
+    });
+    return integral;
 }
 
 
@@ -25,7 +87,7 @@ struct Reconstructor {
         num_directions{_sinogram.width()},
         sinogram{_sinogram},
         n{_n},
-        reconstruction(_n, _n),
+        reconstruction(_n, _n)
     {
         reconstruction.clear(0);
 
@@ -33,26 +95,54 @@ struct Reconstructor {
         cyclic_counter_theta = 0;
         inv_num_directions_minus_one = 1.f / (num_directions - 1);
         inv_num_parallel_rays = 1.f / num_parallel_rays;
+
+        theta = 0;
+        cos_theta = 1;
+        sin_theta = 0;
     }
+    Reconstructor() {}
 
     int cyclic_counter_s;
     int cyclic_counter_theta;
     float inv_num_directions_minus_one;
     float inv_num_parallel_rays;
+    float theta;
+    float cos_theta;
+    float sin_theta;
+    std::vector<float> square_row_lengths; // pre-computed for weighting the residual.
+
     void iterate();
 };
 
 void Reconstructor::iterate()
 {
-    float val = sinogram(cyclic_counter_j, cyclic_counter_i);
-    float theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+    float val = sinogram(cyclic_counter_s, cyclic_counter_theta);
     float s = -1 + 2*cyclic_counter_s*inv_num_directions_minus_one;
     // Compute the approximate line integral of the current guess through this line, corresponding to the point in the sinogram.
-    float integral = line_integral(reconstruction, theta, s);
+    float integral = line_integral(reconstruction, cos_theta, sin_theta, s);
+    float residual = val - integral;
 
+    float square_row_length = 0.f;
 
-    cyclic_counter_s = (cylic_counter_s + 1) % num_directions;
-    cyclic_counter_theta = (cylic_counter_theta + 1) % num_parallel_rays;
+    trace_line(reconstruction, theta, s, [&](LinePoint p) {
+        square_row_length += p.weight * p.weight;
+    });
+
+    float lambda = 1.f; // relaxation coefficient.
+    float weighted_residual = lambda * (residual / square_row_length);
+    
+    trace_line(reconstruction, theta, s, [&](LinePoint p) {
+        reconstruction(p.y, p.x) += weighted_residual * p.weight;
+    });
+
+    cyclic_counter_s += 1;
+    if (cyclic_counter_s == num_parallel_rays) {
+        cyclic_counter_s = 0;
+        cyclic_counter_theta = (cyclic_counter_theta+1) % num_directions;
+        theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+        cos_theta = cos(theta);
+        sin_theta = sin(theta);
+    }
 }
 
 
@@ -66,46 +156,11 @@ Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_
     float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
     for (int i = 0; i < num_directions; i++) {
         float theta = M_PI * i * inv_num_directions;
-        float sin_theta = sin(theta);
         float cos_theta = cos(theta);
+        float sin_theta = sin(theta);
         for (int j = 0; j < num_parallel_rays; j++) {
             float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
-            vec2 p(s * cos_theta, s * sin_theta);
-            
-            float height = sqrt(1 - fabs(s)*fabs(s));
-            vec2 from = 0.5*(p + height*vec2(-sin_theta, cos_theta) + vec2(1,1));
-            vec2 to = 0.5*(p - height*vec2(-sin_theta, cos_theta) + vec2(1,1));
-            int a_x = floor(from.x() * n);
-            int a_y = floor(from.y() * n);
-            int b_x = floor(to.x() * n);
-            int b_y = floor(to.y() * n);
-            // Bresenham's line algorithm.
-            int x_dir = to.x() > from.x() ? 1 : -1;
-            int y_dir = to.y() > from.y() ? 1 : -1;
-            float dx = fabs(1.f/(n*(to.x() - from.x())));
-            float dy = fabs(1.f/(n*(to.y() - from.y())));
-            float next_x = x_dir > 0 ? (1 - (n*from.x() - floor(n*from.x())))*dx
-                                     : (n*from.x() - floor(n*from.x()))*dx;
-            float next_y = y_dir > 0 ? (1 - (n*from.y() - floor(n*from.y())))*dy
-                                     : (n*from.y() - floor(n*from.y()))*dy;
-            int cell_x = a_x;
-            int cell_y = a_y;
-            float t = 0;
-            float integral = 0.f;
-            while (x_dir*cell_x <= x_dir*b_x && y_dir*cell_y <= y_dir*b_y && cell_x >= 0 && cell_x < n && cell_y >= 0 && cell_y < n) {
-                float next_t;
-                if (next_x < next_y) {
-                    cell_x += x_dir;
-                    next_t = next_x;
-                    next_x += dx;
-                } else {
-                    cell_y += y_dir;
-                    next_t = next_y;
-                    next_y += dy;
-                }
-                integral += (next_t - t) * image(cell_y, cell_x);
-                t = next_t;
-            }
+            float integral = line_integral(image, cos_theta, sin_theta, s);
             sinogram(j, i) = integral;
         }
     }
@@ -122,12 +177,13 @@ Aspect<Camera> main_camera;
 struct Test : public IBehaviour {
     Image<float> image;
     Image<float> sinogram;
-
+    Reconstructor reconstructor;
 
     void refresh() {
         image.clear(0);
         for (int i = 0; i < 20; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
         sinogram = create_sinogram(image, 128, 128);
+        reconstructor = Reconstructor(sinogram, 128);
     }
 
     Test(int n) : image(n, n)
@@ -182,12 +238,16 @@ struct Test : public IBehaviour {
             if (e.key.code == KEY_O) {
                 refresh();
             }
+            if (e.key.code == KEY_P) {
+                reconstructor.iterate();
+            }
         }
     }
 
     void update() {
         world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
         world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
+        world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor.reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
     }
 };
 

@@ -11,6 +11,7 @@ class Image {
 public:
     Image(int m, int n);
     Image(int m, int n, ImageType image_type);
+    Image() {}
 
     inline T &operator()(int i, int j) {
         if (i < 0 || i >= _height || j < 0 || j >= _width) return dummy;
@@ -60,7 +61,7 @@ Image<T>::Image(int m, int n, ImageType image_type) :
 template <typename T>
 GLuint Image<T>::texture()
 {
-    if (!dirty) return _texture;
+    // if (!dirty) return _texture; //----
     if (_image_type == IMAGE_RGB) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGBA, GL_FLOAT, (void *) &pixels[0]);
     } else if (_image_type == IMAGE_GRAYSCALE) {

@@ -26,7 +26,6 @@ Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_
             float height = sqrt(1 - fabs(s)*fabs(s));
             vec2 from = 0.5*(p + height*vec2(-sin_theta, cos_theta) + vec2(1,1));
             vec2 to = 0.5*(p - height*vec2(-sin_theta, cos_theta) + vec2(1,1));
-            float full_length = (to - from).length();
             int a_x = floor(from.x() * n);
             int a_y = floor(from.y() * n);
             int b_x = floor(to.x() * n);
@@ -43,6 +42,7 @@ Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_
             int cell_x = a_x;
             int cell_y = a_y;
             float t = 0;
+            float integral = 0.f;
             while (x_dir*cell_x <= x_dir*b_x && y_dir*cell_y <= y_dir*b_y && cell_x >= 0 && cell_x < n && cell_y >= 0 && cell_y < n) {
                 float next_t;
                 if (next_x < next_y) {
@@ -54,14 +54,12 @@ Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_
                     next_t = next_y;
                     next_y += dy;
                 }
-                float val = image(cell_y, cell_x);
-                float length = full_length * (next_t - t);
+                integral += (next_t - t) * image(cell_y, cell_x);
                 t = next_t;
-            } 
+            }
+            sinogram(j, i) = integral;
         }
     }
-    
-
     return sinogram;
 }
 
@@ -73,9 +71,11 @@ Aspect<Camera> main_camera;
 
 
 struct Test : public IBehaviour {
-    Image<vec4> image;
-    Test(int m, int n) : image(m, n)
+    Image<float> image;
+    Image<float> sinogram;
+    Test(int n) : image(n, n)
     {
+	for (int i = 0; i < 5; i++) draw_circle(vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
     }
 
     void draw_line(vec2 from, vec2 to) {
@@ -103,7 +103,19 @@ struct Test : public IBehaviour {
                 cell_y += y_dir;
                 next_y += dy;
             }
-            image(cell_y, cell_x) = vec4(0,1,0, 1);
+            image(cell_y, cell_x) = 0.8;
+        }
+    }
+
+    void draw_circle(vec2 center, float radius, float intensity) {
+        center *= image.width();
+        radius *= image.width();
+        for (int i = 0; i < image.width(); i++) {
+            for (int j = 0; j < image.width(); j++) {
+                if ((i - center.y())*(i - center.y()) + (j - center.x())*(j - center.x()) <= radius*radius) {
+                    image(i, j) = intensity;
+                }
+            }
         }
     }
 
@@ -112,8 +124,9 @@ struct Test : public IBehaviour {
         if (e.action == KEYBOARD_PRESS) {
             // if (e.key.code == KEY_O) draw_line(0.2*vec2(cos(total_time)+1,sin(total_time)+1), 0.2*vec2(cos(total_time+M_PI)+1,sin(total_time+M_PI)+1));
             if (e.key.code == KEY_O) {
-                draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
-                          vec2(0.5,0.5));
+                // draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
+                //           vec2(0.5,0.5));
+                sinogram = create_sinogram(image, 128, 128);
             }
             // if (e.key.code == KEY_O) image(5, 5) = vec4(0,1,0,1);
         }
@@ -121,9 +134,10 @@ struct Test : public IBehaviour {
 
     void update() {
         // image(rand() % image.height(), rand() % image.width()) = vec3::random(0,1);
-                draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
-                          vec2(0.5,0.5));
-        world->graphics.paint.bordered_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.8,0.8, 3, vec4(0.5,0.5,0.5,1));
+        // draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
+        // vec2(0.5,0.5));
+        world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
+        world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
     }
 };
 
@@ -147,7 +161,7 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     Entity test = world.entities.add();
-    world.add<Test>(test, 128, 128);
+    world.add<Test>(test, 128);
 }
 
 

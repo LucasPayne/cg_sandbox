@@ -6,6 +6,7 @@
 #include "objects/cameraman.cpp"
 #include "behaviours/Trackball.cpp"
 #include "mesh_processing/mesh_processing.h"
+#include "world/graphics/image.h"
 
 Aspect<Camera> main_camera;
 Aspect<DirectionalLight> main_light;

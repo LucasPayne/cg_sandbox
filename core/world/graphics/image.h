@@ -13,6 +13,7 @@ public:
     Image(int m, int n, ImageType image_type);
 
     inline T &operator()(int i, int j) {
+        if (i < 0 || i >= _height || j < 0 || j >= _width) return dummy;
         dirty = true;
         return pixels[i*_width + j];
     }
@@ -31,6 +32,7 @@ private:
     GLuint _texture;
     std::vector<T> pixels;
     bool dirty;
+    T dummy; // Out of bounds pixel writes write to this.
 };
 
 
@@ -41,13 +43,13 @@ Image<T>::Image(int m, int n, ImageType image_type) :
     _height{m}, _width{n}, _image_type{image_type}, dirty{true}
 {
     pixels = std::vector<T>(_height * _width);
-
+    
     glGenTextures(1, &_texture);
     glBindTexture(GL_TEXTURE_2D, _texture);
     if (_image_type == IMAGE_RGB) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGBA, GL_FLOAT, (void *) &pixels[0]);
     } else if (_image_type == IMAGE_GRAYSCALE) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _width, _height, 0, GL_RED, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _width, _height, 0, GL_RED, GL_FLOAT, (void *) &pixels[0]);
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -64,5 +66,6 @@ GLuint Image<T>::texture()
     } else if (_image_type == IMAGE_GRAYSCALE) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _width, _height, 0, GL_RED, GL_FLOAT, (void *) &pixels[0]);
     }
+    dirty = false;
     return _texture;
 }

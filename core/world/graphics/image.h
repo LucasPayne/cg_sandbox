@@ -11,6 +11,7 @@ class Image {
 public:
     Image(int m, int n);
     Image(int m, int n, ImageType image_type);
+
     Image() {}
 
     inline T &operator()(int i, int j) {
@@ -25,6 +26,8 @@ public:
 
     inline int width() const { return _width; }
     inline int height() const { return _height; }
+
+    void clear(T clear_value);
 
 private:
     int _height;
@@ -62,11 +65,24 @@ template <typename T>
 GLuint Image<T>::texture()
 {
     // if (!dirty) return _texture; //----
+    glBindTexture(GL_TEXTURE_2D, _texture);
     if (_image_type == IMAGE_RGB) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, _width, _height, 0, GL_RGBA, GL_FLOAT, (void *) &pixels[0]);
     } else if (_image_type == IMAGE_GRAYSCALE) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _width, _height, 0, GL_RED, GL_FLOAT, (void *) &pixels[0]);
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
     dirty = false;
     return _texture;
+}
+
+
+template <typename T>
+void Image<T>::clear(T clear_value)
+{
+    for (int i = 0; i < _height; i++) {
+        for (int j = 0; j < _width; j++) {
+            (*this)(i, j) = clear_value;
+        }
+    }
 }

@@ -32,6 +32,8 @@ void Painting::render_sprites()
     glEnableVertexAttribArray(1);
 
     sprite_shader_program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(sprite_shader_program->uniform_location("sprite"), 0);
     for (unsigned int i = 0; i < sprites.size(); i++) {
         auto &sp = sprites[i];
         if (sp.is_depth) continue;
@@ -39,22 +41,22 @@ void Painting::render_sprites()
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, sp.texture);
-        glUniform1i(sprite_shader_program->uniform_location("sprite"), 0);
         glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
         graphics.end_camera_rendering(sp.camera);
     }
     sprite_shader_program->unbind();
 
     depth_sprite_shader_program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(depth_sprite_shader_program->uniform_location("depth_map"), 0);
     for (unsigned int i = 0; i < sprites.size(); i++) {
         auto &sp = sprites[i];
         if (!sp.is_depth) continue;
         graphics.begin_camera_rendering(sp.camera);
 
-        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, sp.texture);
-        glUniform1i(sprite_shader_program->uniform_location("depth_map"), 0);
         glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
 
         graphics.end_camera_rendering(sp.camera);

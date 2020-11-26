@@ -63,7 +63,7 @@ void World::loop()
     /*--------------------------------------------------------------------------------
         Clear framebuffers and render surfaces into the G-buffer.
     --------------------------------------------------------------------------------*/
-    graphics.clear(vec4(1,0,0,1), vec4(1,1,1,1));
+    graphics.clear(vec4(0,0,0,1), vec4(1,1,1,1));
     graphics.clear_cameras();
     glBindFramebuffer(GL_FRAMEBUFFER, graphics.gbuffer_fb);
     graphics.clear(vec4(0,0,0,0), vec4(0,0,0,0));

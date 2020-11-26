@@ -75,7 +75,9 @@ struct Test : public IBehaviour {
     Image<float> sinogram;
     Test(int n) : image(n, n)
     {
-	for (int i = 0; i < 5; i++) draw_circle(vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
+        image.clear(0);
+        for (int i = 0; i < 5; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
+        sinogram = create_sinogram(image, 128, 128);
     }
 
     void draw_line(vec2 from, vec2 to) {
@@ -107,13 +109,13 @@ struct Test : public IBehaviour {
         }
     }
 
-    void draw_circle(vec2 center, float radius, float intensity) {
-        center *= image.width();
-        radius *= image.width();
-        for (int i = 0; i < image.width(); i++) {
-            for (int j = 0; j < image.width(); j++) {
+    void draw_circle(Image<float> &img, vec2 center, float radius, float intensity) {
+        center *= img.width();
+        radius *= img.width();
+        for (int i = 0; i < img.width(); i++) {
+            for (int j = 0; j < img.width(); j++) {
                 if ((i - center.y())*(i - center.y()) + (j - center.x())*(j - center.x()) <= radius*radius) {
-                    image(i, j) = intensity;
+                    img(i, j) = intensity;
                 }
             }
         }
@@ -122,20 +124,15 @@ struct Test : public IBehaviour {
 
     void keyboard_handler(KeyboardEvent e) {
         if (e.action == KEYBOARD_PRESS) {
-            // if (e.key.code == KEY_O) draw_line(0.2*vec2(cos(total_time)+1,sin(total_time)+1), 0.2*vec2(cos(total_time+M_PI)+1,sin(total_time+M_PI)+1));
             if (e.key.code == KEY_O) {
-                // draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
-                //           vec2(0.5,0.5));
+                image.clear(0);
+	        for (int i = 0; i < 5; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
                 sinogram = create_sinogram(image, 128, 128);
             }
-            // if (e.key.code == KEY_O) image(5, 5) = vec4(0,1,0,1);
         }
     }
 
     void update() {
-        // image(rand() % image.height(), rand() % image.width()) = vec3::random(0,1);
-        // draw_line(vec2(0.5,0.5) + 0.3*vec2(cos(total_time), sin(total_time)),
-        // vec2(0.5,0.5));
         world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
         world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
     }

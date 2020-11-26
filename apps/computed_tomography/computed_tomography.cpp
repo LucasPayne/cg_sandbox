@@ -29,9 +29,10 @@ void trace_line(Image<float> &image, float cos_theta, float sin_theta, float s, 
     int n = image.width();
     vec2 p(s * cos_theta, s * sin_theta);
 
-    float height = sqrt(1 - fabs(s)*fabs(s));
+    float height = sqrt(fabs(1 - s*s));
     vec2 from = 0.5*(p + height*vec2(-sin_theta, cos_theta) + vec2(1,1));
     vec2 to = 0.5*(p - height*vec2(-sin_theta, cos_theta) + vec2(1,1));
+
     int a_x = floor(from.x() * n);
     int a_y = floor(from.y() * n);
     int b_x = floor(to.x() * n);
@@ -60,7 +61,7 @@ void trace_line(Image<float> &image, float cos_theta, float sin_theta, float s, 
             next_t = next_y;
             next_y += dy;
         }
-        function(LinePoint(cell_x, cell_y, next_t - t));
+        function(LinePoint(cell_x, cell_y, (next_t - t) * height));
         t = next_t;
     }
 }
@@ -82,12 +83,13 @@ void fill_sinogram(Image<float> &image, Image<float> &sinogram)
     int num_directions = sinogram.width();
     float inv_num_directions = 1.0 / num_directions;
     float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
+    float w = (num_parallel_rays - 2.f) / num_parallel_rays; //weights the computed s so that no rays are tangent to the circle.
     for (int i = 0; i < num_directions; i++) {
         float theta = M_PI * i * inv_num_directions;
         float cos_theta = cos(theta);
         float sin_theta = sin(theta);
         for (int j = 0; j < num_parallel_rays; j++) {
-            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
+            float s = (-1 + 2*j*inv_num_parallel_rays_minus_one)*w;
             float integral = line_integral(image, cos_theta, sin_theta, s);
             sinogram(j, i) = integral;
         }
@@ -117,29 +119,27 @@ struct Reconstructor {
         reconstruction(_n, _n)
     {
         reconstruction.clear(0);
-
         cyclic_counter_s = 0;
         cyclic_counter_theta = 0;
-        inv_num_directions_minus_one = 1.f / (num_directions - 1);
-        inv_num_parallel_rays = 1.f / num_parallel_rays;
+        inv_num_directions = 1.f / num_directions;
+        inv_num_parallel_rays_minus_one = 1.f / (num_parallel_rays - 1);
 
-        // theta = 0;
-        // cos_theta = 1;
-        // sin_theta = 0;
-        cyclic_counter_theta = rand() % num_directions;
-        theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
-        cos_theta = cos(theta);
-        sin_theta = sin(theta);
+        theta = 0;
+        cos_theta = 1;
+        sin_theta = 0;
+
+        w = (num_parallel_rays - 2.f) / num_parallel_rays; //weights the computed s so that no rays are tangent to the circle.
     }
     Reconstructor() {}
 
     int cyclic_counter_s;
     int cyclic_counter_theta;
-    float inv_num_directions_minus_one;
-    float inv_num_parallel_rays;
+    float inv_num_directions;
+    float inv_num_parallel_rays_minus_one;
     float theta;
     float cos_theta;
     float sin_theta;
+    float w;
 
     void iterate();
 };
@@ -153,15 +153,19 @@ void Reconstructor::iterate()
     // sin_theta = sin(theta);
 
     float val = sinogram(cyclic_counter_s, cyclic_counter_theta);
-    float s = -1 + 2*cyclic_counter_s*inv_num_directions_minus_one;
+    float s = (-1 + 2*cyclic_counter_s*inv_num_parallel_rays_minus_one)*w;
     // Compute the approximate line integral of the current guess through this line, corresponding to the point in the sinogram.
     float integral = line_integral(reconstruction, cos_theta, sin_theta, s);
     float residual = val - integral;
 
     float square_row_length = 0.f;
+    float total_weight = 0.f;
     trace_line(reconstruction, cos_theta, sin_theta, s, [&](LinePoint p) {
         square_row_length += p.weight * p.weight;
+        total_weight += p.weight;
     });
+    // printf("total_weight: %.8f\n", total_weight);
+    // printf("square_row_length: %.8f\n", square_row_length);getchar();
     float lambda = 1.f; // relaxation coefficient.
     float weighted_residual = lambda * (residual / square_row_length);
     
@@ -174,7 +178,7 @@ void Reconstructor::iterate()
         cyclic_counter_s = 0;
         // cyclic_counter_theta = (cyclic_counter_theta+1) % num_directions;
         cyclic_counter_theta = rand() % num_directions;
-        theta = M_PI*cyclic_counter_theta*inv_num_directions_minus_one;
+        theta = M_PI*cyclic_counter_theta*inv_num_directions;
         cos_theta = cos(theta);
         sin_theta = sin(theta);
     }
@@ -199,9 +203,10 @@ struct Test : public IBehaviour {
         for (int i = 0; i < 20; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
         fill_sinogram(image, sinogram);
         reconstructor = Reconstructor(sinogram, 128);
+        reconstruction_sinogram = Image<float>(sinogram.width(), sinogram.height());
     }
 
-    Test(int n) : image(n, n), sinogram(128, 128)
+    Test(int n) : image(n, n), sinogram(28, 28)
     {
         refresh();
     }
@@ -257,7 +262,7 @@ struct Test : public IBehaviour {
                 for (int i = 0; i < 28; i++) reconstructor.iterate();
             }
             if (e.key.code == KEY_I) {
-                reconstruction_sinogram = create_sinogram(reconstructor.reconstruction, 128, 128);
+                reconstruction_sinogram = create_sinogram(reconstructor.reconstruction, sinogram.width(), sinogram.height());
             }
         }
     }
@@ -268,6 +273,9 @@ struct Test : public IBehaviour {
         world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, border_color);
         world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor.reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, border_color);
         world->graphics.paint.bordered_depth_sprite(main_camera, reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4, 3, border_color);
+
+	for (int i = 0; i < 10*28; i++) reconstructor.iterate();
+	fill_sinogram(reconstructor.reconstruction, reconstruction_sinogram);
     }
 };
 
@@ -302,89 +310,6 @@ void App::close()
 }
 void App::loop()
 {
-    // std::vector<vec2> points = {vec2(0.2,0.2)};
-    // world.graphics.paint.circles(main_camera, points, 0.2, vec4(0,0,1,1), 0.03, vec4(1,0,0,1));
-
-/*
-    struct ellipse {
-        vec2 origin;
-        float theta;
-        float a;
-        float b;
-        float density;
-    };
-    std::vector<ellipse> ellipses;
-    ellipse e;
-    e.origin = vec2(0.5,0.5);
-    e.theta = 0;
-    e.a = 0.1;
-    e.b = 0.1;
-    ellipses.push_back(e);
-
-    vec2 c(0.5, 0.5);
-    float r = 0.1;
-    int s_n = 10;
-    int theta_n = 10;
-    for (int i = 0; i < theta_n; i++) {
-        float theta = 2*M_PI*i*(1.0/theta_n);
-        for (int j = 0; j < s_n; j++) {
-            float s = -r + 2*r*j*(1.0/s_n);
-            vec2 d1 = c + s*vec2(cos(theta), sin(theta)/0.566) + r*vec2(sin(theta), -cos(theta)/0.566);
-            vec2 d2 = c + s*vec2(cos(theta), sin(theta)/0.566) - r*vec2(sin(theta), -cos(theta)/0.566);
-            std::vector<vec2> points = {d1, d2};
-            world.graphics.paint.chain_2D(main_camera, points, 1, vec4(0,0,1,1));
-
-            vec2 origin = d1;
-            vec2 dir = (d2 - d1).normalized();
-
-            for (auto &el : ellipses) {
-                float inv_a_squared = 1.0 / (el.a * el.a);
-                float inv_b_squared = 1.0 / (el.b * el.b);
-
-                std::cout << origin << "\n";
-                vec2 origin_p = origin.inverse_transform(el.origin, el.theta);
-                std::cout << "---> " << origin_p << "\n";
-                vec2 dir_p = dir.rotate(el.theta);
-                float A = dir_p.x()*dir_p.x() * inv_a_squared + dir_p.y()*dir_p.y() * inv_b_squared;
-                float B = 2*origin_p.x()*dir_p.x() * inv_a_squared + 2*origin_p.y()*dir_p.y() * inv_b_squared;
-                float C = origin_p.x()*origin_p.x() * inv_a_squared + origin_p.y()*origin_p.y() * inv_b_squared - 1;
-                float discrim = B*B - 4*A*C;
-                if (discrim >= 0) {
-                    float sqrt_discrim = sqrt(discrim);
-                    float inv_2A = 1.0 / 2*A;
-                    float t1 = (B + sqrt_discrim)*inv_2A;
-                    float t2 = (B - sqrt_discrim)*inv_2A;
-                    vec2 p1 = origin + dir*t1;
-                    vec2 p2 = origin + dir*t2;
-                    std::vector<vec2> points = {p1, p2};
-                    world.graphics.paint.circles(main_camera, points, 0.01, vec4(0,0,1,1), 0.01, vec4(1,0,0,1));
-                }
-            }
-        }
-    }
-*/
-/*
-    int num_parallel_rays = 50;
-    int num_directions = 50;
-    float inv_num_directions = 1.0 / num_directions;
-    float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
-    for (int i = 0; i < num_directions; i++) {
-        float theta = M_PI * i * inv_num_directions;
-        float sin_theta = sin(theta);
-        float cos_theta = cos(theta);
-        for (int j = 0; j < num_parallel_rays; j++) {
-            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
-            vec2 p(s * cos_theta, s * sin_theta);
-            
-            float height = sqrt(1 - fabs(s)*fabs(s));
-            vec2 from = p + height*vec2(-sin_theta, cos_theta);
-            vec2 to = p - height*vec2(-sin_theta, cos_theta);
-
-	    std::vector<vec2> points = {0.5*(from + vec2(1,1)), 0.5*(to + vec2(1,1))};
-            world.graphics.paint.chain_2D(main_camera, points, 1, vec4(0,0,1,1));
-        }
-    }
-*/
 }
 
 void App::window_handler(WindowEvent e)

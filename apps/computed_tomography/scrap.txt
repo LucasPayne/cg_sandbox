@@ -35,3 +35,86 @@ struct LineTracer {
     
 };
 
+    // std::vector<vec2> points = {vec2(0.2,0.2)};
+    // world.graphics.paint.circles(main_camera, points, 0.2, vec4(0,0,1,1), 0.03, vec4(1,0,0,1));
+
+/*
+    struct ellipse {
+        vec2 origin;
+        float theta;
+        float a;
+        float b;
+        float density;
+    };
+    std::vector<ellipse> ellipses;
+    ellipse e;
+    e.origin = vec2(0.5,0.5);
+    e.theta = 0;
+    e.a = 0.1;
+    e.b = 0.1;
+    ellipses.push_back(e);
+
+    vec2 c(0.5, 0.5);
+    float r = 0.1;
+    int s_n = 10;
+    int theta_n = 10;
+    for (int i = 0; i < theta_n; i++) {
+        float theta = 2*M_PI*i*(1.0/theta_n);
+        for (int j = 0; j < s_n; j++) {
+            float s = -r + 2*r*j*(1.0/s_n);
+            vec2 d1 = c + s*vec2(cos(theta), sin(theta)/0.566) + r*vec2(sin(theta), -cos(theta)/0.566);
+            vec2 d2 = c + s*vec2(cos(theta), sin(theta)/0.566) - r*vec2(sin(theta), -cos(theta)/0.566);
+            std::vector<vec2> points = {d1, d2};
+            world.graphics.paint.chain_2D(main_camera, points, 1, vec4(0,0,1,1));
+
+            vec2 origin = d1;
+            vec2 dir = (d2 - d1).normalized();
+
+            for (auto &el : ellipses) {
+                float inv_a_squared = 1.0 / (el.a * el.a);
+                float inv_b_squared = 1.0 / (el.b * el.b);
+
+                std::cout << origin << "\n";
+                vec2 origin_p = origin.inverse_transform(el.origin, el.theta);
+                std::cout << "---> " << origin_p << "\n";
+                vec2 dir_p = dir.rotate(el.theta);
+                float A = dir_p.x()*dir_p.x() * inv_a_squared + dir_p.y()*dir_p.y() * inv_b_squared;
+                float B = 2*origin_p.x()*dir_p.x() * inv_a_squared + 2*origin_p.y()*dir_p.y() * inv_b_squared;
+                float C = origin_p.x()*origin_p.x() * inv_a_squared + origin_p.y()*origin_p.y() * inv_b_squared - 1;
+                float discrim = B*B - 4*A*C;
+                if (discrim >= 0) {
+                    float sqrt_discrim = sqrt(discrim);
+                    float inv_2A = 1.0 / 2*A;
+                    float t1 = (B + sqrt_discrim)*inv_2A;
+                    float t2 = (B - sqrt_discrim)*inv_2A;
+                    vec2 p1 = origin + dir*t1;
+                    vec2 p2 = origin + dir*t2;
+                    std::vector<vec2> points = {p1, p2};
+                    world.graphics.paint.circles(main_camera, points, 0.01, vec4(0,0,1,1), 0.01, vec4(1,0,0,1));
+                }
+            }
+        }
+    }
+*/
+/*
+    int num_parallel_rays = 50;
+    int num_directions = 50;
+    float inv_num_directions = 1.0 / num_directions;
+    float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
+    for (int i = 0; i < num_directions; i++) {
+        float theta = M_PI * i * inv_num_directions;
+        float sin_theta = sin(theta);
+        float cos_theta = cos(theta);
+        for (int j = 0; j < num_parallel_rays; j++) {
+            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
+            vec2 p(s * cos_theta, s * sin_theta);
+            
+            float height = sqrt(1 - fabs(s)*fabs(s));
+            vec2 from = p + height*vec2(-sin_theta, cos_theta);
+            vec2 to = p - height*vec2(-sin_theta, cos_theta);
+
+	    std::vector<vec2> points = {0.5*(from + vec2(1,1)), 0.5*(to + vec2(1,1))};
+            world.graphics.paint.chain_2D(main_camera, points, 1, vec4(0,0,1,1));
+        }
+    }
+*/

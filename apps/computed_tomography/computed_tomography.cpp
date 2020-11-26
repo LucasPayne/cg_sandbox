@@ -6,6 +6,8 @@
 #include "objects/cameraman.cpp"
 #include "world/graphics/image.h"
 
+void fill_sinogram(Image<float> &image, Image<float> &sinogram);
+Image<float> create_sinogram(Image<float> &image, int num_parallel_rays, int num_directions);
 
 
 struct LinePoint {
@@ -72,6 +74,31 @@ float line_integral(Image<float> &image, float cos_theta, float sin_theta, float
         integral += p.weight * image(p.y, p.x);
     });
     return integral;
+}
+
+void fill_sinogram(Image<float> &image, Image<float> &sinogram)
+{
+    int num_parallel_rays = sinogram.height();
+    int num_directions = sinogram.width();
+    float inv_num_directions = 1.0 / num_directions;
+    float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
+    for (int i = 0; i < num_directions; i++) {
+        float theta = M_PI * i * inv_num_directions;
+        float cos_theta = cos(theta);
+        float sin_theta = sin(theta);
+        for (int j = 0; j < num_parallel_rays; j++) {
+            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
+            float integral = line_integral(image, cos_theta, sin_theta, s);
+            sinogram(j, i) = integral;
+        }
+    }
+}
+Image<float> create_sinogram(Image<float> &image, int num_parallel_rays, int num_directions)
+{
+    assert(image.width() == image.height());
+    Image<float> sinogram(num_parallel_rays, num_directions);
+    fill_sinogram(image, sinogram);
+    return sinogram;
 }
 
 
@@ -154,27 +181,6 @@ void Reconstructor::iterate()
 }
 
 
-Image<float> create_sinogram(Image<float> image, int num_parallel_rays, int num_directions)
-{
-    assert(image.width() == image.height());
-    int n = image.width();
-    Image<float> sinogram(num_parallel_rays, num_directions);
-
-    float inv_num_directions = 1.0 / num_directions;
-    float inv_num_parallel_rays_minus_one = 1.0 / (num_parallel_rays - 1);
-    for (int i = 0; i < num_directions; i++) {
-        float theta = M_PI * i * inv_num_directions;
-        float cos_theta = cos(theta);
-        float sin_theta = sin(theta);
-        for (int j = 0; j < num_parallel_rays; j++) {
-            float s = -1 + 2*j*inv_num_parallel_rays_minus_one;
-            float integral = line_integral(image, cos_theta, sin_theta, s);
-            sinogram(j, i) = integral;
-        }
-    }
-    return sinogram;
-}
-
 
 
 
@@ -191,11 +197,11 @@ struct Test : public IBehaviour {
     void refresh() {
         image.clear(0);
         for (int i = 0; i < 20; i++) draw_circle(image, vec2(0.5+0.3*(frand()-0.5), 0.5+0.3*(frand()-0.5)), 0.1+frand()*0.2, 0.5+0.5*frand());
-        sinogram = create_sinogram(image, 128, 128);
+        fill_sinogram(image, sinogram);
         reconstructor = Reconstructor(sinogram, 128);
     }
 
-    Test(int n) : image(n, n)
+    Test(int n) : image(n, n), sinogram(128, 128)
     {
         refresh();
     }
@@ -251,16 +257,17 @@ struct Test : public IBehaviour {
                 for (int i = 0; i < 28; i++) reconstructor.iterate();
             }
             if (e.key.code == KEY_I) {
-                // reconstruction_sinogram = create_sinogram(reconstructor.reconstruction, 128, 128);
+                reconstruction_sinogram = create_sinogram(reconstructor.reconstruction, 128, 128);
             }
         }
     }
 
     void update() {
-        world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
-        world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
-        world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor.reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
-        // world->graphics.paint.bordered_depth_sprite(main_camera, reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4, 3, vec4(0.5,0.5,0.5,1));
+        vec4 border_color = vec4(1,1,1,1);
+        world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, border_color);
+        world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, border_color);
+        world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor.reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, border_color);
+        world->graphics.paint.bordered_depth_sprite(main_camera, reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4, 3, border_color);
     }
 };
 
@@ -285,6 +292,8 @@ App::App(World &_world) : world{_world}
 
     Entity test = world.entities.add();
     world.add<Test>(test, 128);
+
+    main_camera->background_color = vec4(0,0,0,1);
 }
 
 

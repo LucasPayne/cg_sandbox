@@ -133,7 +133,6 @@ public:
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
 
     void update_lights();
-
 private:
     World &world;
 

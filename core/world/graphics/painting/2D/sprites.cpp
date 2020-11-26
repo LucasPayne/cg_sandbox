@@ -16,9 +16,6 @@ void Painting::render_sprites()
         vertex_data[8*i + 7] = vec2(0,1);
     }
 
-    for (auto v : vertex_data) std::cout << v << "\n";
-    printf("!^!\n");
-
     GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);

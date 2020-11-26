@@ -347,12 +347,12 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     
-{
+if (0) {
     Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
     obj.get<Transform>()->position = vec3(0.7,0,0);
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
 }
-{
+if (1) {
     Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->scale = 5;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);

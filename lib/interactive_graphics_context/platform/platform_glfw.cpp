@@ -5,7 +5,7 @@
 #include "interactive_graphics_context.h"
 #include <iostream>
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "glfw/include/GLFW/glfw3.h"
 namespace IGC {
 namespace Platform {
 

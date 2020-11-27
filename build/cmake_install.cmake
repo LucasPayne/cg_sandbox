@@ -1,4 +1,4 @@
-# Install script for directory: /home/lucas/computer_graphics/cg_sandbox
+# Install script for directory: /home/cosc/student/lcp35/cg_sandbox
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,9 +39,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/cmake_install.cmake")
-  include("/home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra/cmake_install.cmake")
-  include("/home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader/cmake_install.cmake")
+  include("/home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/cmake_install.cmake")
+  include("/home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra/cmake_install.cmake")
+  include("/home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader/cmake_install.cmake")
 
 endif()
 
@@ -53,5 +53,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/lucas/computer_graphics/cg_sandbox/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/cosc/student/lcp35/cg_sandbox/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

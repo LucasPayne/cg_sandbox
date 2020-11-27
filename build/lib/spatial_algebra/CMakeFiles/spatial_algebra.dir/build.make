@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
+CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
 
 # Include any dependencies generated for this target.
 include lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/depend.make
@@ -59,16 +59,16 @@ include lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/flags.make
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o: lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/flags.make
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o: ../lib/spatial_algebra/spatial_algebra.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.i"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp > CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp > CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.i
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.s"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp -o CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp -o CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.s
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o.requires:
 
@@ -91,9 +91,9 @@ spatial_algebra_EXTERNAL_OBJECTS =
 lib/spatial_algebra/libspatial_algebra.a: lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o
 lib/spatial_algebra/libspatial_algebra.a: lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/build.make
 lib/spatial_algebra/libspatial_algebra.a: lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libspatial_algebra.a"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -P CMakeFiles/spatial_algebra.dir/cmake_clean_target.cmake
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/spatial_algebra.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libspatial_algebra.a"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -P CMakeFiles/spatial_algebra.dir/cmake_clean_target.cmake
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/spatial_algebra.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/build: lib/spatial_algebra/libspatial_algebra.a
@@ -105,10 +105,10 @@ lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/requires: lib/spatial_algebra
 .PHONY : lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/requires
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/clean:
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -P CMakeFiles/spatial_algebra.dir/cmake_clean.cmake
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra && $(CMAKE_COMMAND) -P CMakeFiles/spatial_algebra.dir/cmake_clean.cmake
 .PHONY : lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/clean
 
 lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/depend:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lucas/computer_graphics/cg_sandbox /home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra /home/lucas/computer_graphics/cg_sandbox/build /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra /home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cosc/student/lcp35/cg_sandbox /home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra /home/cosc/student/lcp35/cg_sandbox/build /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra /home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/depend
 

@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
+CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
 
 # Include any dependencies generated for this target.
 include lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/depend.make
@@ -59,16 +59,16 @@ include lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/flags.make
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o: ../lib/interactive_graphics_context/interactive_graphics_context.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp > CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp > CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp -o CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp -o CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o.requires:
 
@@ -83,16 +83,16 @@ lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/int
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/flags.make
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o: ../lib/interactive_graphics_context/input.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/input.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/input.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.cpp
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/interactive_graphics_context.dir/input.cpp.i"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.cpp > CMakeFiles/interactive_graphics_context.dir/input.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.cpp > CMakeFiles/interactive_graphics_context.dir/input.cpp.i
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/interactive_graphics_context.dir/input.cpp.s"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.cpp -o CMakeFiles/interactive_graphics_context.dir/input.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.cpp -o CMakeFiles/interactive_graphics_context.dir/input.cpp.s
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o.requires:
 
@@ -107,16 +107,16 @@ lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/inp
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/flags.make
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o: ../lib/interactive_graphics_context/platform/platform_glfw.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp > CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp > CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp -o CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp -o CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o.requires:
 
@@ -143,9 +143,9 @@ lib/interactive_graphics_context/libinteractive_graphics_context.a: lib/interact
 lib/interactive_graphics_context/libinteractive_graphics_context.a: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o
 lib/interactive_graphics_context/libinteractive_graphics_context.a: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make
 lib/interactive_graphics_context/libinteractive_graphics_context.a: lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libinteractive_graphics_context.a"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -P CMakeFiles/interactive_graphics_context.dir/cmake_clean_target.cmake
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/interactive_graphics_context.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libinteractive_graphics_context.a"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -P CMakeFiles/interactive_graphics_context.dir/cmake_clean_target.cmake
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/interactive_graphics_context.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build: lib/interactive_graphics_context/libinteractive_graphics_context.a
@@ -159,10 +159,10 @@ lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/req
 .PHONY : lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/requires
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/clean:
-	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -P CMakeFiles/interactive_graphics_context.dir/cmake_clean.cmake
+	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context && $(CMAKE_COMMAND) -P CMakeFiles/interactive_graphics_context.dir/cmake_clean.cmake
 .PHONY : lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/clean
 
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/depend:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lucas/computer_graphics/cg_sandbox /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context /home/lucas/computer_graphics/cg_sandbox/build /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cosc/student/lcp35/cg_sandbox /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context /home/cosc/student/lcp35/cg_sandbox/build /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/depend
 

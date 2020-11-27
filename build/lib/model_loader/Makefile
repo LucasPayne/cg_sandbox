@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
+CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -70,8 +70,8 @@ install/strip/fast: preinstall/fast
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/cmake-gui -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -126,14 +126,14 @@ install/local/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader/CMakeFiles/progress.marks
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles 0
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader/CMakeFiles/progress.marks
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/clean
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/clean
 .PHONY : clean
 
 # The main clean target
@@ -143,22 +143,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/preinstall
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/preinstall
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 lib/model_loader/CMakeFiles/model_loader.dir/rule:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/CMakeFiles/model_loader.dir/rule
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/model_loader/CMakeFiles/model_loader.dir/rule
 .PHONY : lib/model_loader/CMakeFiles/model_loader.dir/rule
 
 # Convenience name for target.
@@ -168,7 +168,7 @@ model_loader: lib/model_loader/CMakeFiles/model_loader.dir/rule
 
 # fast build rule for target.
 model_loader/fast:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/build
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/build
 .PHONY : model_loader/fast
 
 model_file_formats/OFF.o: model_file_formats/OFF.cpp.o
@@ -177,7 +177,7 @@ model_file_formats/OFF.o: model_file_formats/OFF.cpp.o
 
 # target to build an object file
 model_file_formats/OFF.cpp.o:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o
 .PHONY : model_file_formats/OFF.cpp.o
 
 model_file_formats/OFF.i: model_file_formats/OFF.cpp.i
@@ -186,7 +186,7 @@ model_file_formats/OFF.i: model_file_formats/OFF.cpp.i
 
 # target to preprocess a source file
 model_file_formats/OFF.cpp.i:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i
 .PHONY : model_file_formats/OFF.cpp.i
 
 model_file_formats/OFF.s: model_file_formats/OFF.cpp.s
@@ -195,7 +195,7 @@ model_file_formats/OFF.s: model_file_formats/OFF.cpp.s
 
 # target to generate assembly for a file
 model_file_formats/OFF.cpp.s:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s
 .PHONY : model_file_formats/OFF.cpp.s
 
 model_file_formats/Obj.o: model_file_formats/Obj.cpp.o
@@ -204,7 +204,7 @@ model_file_formats/Obj.o: model_file_formats/Obj.cpp.o
 
 # target to build an object file
 model_file_formats/Obj.cpp.o:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o
 .PHONY : model_file_formats/Obj.cpp.o
 
 model_file_formats/Obj.i: model_file_formats/Obj.cpp.i
@@ -213,7 +213,7 @@ model_file_formats/Obj.i: model_file_formats/Obj.cpp.i
 
 # target to preprocess a source file
 model_file_formats/Obj.cpp.i:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i
 .PHONY : model_file_formats/Obj.cpp.i
 
 model_file_formats/Obj.s: model_file_formats/Obj.cpp.s
@@ -222,7 +222,7 @@ model_file_formats/Obj.s: model_file_formats/Obj.cpp.s
 
 # target to generate assembly for a file
 model_file_formats/Obj.cpp.s:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s
 .PHONY : model_file_formats/Obj.cpp.s
 
 model_file_formats/STL.o: model_file_formats/STL.cpp.o
@@ -231,7 +231,7 @@ model_file_formats/STL.o: model_file_formats/STL.cpp.o
 
 # target to build an object file
 model_file_formats/STL.cpp.o:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o
 .PHONY : model_file_formats/STL.cpp.o
 
 model_file_formats/STL.i: model_file_formats/STL.cpp.i
@@ -240,7 +240,7 @@ model_file_formats/STL.i: model_file_formats/STL.cpp.i
 
 # target to preprocess a source file
 model_file_formats/STL.cpp.i:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i
 .PHONY : model_file_formats/STL.cpp.i
 
 model_file_formats/STL.s: model_file_formats/STL.cpp.s
@@ -249,7 +249,7 @@ model_file_formats/STL.s: model_file_formats/STL.cpp.s
 
 # target to generate assembly for a file
 model_file_formats/STL.cpp.s:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s
 .PHONY : model_file_formats/STL.cpp.s
 
 model_loader.o: model_loader.cpp.o
@@ -258,7 +258,7 @@ model_loader.o: model_loader.cpp.o
 
 # target to build an object file
 model_loader.cpp.o:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o
 .PHONY : model_loader.cpp.o
 
 model_loader.i: model_loader.cpp.i
@@ -267,7 +267,7 @@ model_loader.i: model_loader.cpp.i
 
 # target to preprocess a source file
 model_loader.cpp.i:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.i
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.i
 .PHONY : model_loader.cpp.i
 
 model_loader.s: model_loader.cpp.s
@@ -276,7 +276,7 @@ model_loader.s: model_loader.cpp.s
 
 # target to generate assembly for a file
 model_loader.cpp.s:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.s
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/model_loader/CMakeFiles/model_loader.dir/build.make lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.s
 .PHONY : model_loader.cpp.s
 
 # Help Target
@@ -315,6 +315,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

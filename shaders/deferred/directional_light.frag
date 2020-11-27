@@ -14,17 +14,29 @@ in vec2 uv;
 
 out vec4 color;
 
+
+float shadowing(vec3 shadow_coord)
+{
+    vec2 shadow_uv = 0.5*shadow_coord.xy + 0.5;
+    float shadow_depth = texture(shadow_map, shadow_uv).r;
+    float shadow = shadow_coord.z > shadow_depth ? 1.f : 0.f;
+    return shadow;
+}
+
+
 void main(void)
 {
     vec4 f_albedo = texture(albedo, uv);
     vec3 f_normal = texture(normal, uv).rgb;
-
     vec3 f_position = texture(position, uv).rgb;
+
     vec3 shadow_coord = (shadow_matrix * vec4(f_position, 1)).xyz;
-    float shadow_depth = texture(shadow_map, shadow_coord.xy).r;
-    if (shadow_depth > shadow_coord.z) {
-        color = vec4(max(0, dot(f_normal, -normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
+    float shadow = shadowing(shadow_coord);
+    color = vec4((1.f - shadow)*max(0, dot(f_normal, -normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
+
+    if (!(shadow_coord.x < 0 || shadow_coord.x > 1 || shadow_coord.y < 0 || shadow_coord.y > 1)) {
+        color = vec4(shadow_coord.x, shadow_coord.y, 0, 1);
     } else {
-        color = vec4(0,0,0,1);
+        color = vec4(1,0,1,1);
     }
 }

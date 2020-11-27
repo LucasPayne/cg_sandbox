@@ -1,4 +1,4 @@
-# Install script for directory: /home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/docs
+# Install script for directory: /home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/docs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

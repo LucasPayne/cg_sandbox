@@ -167,3 +167,13 @@ mat4x4 mat4x4::orthogonal_projection(float min_x, float max_x, float min_y, floa
         0,0,0,1
     ) * mat4x4::translation(vec3(-0.5*(min_x+max_x), -0.5*(min_y+max_y), -min_z));
 }
+
+mat4x4 mat4x4::scale(float x, float y, float z)
+{
+    return mat4x4::row_major(
+        x, 0, 0, 0,
+        0, y, 0, 0,
+        0, 0, z, 0,
+        0,0,0,1
+    );
+}

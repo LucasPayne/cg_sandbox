@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp" "/home/cosc/student/lcp35/cg_sandbox/build/lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o"
+  "/home/lucas/computer_graphics/cg_sandbox/lib/spatial_algebra/spatial_algebra.cpp" "/home/lucas/computer_graphics/cg_sandbox/build/lib/spatial_algebra/CMakeFiles/spatial_algebra.dir/spatial_algebra.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -15,14 +15,6 @@ in vec2 uv;
 out vec4 color;
 
 
-float shadowing(vec3 shadow_coord)
-{
-    vec2 shadow_uv = 0.5*shadow_coord.xy + 0.5;
-    float shadow_depth = texture(shadow_map, shadow_uv).r;
-    float shadow = shadow_coord.z > shadow_depth ? 1.f : 0.f;
-    return shadow;
-}
-
 
 void main(void)
 {
@@ -31,12 +23,24 @@ void main(void)
     vec3 f_position = texture(position, uv).rgb;
 
     vec3 shadow_coord = (shadow_matrix * vec4(f_position, 1)).xyz;
-    float shadow = shadowing(shadow_coord);
+
+    vec2 shadow_uv = 0.5*shadow_coord.xy + 0.5;
+
+    float shadow_depth = texture(shadow_map, shadow_uv).r;
+    float shadow = shadow_coord.z < shadow_depth ? 0.f : 1.f;
     color = vec4((1.f - shadow)*max(0, dot(f_normal, -normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
 
-    if (!(shadow_coord.x < 0 || shadow_coord.x > 1 || shadow_coord.y < 0 || shadow_coord.y > 1)) {
-        color = vec4(shadow_coord.x, shadow_coord.y, 0, 1);
+#if 0
+    if (!(shadow_coord.x < -1 || shadow_coord.x > 1 || shadow_coord.y < -1 || shadow_coord.y > 1)) {
+        // color = vec4(0.5*shadow_coord.x+0.5, 0.5*shadow_coord.y+0.5, 0, f_albedo.a);
+        color = vec4(vec3(shadow_depth), f_albedo.a);
+        // color = vec4(vec3(0.5*shadow_coord.x+0.5), f_albedo.a);
     } else {
-        color = vec4(1,0,1,1);
+        color = vec4(1,0,1,f_albedo.a);
     }
+#endif
+
+    // color = vec4(vec3(shadow_coord.z), f_albedo.a);
+    // color = vec4(shadow_uv.x, shadow_uv.y, shadow_coord.z, f_albedo.a);
+    // color = vec4(f_position, 1);
 }

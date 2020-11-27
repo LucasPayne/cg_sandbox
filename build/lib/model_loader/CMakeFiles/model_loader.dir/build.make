@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
+CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
 
 # Include any dependencies generated for this target.
 include lib/model_loader/CMakeFiles/model_loader.dir/depend.make
@@ -59,16 +59,16 @@ include lib/model_loader/CMakeFiles/model_loader.dir/flags.make
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o: lib/model_loader/CMakeFiles/model_loader.dir/flags.make
 lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o: ../lib/model_loader/model_loader.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_loader.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o"
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_loader.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.cpp
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/model_loader.dir/model_loader.cpp.i"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.cpp > CMakeFiles/model_loader.dir/model_loader.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.cpp > CMakeFiles/model_loader.dir/model_loader.cpp.i
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/model_loader.dir/model_loader.cpp.s"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.cpp -o CMakeFiles/model_loader.dir/model_loader.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.cpp -o CMakeFiles/model_loader.dir/model_loader.cpp.s
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o.requires:
 
@@ -83,16 +83,16 @@ lib/model_loader/CMakeFiles/model_loader.dir/model_loader.cpp.o.provides.build: 
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o: lib/model_loader/CMakeFiles/model_loader.dir/flags.make
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o: ../lib/model_loader/model_file_formats/OFF.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o"
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp > CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp > CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.i
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp -o CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp -o CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.s
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o.requires:
 
@@ -107,16 +107,16 @@ lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o.provid
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o: lib/model_loader/CMakeFiles/model_loader.dir/flags.make
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o: ../lib/model_loader/model_file_formats/Obj.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o"
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp > CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp > CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.i
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp -o CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp -o CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.s
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o.requires:
 
@@ -131,16 +131,16 @@ lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o.provid
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o: lib/model_loader/CMakeFiles/model_loader.dir/flags.make
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o: ../lib/model_loader/model_file_formats/STL.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o -c /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o"
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o -c /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp > CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp > CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.i
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp -o CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp -o CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.s
 
 lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o.requires:
 
@@ -169,9 +169,9 @@ lib/model_loader/libmodel_loader.a: lib/model_loader/CMakeFiles/model_loader.dir
 lib/model_loader/libmodel_loader.a: lib/model_loader/CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o
 lib/model_loader/libmodel_loader.a: lib/model_loader/CMakeFiles/model_loader.dir/build.make
 lib/model_loader/libmodel_loader.a: lib/model_loader/CMakeFiles/model_loader.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libmodel_loader.a"
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -P CMakeFiles/model_loader.dir/cmake_clean_target.cmake
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/model_loader.dir/link.txt --verbose=$(VERBOSE)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX static library libmodel_loader.a"
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -P CMakeFiles/model_loader.dir/cmake_clean_target.cmake
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/model_loader.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
 lib/model_loader/CMakeFiles/model_loader.dir/build: lib/model_loader/libmodel_loader.a
@@ -186,10 +186,10 @@ lib/model_loader/CMakeFiles/model_loader.dir/requires: lib/model_loader/CMakeFil
 .PHONY : lib/model_loader/CMakeFiles/model_loader.dir/requires
 
 lib/model_loader/CMakeFiles/model_loader.dir/clean:
-	cd /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -P CMakeFiles/model_loader.dir/cmake_clean.cmake
+	cd /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader && $(CMAKE_COMMAND) -P CMakeFiles/model_loader.dir/cmake_clean.cmake
 .PHONY : lib/model_loader/CMakeFiles/model_loader.dir/clean
 
 lib/model_loader/CMakeFiles/model_loader.dir/depend:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cosc/student/lcp35/cg_sandbox /home/cosc/student/lcp35/cg_sandbox/lib/model_loader /home/cosc/student/lcp35/cg_sandbox/build /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader /home/cosc/student/lcp35/cg_sandbox/build/lib/model_loader/CMakeFiles/model_loader.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lucas/computer_graphics/cg_sandbox /home/lucas/computer_graphics/cg_sandbox/lib/model_loader /home/lucas/computer_graphics/cg_sandbox/build /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader /home/lucas/computer_graphics/cg_sandbox/build/lib/model_loader/CMakeFiles/model_loader.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : lib/model_loader/CMakeFiles/model_loader.dir/depend
 

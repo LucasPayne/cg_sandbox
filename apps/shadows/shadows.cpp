@@ -21,7 +21,7 @@ struct LightRotate : public IBehaviour {
         light{_light},
         axis{_axis.normalized()}
     {
-        theta = 0.f;
+        theta = M_PI;
     }
     void update() {
         auto t = light.sibling<Transform>();
@@ -30,10 +30,10 @@ struct LightRotate : public IBehaviour {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
         world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0.5,0.5), 0.28,0.28, 3, vec4(0,0,0,1));
         if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
-            theta -= 3.f * dt;
+            theta -= 0.3f * dt;
         }
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
-            theta += 3.f * dt;
+            theta += 0.3f * dt;
         }
     }
 };
@@ -58,13 +58,14 @@ float omega = 0.25;
 App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
-    cameraman.get<Transform>()->position = vec3(0,0,2);
+    cameraman.get<Transform>()->position = vec3(0,0,0);
     main_camera = cameraman.get<Camera>();
     
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
-            obj.get<Transform>()->position = vec3(i, 0, j);
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+            obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
+            obj.get<Transform>()->scale = 5;
             obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
         }
     }
@@ -99,7 +100,6 @@ void App::loop()
         std::vector<vec3> ps = {frustum_points[i], frustum_points[i+4]};
         world.graphics.paint.chain(ps, ps.size(), vec4(0,0,0,1));
     }
-
 
     auto light_transform = main_light.sibling<Transform>();
     vec3 X = light_transform->right();
@@ -161,10 +161,10 @@ void App::keyboard_handler(KeyboardEvent e)
                 main_camera->frustum_point(1,-1,0),
                 main_camera->frustum_point(1,1,0),
                 main_camera->frustum_point(-1,1,0),
-                main_camera->frustum_point(-1,-1,0.05),
-                main_camera->frustum_point(1,-1,0.05),
-                main_camera->frustum_point(1,1,0.05),
-                main_camera->frustum_point(-1,1,0.05),
+                main_camera->frustum_point(-1,-1,0.01),
+                main_camera->frustum_point(1,-1,0.01),
+                main_camera->frustum_point(1,1,0.01),
+                main_camera->frustum_point(-1,1,0.01),
             };
             for (int i = 0; i < 8; i++) {
                 frustum_points[i] = _frustum_points[i];

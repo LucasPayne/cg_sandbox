@@ -66,37 +66,37 @@ vector
 input.h
 ../lib/interactive_graphics_context/input.h
 
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.cpp
 interactive_graphics_context.h
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
 ctype.h
 -
 stdio.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.h
 stdint.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp
 interactive_graphics_context.h
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
 
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.h
 string
 -
 vector
 -
 input.h
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.h
 
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp
 interactive_graphics_context.h
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/interactive_graphics_context.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/interactive_graphics_context.h
 iostream
 -
 glad/glad.h
 -
 glfw/include/GLFW/glfw3.h
-/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/glfw/include/GLFW/glfw3.h
+/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/glfw/include/GLFW/glfw3.h
 

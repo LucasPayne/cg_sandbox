@@ -1,9 +1,9 @@
 
-if (NOT EXISTS "/home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/install_manifest.txt")
-    message(FATAL_ERROR "Cannot find install manifest: \"/home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/install_manifest.txt\"")
+if (NOT EXISTS "/home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/install_manifest.txt")
+    message(FATAL_ERROR "Cannot find install manifest: \"/home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/install_manifest.txt\"")
 endif()
 
-file(READ "/home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/install_manifest.txt" files)
+file(READ "/home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
 
 foreach (file ${files})

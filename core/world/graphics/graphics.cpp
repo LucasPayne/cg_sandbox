@@ -250,10 +250,11 @@ void Graphics::deferred_lighting()
         for (auto light : world.entities.aspects<DirectionalLight>()) {
             auto &shadow_map = directional_light_data(light).shadow_map(camera);
 
-            GLenum shadow_map_slot = gbuffer_components.size();
+            int shadow_map_slot = gbuffer_components.size();
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
             glBindTexture(GL_TEXTURE_2D, shadow_map.texture);
             glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
+            std::cout << "Aye " << shadow_map.shadow_matrix << "\n";
             glUniformMatrix4fv(program->uniform_location("shadow_matrix"), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrix);
 
             vec3 direction = light.sibling<Transform>()->forward();
@@ -383,8 +384,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 512;
-    int height = 512;
+    int width = 1024;
+    int height = 1024;
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -434,9 +435,8 @@ void Graphics::update_lights()
             auto &sm = directional_light_data(light).shadow_map(camera);
             
             // Bound the camera frustum section with a box, elongated in the direction of the light.
-
             float extent_a = 0;
-            float extent_b = 0.05;
+            float extent_b = 0.01;
             vec3 frustum_points[8] = {
                 camera->frustum_point(-1,-1,extent_a),
                 camera->frustum_point(1,-1,extent_a),
@@ -447,6 +447,8 @@ void Graphics::update_lights()
                 camera->frustum_point(1,1,extent_b),
                 camera->frustum_point(-1,1,extent_b),
             };
+            for (int i = 0; i < 8; i++) std::cout << frustum_points[i] << "\n";
+
             vec3 X = light_transform->right();
             vec3 Y = light_transform->up();
             vec3 Z = light_transform->forward();
@@ -455,6 +457,7 @@ void Graphics::update_lights()
                 vec3 d = frustum_points[i];
                 transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
             }
+            for (int i = 0; i < 8; i++) std::cout << transformed_frustum[i] << "\n";
             vec3 mins = transformed_frustum[0];
             vec3 maxs = transformed_frustum[0];
             for (int i = 1; i < 8; i++) {
@@ -466,14 +469,18 @@ void Graphics::update_lights()
                     }
                 }
             }
-
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
             float depth = maxs.z() - mins.z();
 
+            std::cout << "mins " << mins << "\n";
+            std::cout << "maxs " << maxs << "\n";
+
+            vec3 min_point = mins.x()*X + mins.y()*Y + mins.z()*Z;
             mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
-                                 * mat4x4::to_rigid_frame(mins.x()*X + mins.y()*Y + mins.z()*Z, X, Y, Z);
+                                 * mat4x4::to_rigid_frame(min_point, X, Y, Z);
             std::cout << shadow_matrix << "\n";
+            std::cout << min_point << "\n";
             shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
             sm.shadow_matrix = shadow_matrix;
 
@@ -484,46 +491,10 @@ void Graphics::update_lights()
                     for (int k = 0; k < 2; k++) {
                         vec3 p = X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
                         bounding_box[4*i + 2*j + k] = p;
-                        std::cout << "shadow: " << shadow_matrix * vec4(p, 1) << "\n";
+                        std::cout << shadow_matrix * vec4(p, 1) << "\n";
                     }
                 }
             }
-
-
-            // Compute the shadow coordinate matrix. This transforms points in world space to texture space of the shadow map, 
-            // with depth being in the range of the box.
-            // sm.shadow_matrix =
-            // mat4x4::row_major(
-            //     1,0,0,bottom_left_shift.x() * width,
-            //     0,1,0,bottom_left_shift.y() * height,
-            //     0,0,1,bottom_left_shift.z() * depth,
-            //     0,0,0,1
-            // ) * mat4x4::row_major(
-            //     X.x() * inv_w, X.y() * inv_w, X.z() * inv_w, 0,
-            //     Y.x() * inv_h, Y.y() * inv_h, Y.z() * inv_h, 0,
-            //     Z.x() * inv_d, Z.y() * inv_d, Z.z() * inv_d, 0,
-            //     0,0,0, 1
-            // ) * mat4x4::row_major(
-            //     1,0,0,-light_transform->position.x(),
-            //     0,1,0,-light_transform->position.y(),
-            //     0,0,1,-light_transform->position.z(),
-            //     0,0,0,1
-            // );
-            // std::cout << sm.shadow_matrix << "\n";
-            // Render surfaces into the shadow map.
-            // When rendering, the rectangle projected to needs to range from [-1,-1] to [1,1].
-            // The shadow matrix maps to the shadow map's texture space, so just affine transform these space.
-            // mat4x4 shadow_vp_matrix = mat4x4::row_major(
-            //     2,0,0,-1,
-            //     0,2,0,-1,
-            //     0,0,2,-1,
-            //     0,0,0,1
-            // ) * sm.shadow_matrix;
-            // std::cout << shadow_vp_matrix << "\n";
-            //--test shadow map by rendering from the camera.
-            // mat4x4 camera_vp_matrix = camera->view_projection_matrix();
-            // shadow_map_shading_model.properties.set_mat4x4("vp_matrix", camera_vp_matrix);
-
 
             glViewport(0, 0, sm.width, sm.height);
             glDisable(GL_SCISSOR_TEST);
@@ -535,6 +506,8 @@ void Graphics::update_lights()
             glEnable(GL_SCISSOR_TEST);
         }
     }
-
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.
+    shadow_map_shading_model.properties.destroy();
+
+    // getchar();
 }

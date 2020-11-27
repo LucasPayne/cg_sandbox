@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/input.cpp" "/home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o"
-  "/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp" "/home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o"
-  "/home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp" "/home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o"
+  "/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/input.cpp" "/home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o"
+  "/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/interactive_graphics_context.cpp" "/home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o"
+  "/home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context/platform/platform_glfw.cpp" "/home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

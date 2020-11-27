@@ -69,7 +69,7 @@
     using namespace ShadingFileDetails;
     #include "shading_file.yy.hh"
 
-#line 73 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:339  */
+#line 73 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -89,8 +89,8 @@
 
 /* In a future release of Bison, this section will be replaced
    by #include "shading_file.tab.hh".  */
-#ifndef YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
-# define YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
+#ifndef YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
+# define YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -133,7 +133,7 @@ union YYSTYPE
     const char *string;
     unsigned int unsigned_int;
 
-#line 137 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:355  */
+#line 137 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -146,11 +146,11 @@ extern YYSTYPE yylval;
 
 int yyparse (ShadingFileASTNode **ast_root_out);
 
-#endif /* !YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED  */
+#endif /* !YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
-#line 154 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:358  */
+#line 154 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -1255,7 +1255,7 @@ yyreduce:
     {
         *ast_root_out = (yyvsp[0].node);
     }
-#line 1259 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1259 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 3:
@@ -1264,7 +1264,7 @@ yyreduce:
         (yyvsp[-1].section)->next = (yyvsp[0].node);
         (yyval.node) = (yyvsp[-1].section);
     }
-#line 1268 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1268 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 4:
@@ -1273,7 +1273,7 @@ yyreduce:
         (yyvsp[-1].output)->next = (yyvsp[0].node);
         (yyval.node) = (yyvsp[-1].output);
     }
-#line 1277 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1277 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 5:
@@ -1282,7 +1282,7 @@ yyreduce:
         (yyvsp[-1].directive)->next = (yyvsp[0].node);
         (yyval.node) = (yyvsp[-1].directive);
     }
-#line 1286 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1286 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 6:
@@ -1291,7 +1291,7 @@ yyreduce:
         (yyvsp[-1].block)->next = (yyvsp[0].node);
         (yyval.node) = (yyvsp[-1].block);
     }
-#line 1295 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1295 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 7:
@@ -1299,7 +1299,7 @@ yyreduce:
     {
         (yyval.node) = nullptr;
     }
-#line 1303 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1303 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 8:
@@ -1310,7 +1310,7 @@ yyreduce:
         (yyval.section) = new ShadingFileASTSection(section_name);
         (yyval.section)->first_child = section_internals;
     }
-#line 1314 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1314 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 9:
@@ -1321,7 +1321,7 @@ yyreduce:
         (yyval.block) = new ShadingFileASTBlock(block_name);
         (yyval.block)->first_entry = block_entries;
     }
-#line 1325 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1325 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 10:
@@ -1329,7 +1329,7 @@ yyreduce:
     {
         (yyval.block_entry) = nullptr;
     }
-#line 1333 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1333 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 11:
@@ -1338,7 +1338,7 @@ yyreduce:
         (yyvsp[-1].block_entry)->next_entry = (yyvsp[0].block_entry);
         (yyval.block_entry) = (yyvsp[-1].block_entry);
     }
-#line 1342 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1342 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 12:
@@ -1349,7 +1349,7 @@ yyreduce:
         const char *name = (yyvsp[-1].string);
         (yyval.block_entry) = new ShadingFileASTBlockEntry(type, name);
     }
-#line 1353 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1353 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 13:
@@ -1362,7 +1362,7 @@ yyreduce:
         const unsigned int array_length = (yyvsp[-2].unsigned_int);
         (yyval.block_entry) = new ShadingFileASTBlockEntry(type, name, array_length);
     }
-#line 1366 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1366 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 14:
@@ -1371,7 +1371,7 @@ yyreduce:
         const char *directive_text = (yyvsp[0].string);
         (yyval.directive) = new ShadingFileASTDirective(directive_text);
     }
-#line 1375 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1375 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 15:
@@ -1383,7 +1383,7 @@ yyreduce:
         const char *snippet = (yyvsp[-1].string);
         (yyval.output) = new ShadingFileASTOutput(type, name, parameter_list, snippet);
     }
-#line 1387 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1387 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 16:
@@ -1391,7 +1391,7 @@ yyreduce:
     {
         (yyval.parameter) = nullptr;
     }
-#line 1395 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1395 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 17:
@@ -1399,7 +1399,7 @@ yyreduce:
     {
         (yyval.parameter) = (yyvsp[0].parameter);
     }
-#line 1403 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1403 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 18:
@@ -1408,7 +1408,7 @@ yyreduce:
         (yyvsp[-2].parameter)->next = (yyvsp[0].parameter);
         (yyval.parameter) = (yyvsp[-2].parameter);
     }
-#line 1412 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1412 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 19:
@@ -1418,7 +1418,7 @@ yyreduce:
         const char *name = (yyvsp[0].string);
         (yyval.parameter) = new ShadingFileASTParameter(type, name, SHADING_PARAMETER_IN);
     }
-#line 1422 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1422 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
   case 20:
@@ -1428,11 +1428,11 @@ yyreduce:
         const char *name = (yyvsp[0].string);
         (yyval.parameter) = new ShadingFileASTParameter(type, name, SHADING_PARAMETER_UNIFORM);
     }
-#line 1432 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1432 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
     break;
 
 
-#line 1436 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
+#line 1436 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

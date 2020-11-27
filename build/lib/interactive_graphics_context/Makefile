@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
+CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -70,8 +70,8 @@ install/strip/fast: preinstall/fast
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/bin/cmake-gui -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -126,14 +126,14 @@ install/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles /home/cosc/student/lcp35/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/progress.marks
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles 0
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles /home/lucas/computer_graphics/cg_sandbox/build/lib/interactive_graphics_context/CMakeFiles/progress.marks
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/clean
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/clean
 .PHONY : clean
 
 # The main clean target
@@ -143,22 +143,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/preinstall
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/preinstall
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/rule:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/rule
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f CMakeFiles/Makefile2 lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/rule
 .PHONY : lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/rule
 
 # Convenience name for target.
@@ -168,7 +168,7 @@ interactive_graphics_context: lib/interactive_graphics_context/CMakeFiles/intera
 
 # fast build rule for target.
 interactive_graphics_context/fast:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build
 .PHONY : interactive_graphics_context/fast
 
 input.o: input.cpp.o
@@ -177,7 +177,7 @@ input.o: input.cpp.o
 
 # target to build an object file
 input.cpp.o:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.o
 .PHONY : input.cpp.o
 
 input.i: input.cpp.i
@@ -186,7 +186,7 @@ input.i: input.cpp.i
 
 # target to preprocess a source file
 input.cpp.i:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.i
 .PHONY : input.cpp.i
 
 input.s: input.cpp.s
@@ -195,7 +195,7 @@ input.s: input.cpp.s
 
 # target to generate assembly for a file
 input.cpp.s:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/input.cpp.s
 .PHONY : input.cpp.s
 
 interactive_graphics_context.o: interactive_graphics_context.cpp.o
@@ -204,7 +204,7 @@ interactive_graphics_context.o: interactive_graphics_context.cpp.o
 
 # target to build an object file
 interactive_graphics_context.cpp.o:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o
 .PHONY : interactive_graphics_context.cpp.o
 
 interactive_graphics_context.i: interactive_graphics_context.cpp.i
@@ -213,7 +213,7 @@ interactive_graphics_context.i: interactive_graphics_context.cpp.i
 
 # target to preprocess a source file
 interactive_graphics_context.cpp.i:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.i
 .PHONY : interactive_graphics_context.cpp.i
 
 interactive_graphics_context.s: interactive_graphics_context.cpp.s
@@ -222,7 +222,7 @@ interactive_graphics_context.s: interactive_graphics_context.cpp.s
 
 # target to generate assembly for a file
 interactive_graphics_context.cpp.s:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.s
 .PHONY : interactive_graphics_context.cpp.s
 
 platform/platform_glfw.o: platform/platform_glfw.cpp.o
@@ -231,7 +231,7 @@ platform/platform_glfw.o: platform/platform_glfw.cpp.o
 
 # target to build an object file
 platform/platform_glfw.cpp.o:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o
 .PHONY : platform/platform_glfw.cpp.o
 
 platform/platform_glfw.i: platform/platform_glfw.cpp.i
@@ -240,7 +240,7 @@ platform/platform_glfw.i: platform/platform_glfw.cpp.i
 
 # target to preprocess a source file
 platform/platform_glfw.cpp.i:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.i
 .PHONY : platform/platform_glfw.cpp.i
 
 platform/platform_glfw.s: platform/platform_glfw.cpp.s
@@ -249,7 +249,7 @@ platform/platform_glfw.s: platform/platform_glfw.cpp.s
 
 # target to generate assembly for a file
 platform/platform_glfw.cpp.s:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(MAKE) -f lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/build.make lib/interactive_graphics_context/CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.s
 .PHONY : platform/platform_glfw.cpp.s
 
 # Help Target
@@ -285,6 +285,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

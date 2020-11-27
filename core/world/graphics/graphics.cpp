@@ -390,18 +390,21 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex, 0);
-
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "Incomplete framebuffer when initializing shadow maps.\n");
         exit(EXIT_FAILURE);
     }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
     DirectionalLightShadowMap sm;
     sm.width = width;
@@ -463,23 +466,37 @@ void Graphics::update_lights()
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
             float depth = maxs.z() - mins.z();
-            vec3 bottom_left = light_transform->position + X*mins.x() + Y*mins.y() + Z*mins.z();
-            float inv_w = 1.0 / width;
-            float inv_h = 1.0 / height;
-            float inv_d = 1.0 / depth;
+            vec3 bottom_left_shift = X*mins.x() + Y*mins.y() + Z*mins.z();
+            vec3 bottom_left = light_transform->position + bottom_left_shift;
+            float inv_w = 1.f / width;
+            float inv_h = 1.f / height;
+            float inv_d = 1.f / depth;
+
+            vec3 middle = light_transform->position + 0.5*X*(mins.x()+maxs.x()) + 0.5*Y*(mins.y()+maxs.y());
+
+            sm.shadow_matrix = mat4x4::to_rigid_frame(middle, X, Y, Z)
+                                 * mat4x4::orthogonal_projection(-0.5*width, 0.5*width, -0.5*height, 0.5*height, 0, depth);
+
+
             // Compute the shadow coordinate matrix. This transforms points in world space to texture space of the shadow map,
             // with depth being in the range of the box.
-            sm.shadow_matrix = mat4x4::row_major(
-                X.x() * inv_w, X.y() * inv_w, X.z() * inv_w, 0,
-                Y.x() * inv_h, Y.y() * inv_h, Y.z() * inv_h, 0,
-                Z.x() * inv_d, Z.y() * inv_d, Z.z() * inv_d, 0,
-                0,0,0, 1
-            ) * mat4x4::row_major(
-                1,0,0,-bottom_left.x(),
-                0,1,0,-bottom_left.y(),
-                0,0,1,-bottom_left.z(),
-                0,0,0,1
-            );
+            // sm.shadow_matrix =
+            // mat4x4::row_major(
+            //     1,0,0,bottom_left_shift.x() * width,
+            //     0,1,0,bottom_left_shift.y() * height,
+            //     0,0,1,bottom_left_shift.z() * depth,
+            //     0,0,0,1
+            // ) * mat4x4::row_major(
+            //     X.x() * inv_w, X.y() * inv_w, X.z() * inv_w, 0,
+            //     Y.x() * inv_h, Y.y() * inv_h, Y.z() * inv_h, 0,
+            //     Z.x() * inv_d, Z.y() * inv_d, Z.z() * inv_d, 0,
+            //     0,0,0, 1
+            // ) * mat4x4::row_major(
+            //     1,0,0,-light_transform->position.x(),
+            //     0,1,0,-light_transform->position.y(),
+            //     0,0,1,-light_transform->position.z(),
+            //     0,0,0,1
+            // );
             std::cout << sm.shadow_matrix << "\n";
             // Render surfaces into the shadow map.
             // When rendering, the rectangle projected to needs to range from [-1,-1] to [1,1].
@@ -492,6 +509,10 @@ void Graphics::update_lights()
             ) * sm.shadow_matrix;
             std::cout << shadow_vp_matrix << "\n";
             shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_vp_matrix);
+            //--test shadow map by rendering from the camera.
+            // mat4x4 camera_vp_matrix = camera->view_projection_matrix();
+            // shadow_map_shading_model.properties.set_mat4x4("vp_matrix", camera_vp_matrix);
+
 
             vec3 bounding_box[8];
             vec3 minsmaxs[2] = {mins, maxs};
@@ -504,8 +525,9 @@ void Graphics::update_lights()
                 }
             }
 
-            glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
             glViewport(0, 0, sm.width, sm.height);
+            glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+            glClear(GL_DEPTH_BUFFER_BIT);
             render_drawables(shadow_map_shading_model);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(viewport_x, viewport_y, viewport_width, viewport_height); // Restore the previous viewport.

@@ -347,7 +347,7 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     
-if (0) {
+if (1) {
     Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
     obj.get<Transform>()->position = vec3(0.7,0,0);
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
@@ -366,10 +366,10 @@ if (1) {
     main_light = light.get<DirectionalLight>();
 }
 {
-    Entity light = world.entities.add();
-    light.add<Transform>(0,0,0);
-    light.add<DirectionalLight>(vec3(1,0,1), 1);
-    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,0,1));
+    // Entity light = world.entities.add();
+    // light.add<Transform>(0,0,0);
+    // light.add<DirectionalLight>(vec3(1,0,1), 1);
+    // world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,0,1));
 }
 
     

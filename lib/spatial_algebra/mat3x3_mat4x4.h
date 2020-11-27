@@ -167,6 +167,11 @@ struct mat4x4 {
         return mat4x4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
     }
 
+    // Transformations.
+    static mat4x4 orthogonal_projection(float min_x, float max_x, float min_y, float max_y, float min_z, float max_z);
+    static mat4x4 to_rigid_frame(vec3 origin, vec3 X, vec3 Y, vec3 Z);
+    static mat4x4 translation(vec3 amount);
+
     mat4x4 inverse() const;
 
 };

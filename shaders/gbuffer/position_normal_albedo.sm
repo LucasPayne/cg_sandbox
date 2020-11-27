@@ -4,21 +4,21 @@ block properties {
     mat4x4 vp_matrix;
 }
 section geom_post {
-    out vec4 gl_Position(in vec4 world_position) {
+    out vec4 gl_Position(in vec3 f_world_position) {
     GLSL
-        return vp_matrix * world_position;
+        return vp_matrix * vec4(f_world_position, 1);
     END
     }
 }
 section frag_post {
-    out vec4 gbuffer_position(in vec3 f_position) {
+    out vec4 gbuffer_position(in vec3 f_world_position) {
     GLSL
-        return model_matrix * vec4(f_position, 1);
+        return vec4(f_world_position, 1);
     END
     }
-    out vec4 gbuffer_normal(in vec3 f_normal) {
+    out vec4 gbuffer_normal(in vec3 f_world_normal) {
     GLSL
-        return vec4(f_normal,1);
+        return vec4(f_world_normal, 1);
     END
     }
     out vec4 gbuffer_albedo(in vec4 f_albedo) {

@@ -57,6 +57,11 @@ struct CameraController : public IBehaviour {
                 lock_angle();
             }
         }
+        if (e.action == MOUSE_SCROLL) {
+            strafe_speed *= 1.f + (dt * e.scroll_y);
+            forward_speed *= 1.f + (dt * e.scroll_y);
+            lift_speed *= 1.f + (dt * e.scroll_y);
+        }
     }
     void update() {
         auto t = entity.get<Transform>();
@@ -101,9 +106,9 @@ struct CameraController : public IBehaviour {
         t->rotation = q2 * q1;
     }
     void init() {
-        strafe_speed = 1;
-        forward_speed = 1;
-        lift_speed = 1;
+        strafe_speed = 2;
+        forward_speed = 2;
+        lift_speed = 2;
         key_view_speed_horizontal = 2;
         key_view_speed_vertical = 1.5;
         azimuth = 0;

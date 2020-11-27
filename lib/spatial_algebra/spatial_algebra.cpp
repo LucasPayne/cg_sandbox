@@ -158,14 +158,14 @@ mat4x4 mat4x4::to_rigid_frame(vec3 origin, vec3 X, vec3 Y, vec3 Z)
 
 mat4x4 mat4x4::orthogonal_projection(float min_x, float max_x, float min_y, float max_y, float min_z, float max_z)
 {
-    // Maps the x and y ranges to [-1, 1] and the z range to [0, 1].
+    // Maps the x, y, z ranges to [-1, 1].
     // This orthogonal projection is axis aligned. Compose with a rigid transform to get an arbitrary orthogonal projection.
     return mat4x4::row_major(
         2.f / (max_x - min_x), 0, 0, 0,
         0, 2.f / (max_y - min_y), 0, 0,
-        0, 0, 1.f / (max_z - min_z), 0,
+        0, 0, 2.f / (max_z - min_z), 0,
         0,0,0,1
-    ) * mat4x4::translation(vec3(-0.5*(min_x+max_x), -0.5*(min_y+max_y), -min_z));
+    ) * mat4x4::translation(vec3(-0.5*(min_x+max_x), -0.5*(min_y+max_y), -0.5*(min_z+max_z)));
 }
 
 mat4x4 mat4x4::scale(float x, float y, float z)
@@ -177,3 +177,15 @@ mat4x4 mat4x4::scale(float x, float y, float z)
         0,0,0,1
     );
 }
+mat3x3 Quaternion::matrix()
+{
+    auto inv = inverse();
+    Quaternion q1 = *this * Quaternion(0,1,0,0) * inv;
+    Quaternion q2 = *this * Quaternion(0,0,1,0) * inv;
+    Quaternion q3 = *this * Quaternion(0,0,0,1) * inv;
+
+    return mat3x3(q1.i(), q1.j(), q1.k(),
+                  q2.i(), q2.j(), q2.k(),
+                  q3.i(), q3.j(), q3.k());
+};
+

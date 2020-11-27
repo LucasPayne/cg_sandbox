@@ -7,6 +7,9 @@ BEGIN_ENTRIES(Drawable)
 END_ENTRIES()
 
 
+
+
+
 mat4x4 Drawable::model_matrix()
 {
     mat4x4 matrix = entity.get<Transform>()->matrix();
@@ -15,4 +18,10 @@ mat4x4 Drawable::model_matrix()
     matrix.entry(1,3) -= center.y();
     matrix.entry(2,3) -= center.z();
     return matrix;
+}
+
+
+mat3x3 Drawable::normal_matrix()
+{
+    return entity.get<Transform>()->rotation.matrix();
 }

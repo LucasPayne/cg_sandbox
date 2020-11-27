@@ -14,6 +14,7 @@ GLSLType GLSLType::glsl_types[] = {
     {4, "bool", 1, 1},
     {5, "int", 4, 4},
     {6, "mat4x4", 64, 16},
+    {7, "mat3x3", 48, 16},
 };
 #undef TYPE
 

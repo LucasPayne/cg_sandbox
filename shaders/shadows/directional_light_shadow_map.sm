@@ -4,9 +4,9 @@ block properties {
     mat4x4 vp_matrix;
 }
 section geom_post {
-    out vec4 gl_Position(in vec4 world_position) {
+    out vec4 gl_Position(in vec3 f_world_position) {
     GLSL
-        return vp_matrix * world_position;
+        return vp_matrix * vec4(f_world_position, 1);
     END
     }
 }

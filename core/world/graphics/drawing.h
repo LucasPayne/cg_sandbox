@@ -62,6 +62,11 @@ struct PropertySheet {
         *((mat4x4 *) &data[offset]) = M;
         in_sync = false;
     }
+    inline void set_mat3x3(const std::string &name, const mat3x3 &M) {
+        size_t offset = block->entry_layout[name].offset;
+        *((mat3x3 *) &data[offset]) = M;
+        in_sync = false;
+    }
 
     inline void destroy() {
         glDeleteBuffers(1, &buffer_id);

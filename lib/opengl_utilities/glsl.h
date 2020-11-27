@@ -18,7 +18,7 @@ struct GLSLType {
 
     // All glsl types are defined in a global array. This holds information the application might need
     // about a glsl type.
-    static GLSLType glsl_types[7]; //!-IMPORTANT-! Make this the correct length.
+    static GLSLType glsl_types[8]; //!-IMPORTANT-! Make this the correct length.
     static GLSLType from_name(const std::string &name);
     static GLSLType from_ID(GLSLTypeID id);
 };

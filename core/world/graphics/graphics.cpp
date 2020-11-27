@@ -158,7 +158,9 @@ void Graphics::render_drawables(ShadingModelInstance shading_model)
 {
     for (auto drawable : world.entities.aspects<Drawable>()) {
         mat4x4 model_matrix = drawable->model_matrix();
+        mat3x3 normal_matrix = drawable->normal_matrix();
         drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
+        drawable->geometric_material.properties.set_mat3x3("normal_matrix", normal_matrix);
         draw(drawable->geometric_material, drawable->material, shading_model);
     }
 }
@@ -436,7 +438,7 @@ void Graphics::update_lights()
             
             // Bound the camera frustum section with a box, elongated in the direction of the light.
             float extent_a = 0;
-            float extent_b = 0.01;
+            float extent_b = 0.05;
             vec3 frustum_points[8] = {
                 camera->frustum_point(-1,-1,extent_a),
                 camera->frustum_point(1,-1,extent_a),
@@ -447,7 +449,6 @@ void Graphics::update_lights()
                 camera->frustum_point(1,1,extent_b),
                 camera->frustum_point(-1,1,extent_b),
             };
-            for (int i = 0; i < 8; i++) std::cout << frustum_points[i] << "\n";
 
             vec3 X = light_transform->right();
             vec3 Y = light_transform->up();
@@ -457,7 +458,6 @@ void Graphics::update_lights()
                 vec3 d = frustum_points[i];
                 transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
             }
-            for (int i = 0; i < 8; i++) std::cout << transformed_frustum[i] << "\n";
             vec3 mins = transformed_frustum[0];
             vec3 maxs = transformed_frustum[0];
             for (int i = 1; i < 8; i++) {
@@ -469,18 +469,23 @@ void Graphics::update_lights()
                     }
                 }
             }
+            // Extend the box to include all possible shadow casters.
+            for (auto drawable : world.entities.aspects<Drawable>()) {
+                auto transform = drawable.sibling<Transform>();
+                float extend = vec3::dot(transform->position + drawable->center, Z) - drawable->bounding_radius;
+                if (extend < mins.z()) {
+                    mins.z() = extend;
+                }
+            }
+
+
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
             float depth = maxs.z() - mins.z();
 
-            std::cout << "mins " << mins << "\n";
-            std::cout << "maxs " << maxs << "\n";
-
             vec3 min_point = mins.x()*X + mins.y()*Y + mins.z()*Z;
             mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
                                  * mat4x4::to_rigid_frame(min_point, X, Y, Z);
-            std::cout << shadow_matrix << "\n";
-            std::cout << min_point << "\n";
             shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
             sm.shadow_matrix = shadow_matrix;
 

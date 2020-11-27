@@ -30,10 +30,10 @@ struct LightRotate : public IBehaviour {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
         world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0.5,0.5), 0.28,0.28, 3, vec4(0,0,0,1));
         if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
-            theta -= 0.3f * dt;
+            theta -= 1.f * dt;
         }
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
-            theta += 0.3f * dt;
+            theta += 1.f * dt;
         }
     }
 };
@@ -69,9 +69,8 @@ App::App(World &_world) : world{_world}
             obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
         }
     }
-    // obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
-    // obj.get<Transform>()->scale = 50;
-    // obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
+    Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
     
     Entity light = world.entities.add();
     light.add<Transform>(0,0,0);
@@ -155,16 +154,18 @@ void App::keyboard_handler(KeyboardEvent e)
     check_quit_key(e, KEY_Q);
 
     if (e.action == KEYBOARD_PRESS) {
+        float extent_a = 0.f;
+        float extent_b = 0.05f;
         if (e.key.code == KEY_O) {
             vec3 _frustum_points[8] = {
-                main_camera->frustum_point(-1,-1,0),
-                main_camera->frustum_point(1,-1,0),
-                main_camera->frustum_point(1,1,0),
-                main_camera->frustum_point(-1,1,0),
-                main_camera->frustum_point(-1,-1,0.01),
-                main_camera->frustum_point(1,-1,0.01),
-                main_camera->frustum_point(1,1,0.01),
-                main_camera->frustum_point(-1,1,0.01),
+                main_camera->frustum_point(-1,-1,extent_a),
+                main_camera->frustum_point(1,-1,extent_a),
+                main_camera->frustum_point(1,1,extent_a),
+                main_camera->frustum_point(-1,1,extent_a),
+                main_camera->frustum_point(-1,-1,extent_b),
+                main_camera->frustum_point(1,-1,extent_b),
+                main_camera->frustum_point(1,1,extent_b),
+                main_camera->frustum_point(-1,1,extent_b),
             };
             for (int i = 0; i < 8; i++) {
                 frustum_points[i] = _frustum_points[i];

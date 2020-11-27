@@ -39,6 +39,7 @@ struct Quaternion {
         return Quaternion(-scalar(), -i(), -j(), -k());
     }
 
+    mat3x3 matrix();
 
     /*--------------------------------------------------------------------------------
         Quaternion inverse.

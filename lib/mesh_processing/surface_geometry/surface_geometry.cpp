@@ -71,7 +71,6 @@ void SurfaceGeometry::write_OFF(std::ostream &out)
 
 
 
-// Add the geometry of the given model to the surface.
 void SurfaceGeometry::add_model(MLModel &model)
 {
     std::vector<Vertex> new_vertices(model.num_vertices);
@@ -96,31 +95,36 @@ void SurfaceGeometry::read_OFF(std::istream &in)
 }
 
 
-MLModel SurfaceGeometry::to_model(bool use_triangle_normals)
+MLModel SurfaceGeometry::to_model()
 {
-    // Vertex indices in the ElementPool sense are not necessarily contiguous.
-    // So, a temporary attachment is used to give contiguous indices to the vertices.
-    auto vertex_indices = VertexAttachment<uint32_t>(mesh);
+    MLModel model;
+    model.name = "N/A";
+    model.num_vertices = 3 * num_faces();
+    model.positions = std::vector<vec3>(model.num_vertices);
+    model.normals = std::vector<vec3>(model.num_vertices);
+    model.has_normals = true;
+    model.num_triangles = num_faces();
+    model.triangles = std::vector<MLModelTriangle>(model.num_triangles);
+    model.has_triangles = true;
 
-    out << "OFF\n";
-    out << mesh.num_vertices() << " " << mesh.num_faces() << " 0\n";
-    out << std::fixed << std::setprecision(6);
-    int index = 0;
-    for (auto vertex : mesh.vertices()) {
-        vertex_indices[vertex] = index; // Give the vertices contiguous indices.
-        vec3 position = vertex_positions[vertex];
-        out << position.x() << " " << position.y() << " " << position.z() << "\n";
-        index ++;
-    }
+    int i = 0;
     for (auto face : mesh.faces()) {
-        out << face.num_vertices();
+        if (face.num_vertices() != 3) {
+            log_error("[surface_geometry] Cannot convert non-triangular mesh to an MLModel.");
+            exit(EXIT_FAILURE);
+        }
         auto start = face.halfedge();
         auto he = start;
+        int j = 0;
+        vec3 normal = face_normals[face];
         do {
-            uint32_t vertex_index = vertex_indices[he.vertex()];
-            out << " " << vertex_index;
+            model.positions[3*i + j] = vertex_positions[he.vertex()];
+            model.normals[3*i + j] = normal;
             he = he.next();
+            j += 1;
         } while (start != he);
-        out << "\n";
+        model.triangles[i] = MLModelTriangle(3*i+0, 3*i+1, 3*i+2);
+        i += 1;
     }
+    return model;
 }

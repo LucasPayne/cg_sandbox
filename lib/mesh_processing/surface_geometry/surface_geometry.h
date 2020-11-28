@@ -36,12 +36,16 @@ public:
 
 
     // model_loader library related methods.
+
+    // Add the geometry of the given model to the surface.
     void add_model(MLModel &model);
 
     // Input/output.
     void write_OFF(std::ostream &out);
     void read_OFF(std::istream &in);
 
+    // Convert the SurfaceGeometry into a triangle-soup model with per-facet normals.
+    MLModel to_model();
 };
 
 

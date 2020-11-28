@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-static void log(const char *format, ...)
+
+
+[[maybe_unused]] static void log(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -13,7 +15,7 @@ static void log(const char *format, ...)
     va_end(args);
 }
 
-static void log_error(const char *format, ...)
+[[maybe_unused]] static void log_error(const char *format, ...)
 {
     va_list args;
     va_start(args, format);

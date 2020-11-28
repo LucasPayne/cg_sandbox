@@ -6,5 +6,6 @@
 #include "graphics_resources/vertex_arrays.h"
 #include "world/resource_cache.h"
 
+bool MLModel_to_VertexArrayData(MLModel &model, VertexArrayData &va);
 
 #endif // MODEL_ASSETS_H

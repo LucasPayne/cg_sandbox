@@ -111,7 +111,7 @@ void MLModel::compute_phong_normals_uniformly_weighted()
         vec3 a = positions[index_a];
         vec3 b = positions[index_b];
         vec3 c = positions[index_c];
-        vec3 n = vec3::cross(b - a, c - a).normalized();
+        vec3 n = -vec3::cross(b - a, c - a).normalized();
         normals[index_a] += n;
         normals[index_b] += n;
         normals[index_c] += n;
@@ -137,7 +137,7 @@ void MLModel::compute_phong_normals_angle_weighted()
         vec3 a = positions[index_a];
         vec3 b = positions[index_b];
         vec3 c = positions[index_c];
-        vec3 n = vec3::cross(b - a, c - a).normalized();
+        vec3 n = -vec3::cross(b - a, c - a).normalized();
 
         float theta_a = fabs(acos(vec3::dot((b - a).normalized(), (c - a).normalized())));
         float theta_b = fabs(acos(vec3::dot((c - b).normalized(), (a - b).normalized())));

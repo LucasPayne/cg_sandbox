@@ -69,6 +69,7 @@ struct MLModel {
     // Model post-processing.
     void compute_phong_normals_uniformly_weighted();
     void compute_phong_normals_angle_weighted();
+    inline void compute_phong_normals() { compute_phong_normals_angle_weighted(); } // default
     void invert_winding_order();
 
     static MLModel load(ModelFileFormat file_format, std::istream &in, MLLoadFlags flags = 0);

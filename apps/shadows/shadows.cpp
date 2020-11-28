@@ -72,11 +72,25 @@ App::App(World &_world) : world{_world}
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
 
-    obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
-    obj.get<Transform>()->position = vec3(0,0,0);
-    obj.get<Transform>()->scale = 10;
+    // obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
+    // obj.get<Transform>()->position = vec3(0,0,0);
+    // obj.get<Transform>()->scale = 10;
+    // obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,0,0,1);
+    // obj.get<Drawable>()->shadow_caster = false;
+    SurfaceGeometry floor;
+    auto a = floor.add_vertex(-1,0,-1);
+    auto b = floor.add_vertex(1,0,-1);
+    auto c = floor.add_vertex(1,0,1);
+    auto d = floor.add_vertex(-1,0,1);
+    floor.add_triangle(a, b, c);
+    floor.add_triangle(a, c, d);
+    auto floor_model = floor.to_model();
+    obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,0,0,1);
     obj.get<Drawable>()->shadow_caster = false;
+    obj.get<Transform>()->scale = 100;
+    obj.get<Transform>()->position = vec3(0,0.15,0);
+    
     
     Entity light = world.entities.add();
     light.add<Transform>(0,0,0);

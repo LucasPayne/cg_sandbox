@@ -25,3 +25,11 @@ mat3x3 Drawable::normal_matrix()
 {
     return entity.get<Transform>()->rotation.matrix();
 }
+
+
+Sphere Drawable::bounding_sphere()
+{
+    vec3 origin = (model_matrix() * vec4(raw_bounding_sphere.origin,1)).xyz();
+    float radius = raw_bounding_sphere.radius * entity.get<Transform>()->scale;
+    return Sphere(origin, radius);
+}

@@ -25,6 +25,32 @@ struct Sphere {
     {}
 };
 
+struct BoundingBox {
+    vec3 mins;
+    vec3 maxs;
+    BoundingBox() :
+        mins{vec3(INFINITY)}, maxs{vec3(-INFINITY)}
+    {}
+    BoundingBox(vec3 _mins, vec3 _maxs) :
+        mins{_mins}, maxs{_maxs}
+    {}
+    BoundingBox(std::vector<vec3> points);
+
+    inline vec3 extents() const {
+        return vec3(maxs.x() - mins.x(), maxs.y() - mins.y(), maxs.z() - mins.z());
+    }
+
+    inline Sphere bounding_sphere() const {
+        vec3 origin = 0.5*mins + 0.5*maxs;
+        float radius = (0.5*extents()).length();
+        return Sphere(origin, radius);
+    }
+
+    inline vec3 contains(vec3 p) {
+        return p >= mins && p <= maxs;
+    }
+};
+
 
 struct Ray {
     vec3 origin;

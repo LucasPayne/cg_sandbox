@@ -71,11 +71,17 @@ App::App(World &_world) : world{_world}
     }
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
+
+    obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position = vec3(0,0,0);
+    obj.get<Transform>()->scale = 10;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,0,0,1);
+    obj.get<Drawable>()->shadow_caster = false;
     
     Entity light = world.entities.add();
     light.add<Transform>(0,0,0);
     light.add<DirectionalLight>(vec3(1,1,1), 1.5);
-    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,1,0));
+    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0.2,-1,0.3));
     main_light = light.get<DirectionalLight>();
 }
 

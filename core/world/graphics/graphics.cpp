@@ -386,8 +386,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 1024;
-    int height = 1024;
+    int width = 2048;
+    int height = 2048;
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
@@ -469,15 +469,52 @@ void Graphics::update_lights()
                     }
                 }
             }
-            // Extend the box to include all possible shadow casters.
+            // Shrink the box in X and Y, and max Z, to bound all drawables. This increases the density of the shadow map.
+            vec3 drawable_maxs = mins;
+            vec3 drawable_mins = maxs;
             for (auto drawable : world.entities.aspects<Drawable>()) {
-                auto transform = drawable.sibling<Transform>();
-                float extend = vec3::dot(transform->position + drawable->center, Z) - drawable->bounding_radius;
-                if (extend < mins.z()) {
-                    mins.z() = extend;
+                if (!drawable->shadow_caster) continue;
+                auto s = drawable->bounding_sphere();
+                vec3 p = vec3(vec3::dot(s.origin, X),
+                              vec3::dot(s.origin, Y),
+                              vec3::dot(s.origin, Z));
+                float r = s.radius;
+	        if (   p.x() + r > mins.x() && p.x() - r < maxs.x()
+                    && p.y() + r > mins.y() && p.y() - r < maxs.y()
+                    && p.z() + r > mins.z() && p.z() - r < maxs.z()) {
+                    for (int i = 0; i < 3; i++) {
+                        if (p[i] + r > drawable_maxs[i]) drawable_maxs[i] = p[i] + r;
+                        if (p[i] - r < drawable_mins[i]) drawable_mins[i] = p[i] - r;
+                    }
                 }
             }
+            for (int i = 0; i < 3; i++) {
+                drawable_maxs[i] = fmin(drawable_maxs[i], maxs[i]);
+                drawable_mins[i] = fmax(drawable_mins[i], mins[i]);
+            }
 
+            // Only update the bounds if there were any drawables, otherwise there will be issues with a degenerate projection.
+            for (int i = 0; i < 3; i++) {
+                if (drawable_mins[i] < drawable_maxs[i]) {
+                    maxs[i] = drawable_maxs[i];
+                    mins[i] = drawable_mins[i];
+                }
+            }
+            // Extend the box to include all possible shadow casters.
+            for (auto drawable : world.entities.aspects<Drawable>()) {
+                if (!drawable->shadow_caster) continue;
+                auto s = drawable->bounding_sphere();
+                vec3 p = vec3(vec3::dot(s.origin, X),
+                              vec3::dot(s.origin, Y),
+                              vec3::dot(s.origin, Z));
+                float r = s.radius;
+                // Extent the box to possible shadow casters.
+                if (p.z() - r < mins.z()) {
+                    if (p.x() + r > mins.x() && p.x() - r < maxs.x() && p.y() + r > mins.y() && p.y() - r < maxs.y()) {
+                        mins.z() = p.z() - r;
+                    }
+                }
+            }
 
             float width = maxs.x() - mins.x();
             float height = maxs.y() - mins.y();
@@ -488,18 +525,6 @@ void Graphics::update_lights()
                                  * mat4x4::to_rigid_frame(min_point, X, Y, Z);
             shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
             sm.shadow_matrix = shadow_matrix;
-
-            vec3 bounding_box[8];
-            vec3 minsmaxs[2] = {mins, maxs};
-            for (int i = 0; i < 2; i++) {
-                for (int j = 0; j < 2; j++) {
-                    for (int k = 0; k < 2; k++) {
-                        vec3 p = X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
-                        bounding_box[4*i + 2*j + k] = p;
-                        std::cout << shadow_matrix * vec4(p, 1) << "\n";
-                    }
-                }
-            }
 
             glViewport(0, 0, sm.width, sm.height);
             glDisable(GL_SCISSOR_TEST);
@@ -513,6 +538,4 @@ void Graphics::update_lights()
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.
     shadow_map_shading_model.properties.destroy();
-
-    // getchar();
 }

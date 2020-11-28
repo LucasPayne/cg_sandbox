@@ -66,3 +66,14 @@ float saturate(float x, float minimum, float maximum)
     return x;
 }
 
+
+
+BoundingBox::BoundingBox(std::vector<vec3> points) : BoundingBox()
+{
+    for (auto p : points) {
+        for (int i = 0; i < 3; i++) {
+            if (p[i] < mins[i]) mins[i] = p[i];
+            if (p[i] > maxs[i]) maxs[i] = p[i];
+        }
+    }
+}

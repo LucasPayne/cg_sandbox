@@ -94,3 +94,33 @@ void SurfaceGeometry::read_OFF(std::istream &in)
     auto model = MLModel::load(MODEL_FILE_FORMAT_OFF, in);
     add_model(model);
 }
+
+
+MLModel SurfaceGeometry::to_model(bool use_triangle_normals)
+{
+    // Vertex indices in the ElementPool sense are not necessarily contiguous.
+    // So, a temporary attachment is used to give contiguous indices to the vertices.
+    auto vertex_indices = VertexAttachment<uint32_t>(mesh);
+
+    out << "OFF\n";
+    out << mesh.num_vertices() << " " << mesh.num_faces() << " 0\n";
+    out << std::fixed << std::setprecision(6);
+    int index = 0;
+    for (auto vertex : mesh.vertices()) {
+        vertex_indices[vertex] = index; // Give the vertices contiguous indices.
+        vec3 position = vertex_positions[vertex];
+        out << position.x() << " " << position.y() << " " << position.z() << "\n";
+        index ++;
+    }
+    for (auto face : mesh.faces()) {
+        out << face.num_vertices();
+        auto start = face.halfedge();
+        auto he = start;
+        do {
+            uint32_t vertex_index = vertex_indices[he.vertex()];
+            out << " " << vertex_index;
+            he = he.next();
+        } while (start != he);
+        out << "\n";
+    }
+}

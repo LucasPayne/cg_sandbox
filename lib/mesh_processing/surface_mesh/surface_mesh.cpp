@@ -372,7 +372,7 @@ Face SurfaceMesh::add_face(std::vector<Vertex> &vertices, bool been_flipped)
     for (unsigned int i = 0; i < n; i++) {
         auto he = get_halfedge(vertices[i], vertices[(i+1)%n]);
         if (!he.null()) {
-            printf("Halfedge already there for %u to %u.\n", i, (i+1)%n);
+            printf("Halfedge already there for %u to %lu.\n", i, (i+1)%n);
             connected[i] = true;
             halfedges[i] = he;
             if (!he.face().null()) {

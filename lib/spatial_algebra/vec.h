@@ -14,6 +14,7 @@ struct vec3 {
     vec3() {}
     static inline vec3 zero() { return vec3(0,0,0); }
     vec3(float x, float y, float z) : entries{x,y,z} {}
+    vec3(float val) : vec3(val, val, val) {}
 
     // Entry accessors
     inline float x() const { return entries[0]; }
@@ -139,6 +140,24 @@ inline vec3 operator*(const vec3 &v, const float &t) {
 }
 inline vec3 operator/(const vec3 &v, const float &t) {
     return vec3(v[0]/t, v[1]/t, v[2]/t);
+}
+
+// Pairwise comparison.
+inline bool operator>(const vec3 &a, const vec3 &b)
+{
+    return a.x() > b.x() && a.y() > b.y() && a.z() > b.z();
+}
+inline bool operator<(const vec3 &a, const vec3 &b)
+{
+    return a.x() < b.x() && a.y() < b.y() && a.z() < b.z();
+}
+inline bool operator>=(const vec3 &a, const vec3 &b)
+{
+    return a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z();
+}
+inline bool operator<=(const vec3 &a, const vec3 &b)
+{
+    return a.x() <= b.x() && a.y() <= b.y() && a.z() <= b.z();
 }
 
 
@@ -278,6 +297,23 @@ inline vec4 operator*(const vec4 &v, const float &t) {
 inline vec4 operator/(const vec4 &v, const float &t) {
     return vec4(v[0]/t, v[1]/t, v[2]/t, v[3]/t);
 }
+// Pairwise comparison.
+inline bool operator>(const vec4 &a, const vec4 &b)
+{
+    return a.x() > b.x() && a.y() > b.y() && a.z() > b.z() && a.w() > b.w();
+}
+inline bool operator<(const vec4 &a, const vec4 &b)
+{
+    return a.x() < b.x() && a.y() < b.y() && a.z() < b.z() && a.w() < b.w();
+}
+inline bool operator>=(const vec4 &a, const vec4 &b)
+{
+    return a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() && a.w() >= b.w();
+}
+inline bool operator<=(const vec4 &a, const vec4 &b)
+{
+    return a.x() <= b.x() && a.y() <= b.y() && a.z() <= b.z() && a.w() <= b.w();
+}
 
 
 /*--------------------------------------------------------------------------------
@@ -410,6 +446,24 @@ inline vec2 vec2::transform(vec2 origin, float theta) {
 }
 inline vec2 vec2::inverse_transform(vec2 origin, float theta) {
     return (*this - origin).rotate(-theta);
+}
+
+// Pairwise comparison.
+inline bool operator>(const vec2 &a, const vec2 &b)
+{
+    return a.x() > b.x() && a.y() > b.y();
+}
+inline bool operator<(const vec2 &a, const vec2 &b)
+{
+    return a.x() < b.x() && a.y() < b.y();
+}
+inline bool operator>=(const vec2 &a, const vec2 &b)
+{
+    return a.x() >= b.x() && a.y() >= b.y();
+}
+inline bool operator<=(const vec2 &a, const vec2 &b)
+{
+    return a.x() <= b.x() && a.y() <= b.y();
 }
 
 //--------------------------------------------------------------------------------

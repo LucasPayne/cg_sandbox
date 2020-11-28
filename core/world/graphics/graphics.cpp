@@ -158,9 +158,9 @@ void Graphics::render_drawables(ShadingModelInstance shading_model)
 {
     for (auto drawable : world.entities.aspects<Drawable>()) {
         mat4x4 model_matrix = drawable->model_matrix();
-        mat3x3 normal_matrix = drawable->normal_matrix();
+        mat4x4 normal_matrix = drawable->normal_matrix();
         drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
-        drawable->geometric_material.properties.set_mat3x3("normal_matrix", normal_matrix);
+        drawable->geometric_material.properties.set_mat4x4("normal_matrix", normal_matrix);
         draw(drawable->geometric_material, drawable->material, shading_model);
     }
 }
@@ -256,11 +256,9 @@ void Graphics::deferred_lighting()
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
             glBindTexture(GL_TEXTURE_2D, shadow_map.texture);
             glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
-            std::cout << "Aye " << shadow_map.shadow_matrix << "\n";
             glUniformMatrix4fv(program->uniform_location("shadow_matrix"), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrix);
 
-            vec3 direction = light.sibling<Transform>()->forward();
-            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &direction);
+            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
             glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
             glUniform1f(program->uniform_location("width"), light->width);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -432,7 +430,6 @@ void Graphics::update_lights()
 
     // Render shadow maps.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
-        auto light_transform = light.sibling<Transform>();
         for (auto camera : world.entities.aspects<Camera>()) {
             auto &sm = directional_light_data(light).shadow_map(camera);
             
@@ -450,9 +447,12 @@ void Graphics::update_lights()
                 camera->frustum_point(-1,1,extent_b),
             };
 
-            vec3 X = light_transform->right();
-            vec3 Y = light_transform->up();
-            vec3 Z = light_transform->forward();
+            vec3 Z = light->direction;
+            // Create a frame of reference.
+            // ---todo: This should be chosen to make the shadow maps denser.
+            vec3 X = vec3(light->direction.x() + 1, light->direction.y() - 1, light->direction.z() + 1);
+            X = (X - vec3::dot(X, Z) * Z).normalized();
+            vec3 Y = vec3::cross(X, Z);
             vec3 transformed_frustum[8];
             for (int i = 0; i < 8; i++) {
                 vec3 d = frustum_points[i];

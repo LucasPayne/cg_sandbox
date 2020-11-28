@@ -21,7 +21,7 @@ mat4x4 Drawable::model_matrix()
 }
 
 
-mat3x3 Drawable::normal_matrix()
+mat4x4 Drawable::normal_matrix()
 {
     return entity.get<Transform>()->rotation.matrix();
 }

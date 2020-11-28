@@ -13,28 +13,33 @@ Aspect<DirectionalLight> main_light;
 
 struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
-    vec3 axis;
-    vec3 X;
-    vec3 Z;
     float theta;
-    LightRotate(Aspect<DirectionalLight> _light, vec3 _axis) :
-        light{_light},
-        axis{_axis.normalized()}
+    LightRotate(Aspect<DirectionalLight> _light) :
+        light{_light}
     {
-        theta = M_PI;
+        theta = 0;
     }
     void update() {
-        auto t = light.sibling<Transform>();
-        t->rotation = Quaternion::from_axis_angle(axis, theta);
-
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
-        world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0.5,0.5), 0.28,0.28, 3, vec4(0,0,0,1));
+        world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
+
         if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
             theta -= 1.f * dt;
         }
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
             theta += 1.f * dt;
         }
+        light->direction = vec3(cos(theta), -2, sin(theta)).normalized();
+    }
+};
+
+struct Rotator : public IBehaviour {
+    float theta;
+    Rotator() : theta{0} {}
+    void update() {
+        theta += dt;
+        auto t = entity.get<Transform>();
+        t->rotation = Quaternion::from_axis_angle(vec3(0,1,0), theta);
     }
 };
 
@@ -58,7 +63,7 @@ float omega = 0.25;
 App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
-    cameraman.get<Transform>()->position = vec3(0,0,0);
+    cameraman.get<Transform>()->position = vec3(0,3,0);
     main_camera = cameraman.get<Camera>();
     
     for (int i = 0; i < 20; i++) {
@@ -71,6 +76,7 @@ App::App(World &_world) : world{_world}
     }
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
+    world.add<Rotator>(obj);
 
     // obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
     // obj.get<Transform>()->position = vec3(0,0,0);
@@ -93,9 +99,8 @@ App::App(World &_world) : world{_world}
     
     
     Entity light = world.entities.add();
-    light.add<Transform>(0,0,0);
-    light.add<DirectionalLight>(vec3(1,1,1), 1.5);
-    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0.2,-1,0.3));
+    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), 1.5);
+    world.add<LightRotate>(light, light.get<DirectionalLight>());
     main_light = light.get<DirectionalLight>();
 }
 
@@ -120,50 +125,55 @@ void App::loop()
         world.graphics.paint.chain(ps, ps.size(), vec4(0,0,0,1));
     }
 
-    auto light_transform = main_light.sibling<Transform>();
-    vec3 X = light_transform->right();
-    vec3 Y = light_transform->up();
-    vec3 Z = light_transform->forward();
-    {std::vector<vec3> line = {light_transform->position, light_transform->position+X};
-    world.graphics.paint.chain(line, line.size(), vec4(1,0,0,1));}
-    {std::vector<vec3> line = {light_transform->position, light_transform->position+Y};
-    world.graphics.paint.chain(line, line.size(), vec4(0,1,0,1));}
-    {std::vector<vec3> line = {light_transform->position, light_transform->position+Z};
-    world.graphics.paint.chain(line, line.size(), vec4(0,0,1,1));}
+    // auto light_transform = main_light.sibling<Transform>();
+    // vec3 X = light_transform->right();
+    // vec3 Y = light_transform->up();
+    // vec3 Z = light_transform->forward();
+    // {std::vector<vec3> line = {light_transform->position, light_transform->position+X};
+    // world.graphics.paint.chain(line, line.size(), vec4(1,0,0,1));}
+    // {std::vector<vec3> line = {light_transform->position, light_transform->position+Y};
+    // world.graphics.paint.chain(line, line.size(), vec4(0,1,0,1));}
+    // {std::vector<vec3> line = {light_transform->position, light_transform->position+Z};
+    // world.graphics.paint.chain(line, line.size(), vec4(0,0,1,1));}
 
-    vec3 transformed_frustum[8];
-    for (int i = 0; i < 8; i++) {
-        vec3 d = frustum_points[i];
-        transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
-    }
-    vec3 mins = transformed_frustum[0];
-    vec3 maxs = transformed_frustum[0];
-    for (int i = 1; i < 8; i++) {
-        for (int j = 0; j < 3; j++) {
-            if (transformed_frustum[i][j] < mins[j]) {
-                mins[j] = transformed_frustum[i][j];
-            } else if (transformed_frustum[i][j] > maxs[j]) {
-                maxs[j] = transformed_frustum[i][j];
-            }
-        }
-    }
-    vec3 bounding_box[8];
-    vec3 minsmaxs[2] = {mins, maxs};
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < 2; k++) {
-                vec3 p = X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
-                bounding_box[4*i + 2*j + k] = p;
-            }
-        }
-    }
-    for (int i = 0; i < 8; i++) {
-        world.graphics.paint.sphere(bounding_box[i], 0.1, vec4(0,1,1,1));
-    }
-    for (int i = 0; i < 4; i++) {
-        std::vector<vec3> ps = {bounding_box[i], bounding_box[i+4]};
-        world.graphics.paint.chain(ps, ps.size(), vec4(0,0.5,0.5,1));
-    }
+    // vec3 transformed_frustum[8];
+    // for (int i = 0; i < 8; i++) {
+    //     vec3 d = frustum_points[i];
+    //     transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
+    // }
+    // vec3 mins = transformed_frustum[0];
+    // vec3 maxs = transformed_frustum[0];
+    // for (int i = 1; i < 8; i++) {
+    //     for (int j = 0; j < 3; j++) {
+    //         if (transformed_frustum[i][j] < mins[j]) {
+    //             mins[j] = transformed_frustum[i][j];
+    //         } else if (transformed_frustum[i][j] > maxs[j]) {
+    //             maxs[j] = transformed_frustum[i][j];
+    //         }
+    //     }
+    // }
+    // vec3 bounding_box[8];
+    // vec3 minsmaxs[2] = {mins, maxs};
+    // for (int i = 0; i < 2; i++) {
+    //     for (int j = 0; j < 2; j++) {
+    //         for (int k = 0; k < 2; k++) {
+    //             vec3 p = X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
+    //             bounding_box[4*i + 2*j + k] = p;
+    //         }
+    //     }
+    // }
+    // for (int i = 0; i < 8; i++) {
+    //     world.graphics.paint.sphere(bounding_box[i], 0.1, vec4(0,1,1,1));
+    // }
+    // for (int i = 0; i < 4; i++) {
+    //     std::vector<vec3> ps = {bounding_box[i], bounding_box[i+4]};
+    //     world.graphics.paint.chain(ps, ps.size(), vec4(0,0.5,0.5,1));
+    // }
+
+    // View the G-buffer.
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)

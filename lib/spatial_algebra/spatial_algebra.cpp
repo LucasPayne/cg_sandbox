@@ -177,15 +177,16 @@ mat4x4 mat4x4::scale(float x, float y, float z)
         0,0,0,1
     );
 }
-mat3x3 Quaternion::matrix()
+mat4x4 Quaternion::matrix()
 {
     auto inv = inverse();
     Quaternion q1 = *this * Quaternion(0,1,0,0) * inv;
     Quaternion q2 = *this * Quaternion(0,0,1,0) * inv;
     Quaternion q3 = *this * Quaternion(0,0,0,1) * inv;
 
-    return mat3x3(q1.i(), q1.j(), q1.k(),
-                  q2.i(), q2.j(), q2.k(),
-                  q3.i(), q3.j(), q3.k());
+    return mat4x4(q1.i(), q1.j(), q1.k(),0,
+                  q2.i(), q2.j(), q2.k(),0,
+                  q3.i(), q3.j(), q3.k(),0,
+                  0,0,0,1);
 };
 

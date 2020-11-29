@@ -1,4 +1,4 @@
-# Install script for directory: /home/lucas/computer_graphics/cg_sandbox/lib/model_loader
+# Install script for directory: /home/cosc/student/lcp35/cg_sandbox/lib/model_loader
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

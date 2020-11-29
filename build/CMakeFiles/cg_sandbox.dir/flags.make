@@ -7,11 +7,11 @@ C_FLAGS =   -Wall -g -Wno-invalid-offsetof
 
 C_DEFINES = 
 
-C_INCLUDES = -I/home/lucas/computer_graphics/cg_sandbox/core -I/home/lucas/computer_graphics/cg_sandbox/lib -I/home/lucas/computer_graphics/cg_sandbox/tools -I/home/lucas/computer_graphics/cg_sandbox/dependencies -I/home/lucas/computer_graphics/cg_sandbox/build -I/home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/include 
+C_INCLUDES = -I/home/cosc/student/lcp35/cg_sandbox/core -I/home/cosc/student/lcp35/cg_sandbox/lib -I/home/cosc/student/lcp35/cg_sandbox/tools -I/home/cosc/student/lcp35/cg_sandbox/dependencies -I/home/cosc/student/lcp35/cg_sandbox/build -I/home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/include 
 
 CXX_FLAGS =   -Wall -g -Wno-invalid-offsetof -std=gnu++1z
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/lucas/computer_graphics/cg_sandbox/core -I/home/lucas/computer_graphics/cg_sandbox/lib -I/home/lucas/computer_graphics/cg_sandbox/tools -I/home/lucas/computer_graphics/cg_sandbox/dependencies -I/home/lucas/computer_graphics/cg_sandbox/build -I/home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/include 
+CXX_INCLUDES = -I/home/cosc/student/lcp35/cg_sandbox/core -I/home/cosc/student/lcp35/cg_sandbox/lib -I/home/cosc/student/lcp35/cg_sandbox/tools -I/home/cosc/student/lcp35/cg_sandbox/dependencies -I/home/cosc/student/lcp35/cg_sandbox/build -I/home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/include 
 

@@ -52,33 +52,33 @@ ostream
 stdlib.h
 -
 
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/OFF.cpp
 model_loader/model_loader.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
 
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/Obj.cpp
 model_loader/model_loader.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
 string.h
 -
 
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/STL.cpp
 model_loader/model_loader.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_file_formats/model_loader/model_loader.h
 map
 -
 tuple
 -
 
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.cpp
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.cpp
 model_loader.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.h
 spatial_algebra/spatial_algebra.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/spatial_algebra/spatial_algebra.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/spatial_algebra/spatial_algebra.h
 stdarg.h
 -
 
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/model_loader.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/model_loader.h
 vector
 -
 stdint.h
@@ -92,5 +92,5 @@ string
 assert.h
 -
 spatial_algebra/spatial_algebra.h
-/home/lucas/computer_graphics/cg_sandbox/lib/model_loader/spatial_algebra/spatial_algebra.h
+/home/cosc/student/lcp35/cg_sandbox/lib/model_loader/spatial_algebra/spatial_algebra.h
 

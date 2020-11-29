@@ -6,7 +6,7 @@ C_FLAGS = -fPIC   -Wall -std=c99
 
 C_DEFINES = -D_GLFW_USE_CONFIG_H
 
-C_INCLUDES = -I/home/lucas/computer_graphics/cg_sandbox/core -I/home/lucas/computer_graphics/cg_sandbox/lib -I/home/lucas/computer_graphics/cg_sandbox/tools -I/home/lucas/computer_graphics/cg_sandbox/dependencies -I/home/lucas/computer_graphics/cg_sandbox/build -I/home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/include -I/home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/src -I/home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/src 
+C_INCLUDES = -I/home/cosc/student/lcp35/cg_sandbox/core -I/home/cosc/student/lcp35/cg_sandbox/lib -I/home/cosc/student/lcp35/cg_sandbox/tools -I/home/cosc/student/lcp35/cg_sandbox/dependencies -I/home/cosc/student/lcp35/cg_sandbox/build -I/home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/include -I/home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/src -I/home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/src 
 
 # Custom flags: dependencies/glfw/src/CMakeFiles/glfw.dir/context.c.o_FLAGS = -Wdeclaration-after-statement
 

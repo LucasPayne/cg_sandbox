@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
-# define YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
+#ifndef YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
+# define YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -74,7 +74,7 @@ union YYSTYPE
     const char *string;
     unsigned int unsigned_int;
 
-#line 78 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.hh" /* yacc.c:1909  */
+#line 78 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.hh" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -87,4 +87,4 @@ extern YYSTYPE yylval;
 
 int yyparse (ShadingFileASTNode **ast_root_out);
 
-#endif /* !YY_YY_HOME_LUCAS_COMPUTER_GRAPHICS_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED  */
+#endif /* !YY_YY_HOME_COSC_STUDENT_LCP35_CG_SANDBOX_BUILD_SHADING_FILE_TAB_HH_INCLUDED  */

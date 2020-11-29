@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
+CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
 
 # Utility rule file for docs.
 
@@ -54,8 +54,8 @@ CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
 include dependencies/glfw/docs/CMakeFiles/docs.dir/progress.make
 
 dependencies/glfw/docs/CMakeFiles/docs:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/lucas/computer_graphics/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating HTML documentation"
-	cd /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/docs && /usr/bin/doxygen
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/cosc/student/lcp35/cg_sandbox/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating HTML documentation"
+	cd /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/docs && /usr/bin/doxygen
 
 docs: dependencies/glfw/docs/CMakeFiles/docs
 docs: dependencies/glfw/docs/CMakeFiles/docs.dir/build.make
@@ -68,10 +68,10 @@ dependencies/glfw/docs/CMakeFiles/docs.dir/build: docs
 .PHONY : dependencies/glfw/docs/CMakeFiles/docs.dir/build
 
 dependencies/glfw/docs/CMakeFiles/docs.dir/clean:
-	cd /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/docs && $(CMAKE_COMMAND) -P CMakeFiles/docs.dir/cmake_clean.cmake
+	cd /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/docs && $(CMAKE_COMMAND) -P CMakeFiles/docs.dir/cmake_clean.cmake
 .PHONY : dependencies/glfw/docs/CMakeFiles/docs.dir/clean
 
 dependencies/glfw/docs/CMakeFiles/docs.dir/depend:
-	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lucas/computer_graphics/cg_sandbox /home/lucas/computer_graphics/cg_sandbox/dependencies/glfw/docs /home/lucas/computer_graphics/cg_sandbox/build /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/docs /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/docs/CMakeFiles/docs.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cosc/student/lcp35/cg_sandbox /home/cosc/student/lcp35/cg_sandbox/dependencies/glfw/docs /home/cosc/student/lcp35/cg_sandbox/build /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/docs /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/docs/CMakeFiles/docs.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : dependencies/glfw/docs/CMakeFiles/docs.dir/depend
 

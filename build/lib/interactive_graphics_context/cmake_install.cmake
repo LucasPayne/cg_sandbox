@@ -1,4 +1,4 @@
-# Install script for directory: /home/lucas/computer_graphics/cg_sandbox/lib/interactive_graphics_context
+# Install script for directory: /home/cosc/student/lcp35/cg_sandbox/lib/interactive_graphics_context
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -238,6 +238,8 @@ void Graphics::refresh_gbuffer_textures()
 void Graphics::deferred_lighting()
 {
     glDisable(GL_DEPTH_TEST);
+    auto &program = directional_light_shader_program;
+    auto &filter_program = directional_light_filter_shader_program;
 
     bool first_light_pass = true; // The first pass blends differently into the framebuffer.
     glBindVertexArray(postprocessing_quad_vao);
@@ -247,7 +249,6 @@ void Graphics::deferred_lighting()
 
         auto camera_transform = camera.sibling<Transform>();
         for (auto light : world.entities.aspects<DirectionalLight>()) {
-            auto &program = directional_light_shader_program;
             program->bind();
             glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
             glBlendFunc(GL_ONE, GL_ZERO);
@@ -285,7 +286,6 @@ void Graphics::deferred_lighting()
             glUniform1f(program->uniform_location("shadow_map_height_inv"), 1.f / shadow_map.height);
             glUniform1i(program->uniform_location("shadow_map_width"), shadow_map.width);
             glUniform1i(program->uniform_location("shadow_map_height"), shadow_map.height);
-            glUniform3fv(program->uniform_location("box_extents"), 1, (GLfloat *) &shadow_map.box_extents);
 
             float near = camera->near_plane_distance;
             float far = fmin(shadow_map.distance, camera->far_plane_distance);
@@ -293,6 +293,8 @@ void Graphics::deferred_lighting()
             for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
                 auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
                 glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
+                uniform_name = std::string("box_extents[") + std::to_string(i) + std::string("]");
+                glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
             }
             for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
                 // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
@@ -303,7 +305,7 @@ void Graphics::deferred_lighting()
             }
             {
                 // The last "frustum segment" distance in the shader's array is the distance to the far plane.
-	        auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
+	            auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
                 glUniform1f(program->uniform_location(uniform_name), far);
             }
 
@@ -316,12 +318,42 @@ void Graphics::deferred_lighting()
             program->unbind();
             glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
 
-            directional_light_filter_shader_program->bind();
-            glActiveTexture(GL_TEXTURE0);
+            filter_program->bind();
+            glUniform1i(filter_program->uniform_location("shadow"), 0);
+            glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
+            glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
+
+            // DUPLICATED--------------------------------------------------------------------------------
+            glUniform3fv(filter_program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
+            glUniform3fv(filter_program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+
+            for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
+                // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
+                float t = shadow_map.frustum_segment_dividers[i];
+                float frustum_segment_distance = (1-t)*near + t*far;
+                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
+                glUniform1f(filter_program->uniform_location(uniform_name), frustum_segment_distance);
+            }
+            {
+                // The last "frustum segment" distance in the shader's array is the distance to the far plane.
+	            auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
+                glUniform1f(filter_program->uniform_location(uniform_name), far);
+            }
+
+            for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
+                auto &component = gbuffer_components[i];
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, component.texture);
+                glUniform1i(filter_program->uniform_location(component.name), i);
+            }
+            glUniform3fv(filter_program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
+            glUniform3fv(filter_program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+            //--------------------------------------------------------------------------------
+            int shadow_signal_slot = gbuffer_components.size();
+            glActiveTexture(GL_TEXTURE0 + shadow_signal_slot);
             glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
-            glUniform1i(directional_light_filter_shader_program->uniform_location("lighting"), 0);
-            glUniform1f(directional_light_filter_shader_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
-            glUniform1f(directional_light_filter_shader_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
+            glUniform1i(program->uniform_location("shadow"), shadow_signal_slot);
+
             if (first_light_pass) {
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
                                     GL_ZERO, GL_ONE);                     // Alpha
@@ -333,7 +365,7 @@ void Graphics::deferred_lighting()
 
             begin_camera_rendering(camera);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            directional_light_filter_shader_program->unbind();
+            filter_program->unbind();
             end_camera_rendering(camera);
         }
         end_camera_rendering(camera);
@@ -523,8 +555,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
+    sm.box_extents = std::vector<vec3>(sm.num_frustum_segments);
     sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
-    sm.box_extents = vec3::zero();
 
     sm.distance = 20; //an arbitrarily chosen default
     if (sm.num_frustum_segments == 2) {
@@ -661,7 +693,7 @@ void Graphics::update_lights()
                 mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
                                      * mat4x4::to_rigid_frame(min_point, X, Y, Z);
                 sm.shadow_matrices[segment] = shadow_matrix;
-                sm.box_extents = vec3(width, height, depth);
+                sm.box_extents[segment] = vec3(width, height, depth);
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
 
                 glViewport(0, 0, sm.width, sm.height);

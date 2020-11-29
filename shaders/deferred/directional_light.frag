@@ -23,13 +23,13 @@ uniform float width;
 uniform int num_frustum_segments;
 uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform mat4x4 shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
+uniform vec3 box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform sampler2DArrayShadow shadow_map;
 uniform sampler2DArray shadow_map_raw;
 uniform float shadow_map_width_inv;
 uniform float shadow_map_height_inv;
 uniform int shadow_map_width;
 uniform int shadow_map_height;
-uniform vec3 box_extents;
 
 in vec2 uv;
 out vec4 color;
@@ -81,7 +81,8 @@ void main(void)
     }
 
     /*--------------------------------------------------------------------------------
-        Random variables for sampling
+        Random variables for sampling.
+        A Poisson-disc randomly rotated in screen space is used.
     --------------------------------------------------------------------------------*/
     #define NUM_SAMPLES 12
     float inv_num_samples = 1.f / NUM_SAMPLES;
@@ -118,9 +119,9 @@ void main(void)
         with respect to the solid angle of the incoming light (e.g. the sun).
     --------------------------------------------------------------------------------*/
     // Average the occluder depths from the (orthogonal) perspective of the light.
-    float worldspace_searching_radius = 0.5 * width * shadow_coord.z * box_extents.z;
-    vec2 imagespace_searching_extents = vec2(worldspace_searching_radius / box_extents.x,
-                                             worldspace_searching_radius / box_extents.y);
+    float worldspace_searching_radius = 0.5 * width * shadow_coord.z * box_extents[segment].z;
+    vec2 imagespace_searching_extents = vec2(worldspace_searching_radius / box_extents[segment].x,
+                                             worldspace_searching_radius / box_extents[segment].y);
     float average_occluder_depth = 0.f;
     float num_occluded_samples = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
@@ -140,9 +141,9 @@ void main(void)
         are at the representative depth, and assuming the surface is faced toward the light,
         the occlusion would be correctly computed (with sufficient samples).
     --------------------------------------------------------------------------------*/
-    float worldspace_sample_radius = 0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents.z;
-    vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents.x,
-                                          worldspace_sample_radius / box_extents.y);
+    float worldspace_sample_radius = 0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents[segment].z;
+    vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents[segment].x,
+                                          worldspace_sample_radius / box_extents[segment].y);
     float shadow = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
         vec2 rotated_poisson_sample = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
@@ -152,7 +153,7 @@ void main(void)
     }
     if (shadow < 0) shadow = 0;
 
-    color = vec4(shadow, 0,0,1);
+    color = vec4(shadow_fading * shadow, 0,0,1);
     return;
 
     DEBUG_COLOR(shadow);

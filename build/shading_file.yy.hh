@@ -2,9 +2,9 @@
 #define yyHEADER_H 1
 #define yyIN_HEADER 1
 
-#line 6 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh"
+#line 6 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh"
 
-#line 8 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh"
+#line 8 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh"
 
 #define  YY_INT_ALIGNED short int
 
@@ -475,6 +475,6 @@ extern int yylex (void);
 #line 197 "core/graphics_resources/shading_file.l"
 
 
-#line 479 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh"
+#line 479 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

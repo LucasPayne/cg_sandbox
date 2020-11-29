@@ -39,13 +39,6 @@ void main(void)
         if (eye_z >= frustum_segment_distances[i]) segment = i+1;
     }
 
-    // color = vec4(vec3(frustum_segment_distances[1]/20), f_albedo.a); return;
-    // if (segment == 0) color = vec4(1,0,0,f_albedo.a);
-    // else if (segment == 1) color = vec4(0,1,0,f_albedo.a);
-    // else if (segment == 2) color = vec4(0,0,1,f_albedo.a);
-    // else if (segment == 3) color = vec4(0,1,1,f_albedo.a);
-    // return;
-
 
     vec3 shadow_coord = 0.5*(shadow_matrices[segment] * vec4(f_position, 1)).xyz + 0.5;
     float shadow_depth = texture(shadow_map, vec3(shadow_coord.xy, segment)).r;
@@ -58,7 +51,14 @@ void main(void)
             shadow_coord.y < 0 || shadow_coord.y > 1) {
         shadow = 0.f;
     }
-    color = vec4(vec3(1-shadow), 1);
-
     color = vec4((1.f - shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
+
+    // Uncomment to visualize frustum segments.
+    #if 0
+    if (segment == 0) color += vec4(0.5,0,0,0);
+    else if (segment == 1) color += vec4(0,0.5,0,0);
+    else if (segment == 2) color += vec4(0,0,0.5,0);
+    else if (segment == 3) color += vec4(0,0.5,0.5,0);
+    return;
+    #endif
 }

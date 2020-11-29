@@ -405,8 +405,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 512;
-    int height = 512;
+    int width = 1024;
+    int height = 1024;
     int num_frustum_segments = 4;
 
     GLuint tex;
@@ -432,6 +432,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
 
     DirectionalLightShadowMap sm;
+    sm.camera = camera;
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
@@ -439,10 +440,25 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.num_frustum_segments = num_frustum_segments;
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
     sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
-    for (int i = 1; i < sm.num_frustum_segments; i++) {
-        sm.frustum_segment_dividers[i-1] = i/(1.f * sm.num_frustum_segments);
-    }
+
     sm.distance = 20; //an arbitrarily chosen default
+    if (sm.num_frustum_segments == 2) {
+        // These hard-coded frustum segment dividers are chosen to be generally good while standing at ground level.
+        sm.frustum_segment_dividers[0] = 0.31;
+    } else if (sm.num_frustum_segments == 3) {
+        sm.frustum_segment_dividers[0] = 0.2;
+        sm.frustum_segment_dividers[0] = 0.5;
+    } else if (sm.num_frustum_segments == 3) {
+        sm.frustum_segment_dividers[0] = 0.1;
+        sm.frustum_segment_dividers[1] = 0.3;
+        sm.frustum_segment_dividers[2] = 0.6;
+    } else {
+        // Evenly spaced. This is not very good.
+        for (int i = 1; i < sm.num_frustum_segments; i++) {
+            float d = i/(1.f * sm.num_frustum_segments);
+            sm.frustum_segment_dividers[i-1] = d;
+        }
+    }
 
     shadow_maps[camera.ID()] = sm;
     return shadow_maps[camera.ID()];
@@ -462,11 +478,18 @@ void Graphics::update_lights()
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         for (auto camera : world.entities.aspects<Camera>()) {
             auto &sm = directional_light_data(light).shadow_map(camera);
+            float near = camera->near_plane_distance;
+            float far = fmin(sm.distance, camera->far_plane_distance);
+            // Since frustum coordinates are range in z from 0 at the near plane to 1 at the far plane,
+            // make a correction to a shorter frustum if the shadows have a shorter render distance.
+            float distance_multiplier = (far - near) / (camera->far_plane_distance - camera->near_plane_distance);
 
             for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
                 // Bound the camera frustum section with a box, elongated in the direction of the light.
                 float a = segment == 0 ? 0.f : sm.frustum_segment_dividers[segment-1];
                 float b = segment == sm.num_frustum_segments-1 ? 1.f : sm.frustum_segment_dividers[segment];
+                a *= distance_multiplier;
+                b *= distance_multiplier;
                 vec3 frustum_points[8] = {
                     camera->frustum_point(-1,-1,a),
                     camera->frustum_point(1,-1,a),

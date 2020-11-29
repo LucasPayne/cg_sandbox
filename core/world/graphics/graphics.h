@@ -44,6 +44,7 @@ struct GBufferComponent {
 Lighting data
 --------------------------------------------------------------------------------*/
 struct DirectionalLightShadowMap {
+    Aspect<Camera> camera;
     GLuint fbo;
     GLuint texture;
     int width;

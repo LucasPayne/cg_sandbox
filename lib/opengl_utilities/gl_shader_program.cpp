@@ -2,6 +2,7 @@
 #include "gl_shader_program.h"
 #include <stdio.h>
 #include <iostream>
+#include <string.h>
 
 
 GLShader GLShader::from_string(int shader_type, const char *source)
@@ -133,20 +134,39 @@ void GLShaderProgram::link()
     // Each active uniform is assigned an "index", distinct from location or block indices.
     // This is an identifier for use with the (< 4.3) introspection API.
     glGetProgramiv(m_gl_shader_program_id, GL_ACTIVE_UNIFORMS, &num_active_uniforms);
+
     for (int i = 0; i < num_active_uniforms; i++) {
         const GLsizei buf_size = 2048;
         char name[buf_size];
         GLsizei name_length;
+        GLint array_length;
+        glGetActiveUniformsiv(m_gl_shader_program_id, 1, (GLuint *) &i, GL_UNIFORM_SIZE, (GLint *) &array_length);
+
         glGetActiveUniformName(m_gl_shader_program_id, i, buf_size, &name_length, name);
+        bool is_array = strchr(name, '[') != NULL;
+
         if (name_length > buf_size-1) {
             std::cerr << "ERROR [GLShaderProgram::link]: Uniform name far too long.\n";
             exit(EXIT_FAILURE);
         }
-        GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
-        if (location >= 0) {
-            std::string name_string(name, name_length);
-            uniform_location_dictionary[name_string] = location;
-            printf("Active uniform: %s, %d\n", name, location);
+        if (is_array) {
+            char *array_index_str = strchr(name, '[');
+            for (int index = 0; index < array_length; index++) {
+                sprintf(array_index_str, "[%d]", index);
+                GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
+                if (location >= 0) {
+                    auto name_string = std::string(name, name_length);
+                    uniform_location_dictionary[name_string] = location;
+                    printf("Active uniform: %s, %d\n", name, location);
+                }
+            }
+        } else {
+            GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
+            if (location >= 0) {
+                auto name_string = std::string(name, name_length);
+                uniform_location_dictionary[name_string] = location;
+                printf("Active uniform: %s, %d\n", name, location);
+            }
         }
         // If location < 0, just don't add it, something went wrong.
         //    ---When is location < 0?
@@ -160,6 +180,8 @@ GLint GLShaderProgram::uniform_location(const std::string &name)
     if (found == uniform_location_dictionary.end()) {
         return -1; //is this fine? Just in case shader uniforms are optimized out.
         // std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
+        // getchar();
+        // for (auto iter : uniform_location_dictionary) std::cout << iter.first << "\n";
         // exit(EXIT_FAILURE);
     }
     return found->second;

@@ -48,8 +48,13 @@ struct DirectionalLightShadowMap {
     GLuint texture;
     int width;
     int height; // resolution
-    mat4x4 shadow_matrix; // Transforms points in world space into shadow coordinates (X and Y as texture coordinates, Z as the depth in the range
-                          // of the shadow map).
+    int num_frustum_segments;
+    float distance; // Shadows are computed up to this distance, or the far plane distance if that is closer.
+
+    // The shadow matrices transform points in world space into shadow coordinates (X and Y as texture coordinates, Z as the depth in the range
+    // of the shadow map).
+    std::vector<mat4x4> shadow_matrices;
+    std::vector<float> frustum_segment_dividers;
 };
 struct DirectionalLightData {
     // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.

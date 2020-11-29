@@ -597,6 +597,8 @@ stdio.h
 -
 iostream
 -
+string.h
+-
 
 /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
 assert.h

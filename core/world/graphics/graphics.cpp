@@ -242,6 +242,12 @@ void Graphics::deferred_lighting()
     program->bind();
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
+        auto camera_transform = camera.sibling<Transform>();
+        vec3 camera_position = camera_transform->position;
+        vec3 camera_forward = -camera_transform->forward();
+        glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
+        glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+
         begin_camera_rendering(camera);
         for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
             auto &component = gbuffer_components[i];
@@ -250,17 +256,31 @@ void Graphics::deferred_lighting()
             glUniform1i(program->uniform_location(component.name), i);
         }
         for (auto light : world.entities.aspects<DirectionalLight>()) {
+            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
+            glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+            glUniform1f(program->uniform_location("width"), light->width);
             auto &shadow_map = directional_light_data(light).shadow_map(camera);
 
             int shadow_map_slot = gbuffer_components.size();
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
-            glBindTexture(GL_TEXTURE_2D, shadow_map.texture);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
             glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
-            glUniformMatrix4fv(program->uniform_location("shadow_matrix"), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrix);
+            glUniform1i(program->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
 
-            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
-            glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
-            glUniform1f(program->uniform_location("width"), light->width);
+            float near = camera->near_plane_distance;
+            float far = fmin(shadow_map.distance, camera->far_plane_distance);
+
+            for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
+                auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
+                glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
+            }
+            for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
+                float t = shadow_map.frustum_segment_dividers[i];
+                // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
+                float frustum_segment_distance = (1-t)*near + t*far;
+                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
+                glUniform1f(program->uniform_location(uniform_name), frustum_segment_distance);
+            }
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
                                 GL_ZERO, GL_ONE);     // Alpha
@@ -385,21 +405,23 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 2048;
-    int height = 2048;
+    int width = 512;
+    int height = 512;
+    int num_frustum_segments = 4;
+
     GLuint tex;
     glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex, 0);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, tex, 0, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -414,6 +436,13 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.height = height;
     sm.texture = tex;
     sm.fbo = fbo;
+    sm.num_frustum_segments = num_frustum_segments;
+    sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
+    sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
+    for (int i = 1; i < sm.num_frustum_segments; i++) {
+        sm.frustum_segment_dividers[i-1] = i/(1.f * sm.num_frustum_segments);
+    }
+    sm.distance = 20; //an arbitrarily chosen default
 
     shadow_maps[camera.ID()] = sm;
     return shadow_maps[camera.ID()];
@@ -433,108 +462,109 @@ void Graphics::update_lights()
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         for (auto camera : world.entities.aspects<Camera>()) {
             auto &sm = directional_light_data(light).shadow_map(camera);
-            
-            // Bound the camera frustum section with a box, elongated in the direction of the light.
-            float extent_a = 0;
-            float extent_b = 0.05;
-            vec3 frustum_points[8] = {
-                camera->frustum_point(-1,-1,extent_a),
-                camera->frustum_point(1,-1,extent_a),
-                camera->frustum_point(1,1,extent_a),
-                camera->frustum_point(-1,1,extent_a),
-                camera->frustum_point(-1,-1,extent_b),
-                camera->frustum_point(1,-1,extent_b),
-                camera->frustum_point(1,1,extent_b),
-                camera->frustum_point(-1,1,extent_b),
-            };
 
-            vec3 Z = light->direction;
-            // Create a frame of reference.
-            // ---todo: This should be chosen to make the shadow maps denser.
-            vec3 X = vec3(light->direction.x() + 1, light->direction.y() - 1, light->direction.z() + 1);
-            X = (X - vec3::dot(X, Z) * Z).normalized();
-            vec3 Y = vec3::cross(X, Z);
-            vec3 transformed_frustum[8];
-            for (int i = 0; i < 8; i++) {
-                vec3 d = frustum_points[i];
-                transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
-            }
-            vec3 mins = transformed_frustum[0];
-            vec3 maxs = transformed_frustum[0];
-            for (int i = 1; i < 8; i++) {
-                for (int j = 0; j < 3; j++) {
-                    if (transformed_frustum[i][j] < mins[j]) {
-                        mins[j] = transformed_frustum[i][j];
-                    } else if (transformed_frustum[i][j] > maxs[j]) {
-                        maxs[j] = transformed_frustum[i][j];
+            for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+                // Bound the camera frustum section with a box, elongated in the direction of the light.
+                float a = segment == 0 ? 0.f : sm.frustum_segment_dividers[segment-1];
+                float b = segment == sm.num_frustum_segments-1 ? 1.f : sm.frustum_segment_dividers[segment];
+                vec3 frustum_points[8] = {
+                    camera->frustum_point(-1,-1,a),
+                    camera->frustum_point(1,-1,a),
+                    camera->frustum_point(1,1,a),
+                    camera->frustum_point(-1,1,a),
+                    camera->frustum_point(-1,-1,b),
+                    camera->frustum_point(1,-1,b),
+                    camera->frustum_point(1,1,b),
+                    camera->frustum_point(-1,1,b),
+                };
+
+                vec3 Z = light->direction;
+                // Create a frame of reference.
+                // ---todo: This should be chosen to make the shadow maps denser.
+                vec3 X = vec3(light->direction.x() + 1, light->direction.y() - 1, light->direction.z() + 1);
+                X = (X - vec3::dot(X, Z) * Z).normalized();
+                vec3 Y = vec3::cross(X, Z);
+                vec3 transformed_frustum[8];
+                for (int i = 0; i < 8; i++) {
+                    vec3 d = frustum_points[i];
+                    transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
+                }
+                vec3 mins = transformed_frustum[0];
+                vec3 maxs = transformed_frustum[0];
+                for (int i = 1; i < 8; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        if (transformed_frustum[i][j] < mins[j]) {
+                            mins[j] = transformed_frustum[i][j];
+                        } else if (transformed_frustum[i][j] > maxs[j]) {
+                            maxs[j] = transformed_frustum[i][j];
+                        }
                     }
                 }
-            }
-            // Shrink the box in X and Y, and max Z, to bound all drawables. This increases the density of the shadow map.
-            vec3 drawable_maxs = mins;
-            vec3 drawable_mins = maxs;
-            for (auto drawable : world.entities.aspects<Drawable>()) {
-                if (!drawable->shadow_caster) continue;
-                auto s = drawable->bounding_sphere();
-                vec3 p = vec3(vec3::dot(s.origin, X),
-                              vec3::dot(s.origin, Y),
-                              vec3::dot(s.origin, Z));
-                float r = s.radius;
-	        if (   p.x() + r > mins.x() && p.x() - r < maxs.x()
-                    && p.y() + r > mins.y() && p.y() - r < maxs.y()
-                    && p.z() + r > mins.z() && p.z() - r < maxs.z()) {
-                    for (int i = 0; i < 3; i++) {
-                        if (p[i] + r > drawable_maxs[i]) drawable_maxs[i] = p[i] + r;
-                        if (p[i] - r < drawable_mins[i]) drawable_mins[i] = p[i] - r;
+                // Shrink the box in X and Y, and max Z, to bound all drawables. This increases the density of the shadow map.
+                vec3 drawable_maxs = mins;
+                vec3 drawable_mins = maxs;
+                for (auto drawable : world.entities.aspects<Drawable>()) {
+                    if (!drawable->shadow_caster) continue;
+                    auto s = drawable->bounding_sphere();
+                    vec3 p = vec3(vec3::dot(s.origin, X),
+                                  vec3::dot(s.origin, Y),
+                                  vec3::dot(s.origin, Z));
+                    float r = s.radius;
+                    if (p + vec3(r) > mins && p - vec3(r) < maxs) {
+                        for (int i = 0; i < 3; i++) {
+                            if (p[i] + r > drawable_maxs[i]) drawable_maxs[i] = p[i] + r;
+                            if (p[i] - r < drawable_mins[i]) drawable_mins[i] = p[i] - r;
+                        }
                     }
                 }
-            }
-            for (int i = 0; i < 3; i++) {
-                drawable_maxs[i] = fmin(drawable_maxs[i], maxs[i]);
-                drawable_mins[i] = fmax(drawable_mins[i], mins[i]);
-            }
-
-            // Only update the bounds if there were any drawables, otherwise there will be issues with a degenerate projection.
-            for (int i = 0; i < 3; i++) {
-                if (drawable_mins[i] < drawable_maxs[i]) {
-                    maxs[i] = drawable_maxs[i];
-                    mins[i] = drawable_mins[i];
+                for (int i = 0; i < 3; i++) {
+                    drawable_maxs[i] = fmin(drawable_maxs[i], maxs[i]);
+                    drawable_mins[i] = fmax(drawable_mins[i], mins[i]);
                 }
-            }
-            // Extend the box to include all possible shadow casters.
-            for (auto drawable : world.entities.aspects<Drawable>()) {
-                if (!drawable->shadow_caster) continue;
-                auto s = drawable->bounding_sphere();
-                vec3 p = vec3(vec3::dot(s.origin, X),
-                              vec3::dot(s.origin, Y),
-                              vec3::dot(s.origin, Z));
-                float r = s.radius;
-                // Extent the box to possible shadow casters.
-                if (p.z() - r < mins.z()) {
-                    if (p.x() + r > mins.x() && p.x() - r < maxs.x() && p.y() + r > mins.y() && p.y() - r < maxs.y()) {
-                        mins.z() = p.z() - r;
+
+                // Only update the bounds if there were any drawables, otherwise there will be issues with a degenerate projection.
+                for (int i = 0; i < 3; i++) {
+                    if (drawable_mins[i] < drawable_maxs[i]) {
+                        maxs[i] = drawable_maxs[i];
+                        mins[i] = drawable_mins[i];
                     }
                 }
+                // Extend the box to include all possible shadow casters.
+                for (auto drawable : world.entities.aspects<Drawable>()) {
+                    if (!drawable->shadow_caster) continue;
+                    auto s = drawable->bounding_sphere();
+                    vec3 p = vec3(vec3::dot(s.origin, X),
+                                  vec3::dot(s.origin, Y),
+                                  vec3::dot(s.origin, Z));
+                    float r = s.radius;
+                    // Extent the box to possible shadow casters.
+                    if (p.z() - r < mins.z()) {
+                        if (p.x() + r > mins.x() && p.x() - r < maxs.x() && p.y() + r > mins.y() && p.y() - r < maxs.y()) {
+                            mins.z() = p.z() - r;
+                        }
+                    }
+                }
+
+                float width = maxs.x() - mins.x();
+                float height = maxs.y() - mins.y();
+                float depth = maxs.z() - mins.z();
+
+                vec3 min_point = mins.x()*X + mins.y()*Y + mins.z()*Z;
+                mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
+                                     * mat4x4::to_rigid_frame(min_point, X, Y, Z);
+                sm.shadow_matrices[segment] = shadow_matrix;
+                shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
+
+                glViewport(0, 0, sm.width, sm.height);
+                glDisable(GL_SCISSOR_TEST);
+                glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.texture, 0, segment);
+                glClear(GL_DEPTH_BUFFER_BIT);
+                render_drawables(shadow_map_shading_model);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glViewport(viewport_x, viewport_y, viewport_width, viewport_height); // Restore the previous viewport.
+                glEnable(GL_SCISSOR_TEST);
             }
-
-            float width = maxs.x() - mins.x();
-            float height = maxs.y() - mins.y();
-            float depth = maxs.z() - mins.z();
-
-            vec3 min_point = mins.x()*X + mins.y()*Y + mins.z()*Z;
-            mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
-                                 * mat4x4::to_rigid_frame(min_point, X, Y, Z);
-            shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
-            sm.shadow_matrix = shadow_matrix;
-
-            glViewport(0, 0, sm.width, sm.height);
-            glDisable(GL_SCISSOR_TEST);
-            glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            render_drawables(shadow_map_shading_model);
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glViewport(viewport_x, viewport_y, viewport_width, viewport_height); // Restore the previous viewport.
-            glEnable(GL_SCISSOR_TEST);
         }
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.

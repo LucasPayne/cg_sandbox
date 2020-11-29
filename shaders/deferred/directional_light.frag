@@ -150,9 +150,12 @@ void main(void)
         vec2 sample_uv = shadow_coord.xy + imagespace_sample_extents * rotated_poisson_sample;
         shadow += inv_num_samples * shadowing(vec3(sample_uv, shadow_coord.z), segment);
     }
+    if (shadow < 0) shadow = 0;
+
+    /*--------------------------------------------------------------------------------
+        Lighting
+    --------------------------------------------------------------------------------*/
     color = vec4((1.f - shadow_fading*shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
-
-
     // Ambient lighting
     vec3 ambient = vec3(0.28);
     color += vec4(ambient*f_albedo.rgb, 0);

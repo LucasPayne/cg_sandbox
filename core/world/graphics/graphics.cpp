@@ -233,29 +233,34 @@ void Graphics::refresh_gbuffer_textures()
 void Graphics::deferred_lighting()
 {
     glDisable(GL_DEPTH_TEST);
-    // The alpha of the default framebuffer is all one.
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
-                        GL_ZERO, GL_ONE);                     // Alpha
+
+    bool first_light_pass = true;
 
     glBindVertexArray(postprocessing_quad_vao);
-    auto &program = directional_light_shader_program;
-    program->bind();
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
         auto camera_transform = camera.sibling<Transform>();
-        vec3 camera_position = camera_transform->position;
-        vec3 camera_forward = -camera_transform->forward();
-        glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
-        glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
-
-        begin_camera_rendering(camera);
-        for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
-            auto &component = gbuffer_components[i];
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, component.texture);
-            glUniform1i(program->uniform_location(component.name), i);
-        }
         for (auto light : world.entities.aspects<DirectionalLight>()) {
+            auto &program = directional_light_shader_program;
+            program->bind();
+            glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
+            glBlendFunc(GL_ONE, GL_ZERO);
+            glClearColor(0,0,0,0);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            vec3 camera_position = camera_transform->position;
+            vec3 camera_forward = -camera_transform->forward();
+            glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
+            glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+
+            begin_camera_rendering(camera);
+            for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
+                auto &component = gbuffer_components[i];
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, component.texture);
+                glUniform1i(program->uniform_location(component.name), i);
+            }
+
             glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
             glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
             glUniform1f(program->uniform_location("width"), light->width);
@@ -301,12 +306,25 @@ void Graphics::deferred_lighting()
 
 
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
-                                GL_ZERO, GL_ONE);     // Alpha
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            program->unbind();
+            directional_light_filter_shader_program->bind();
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
+            glUniform1i(directional_light_filter_shader_program->uniform_location("lighting"), 0);
+            if (first_light_pass) {
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
+                                    GL_ZERO, GL_ONE);                     // Alpha
+                first_light_pass = false;
+            } else {
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
+                                    GL_ZERO, GL_ONE);     // Alpha
+            }
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            directional_light_filter_shader_program->unbind();
         }
         end_camera_rendering(camera);
     }
-    program->unbind();
     glBindVertexArray(0);
 
     // Reset to the standard blending mode.
@@ -383,6 +401,10 @@ void Graphics::init()
     directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
     directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
     directional_light_shader_program->link();
+    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
+    directional_light_filter_shader_program->link();
 
     // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
     // any time for post-processing effects or deferred rendering.
@@ -402,6 +424,23 @@ void Graphics::init()
     glEnableVertexAttribArray(1);
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Set up framebuffer object useful for postprocessing effects.
+    glGenFramebuffers(1, &postprocessing_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
+    glGenTextures(1, &postprocessing_fbo_texture);
+    glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, world.screen_width, world.screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessing_fbo_texture, 0);
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "G-buffer framebuffer incomplete.\n");
+        exit(EXIT_FAILURE);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
@@ -432,12 +471,6 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLuint sampler;
     glGenSamplers(1, &sampler);
@@ -455,8 +488,6 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-
-
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -468,7 +499,6 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         exit(EXIT_FAILURE);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
     DirectionalLightShadowMap sm;
     sm.camera = camera;
@@ -602,7 +632,7 @@ void Graphics::update_lights()
                                   vec3::dot(s.origin, Y),
                                   vec3::dot(s.origin, Z));
                     float r = s.radius;
-                    // Extent the box to possible shadow casters.
+                    // Extend the box to possible shadow casters.
                     if (p.z() - r < mins.z()) {
                         if (p.x() + r > mins.x() && p.x() - r < maxs.x() && p.y() + r > mins.y() && p.y() - r < maxs.y()) {
                             mins.z() = p.z() - r;

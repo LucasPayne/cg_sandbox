@@ -126,9 +126,14 @@ public:
     // Deferred rendering using the G-buffer.
     void deferred_lighting();
     Resource<GLShaderProgram> directional_light_shader_program;
+    Resource<GLShaderProgram> directional_light_filter_shader_program;
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
+
+    GLuint postprocessing_fbo; // A framebuffer object for rendering color values into.
+                               // This can be used to, for example, bilaterally denoise deferred light passes.
+    GLuint postprocessing_fbo_texture;
 
     void set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height);
     void subviewport_begin(vec2 bottom_left, vec2 top_right);

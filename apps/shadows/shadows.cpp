@@ -90,6 +90,12 @@ App::App(World &_world) : world{_world}
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
     world.add<Rotator>(obj);
 
+    obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position = vec3(10,0,10);;
+    obj.get<Transform>()->position.y() -= 12 * 0.45;
+    obj.get<Transform>()->scale = 10;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.4,0,1);
+
     // obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
     // obj.get<Transform>()->position = vec3(0,0,0);
     // obj.get<Transform>()->scale = 10;
@@ -119,7 +125,7 @@ App::App(World &_world) : world{_world}
     main_light = light.get<DirectionalLight>();
     }
 
-    {
+    if (0) {
     Entity light = world.entities.add();
     // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
     float sun_w = 0.07;

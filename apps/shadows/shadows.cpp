@@ -21,7 +21,7 @@ struct LightRotate : public IBehaviour {
     }
     void update() {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
-        world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
+        // world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
 
         if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
             theta -= 1.f * dt;
@@ -29,7 +29,7 @@ struct LightRotate : public IBehaviour {
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
             theta += 1.f * dt;
         }
-        light->direction = vec3(cos(theta), -2, sin(theta)).normalized();
+        light->direction = vec3(cos(theta), -0.3, sin(theta)).normalized();
     }
 };
 
@@ -74,7 +74,19 @@ App::App(World &_world) : world{_world}
             obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
         }
     }
+    int n = 20;
+    for (int i = 0; i < n; i++) {
+        float r = 5;
+        float theta = 2*M_PI*i*1.f/n;
+        Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+        obj.get<Transform>()->position = r*vec3(cos(theta), 0, sin(theta));
+        obj.get<Transform>()->position.y() -= 0.05;
+        obj.get<Transform>()->rotation = Quaternion::from_axis_angle(vec3(0,1,0), theta);
+        obj.get<Transform>()->scale = 5;
+        obj.get<Drawable>()->material.properties.set_vec4("albedo", frand(),frand(),frand(),1);
+    }
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position.y() -= 0.45;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
     world.add<Rotator>(obj);
 
@@ -92,14 +104,16 @@ App::App(World &_world) : world{_world}
     floor.add_triangle(a, c, d);
     auto floor_model = floor.to_model();
     obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,0,0,1);
-    obj.get<Drawable>()->shadow_caster = false;
-    obj.get<Transform>()->scale = 100;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
+    // obj.get<Drawable>()->shadow_caster = false;
+    obj.get<Transform>()->scale = 10;
     obj.get<Transform>()->position = vec3(0,0.15,0);
     
     
     Entity light = world.entities.add();
-    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), 1.5);
+    // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
+    float sun_w = 0.07;
+    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), sun_w);
     world.add<LightRotate>(light, light.get<DirectionalLight>());
     main_light = light.get<DirectionalLight>();
 }
@@ -112,9 +126,6 @@ void App::close()
 vec3 frustum_points[8];
 void App::loop()
 {
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.06,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.36,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.66,0.09), 0.28,0.28, 3, vec4(0,0,0,1));
 
     for (int i = 0; i < 2; i++) {
         std::vector<vec3> plane_points = {frustum_points[4*i+0],frustum_points[4*i+1],frustum_points[4*i+2],frustum_points[4*i+3],frustum_points[4*i+0]};
@@ -171,9 +182,9 @@ void App::loop()
     // }
 
     // View the G-buffer.
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)

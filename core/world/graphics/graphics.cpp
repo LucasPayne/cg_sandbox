@@ -270,6 +270,7 @@ void Graphics::deferred_lighting()
             glUniform1f(program->uniform_location("shadow_map_height_inv"), 1.f / shadow_map.height);
             glUniform1i(program->uniform_location("shadow_map_width"), shadow_map.width);
             glUniform1i(program->uniform_location("shadow_map_height"), shadow_map.height);
+            glUniform3fv(program->uniform_location("box_extents"), 1, (GLfloat *) &shadow_map.box_extents);
 
             float near = camera->near_plane_distance;
             float far = fmin(shadow_map.distance, camera->far_plane_distance);
@@ -444,6 +445,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.num_frustum_segments = num_frustum_segments;
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
     sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
+    sm.box_extents = vec3::zero();
 
     sm.distance = 20; //an arbitrarily chosen default
     if (sm.num_frustum_segments == 2) {
@@ -580,6 +582,7 @@ void Graphics::update_lights()
                 mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
                                      * mat4x4::to_rigid_frame(min_point, X, Y, Z);
                 sm.shadow_matrices[segment] = shadow_matrix;
+                sm.box_extents = vec3(width, height, depth);
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
 
                 glViewport(0, 0, sm.width, sm.height);

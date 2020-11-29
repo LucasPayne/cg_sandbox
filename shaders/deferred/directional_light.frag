@@ -23,6 +23,7 @@ uniform float shadow_map_width_inv;
 uniform float shadow_map_height_inv;
 uniform int shadow_map_width;
 uniform int shadow_map_height;
+uniform vec3 box_extents;
 
 in vec2 uv;
 out vec4 color;
@@ -56,29 +57,23 @@ float shadowing(vec3 shadow_coord, int segment)
 // }
 
 
+
+
 void main(void)
 {
     vec4 f_albedo = texture(albedo, uv);
     vec3 f_normal = texture(normal, uv).rgb;
     vec3 f_position = texture(position, uv).rgb;
 
-
-    // color = vec4(vec3(0.1*eye_z), 1); return;
-
     float eye_z = dot(f_position - camera_position, camera_forward);
     int segment = 0;
     for (int i = 0; i < num_frustum_segments-1; i++) {
         if (eye_z >= frustum_segment_distances[i]) segment = i+1;
     }
-
-
     vec3 shadow_coord = 0.5*(shadow_matrices[segment] * vec4(f_position, 1)).xyz + 0.5;
-    float shadow = 0.f;
 
-    float sample_radius = 5.f * shadow_map_width_inv;
     #define NUM_SAMPLES 12
-    float weight = 1.f / NUM_SAMPLES;
-
+    float inv_num_samples = 1.f / NUM_SAMPLES;
     const vec2 poisson_samples[NUM_SAMPLES] = {
         vec2(-0.3835597153857353, -0.7778487407064922),
         vec2(0.40130091048388405, 0.19374174659263033),
@@ -93,17 +88,41 @@ void main(void)
         vec2(-0.17933857483077387, 0.8697576875147421),
         vec2(-0.15206507065241204, -0.7761207861878452)
     };
-
     // Pseudo-random noise taken off of stackoverflow.
     float rand_theta = 2*PI*fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);
 
+    #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
+
+    // Average the occluder depths from the (orthogonal) perspective of the light.
+    float worldspace_searching_radius = 0.5 * width * shadow_coord.z * box_extents.z;
+    vec2 imagespace_searching_extents = vec2(worldspace_searching_radius / box_extents.x,
+                                             worldspace_searching_radius / box_extents.y);
+    // imagespace_searching_extents = vec2(1.f * shadow_map_width_inv);
+    float average_occluder_depth = 0.f;
+    float num_occluded_samples = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
         vec2 rotated_poisson_sample = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
                                            -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y);
-        vec2 sample_uv = shadow_coord.xy + sample_radius * rotated_poisson_sample;
-        shadow += weight * shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        vec2 sample_uv = shadow_coord.xy + imagespace_searching_extents*rotated_poisson_sample;
+
+        float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        average_occluder_depth += shadow * texture(shadow_map, vec3(sample_uv, segment)).r;
+        num_occluded_samples += shadow;
+    }
+    if (num_occluded_samples != 0) average_occluder_depth /= num_occluded_samples;
+    else average_occluder_depth = 1;
+
+    float worldspace_sample_radius = 0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents.z;
+    vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents.x,
+                                          worldspace_sample_radius / box_extents.y);
+    float shadow = 0.f;
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        vec2 rotated_poisson_sample = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
+                                           -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y);
+        vec2 sample_uv = shadow_coord.xy + imagespace_sample_extents * rotated_poisson_sample;
+        shadow += inv_num_samples * shadowing(vec3(sample_uv, shadow_coord.z), segment);
     }
 
     color = vec4((1.f - shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);

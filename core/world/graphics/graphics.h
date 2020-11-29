@@ -51,6 +51,7 @@ struct DirectionalLightShadowMap {
     int height; // resolution
     int num_frustum_segments;
     float distance; // Shadows are computed up to this distance, or the far plane distance if that is closer.
+    vec3 box_extents;
 
     // The shadow matrices transform points in world space into shadow coordinates (X and Y as texture coordinates, Z as the depth in the range
     // of the shadow map).

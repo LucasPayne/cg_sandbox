@@ -266,6 +266,10 @@ void Graphics::deferred_lighting()
             glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
             glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
             glUniform1i(program->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
+            glUniform1f(program->uniform_location("shadow_map_width_inv"), 1.f / shadow_map.width);
+            glUniform1f(program->uniform_location("shadow_map_height_inv"), 1.f / shadow_map.height);
+            glUniform1i(program->uniform_location("shadow_map_width"), shadow_map.width);
+            glUniform1i(program->uniform_location("shadow_map_height"), shadow_map.height);
 
             float near = camera->near_plane_distance;
             float far = fmin(shadow_map.distance, camera->far_plane_distance);

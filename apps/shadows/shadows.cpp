@@ -138,68 +138,14 @@ void App::close()
 {
 }
 
-vec3 frustum_points[8];
 void App::loop()
 {
-
-    for (int i = 0; i < 2; i++) {
-        std::vector<vec3> plane_points = {frustum_points[4*i+0],frustum_points[4*i+1],frustum_points[4*i+2],frustum_points[4*i+3],frustum_points[4*i+0]};
-        world.graphics.paint.chain(plane_points, plane_points.size(), vec4(0,0,0,1));
-    }
-    for (int i = 0; i < 4; i++) {
-        std::vector<vec3> ps = {frustum_points[i], frustum_points[i+4]};
-        world.graphics.paint.chain(ps, ps.size(), vec4(0,0,0,1));
-    }
-
-    // auto light_transform = main_light.sibling<Transform>();
-    // vec3 X = light_transform->right();
-    // vec3 Y = light_transform->up();
-    // vec3 Z = light_transform->forward();
-    // {std::vector<vec3> line = {light_transform->position, light_transform->position+X};
-    // world.graphics.paint.chain(line, line.size(), vec4(1,0,0,1));}
-    // {std::vector<vec3> line = {light_transform->position, light_transform->position+Y};
-    // world.graphics.paint.chain(line, line.size(), vec4(0,1,0,1));}
-    // {std::vector<vec3> line = {light_transform->position, light_transform->position+Z};
-    // world.graphics.paint.chain(line, line.size(), vec4(0,0,1,1));}
-
-    // vec3 transformed_frustum[8];
-    // for (int i = 0; i < 8; i++) {
-    //     vec3 d = frustum_points[i];
-    //     transformed_frustum[i] = vec3(vec3::dot(d, X), vec3::dot(d, Y), vec3::dot(d, Z));
-    // }
-    // vec3 mins = transformed_frustum[0];
-    // vec3 maxs = transformed_frustum[0];
-    // for (int i = 1; i < 8; i++) {
-    //     for (int j = 0; j < 3; j++) {
-    //         if (transformed_frustum[i][j] < mins[j]) {
-    //             mins[j] = transformed_frustum[i][j];
-    //         } else if (transformed_frustum[i][j] > maxs[j]) {
-    //             maxs[j] = transformed_frustum[i][j];
-    //         }
-    //     }
-    // }
-    // vec3 bounding_box[8];
-    // vec3 minsmaxs[2] = {mins, maxs};
-    // for (int i = 0; i < 2; i++) {
-    //     for (int j = 0; j < 2; j++) {
-    //         for (int k = 0; k < 2; k++) {
-    //             vec3 p = X*minsmaxs[i].x() + Y*minsmaxs[j].y() + Z*minsmaxs[k].z();
-    //             bounding_box[4*i + 2*j + k] = p;
-    //         }
-    //     }
-    // }
-    // for (int i = 0; i < 8; i++) {
-    //     world.graphics.paint.sphere(bounding_box[i], 0.1, vec4(0,1,1,1));
-    // }
-    // for (int i = 0; i < 4; i++) {
-    //     std::vector<vec3> ps = {bounding_box[i], bounding_box[i+4]};
-    //     world.graphics.paint.chain(ps, ps.size(), vec4(0,0.5,0.5,1));
-    // }
-
     // View the G-buffer.
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
+
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.postprocessing_fbo_texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)
@@ -210,23 +156,6 @@ void App::keyboard_handler(KeyboardEvent e)
     check_quit_key(e, KEY_Q);
 
     if (e.action == KEYBOARD_PRESS) {
-        float extent_a = 0.f;
-        float extent_b = 0.05f;
-        if (e.key.code == KEY_O) {
-            vec3 _frustum_points[8] = {
-                main_camera->frustum_point(-1,-1,extent_a),
-                main_camera->frustum_point(1,-1,extent_a),
-                main_camera->frustum_point(1,1,extent_a),
-                main_camera->frustum_point(-1,1,extent_a),
-                main_camera->frustum_point(-1,-1,extent_b),
-                main_camera->frustum_point(1,-1,extent_b),
-                main_camera->frustum_point(1,1,extent_b),
-                main_camera->frustum_point(-1,1,extent_b),
-            };
-            for (int i = 0; i < 8; i++) {
-                frustum_points[i] = _frustum_points[i];
-            }
-        }
         if (e.key.code == KEY_G) world.graphics.update_lights();
     }
     

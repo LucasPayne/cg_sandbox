@@ -361,7 +361,7 @@ if (1) {
 {
     Entity light = world.entities.add();
     light.add<Transform>(0,0,0);
-    light.add<DirectionalLight>(vec3(1,1,1), 1.5);
+    light.add<DirectionalLight>(vec3(1,-0.3,1), vec3(1,1,1), 0.07);
     world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,1,0));
     main_light = light.get<DirectionalLight>();
 }

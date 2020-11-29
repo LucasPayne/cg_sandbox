@@ -227,6 +227,11 @@ void Graphics::refresh_gbuffer_textures()
         glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, viewport_width, viewport_height, 0, component.external_format, component.type, NULL);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Also resize the postprocessing fbo.
+    glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width, viewport_height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -234,26 +239,24 @@ void Graphics::deferred_lighting()
 {
     glDisable(GL_DEPTH_TEST);
 
-    bool first_light_pass = true;
-
+    bool first_light_pass = true; // The first pass blends differently into the framebuffer.
     glBindVertexArray(postprocessing_quad_vao);
     for (auto camera : world.entities.aspects<Camera>()) {
         if (!camera->rendering_to_framebuffer) continue;
+
+
         auto camera_transform = camera.sibling<Transform>();
         for (auto light : world.entities.aspects<DirectionalLight>()) {
             auto &program = directional_light_shader_program;
             program->bind();
             glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
             glBlendFunc(GL_ONE, GL_ZERO);
-            glClearColor(0,0,0,0);
-            glClear(GL_COLOR_BUFFER_BIT);
 
             vec3 camera_position = camera_transform->position;
             vec3 camera_forward = -camera_transform->forward();
             glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
             glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
 
-            begin_camera_rendering(camera);
             for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
                 auto &component = gbuffer_components[i];
                 glActiveTexture(GL_TEXTURE0 + i);
@@ -292,8 +295,8 @@ void Graphics::deferred_lighting()
                 glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
             }
             for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
-                float t = shadow_map.frustum_segment_dividers[i];
                 // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
+                float t = shadow_map.frustum_segment_dividers[i];
                 float frustum_segment_distance = (1-t)*near + t*far;
                 auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
                 glUniform1f(program->uniform_location(uniform_name), frustum_segment_distance);
@@ -305,13 +308,20 @@ void Graphics::deferred_lighting()
             }
 
 
+            glViewport(0, 0, viewport_width, viewport_height);
+            glClearColor(0,0,0,0);
+            glClear(GL_COLOR_BUFFER_BIT);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             program->unbind();
+            glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
+
             directional_light_filter_shader_program->bind();
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
             glUniform1i(directional_light_filter_shader_program->uniform_location("lighting"), 0);
+            glUniform1f(directional_light_filter_shader_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
+            glUniform1f(directional_light_filter_shader_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
             if (first_light_pass) {
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
                                     GL_ZERO, GL_ONE);                     // Alpha
@@ -320,8 +330,11 @@ void Graphics::deferred_lighting()
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
                                     GL_ZERO, GL_ONE);     // Alpha
             }
+
+            begin_camera_rendering(camera);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             directional_light_filter_shader_program->unbind();
+            end_camera_rendering(camera);
         }
         end_camera_rendering(camera);
     }

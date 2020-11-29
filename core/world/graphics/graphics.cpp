@@ -237,6 +237,9 @@ void Graphics::refresh_gbuffer_textures()
 
 void Graphics::deferred_lighting()
 {
+
+
+
     glDisable(GL_DEPTH_TEST);
     auto &program = directional_light_shader_program;
     auto &filter_program = directional_light_filter_shader_program;
@@ -249,27 +252,52 @@ void Graphics::deferred_lighting()
 
         auto camera_transform = camera.sibling<Transform>();
         for (auto light : world.entities.aspects<DirectionalLight>()) {
+            auto &shadow_map = directional_light_data(light).shadow_map(camera);
+
             program->bind();
             glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
             glBlendFunc(GL_ONE, GL_ZERO);
 
             vec3 camera_position = camera_transform->position;
             vec3 camera_forward = -camera_transform->forward();
-            glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
-            glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+            float near = camera->near_plane_distance;
+            float far = fmin(shadow_map.distance, camera->far_plane_distance);
 
-            for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
-                auto &component = gbuffer_components[i];
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, component.texture);
-                glUniform1i(program->uniform_location(component.name), i);
-            }
+            // Some uniforms are shared between both passes, so using this function avoids code duplication.
+            auto upload_shared_uniforms = [&](Resource<GLShaderProgram> prog) {
+                glUniform3fv(prog->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
+                glUniform3fv(prog->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+                glUniform1i(prog->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
+                for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
+                    // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
+                    float t = shadow_map.frustum_segment_dividers[i];
+                    float frustum_segment_distance = (1-t)*near + t*far;
+                    auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
+                    glUniform1f(prog->uniform_location(uniform_name), frustum_segment_distance);
+                }
+                {
+                    // The last "frustum segment" distance in the shader's array is the distance to the far plane.
+	                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
+                    glUniform1f(prog->uniform_location(uniform_name), far);
+                }
+                for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
+                    auto &component = gbuffer_components[i];
+                    glActiveTexture(GL_TEXTURE0 + i);
+                    glBindTexture(GL_TEXTURE_2D, component.texture);
+                    glUniform1i(prog->uniform_location(component.name), i);
+                }
+                glUniform3fv(prog->uniform_location("direction"), 1, (GLfloat *) &light->direction);
+                glUniform3fv(prog->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+                glUniform1f(program->uniform_location("width"), light->width);
+                for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
+                    auto &component = gbuffer_components[i];
+                    glActiveTexture(GL_TEXTURE0 + i);
+                    glBindTexture(GL_TEXTURE_2D, component.texture);
+                    glUniform1i(prog->uniform_location(component.name), i);
+                }
+            };
 
-            glUniform3fv(program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
-            glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
-            glUniform1f(program->uniform_location("width"), light->width);
-            auto &shadow_map = directional_light_data(light).shadow_map(camera);
-
+            upload_shared_uniforms(program);
             int shadow_map_slot = gbuffer_components.size();
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
             glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
@@ -277,36 +305,17 @@ void Graphics::deferred_lighting()
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot+1);
             glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
             glBindSampler(shadow_map_slot+1, shadow_map.sampler_raw);
-
-            glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
-            glUniform1i(program->uniform_location("shadow_map_raw"), shadow_map_slot+1);
-
-            glUniform1i(program->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
             glUniform1f(program->uniform_location("shadow_map_width_inv"), 1.f / shadow_map.width);
             glUniform1f(program->uniform_location("shadow_map_height_inv"), 1.f / shadow_map.height);
             glUniform1i(program->uniform_location("shadow_map_width"), shadow_map.width);
             glUniform1i(program->uniform_location("shadow_map_height"), shadow_map.height);
-
-            float near = camera->near_plane_distance;
-            float far = fmin(shadow_map.distance, camera->far_plane_distance);
-
+            glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
+            glUniform1i(program->uniform_location("shadow_map_raw"), shadow_map_slot+1);
             for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
                 auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
                 glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
                 uniform_name = std::string("box_extents[") + std::to_string(i) + std::string("]");
                 glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
-            }
-            for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
-                // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
-                float t = shadow_map.frustum_segment_dividers[i];
-                float frustum_segment_distance = (1-t)*near + t*far;
-                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
-                glUniform1f(program->uniform_location(uniform_name), frustum_segment_distance);
-            }
-            {
-                // The last "frustum segment" distance in the shader's array is the distance to the far plane.
-	            auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
-                glUniform1f(program->uniform_location(uniform_name), far);
             }
 
 
@@ -319,40 +328,15 @@ void Graphics::deferred_lighting()
             glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
 
             filter_program->bind();
+            upload_shared_uniforms(filter_program);
             glUniform1i(filter_program->uniform_location("shadow"), 0);
             glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
             glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
-
-            // DUPLICATED--------------------------------------------------------------------------------
-            glUniform3fv(filter_program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
-            glUniform3fv(filter_program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
-
-            for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
-                // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
-                float t = shadow_map.frustum_segment_dividers[i];
-                float frustum_segment_distance = (1-t)*near + t*far;
-                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
-                glUniform1f(filter_program->uniform_location(uniform_name), frustum_segment_distance);
-            }
-            {
-                // The last "frustum segment" distance in the shader's array is the distance to the far plane.
-	            auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
-                glUniform1f(filter_program->uniform_location(uniform_name), far);
-            }
-
-            for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
-                auto &component = gbuffer_components[i];
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, component.texture);
-                glUniform1i(filter_program->uniform_location(component.name), i);
-            }
-            glUniform3fv(filter_program->uniform_location("direction"), 1, (GLfloat *) &light->direction);
-            glUniform3fv(filter_program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
             //--------------------------------------------------------------------------------
             int shadow_signal_slot = gbuffer_components.size();
             glActiveTexture(GL_TEXTURE0 + shadow_signal_slot);
             glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
-            glUniform1i(program->uniform_location("shadow"), shadow_signal_slot);
+            glUniform1i(filter_program->uniform_location("shadow"), shadow_signal_slot);
 
             if (first_light_pass) {
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB

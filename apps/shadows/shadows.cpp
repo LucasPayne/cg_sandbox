@@ -29,7 +29,7 @@ struct LightRotate : public IBehaviour {
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
             theta += 1.f * dt;
         }
-        light->direction = vec3(cos(theta), -0.3, sin(theta)).normalized();
+        light->direction = vec3(cos(theta), -0.2, sin(theta)).normalized();
     }
 };
 

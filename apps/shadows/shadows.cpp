@@ -110,12 +110,21 @@ App::App(World &_world) : world{_world}
     obj.get<Transform>()->position = vec3(0,0.15,0);
     
     
+    {
     Entity light = world.entities.add();
     // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
     float sun_w = 0.07;
-    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), sun_w);
+    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.7,0.7,0.7), sun_w);
     world.add<LightRotate>(light, light.get<DirectionalLight>());
     main_light = light.get<DirectionalLight>();
+    }
+
+    {
+    Entity light = world.entities.add();
+    // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
+    float sun_w = 0.07;
+    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.3,0.3,0.3), sun_w);
+    }
 }
 
 

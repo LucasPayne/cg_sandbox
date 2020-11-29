@@ -264,7 +264,14 @@ void Graphics::deferred_lighting()
             int shadow_map_slot = gbuffer_components.size();
             glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
             glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
+            glBindSampler(shadow_map_slot, shadow_map.sampler_comparison);
+            glActiveTexture(GL_TEXTURE0 + shadow_map_slot+1);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
+            glBindSampler(shadow_map_slot+1, shadow_map.sampler_raw);
+
             glUniform1i(program->uniform_location("shadow_map"), shadow_map_slot);
+            glUniform1i(program->uniform_location("shadow_map_raw"), shadow_map_slot+1);
+
             glUniform1i(program->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
             glUniform1f(program->uniform_location("shadow_map_width_inv"), 1.f / shadow_map.width);
             glUniform1f(program->uniform_location("shadow_map_height_inv"), 1.f / shadow_map.height);
@@ -286,6 +293,13 @@ void Graphics::deferred_lighting()
                 auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
                 glUniform1f(program->uniform_location(uniform_name), frustum_segment_distance);
             }
+            {
+                // The last "frustum segment" distance in the shader's array is the distance to the far plane.
+	        auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
+                glUniform1f(program->uniform_location(uniform_name), far);
+            }
+
+
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
                                 GL_ZERO, GL_ONE);     // Alpha
@@ -418,10 +432,30 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    GLuint sampler;
+    glGenSamplers(1, &sampler);
+    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
+    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    GLuint sampler_raw;
+    glGenSamplers(1, &sampler_raw);
+    glSamplerParameteri(sampler_raw, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glSamplerParameteri(sampler_raw, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
@@ -441,6 +475,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
+    sm.sampler_comparison = sampler;
+    sm.sampler_raw = sampler_raw;
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);

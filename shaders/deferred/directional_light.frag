@@ -1,3 +1,8 @@
+/*--------------------------------------------------------------------------------
+    Deferred directional light
+        - Cascaded shadow maps
+        - Percentage-closer soft shadows with percentage-closer filtering
+--------------------------------------------------------------------------------*/
 #version 420
 // G-buffer
 uniform sampler2D position;
@@ -16,9 +21,10 @@ uniform float width;
 // Shadow mapping
 #define MAX_NUM_FRUSTUM_SEGMENTS 4
 uniform int num_frustum_segments;
-uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS-1];
+uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform mat4x4 shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
-uniform sampler2DArray shadow_map;
+uniform sampler2DArrayShadow shadow_map;
+uniform sampler2DArray shadow_map_raw;
 uniform float shadow_map_width_inv;
 uniform float shadow_map_height_inv;
 uniform int shadow_map_width;
@@ -33,9 +39,12 @@ out vec4 color;
 
 float shadowing(vec3 shadow_coord, int segment)
 {
-    float shadow_depth = texture(shadow_map, vec3(shadow_coord.xy, segment)).r;
     float bias = 0.005;
-    float shadow = shadow_coord.z < shadow_depth + bias ? 0.f : 1.f;
+    // float shadow_depth = texture(shadow_map, vec3(shadow_coord.xy, segment)).r;
+    // float shadow = shadow_coord.z < shadow_depth + bias ? 0.f : 1.f;
+
+    float shadow = texture(shadow_map, vec4(shadow_coord.xy, segment, shadow_coord.z - bias)).r;
+
     if (shadow_coord.z > 1 ||
             shadow_coord.x < 0 || shadow_coord.x > 1 ||
             shadow_coord.y < 0 || shadow_coord.y > 1) {
@@ -44,34 +53,36 @@ float shadowing(vec3 shadow_coord, int segment)
     return shadow;
 }
 
-// float bilinear_shadowing(vec3 shadow_coord, int segment) {
-//     float x_frac = fract(shadow_coord.x * shadow_map_width + 0.5);
-//     float y_frac = fract(shadow_coord.y * shadow_map_height + 0.5);
-//     float a = shadowing(vec3(shadow_coord.x - shadow_map_width_inv, shadow_coord.y - shadow_map_height_inv, shadow_coord.z), segment);
-//     float b = shadowing(vec3(shadow_coord.x - shadow_map_width_inv, shadow_coord.y, shadow_coord.z), segment);
-//     float c = shadowing(vec3(shadow_coord.x, shadow_coord.y - shadow_map_height_inv, shadow_coord.z), segment);
-//     float d = shadowing(vec3(shadow_coord.x, shadow_coord.y, shadow_coord.z), segment);
-//     return mix(mix(a, b, y_frac),
-//            mix(c, d, y_frac),
-//            x_frac);
-// }
-
-
-
 
 void main(void)
 {
+    /*--------------------------------------------------------------------------------
+        G-buffer fetching
+    --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, uv);
     vec3 f_normal = texture(normal, uv).rgb;
     vec3 f_position = texture(position, uv).rgb;
 
+    /*--------------------------------------------------------------------------------
+        Determine frustum segment (from cascaded shadow maps), and
+        transform to light space.
+    --------------------------------------------------------------------------------*/
     float eye_z = dot(f_position - camera_position, camera_forward);
     int segment = 0;
     for (int i = 0; i < num_frustum_segments-1; i++) {
         if (eye_z >= frustum_segment_distances[i]) segment = i+1;
     }
     vec3 shadow_coord = 0.5*(shadow_matrices[segment] * vec4(f_position, 1)).xyz + 0.5;
+    // Fade out shadows in the distance.
+    float shadow_fading = 1.f;
+    if (segment == num_frustum_segments - 1) {
+        shadow_fading = 1 - (eye_z - frustum_segment_distances[num_frustum_segments-1])
+                        /(frustum_segment_distances[num_frustum_segments-1] - frustum_segment_distances[num_frustum_segments-2]);
+    }
 
+    /*--------------------------------------------------------------------------------
+        Random variables for sampling
+    --------------------------------------------------------------------------------*/
     #define NUM_SAMPLES 12
     float inv_num_samples = 1.f / NUM_SAMPLES;
     const vec2 poisson_samples[NUM_SAMPLES] = {
@@ -95,11 +106,21 @@ void main(void)
 
     #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
 
+    /*================================================================================
+        Percentage-closer soft shadows
+    ================================================================================*/
+    /*--------------------------------------------------------------------------------
+        The far away area-light subtends a certain solid angle, determined by input parameters.
+        The true occlusion is the proportion of this solid angle that is occluded.
+        PCSS approximates this by first finding a good representative occluder depth
+        (from the perspective of the light) by sampling the shadow map.
+        The searched ellipse in texture space is chosen such that it ranges over all possible occluders,
+        with respect to the solid angle of the incoming light (e.g. the sun).
+    --------------------------------------------------------------------------------*/
     // Average the occluder depths from the (orthogonal) perspective of the light.
     float worldspace_searching_radius = 0.5 * width * shadow_coord.z * box_extents.z;
     vec2 imagespace_searching_extents = vec2(worldspace_searching_radius / box_extents.x,
                                              worldspace_searching_radius / box_extents.y);
-    // imagespace_searching_extents = vec2(1.f * shadow_map_width_inv);
     float average_occluder_depth = 0.f;
     float num_occluded_samples = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
@@ -108,12 +129,17 @@ void main(void)
         vec2 sample_uv = shadow_coord.xy + imagespace_searching_extents*rotated_poisson_sample;
 
         float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment);
-        average_occluder_depth += shadow * texture(shadow_map, vec3(sample_uv, segment)).r;
+        average_occluder_depth += shadow * texture(shadow_map_raw, vec3(sample_uv, segment)).r;
         num_occluded_samples += shadow;
     }
     if (num_occluded_samples != 0) average_occluder_depth /= num_occluded_samples;
     else average_occluder_depth = 1;
 
+    /*--------------------------------------------------------------------------------
+        Now the sampling width is determined such that, assuming all occluders
+        are at the representative depth, and assuming the surface is faced toward the light,
+        the occlusion would be correctly computed (with sufficient samples).
+    --------------------------------------------------------------------------------*/
     float worldspace_sample_radius = 0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents.z;
     vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents.x,
                                           worldspace_sample_radius / box_extents.y);
@@ -124,10 +150,17 @@ void main(void)
         vec2 sample_uv = shadow_coord.xy + imagespace_sample_extents * rotated_poisson_sample;
         shadow += inv_num_samples * shadowing(vec3(sample_uv, shadow_coord.z), segment);
     }
+    color = vec4((1.f - shadow_fading*shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
 
-    color = vec4((1.f - shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
 
-    // Uncomment to visualize frustum segments.
+    // Ambient lighting
+    vec3 ambient = vec3(0.28);
+    color += vec4(ambient*f_albedo.rgb, 0);
+
+
+    /*--------------------------------------------------------------------------------
+        Uncomment to visualize frustum segments.
+    --------------------------------------------------------------------------------*/
     #if 0
     if (segment == 0) color += vec4(0.5,0,0,0);
     else if (segment == 1) color += vec4(0,0.5,0,0);

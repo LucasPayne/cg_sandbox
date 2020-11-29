@@ -47,6 +47,8 @@ struct DirectionalLightShadowMap {
     Aspect<Camera> camera;
     GLuint fbo;
     GLuint texture;
+    GLuint sampler_comparison;
+    GLuint sampler_raw; // this sampler object gives regular lookup with nearest-neighbour filtering.
     int width;
     int height; // resolution
     int num_frustum_segments;

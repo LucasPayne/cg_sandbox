@@ -48,19 +48,20 @@ struct Camera : public IAspectType {
     float near_half_width;
     float m_aspect_ratio; // Aspect ratio here is height over width.
 
-    bool rendering_to_framebuffer; //note: Currently this is always true, but later cameras could be able to render to textures.
+    bool rendering_to_screen; // If rendering to the screen, the framebuffer will automatically be updated to be the screen framebuffer.
+    // Viewport extents.
+    vec2 bottom_left;
+    vec2 top_right;
+    Framebuffer framebuffer;
 
     vec4 background_color;
 
-    // Viewport extents (in terms of the application subrectangle).
-    vec2 bottom_left;
-    vec2 top_right;
-        // If cameras rendering to the framebuffer have different layers, then the one with the lowest layer has priority for,
+        // If cameras rendering to the screen have different layers, then the one with the lowest layer has priority for,
         // e.g., ray picking.
     int layer;
-        // When the camera is rendering to a framebuffer, this returns whether or not the given screen position is in the camera's rectangle.
+        // When the camera is rendering to the screen, this returns whether or not the given screen position is in the camera's rectangle.
     bool in_viewport(float screen_x, float screen_y);
-        // Transform screen coordinates to the coordinates of the camera's viewport (a rectangular affine transformation).
+        // Transform screen coordinates to the coordinates of the camera's subrectangle (a rectangular affine transformation).
     void to_viewport(float screen_x, float screen_y, float *camera_x, float *camera_y);
 
     float aspect_ratio() const;
@@ -77,7 +78,7 @@ struct Camera : public IAspectType {
     mat4x4 view_matrix();
     mat4x4 view_projection_matrix();
 
-    // Initialize this to a projective camera, with the default full viewport.
+    // Initialize this to a projective camera rendering to the full screen.
     Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
     Camera() {}
 };

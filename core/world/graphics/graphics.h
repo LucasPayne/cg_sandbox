@@ -16,6 +16,16 @@ The Graphics component also holds render loops.
 
 #include "world/resource_cache.h"
 
+
+struct Framebuffer {
+    GLuint id;
+    int resolution_x;
+    int resolution_y;
+
+    GLuint texture;
+};
+
+
 // Reflect opengl_utilities classes.
 REFLECT_STRUCT(GLShader);
 REFLECT_STRUCT(GLShaderProgram);
@@ -131,9 +141,13 @@ public:
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
 
-    GLuint postprocessing_fbo; // A framebuffer object for rendering color values into.
-                               // This can be used to, for example, bilaterally denoise deferred light passes.
+    // A framebuffer object for rendering color values into.
+    // This can be used to, for example, bilaterally denoise deferred light passes.
+    GLuint postprocessing_fbo;
     GLuint postprocessing_fbo_texture;
+    // Another one for ping-ponging between.
+    GLuint postprocessing_fbo_2;
+    GLuint postprocessing_fbo_2_texture;
 
     void set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height);
     void subviewport_begin(vec2 bottom_left, vec2 top_right);

@@ -20,18 +20,18 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
                                0, (f - n)/(f*h), 0,0,
                                0,0, -1/n, (-f + n)/(f*n),
                                0,0, -1, 0);
-    // The default is the full viewport.
-    rendering_to_framebuffer = true;
     bottom_left = vec2(0,0);
     top_right = vec2(1,1);
     layer = 0; // Default to highest-priority layer.
 
     background_color = vec4(0.9,0.9,0.9,1);
+
+    rendering_to_screen = true;
 }
 
 bool Camera::in_viewport(float screen_x, float screen_y)
 {
-    if (!rendering_to_framebuffer) return false;
+    if (!rendering_to_screen) return false;
     return screen_x >= bottom_left.x() && screen_x <= top_right.x() &&
            screen_y >= bottom_left.y() && screen_y <= top_right.y();
 }

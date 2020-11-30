@@ -60,47 +60,7 @@ void World::loop()
         if (b->enabled) b->update();
     }
 
-    /*--------------------------------------------------------------------------------
-        Clear framebuffers and render surfaces into the G-buffer.
-    --------------------------------------------------------------------------------*/
-    graphics.clear(vec4(0,0,0,1), vec4(1,1,1,1));
-    graphics.clear_cameras();
-    glBindFramebuffer(GL_FRAMEBUFFER, graphics.gbuffer_fb);
-    graphics.clear(vec4(0,0,0,0), vec4(0,0,0,0));
-    // To save memory, the G-buffer is only the size of the default viewport (the fixed-aspect-ratio subrectangle of the window).
-    // So, the viewport must be changed when rendering into the G-buffer, and restored after.
-    int x, y, w, h;
-    x = graphics.viewport_x;
-    y = graphics.viewport_y;
-    w = graphics.viewport_width;
-    h = graphics.viewport_height;
-    graphics.set_viewport(0,0, w,h);
-    graphics.render_drawables_to_cameras("shaders/gbuffer/position_normal_albedo.sm");
-    graphics.set_viewport(x,y, w,h);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    /*--------------------------------------------------------------------------------
-        Update lighting data, such as shadow maps.
-    --------------------------------------------------------------------------------*/
-    graphics.update_lights();
-    /*--------------------------------------------------------------------------------
-        Lighting and rendering using the G-buffer.
-    --------------------------------------------------------------------------------*/
-    graphics.deferred_lighting();
-    /*--------------------------------------------------------------------------------
-        Blit the G-buffer depth-buffer over to the default framebuffer.
-    --------------------------------------------------------------------------------*/
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, graphics.gbuffer_fb);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, w, h,
-                      x, y, x+w, y+h,
-                      GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    /*--------------------------------------------------------------------------------
-        Update the painting module, rendering 2D and 3D vector graphics.
-    --------------------------------------------------------------------------------*/
-    graphics.paint.render();
-    graphics.paint.clear();
+    graphics.render();
 
     /*--------------------------------------------------------------------------------
         Post-render update entities.

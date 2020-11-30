@@ -11,6 +11,29 @@
 Aspect<Camera> main_camera;
 Aspect<DirectionalLight> main_light;
 
+struct LightRotate : public IBehaviour {
+    Aspect<DirectionalLight> light;
+    float theta;
+    LightRotate(Aspect<DirectionalLight> _light) :
+        light{_light}
+    {
+        theta = 0;
+    }
+    void update() {
+        auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
+        // world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
+
+        if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
+            theta -= 1.f * dt;
+        }
+        if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
+            theta += 1.f * dt;
+        }
+        light->direction = vec3(cos(theta), -0.2, sin(theta)).normalized();
+    }
+};
+
+
 
 class DrawableNURBS : public IBehaviour {
 public:
@@ -304,24 +327,6 @@ struct WireframeDemo : public IBehaviour {
     }
 };
 
-struct LightRotate : public IBehaviour {
-    Aspect<DirectionalLight> light;
-    vec3 axis;
-    vec3 X;
-    vec3 Z;
-    LightRotate(Aspect<DirectionalLight> _light, vec3 _axis) :
-        light{_light},
-        axis{_axis.normalized()}
-    {}
-    void update() {
-        auto t = light.sibling<Transform>();
-        t->rotation = Quaternion::from_axis_angle(axis, total_time);
-
-        auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
-        world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0.5,0.5), 0.28,0.28, 3, vec4(0,0,0,1));
-    }
-};
-
 
 
 class App : public IGC::Callbacks {
@@ -347,14 +352,32 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     
+{
+    SurfaceGeometry floor;
+    auto a = floor.add_vertex(-1,0,-1);
+    auto b = floor.add_vertex(1,0,-1);
+    auto c = floor.add_vertex(1,0,1);
+    auto d = floor.add_vertex(-1,0,1);
+    floor.add_triangle(a, b, c);
+    floor.add_triangle(a, c, d);
+    auto floor_model = floor.to_model();
+    Entity obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
+    // obj.get<Drawable>()->shadow_caster = false;
+    obj.get<Transform>()->scale = 4;
+    obj.get<Transform>()->position = vec3(0,0.15 - 2.3,0);
+}
+
 if (1) {
-    Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
-    obj.get<Transform>()->position = vec3(0.7,0,0);
+    // Entity obj = create_mesh_object(world, "resources/models/large/buddha.obj", "shaders/uniform_color.mat");
+    Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position = vec3(0.7,-2,0);
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
 }
 if (1) {
     Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->scale = 5;
+    obj.get<Transform>()->position.y() -= 2;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
 }
     
@@ -362,7 +385,7 @@ if (1) {
     Entity light = world.entities.add();
     light.add<Transform>(0,0,0);
     light.add<DirectionalLight>(vec3(1,-0.3,1), vec3(1,1,1), 0.07);
-    world.add<LightRotate>(light, light.get<DirectionalLight>(), vec3(0,1,0));
+    world.add<LightRotate>(light, light.get<DirectionalLight>());
     main_light = light.get<DirectionalLight>();
 }
 {

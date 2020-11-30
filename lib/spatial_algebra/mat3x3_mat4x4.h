@@ -2,9 +2,8 @@
 #define SPATIAL_ALGEBRA_MAT4X4_H
 #include <string.h>
 #include <ostream>
+
 // mat3x3 and mat4x4 are column-major, as default in OpenGL/GLSL.
-
-
 struct mat3x3 {
     float entries[9];
     // Constructor with column-major parameter order.

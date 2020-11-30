@@ -549,7 +549,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     } else if (sm.num_frustum_segments == 3) {
         sm.frustum_segment_dividers[0] = 0.2;
         sm.frustum_segment_dividers[0] = 0.5;
-    } else if (sm.num_frustum_segments == 3) {
+    } else if (sm.num_frustum_segments == 4) {
         sm.frustum_segment_dividers[0] = 0.1;
         sm.frustum_segment_dividers[1] = 0.3;
         sm.frustum_segment_dividers[2] = 0.6;

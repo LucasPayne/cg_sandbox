@@ -3,6 +3,7 @@
 #include <math.h>
 #include <ostream>
 #include <stdlib.h>
+#include "gpu.h"
 #define frand() (rand() / (RAND_MAX * 1.0))
 
 
@@ -12,9 +13,9 @@
 struct vec3 {
     float entries[3];
     vec3() {}
-    static inline vec3 zero() { return vec3(0,0,0); }
-    vec3(float x, float y, float z) : entries{x,y,z} {}
-    vec3(float val) : vec3(val, val, val) {}
+    HD static inline vec3 zero() { return vec3(0,0,0); }
+    HD vec3(float x, float y, float z) : entries{x,y,z} {}
+    HD vec3(float val) : vec3(val, val, val) {}
 
     // Entry accessors
     inline float x() const { return entries[0]; }

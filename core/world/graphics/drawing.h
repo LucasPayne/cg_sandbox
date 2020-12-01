@@ -13,6 +13,8 @@ struct Framebuffer {
     int resolution_y;
     GLuint texture;
 };
+std::ostream &operator<<(std::ostream &os, Framebuffer &framebuffer);
+
 // Macro for expanding a viewport into glViewport and glScissor parameters.
 #define VIEWPORT_EXPAND(VIEWPORT) ( VIEWPORT ).x, ( VIEWPORT ).y, ( VIEWPORT ).w, ( VIEWPORT ).h
 struct Viewport {
@@ -25,6 +27,8 @@ struct Viewport {
     {}
     Viewport() {}
 };
+std::ostream &operator<<(std::ostream &os, Viewport &viewport);
+
 
 
 // note: This is currently being passed around by value, so the underlying buffer cannot be freed in the destructor.

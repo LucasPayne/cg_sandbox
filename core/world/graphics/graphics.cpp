@@ -156,6 +156,9 @@ void Graphics::refresh_framebuffers()
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
             glBindTexture(GL_TEXTURE_2D, 0);
         }
+        glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
     framebuffer_res_x = max_res_x;
     framebuffer_res_y = max_res_y;
@@ -202,10 +205,6 @@ void Graphics::render(Aspect<Camera> camera)
                       viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
                       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    /*--------------------------------------------------------------------------------
-        Render 2D and 3D vector graphics.
-    --------------------------------------------------------------------------------*/
-    // paint.render();
 
     /*--------------------------------------------------------------------------------
         Post-processing.
@@ -232,13 +231,33 @@ void Graphics::render()
         render(camera);
     }
 
-    paint.clear();
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    glViewport(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y);
+    glClearColor(0,1,0,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    std::cout << screen_buffer << "\n";
+
+    /*--------------------------------------------------------------------------------
+        Place the screen buffer in the window.
+    --------------------------------------------------------------------------------*/
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glDisable(GL_SCISSOR_TEST);
+    glViewport(0, 0, world.screen_width, world.screen_height);
+    glClearColor(1,0,0,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
+    glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
+                      window_viewport.x, window_viewport.y, window_viewport.x+window_viewport.w, window_viewport.y+window_viewport.h, // destination
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 
 
 void Graphics::lighting(Aspect<Camera> camera)
 {
+    // Clear to background color.
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
     auto viewport = camera->viewport();
     glViewport(VIEWPORT_EXPAND(viewport));
@@ -247,6 +266,7 @@ void Graphics::lighting(Aspect<Camera> camera)
     glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_SCISSOR_TEST);
+
     directional_lights(camera);
 }
 
@@ -453,9 +473,9 @@ void Graphics::init()
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    auto create_color_framebuffer = [](Framebuffer fb) {
-        GLuint fbo = fb.id;
-        GLuint tex = fb.texture;
+    auto create_color_framebuffer = [](Framebuffer &fb) {
+        GLuint &fbo = fb.id;
+        GLuint &tex = fb.texture;
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);

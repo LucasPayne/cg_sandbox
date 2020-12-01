@@ -34,6 +34,4 @@ void main(void)
         // color = vec4(0,r,0,1);
     }
     if (alpha == 0.f) color = vec4(0,0,0,0);
-    
-    color = vec4(0, 1, 0, 1);
 }

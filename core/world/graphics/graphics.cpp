@@ -740,6 +740,31 @@ void Graphics::swap_post()
 }
 
 
+std::string gl_error_string()
+{
+    GLenum err = glGetError();
+    switch(err) {
+        case GL_NO_ERROR:
+            return "GL_NO_ERROR";
+        case GL_INVALID_ENUM:
+            return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE:
+            return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION:
+            return "GL_INVALID_OPERATION";
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        case GL_OUT_OF_MEMORY:
+            return "GL_OUT_OF_MEMORY";
+        case GL_STACK_UNDERFLOW:
+            return "GL_STACK_UNDERFLOW";
+        case GL_STACK_OVERFLOW:
+            return "GL_STACK_OVERFLOW";
+    }
+    return "UNKOWN";
+}
+
+
 
 void Graphics::depth_of_field(Aspect<Camera> camera)
 {
@@ -761,7 +786,6 @@ void Graphics::depth_of_field(Aspect<Camera> camera)
     float focus = 0.5*camera->depth_of_field.x() + 0.5*camera->depth_of_field.y();
     glUniform1f(program->uniform_location("focus"), focus);
 
-
     auto confusion_buffer = post_buffer();
     std::cout << gbuffer_component("position").texture << "\n";
     std::cout << confusion_buffer << "\n";
@@ -774,27 +798,34 @@ void Graphics::depth_of_field(Aspect<Camera> camera)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     program->unbind();
 
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, confusion_buffer.id);
+    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_buffer.id);
+    // glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
+    //                   0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // destination
+    //                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
     /*--------------------------------------------------------------------------------
         Near field filtering.
     --------------------------------------------------------------------------------*/
-    program = depth_of_field_near_field_program;
-    program->bind();
+    auto filter_program = depth_of_field_near_field_program;
+    filter_program->bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, confusion_buffer.texture);
-    glUniform1i(program->uniform_location("confusion"), 0);
+    glUniform1i(filter_program->uniform_location("confusion"), 0);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
-    glUniform1i(program->uniform_location("image"), 1);
-    glUniform1f(program->uniform_location("inv_screen_width"), 1.f / post_buffer().resolution_x);
-    glUniform1f(program->uniform_location("inv_screen_height"), 1.f / post_buffer().resolution_y);
+    glUniform1i(filter_program->uniform_location("image"), 1);
+    glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / post_buffer().resolution_x);
+    glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / post_buffer().resolution_y);
 
     swap_post();
-    std::cout << post_buffer() << "\n";
-    // glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
-    glBlendFunc(GL_ONE, GL_ZERO);
-    glClearColor(0,0,0,0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, post_buffer().id);
+    glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
+                      0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // destination
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindVertexArray(postprocessing_quad_vao);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, post_buffer().id);
@@ -802,6 +833,6 @@ void Graphics::depth_of_field(Aspect<Camera> camera)
     glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
                       0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // destination
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    
-    program->unbind();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    filter_program->unbind();
 }

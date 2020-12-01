@@ -38,14 +38,14 @@ void main(void)
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);
 
-    float r = texture(confusion, uv).x;
+    float r = 20*texture(confusion, uv).x;
     vec4 accumulation = vec4(0,0,0,0);
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        vec2 sample_uv = uv + r * vec2(inv_screen_width, inv_screen_height) * poisson_samples[i];
-        accumulation += inv_num_samples * texture(image, sample_uv);
+        vec2 rotated_poisson_sample = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
+                                           -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y);
+        vec2 sample_uv = uv + r * vec2(inv_screen_width, inv_screen_height) * rotated_poisson_sample;
+        accumulation += inv_num_samples * texture(confusion, sample_uv).a * texture(image, sample_uv);
     }
-    color = accumulation;
-
-    color = texture(confusion, uv);
-    // color = texture(image, uv);
+    // color = vec4(0.5*(texture(image, uv).rgb * texture(image,uv).a) + 0.5 * accumulation.rgb, 1);
+    color = vec4(accumulation.rgb, 1);
 }

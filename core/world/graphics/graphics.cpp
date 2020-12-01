@@ -52,17 +52,6 @@ void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
 
 
 
-void Graphics::clear(vec4 bg_color, vec4 fg_color)
-{
-    // Clearing: window clear to background color, viewport clear to the foreground color.
-    glDisable(GL_SCISSOR_TEST);
-    glClearColor(bg_color.x(),bg_color.y(),bg_color.z(),bg_color.w());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_SCISSOR_TEST);
-    glClearColor(fg_color.x(),fg_color.y(),fg_color.z(),fg_color.w());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
 
 
 static const bool logging_rendering = false;
@@ -139,43 +128,47 @@ END_ENTRIES()
 
 
 
-void Graphics::refresh_gbuffer_textures()
+void Graphics::refresh_framebuffers()
 {
-    // When the window is resized, the G-buffer texture/renderbuffer storage needs to be updated to match the default viewport.
-    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, viewport_width, viewport_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    
-    for (auto &component : gbuffer_components) {
-        glBindTexture(GL_TEXTURE_2D, component.texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, viewport_width, viewport_height, 0, component.external_format, component.type, NULL);
+    /*--------------------------------------------------------------------------------
+        Resize, if necessary, the full-sized framebuffers (G-buffer, full-resolution screenspace post-processing)
+        to be the minimum required to work with each camera.
+    --------------------------------------------------------------------------------*/
+    int max_res_x = 0;
+    int max_res_y = 0;
+    for (auto camera : world.entities.aspects<Camera>()) {
+        if (camera->framebuffer.resolution_x > max_res_x) max_res_x = camera->framebuffer.resolution_x;
+        if (camera->framebuffer.resolution_y > max_res_y) max_res_y = camera->framebuffer.resolution_y;
     }
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if (max_res_x != framebuffer_res_x || max_res_y != framebuffer_res_y) {
+        glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, max_res_x, max_res_y);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        
+        for (auto &component : gbuffer_components) {
+            glBindTexture(GL_TEXTURE_2D, component.texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, max_res_x, max_res_y, 0, component.external_format, component.type, NULL);
+        }
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Also resize the postprocessing fbos.
-    glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width, viewport_height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_2_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport_width, viewport_height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindTexture(GL_TEXTURE_2D, 0);
+        for (int i = 0; i < 2; i++) {
+            glBindTexture(GL_TEXTURE_2D, post_buffers[i].texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
+    framebuffer_res_x = max_res_x;
+    framebuffer_res_y = max_res_y;
 }
 
 void Graphics::render(Aspect<Camera> camera)
 {
-    // Get the camera's viewport of its target framebuffer.
-    int res_x = camera->framebuffer.resolution_x;
-    int res_y = camera->framebuffer.resolution_y;
-    int x,y,w,h;
-    x = floor(res_x * camera->bottom_left.x());
-    w = ceil(res_x *  camera->top_right.x()) - x;
-    y = floor(res_y * camera->bottom_left.y());
-    h = ceil(res_y *  camera->top_right.y()) - y;
+    auto viewport = camera->viewport();
 
     /*--------------------------------------------------------------------------------
         Set default state
     --------------------------------------------------------------------------------*/
-    glDisable(GL_SCISSOR);
+    glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     /*--------------------------------------------------------------------------------
         Render surfaces into the G-buffer.
@@ -183,7 +176,7 @@ void Graphics::render(Aspect<Camera> camera)
         all viewport ranges will have space.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
-    glViewport(0, 0, w, h);
+    glViewport(0, 0, viewport.w, viewport.h);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -205,14 +198,14 @@ void Graphics::render(Aspect<Camera> camera)
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer_fb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, camera->framebuffer.id);
-    glBlitFramebuffer(0, 0, w, h,
-                      x, y, x+w, y+h,
+    glBlitFramebuffer(0, 0, viewport.w, viewport.h,
+                      viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
                       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     /*--------------------------------------------------------------------------------
         Render 2D and 3D vector graphics.
     --------------------------------------------------------------------------------*/
-    paint.render(camera);
+    // paint.render();
 
     /*--------------------------------------------------------------------------------
         Post-processing.
@@ -223,10 +216,10 @@ void Graphics::render()
 {
     // Connect screen-cameras to the screen.
     for (auto camera : world.entities.aspects<Camera>()) {
-        if (camera->rendering_to_screen) camera->framebuffer = screen_framebuffer;
+        if (camera->rendering_to_screen) camera->framebuffer = screen_buffer;
     }
-
-    //---update the framebuffers to be large enough for the largest camera resolution.
+    // Resize framebuffers if necessary.
+    refresh_framebuffers();
 
     /*--------------------------------------------------------------------------------
         Update lighting data, such as shadow maps.
@@ -244,16 +237,16 @@ void Graphics::render()
 
 
 
-void Graphics::lighting(Aspect<Camera> camera, int x, int y, int w, int h)
+void Graphics::lighting(Aspect<Camera> camera)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
-    glViewport(x, y, w, h);
-    glScissor(x, y, w, h);
+    auto viewport = camera->viewport();
+    glViewport(VIEWPORT_EXPAND(viewport));
+    glScissor(VIEWPORT_EXPAND(viewport));
     glEnable(GL_SCISSOR_TEST);
     glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_SCISSOR_TEST);
-
     directional_lights(camera);
 }
 
@@ -333,7 +326,7 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, post_buffer());
+        glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
         glBlendFunc(GL_ONE, GL_ZERO);
         glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -341,13 +334,14 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();
 
+        // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
         upload_shared_uniforms(filter_program);
         glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
         glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
         int shadow_signal_slot = gbuffer_components.size();
         glActiveTexture(GL_TEXTURE0 + shadow_signal_slot);
-        glBindTexture(GL_TEXTURE_2D, post_buffer());
+        glBindTexture(GL_TEXTURE_2D, post_buffer().id);
         glUniform1i(filter_program->uniform_location("shadow"), shadow_signal_slot);
 
         glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
@@ -363,7 +357,6 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         filter_program->unbind();
     }
-    end_camera_rendering(camera);
 }
 
 
@@ -460,26 +453,28 @@ void Graphics::init()
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Set up framebuffer object useful for postprocessing effects.
-    auto create_postprocessing_fbo = [](GLuint &postprocessing_fbo) {
-        glGenFramebuffers(1, &postprocessing_fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, postprocessing_fbo);
-        glGenTextures(1, &postprocessing_fbo_texture);
-        glBindTexture(GL_TEXTURE_2D, postprocessing_fbo_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, world.screen_width, world.screen_height, 0, GL_RGBA, GL_FLOAT, NULL);
+    auto create_color_framebuffer = [](Framebuffer fb) {
+        GLuint fbo = fb.id;
+        GLuint tex = fb.texture;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessing_fbo_texture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "G-buffer framebuffer incomplete.\n");
+            fprintf(stderr, "Framebuffer incomplete.\n");
             exit(EXIT_FAILURE);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-    create_postprocessing_fbo(postprocessing_fbo);
-    create_postprocessing_fbo(postprocessing_fbo_2);
+    };
+    create_color_framebuffer(screen_buffer);
+    create_color_framebuffer(post_buffers[0]);
+    create_color_framebuffer(post_buffers[1]);
 }
 
 DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
@@ -511,7 +506,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 
-    GLuint sampler;
+    GLuint sampler; // For use with sampler2DShadow[Array].
     glGenSamplers(1, &sampler);
     glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
@@ -520,7 +515,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    GLuint sampler_raw;
+    GLuint sampler_raw; // For direct access of shadow map texels.
     glGenSamplers(1, &sampler_raw);
     glSamplerParameteri(sampler_raw, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glSamplerParameteri(sampler_raw, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -560,9 +555,9 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         sm.frustum_segment_dividers[0] = 0.2;
         sm.frustum_segment_dividers[0] = 0.5;
     } else if (sm.num_frustum_segments == 4) {
-        sm.frustum_segment_dividers[0] = 0.1;
-        sm.frustum_segment_dividers[1] = 0.3;
-        sm.frustum_segment_dividers[2] = 0.6;
+        sm.frustum_segment_dividers[0] = 0.15;
+        sm.frustum_segment_dividers[1] = 0.39;
+        sm.frustum_segment_dividers[2] = 0.68;
     } else {
         // Evenly spaced. This is not very good.
         for (int i = 1; i < sm.num_frustum_segments; i++) {
@@ -591,7 +586,7 @@ void Graphics::update_lights()
             auto &sm = directional_light_data(light).shadow_map(camera);
             float near = camera->near_plane_distance;
             float far = fmin(sm.distance, camera->far_plane_distance);
-            // Since frustum coordinates are range in z from 0 at the near plane to 1 at the far plane,
+            // Since frustum coordinates range in z from 0 at the near plane to 1 at the far plane,
             // make a correction to a shorter frustum if the shadows have a shorter render distance.
             float distance_multiplier = (far - near) / (camera->far_plane_distance - camera->near_plane_distance);
 
@@ -697,7 +692,6 @@ void Graphics::update_lights()
                 glClear(GL_DEPTH_BUFFER_BIT);
                 render_drawables(shadow_map_shading_model);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                glViewport(viewport_x, viewport_y, viewport_width, viewport_height); // Restore the previous viewport.
                 glEnable(GL_SCISSOR_TEST);
             }
         }
@@ -705,3 +699,13 @@ void Graphics::update_lights()
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.
     shadow_map_shading_model.properties.destroy();
 }
+
+Framebuffer Graphics::post_buffer()
+{
+    return post_buffers[(int) post_buffer_flag];
+}
+void Graphics::swap_post()
+{
+    post_buffer_flag = !post_buffer_flag;
+}
+

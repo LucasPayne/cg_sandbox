@@ -6,6 +6,26 @@
 
 #include "world/resources/resources.h"
 
+//----------
+struct Framebuffer {
+    GLuint id;
+    int resolution_x;
+    int resolution_y;
+    GLuint texture;
+};
+// Macro for expanding a viewport into glViewport and glScissor parameters.
+#define VIEWPORT_EXPAND(VIEWPORT) ( VIEWPORT ).x, ( VIEWPORT ).y, ( VIEWPORT ).w, ( VIEWPORT ).h
+struct Viewport {
+    GLint x;
+    GLint y;
+    GLsizei w;
+    GLsizei h;
+    Viewport(int _x, int _y, int _w, int _h) :
+        x{(GLint) _x}, y{(GLint) _y}, w{(GLsizei) _w}, h{(GLsizei) _h}
+    {}
+    Viewport() {}
+};
+
 
 // note: This is currently being passed around by value, so the underlying buffer cannot be freed in the destructor.
 //       So, this has an explicit destroy() function.

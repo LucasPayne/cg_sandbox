@@ -46,6 +46,7 @@ CMakeFiles/cg_sandbox.dir/core/graphics_resources/vertex_arrays.cpp.o
 CMakeFiles/cg_sandbox.dir/core/mathematics/mathematics.cpp.o
  ../core/core.h
  ../core/mathematics/mathematics.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -56,6 +57,7 @@ CMakeFiles/cg_sandbox.dir/core/mathematics/mathematics.cpp.o
 CMakeFiles/cg_sandbox.dir/core/mathematics/ray.cpp.o
  ../core/core.h
  ../core/mathematics/mathematics.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -77,6 +79,7 @@ CMakeFiles/cg_sandbox.dir/core/world/assets/assets.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -116,6 +119,7 @@ CMakeFiles/cg_sandbox.dir/core/world/assets/model_assets.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -145,6 +149,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/drawing.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -183,6 +188,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -204,6 +210,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/image.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -242,6 +249,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/circles.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -280,6 +288,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/curves.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -318,6 +327,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/lines.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -356,6 +366,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/sprites.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -394,6 +405,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/lines.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -432,6 +444,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/spheres.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -470,6 +483,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/wireframes.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -508,6 +522,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/painting.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -546,6 +561,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/shading_assets.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -578,6 +594,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Behaviour.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -602,6 +619,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Camera.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -626,6 +644,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/DirectionalLight.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -650,6 +669,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Drawable.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -674,6 +694,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Transform.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -712,6 +733,7 @@ CMakeFiles/cg_sandbox.dir/core/world/world.cpp.o
  ../lib/opengl_utilities/gl_shader_program.h
  ../lib/opengl_utilities/glad/glad.h
  ../lib/opengl_utilities/glsl.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -726,6 +748,7 @@ CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_geometry/surface_geometry.
  ../lib/mesh_processing/surface_mesh/surface_mesh.h
  ../lib/mesh_processing/surface_mesh/surface_mesh.ipp
  ../lib/model_loader/model_loader.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
@@ -737,6 +760,7 @@ CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_mesh/surface_mesh.cpp.o
  ../lib/mesh_processing/surface_mesh/surface_mesh.h
  ../lib/mesh_processing/surface_mesh/surface_mesh.ipp
  ../lib/model_loader/model_loader.h
+ ../lib/spatial_algebra/gpu.h
  ../lib/spatial_algebra/mat3x3_mat4x4.h
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h

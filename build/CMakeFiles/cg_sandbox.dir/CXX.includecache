@@ -336,6 +336,8 @@ string
 string.h
 -
 
+../lib/spatial_algebra/gpu.h
+
 ../lib/spatial_algebra/mat3x3_mat4x4.h
 string.h
 -
@@ -365,6 +367,8 @@ ostream
 -
 stdlib.h
 -
+gpu.h
+../lib/spatial_algebra/gpu.h
 
 ../tools/reflector/reflect_std_vector.h
 

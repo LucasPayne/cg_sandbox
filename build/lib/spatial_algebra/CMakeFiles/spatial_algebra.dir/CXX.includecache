@@ -6,6 +6,8 @@
 
 #IncludeRegexTransform: 
 
+/home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/gpu.h
+
 /home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/mat3x3_mat4x4.h
 string.h
 -
@@ -41,4 +43,6 @@ ostream
 -
 stdlib.h
 -
+gpu.h
+/home/cosc/student/lcp35/cg_sandbox/lib/spatial_algebra/gpu.h
 

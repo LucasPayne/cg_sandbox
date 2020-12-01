@@ -17,14 +17,6 @@ The Graphics component also holds render loops.
 #include "world/resource_cache.h"
 
 
-struct Framebuffer {
-    GLuint id;
-    int resolution_x;
-    int resolution_y;
-
-    GLuint texture;
-};
-
 
 // Reflect opengl_utilities classes.
 REFLECT_STRUCT(GLShader);
@@ -93,24 +85,15 @@ public:
 
     void init();
 
-
-    void clear_cameras();
-    // When rendering into a camera (whether it is attached to a framebuffer or a texture),
-    // use these draw calls at the start and end.
-    void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false);
-    void end_camera_rendering(Aspect<Camera> &camera);
+    void render();
+    void render(Aspect<Camera> camera);
 
     // Draw a vertex array (in the geometric material) using a GeometricMaterial+Material+ShadingModel triple.
     void draw(GeometricMaterialInstance &gmat_instance,
               MaterialInstance &mat_instance,
               ShadingModelInstance &sm_instance);
 
-    // Clear to the default screen.
-    void clear(vec4 bg_color, vec4 fg_color);
-    // Render the Drawables into each camera, using the given shading model.
-    void render_drawables_to_cameras(std::string sm_name);
     void render_drawables(ShadingModelInstance shading_model);
-
 
     // All raw OpenGL shader objects should be stored in this cache.
     //    note: Currently shading-system shaders are not, since they are generated.
@@ -125,48 +108,48 @@ public:
     // The painting module is for immediate-mode drawing of vector graphics in 2D and 3D.
     Painting paint;
 
+    void refresh_framebuffers();
+    Viewport window_viewport; // The final screen buffer rendering is rendered onto the window framebuffer with this viewport.
+                              // This can be set by the application, to, for example, fix the rendering to a fixed-aspect-ratio rectangle.
+    Framebuffer screen_buffer;
+    int framebuffer_res_x;
+    int framebuffer_res_y; // minimum framebuffer size needed to account for all cameras being rendered to.
     // G-buffer
-    void refresh_gbuffer_textures();
     GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
     GLuint gbuffer_fb; // G-buffer framebuffer
     GLuint gbuffer_depth_rbo; // Depth renderbuffer
     std::vector<GBufferComponent> gbuffer_components;
 
-    // Deferred rendering using the G-buffer.
-    void deferred_lighting();
+    //////////////////////////////////////////////////////////////////////////////////
+    // dummy functions until painting module is updated
+    inline void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false) {};
+    inline void end_camera_rendering(Aspect<Camera> &camera) {};
+
+    // Lighting
+    void update_lights();
+    void lighting(Aspect<Camera> camera);
+    void directional_lights(Aspect<Camera> camera);
     Resource<GLShaderProgram> directional_light_shader_program;
     Resource<GLShaderProgram> directional_light_filter_shader_program;
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
 
-    // A framebuffer object for rendering color values into.
-    // This can be used to, for example, bilaterally denoise deferred light passes.
-    GLuint postprocessing_fbo;
-    GLuint postprocessing_fbo_texture;
-    // Another one for ping-ponging between.
-    GLuint postprocessing_fbo_2;
-    GLuint postprocessing_fbo_2_texture;
-
-    void set_viewport(int _viewport_x, int _viewport_y, int _viewport_width, int _viewport_height);
-    void subviewport_begin(vec2 bottom_left, vec2 top_right);
-    GLint viewport_x;
-    GLint viewport_y;
-    GLsizei viewport_width;
-    GLsizei viewport_height;
-    void subviewport_end();
+    // Framebuffers for post-processing effects.
+    // Both of these are 4-float color buffers.
+    Framebuffer post_buffer();
+    // Ping-pong between post-processing buffers.
+    void swap_post();
+    bool post_buffer_flag;
+    Framebuffer post_buffers[2];
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
-
-    void update_lights();
 private:
     World &world;
 
     std::map<uint64_t, DirectionalLightData> directional_light_data_map;
 };
-
-
 
 #endif // GRAPHICS_H

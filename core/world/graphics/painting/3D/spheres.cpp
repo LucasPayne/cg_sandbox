@@ -30,8 +30,6 @@ void Painting::render_spheres()
     // Draw spheres
     spheres_shader_program->bind();
     for (auto camera : world.entities.aspects<Camera>()) {
-
-        if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);
 
         // mat4x4 vp_matrix = camera->view_projection_matrix();

@@ -99,15 +99,23 @@ void World::window_handler(WindowEvent e)
         float width = e.framebuffer.width;
         float height = e.framebuffer.height;
         double aspect_ratio = ((double) height) / width;
+
+        int x, y, w, h;
         if (aspect_ratio > wanted_aspect_ratio) {
-            graphics.set_viewport(0, (height - wanted_aspect_ratio * width)/2.0, width, wanted_aspect_ratio * width);
+            x = 0;
+            y = (height - wanted_aspect_ratio * width)/2.0;
+            w = width;
+            h = wanted_aspect_ratio * width;
         }
         else {
-            graphics.set_viewport((width - height / wanted_aspect_ratio)/2.0, 0, height / wanted_aspect_ratio,  height);
+            x = (width - height / wanted_aspect_ratio)/2.0;
+            y = 0;
+            w = height / wanted_aspect_ratio;
+            h = height;
         }
-        screen_width = width;
-        screen_height = height;
-        graphics.refresh_gbuffer_textures();
+        graphics.screen_buffer.resolution_x = w;
+        graphics.screen_buffer.resolution_y = h;
+        graphics.window_viewport = Viewport(x, y, w, h);
     }
 }
 

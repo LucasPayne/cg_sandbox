@@ -6,7 +6,6 @@ void Painting::render_lines_2D()
     primitive_lines_2D_shader_program->bind();
 
     for (auto &line_chain : lines_2D) {
-        if (!line_chain.camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(line_chain.camera);
         glUniform4fv(primitive_lines_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &line_chain.color);
     

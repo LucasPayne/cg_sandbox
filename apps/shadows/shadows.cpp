@@ -145,7 +145,7 @@ void App::loop()
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.postprocessing_fbo_texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.postprocessing_fbo_texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 }
 
 void App::window_handler(WindowEvent e)

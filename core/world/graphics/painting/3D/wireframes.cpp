@@ -82,7 +82,6 @@ void Painting::render_wireframes()
 
     wireframe_shader_program->bind();
     for (auto camera : world.entities.aspects<Camera>()) {
-        if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);
         GLint viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);

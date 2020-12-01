@@ -53,6 +53,14 @@ struct Camera : public IAspectType {
     vec2 bottom_left;
     vec2 top_right;
     Framebuffer framebuffer;
+    inline Viewport viewport() const {
+        int x, y, w, h;
+        x = floor(framebuffer.resolution_x * bottom_left.x());
+        y = floor(framebuffer.resolution_y * bottom_left.y());
+        w = ceil(framebuffer.resolution_x *  top_right.x()) - x;
+        h = ceil(framebuffer.resolution_y *  top_right.y()) - y;
+        return Viewport(x, y, w, h);
+    }
 
     vec4 background_color;
 

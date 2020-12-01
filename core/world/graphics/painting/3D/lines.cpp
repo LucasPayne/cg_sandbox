@@ -4,7 +4,6 @@
 void Painting::render_lines()
 {
     for (auto camera : world.entities.aspects<Camera>()) {
-        if (!camera->rendering_to_framebuffer) continue;
         graphics.begin_camera_rendering(camera);
 
         lines_shader_program->bind();

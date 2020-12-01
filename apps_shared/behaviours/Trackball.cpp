@@ -114,7 +114,6 @@ struct Trackball : public IBehaviour {
 REFLECT_STRUCT(Trackball)
 BEGIN_ENTRIES(Trackball)
     // Base IBehaviour
-    ENTRY(world)
     ENTRY(entity)
 END_ENTRIES()
 DESCRIPTOR_INSTANCE(Trackball);

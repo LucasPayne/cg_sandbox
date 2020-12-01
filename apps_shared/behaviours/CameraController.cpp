@@ -106,23 +106,23 @@ struct CameraController : public IBehaviour {
         t->rotation = q2 * q1;
     }
     void init() {
-        strafe_speed = 2;
-        forward_speed = 2;
-        lift_speed = 2;
+        float speed = 4;
+        strafe_speed = speed;
+        forward_speed = speed;
+        lift_speed = speed;
         key_view_speed_horizontal = 2;
         key_view_speed_vertical = 1.5;
         azimuth = 0;
         angle = 0;
         min_angle = -M_PI/2.0 + 0.15;
         max_angle = M_PI/2.0 - 0.15;
-        view_with_mouse = false;
-        mouse_sensitivity = 1;
+        view_with_mouse = true;
+        mouse_sensitivity = 2;
     }
 };
 REFLECT_STRUCT(CameraController)
 BEGIN_ENTRIES(CameraController)
     // Base IBehaviour
-    ENTRY(world)
     ENTRY(entity)
 
     ENTRY(azimuth)

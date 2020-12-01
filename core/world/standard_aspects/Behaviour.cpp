@@ -22,7 +22,6 @@ void Behaviour::keyboard_handler(KeyboardEvent e)
 
 DESCRIPTOR_INSTANCE(IBehaviour);
 BEGIN_ENTRIES(IBehaviour)
-    // ENTRY(world) //todo: problems with pointer to incomplete type.
     ENTRY(entity)
 END_ENTRIES()
 

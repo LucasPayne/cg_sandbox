@@ -183,12 +183,14 @@ void Graphics::render(Aspect<Camera> camera)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     auto sm = world.graphics.shading.shading_models.load("shaders/gbuffer/position_normal_albedo.sm");
     auto shading_model = ShadingModelInstance(sm);
     shading_model.properties.set_mat4x4("vp_matrix", camera->view_projection_matrix());
     render_drawables(shading_model);
     //---Explicitly destroy shading model.
     shading_model.properties.destroy();
+    glDisable(GL_DEPTH_TEST);
     /*--------------------------------------------------------------------------------
         Lighting and rendering of surfaces using the G-buffer.
         This is the first pass that fills the target framebuffer, so will
@@ -231,12 +233,11 @@ void Graphics::render()
         render(camera);
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
-    glViewport(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y);
-    glClearColor(0,1,0,1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    std::cout << screen_buffer << "\n";
+    // glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    // glViewport(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y);
+    // glClearColor(0,1,0,1);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // std::cout << screen_buffer << "\n";
 
     /*--------------------------------------------------------------------------------
         Place the screen buffer in the window.
@@ -259,6 +260,7 @@ void Graphics::lighting(Aspect<Camera> camera)
 {
     // Clear to background color.
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
+    glDisable(GL_DEPTH_TEST);
     auto viewport = camera->viewport();
     glViewport(VIEWPORT_EXPAND(viewport));
     glScissor(VIEWPORT_EXPAND(viewport));
@@ -324,7 +326,6 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             }
         };
 
-
         upload_shared_uniforms(program);
         int shadow_map_slot = gbuffer_components.size();
         glActiveTexture(GL_TEXTURE0 + shadow_map_slot);
@@ -346,14 +347,15 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
+        // glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
         glBlendFunc(GL_ONE, GL_ZERO);
-        glClearColor(0,0,0,0);
+        glClearColor(1,0,1,1);
         glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(postprocessing_quad_vao);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();
 
+        continue;
         // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
         upload_shared_uniforms(filter_program);

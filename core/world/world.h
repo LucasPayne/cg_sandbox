@@ -15,8 +15,9 @@
 
 class World : public IGC::Callbacks {
 public:
-    World();
+    World(IGC::Context &_context);
 
+    IGC::Context &context;
     Entities entities;
     Resources resources;
     Assets assets;
@@ -29,6 +30,9 @@ public:
     void keyboard_handler(KeyboardEvent e);
     void mouse_handler(MouseEvent e);
     void window_handler(WindowEvent e);
+
+    // Update information about screen size, which may have changed.
+    void window_update(int width, int height);
 
     // Behaviours.
     // template <typename B>
@@ -45,10 +49,7 @@ public:
 
 private:
     World(const World &); // Delete the copy constructor.
-
-    bool screen_has_resized_this_frame;
 };
-REFLECT_STRUCT(World);
 
 
 // Behaviours.

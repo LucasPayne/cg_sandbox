@@ -76,7 +76,6 @@ struct ObjectViewer : public IBehaviour {
                     // Move along the tangent plane of the sphere the camera is locked to.
                     float dx = e.cursor.x - mode_rotate_last_x;
                     float dy = e.cursor.y - mode_rotate_last_y;
-                    printf("%.6f, %.6f\n", dx, dy);
                     vec3 p = (transform->matrix() * vec4(-10*dx, -10*dy, 0, 1)).xyz();
                     // Reproject to the sphere.
                     transform->position = target_position() + (p - target_position()).normalized() * mode_rotate_radius;
@@ -159,7 +158,6 @@ struct ObjectViewer : public IBehaviour {
 REFLECT_STRUCT(ObjectViewer)
 BEGIN_ENTRIES(ObjectViewer)
     // Base IBehaviour
-    ENTRY(world)
     ENTRY(entity)
 
     // ENTRY(free_controller)

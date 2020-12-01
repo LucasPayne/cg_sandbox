@@ -28,6 +28,8 @@ namespace Platform {
     bool poll(WindowReference window); // Returns false if the platform is terminating.
     void present(WindowReference window);
     void close(WindowReference window);
+    void enable_raw_mouse(WindowReference window);
+    void disable_raw_mouse(WindowReference window);
     void get_screen_size(WindowReference window, int *width, int *height);
     float time();
 } // end namespace Platform
@@ -50,7 +52,10 @@ public:
 
     void add_callbacks(Callbacks *callbacks);
     void enter_loop();
+    void enable_raw_mouse();
+    void disable_raw_mouse();
     void close();
+    void get_screen_size(int *width, int *height);
 
     static void keyboard_event(KeyboardEvent e);
     static void mouse_event(MouseEvent e);

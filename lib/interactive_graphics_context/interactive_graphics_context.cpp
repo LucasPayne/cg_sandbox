@@ -79,6 +79,20 @@ void Context::close()
     active_context = nullptr;
 }
 
+void Context::enable_raw_mouse()
+{
+    Platform::enable_raw_mouse(window);
+}
+
+void Context::disable_raw_mouse()
+{
+    Platform::disable_raw_mouse(window);
+}
+void Context::get_screen_size(int *width, int *height)
+{
+    Platform::get_screen_size(window, width, height);
+}
+
 
 } // end namespace IGC
 

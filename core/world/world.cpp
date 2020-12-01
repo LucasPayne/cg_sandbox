@@ -1,16 +1,17 @@
 #include "world/world.h"
 
 
-World::World() :
+World::World(IGC::Context &_context) :
     // Initialize subsystems and possibly pass them a World reference.
+    context{_context},
     entities(),
     resources(),
     assets(*this),
     graphics(*this),
-    input(),
-    screen_has_resized_this_frame{false}
+    input()
 {
     printf("[world] Creating world...\n");
+
 
     // Register resource types. Remember to do this!
     #define REGISTER_RESOURCE_TYPE(NAME) {\
@@ -43,6 +44,15 @@ World::World() :
 
     // Order-sensitive subsystem initialization.
     graphics.init();
+
+    // Initialize the screen size information for the initial window size.
+    int width, height;
+    context.get_screen_size(&width, &height);
+    window_update(width, height);
+
+    // Connect to the system windowing/graphics context.
+    context.add_callbacks(this);
+    context.add_callbacks(&input);
 }
 
 
@@ -52,6 +62,7 @@ void World::loop()
     printf("================================================================================\n");
     printf("[world] Frame start.\n");
     printf("--------------------------------------------------------------------------------\n");
+
 
     /*--------------------------------------------------------------------------------
         Update entity behaviours.
@@ -95,35 +106,31 @@ void World::mouse_handler(MouseEvent e)
 void World::window_handler(WindowEvent e)
 {
     if (e.type == WINDOW_EVENT_FRAMEBUFFER_SIZE) {
-        const float wanted_aspect_ratio = 0.566;
-        float width = e.framebuffer.width;
-        float height = e.framebuffer.height;
-        double aspect_ratio = ((double) height) / width;
-
-        int x, y, w, h;
-        if (aspect_ratio > wanted_aspect_ratio) {
-            x = 0;
-            y = (height - wanted_aspect_ratio * width)/2.0;
-            w = width;
-            h = wanted_aspect_ratio * width;
-        }
-        else {
-            x = (width - height / wanted_aspect_ratio)/2.0;
-            y = 0;
-            w = height / wanted_aspect_ratio;
-            h = height;
-        }
-        graphics.screen_buffer.resolution_x = w;
-        graphics.screen_buffer.resolution_y = h;
-        graphics.window_viewport = Viewport(x, y, w, h);
+        window_update(e.framebuffer.width, e.framebuffer.height);
     }
 }
+void World::window_update(int width, int height)
+{
+    const float wanted_aspect_ratio = 0.566;
+    double aspect_ratio = ((double) height) / width;
 
-
-DESCRIPTOR_INSTANCE(World);
-BEGIN_ENTRIES(World)
-    //...unfinished
-END_ENTRIES()
+    int x, y, w, h;
+    if (aspect_ratio > wanted_aspect_ratio) {
+        x = 0;
+        y = (height - wanted_aspect_ratio * width)/2.0;
+        w = width;
+        h = wanted_aspect_ratio * width;
+    }
+    else {
+        x = (width - height / wanted_aspect_ratio)/2.0;
+        y = 0;
+        w = height / wanted_aspect_ratio;
+        h = height;
+    }
+    graphics.screen_buffer.resolution_x = w;
+    graphics.screen_buffer.resolution_y = h;
+    graphics.window_viewport = Viewport(x, y, w, h);
+}
 
 
 

@@ -10,6 +10,23 @@ namespace IGC {
 namespace Platform {
 
 
+void enable_raw_mouse(WindowReference window)
+{
+    glfwSetInputMode((GLFWwindow *) window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    glfwSetInputMode((GLFWwindow *) window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+void disable_raw_mouse(WindowReference window)
+{
+    glfwSetInputMode((GLFWwindow *) window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
+    glfwSetInputMode((GLFWwindow *) window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void get_screen_size(WindowReference window, int *width, int *height)
+{
+    glfwGetWindowSize((GLFWwindow *) window, width, height);
+}
+
+
 void close(WindowReference window)
 {
     glfwTerminate();
@@ -37,11 +54,6 @@ float time()
     return (float) glfwGetTime();
 }
 
-
-void get_screen_size(WindowReference window, int *width, int *height)
-{
-    glfwGetWindowSize((GLFWwindow *) window, width, height);
-}
 
 
 static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int height)

@@ -136,6 +136,8 @@ void main(void)
     if (num_occluded_samples != 0) average_occluder_depth /= num_occluded_samples;
     else average_occluder_depth = 1;
 
+    DEBUG_COLOR(f_position.x);
+
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
         are at the representative depth, and assuming the surface is faced toward the light,

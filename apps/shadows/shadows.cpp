@@ -171,10 +171,9 @@ int main(int argc, char *argv[])
     printf("[main] Creating context...\n");
     IGC::Context context("Shadows");
     printf("[main] Creating world...\n");
-    World world;
-    printf("[main] Adding world callbacks...\n");
-    context.add_callbacks(&world);
-    context.add_callbacks(&world.input);
+    World world(context);
+
+    context.enable_raw_mouse();
 
     printf("[main] Creating app...\n");
     App app(world);

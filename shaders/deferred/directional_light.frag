@@ -136,12 +136,20 @@ void main(void)
     if (num_occluded_samples != 0) average_occluder_depth /= num_occluded_samples;
     else average_occluder_depth = 1;
 
+
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
         are at the representative depth, and assuming the surface is faced toward the light,
         the occlusion would be correctly computed (with sufficient samples).
     --------------------------------------------------------------------------------*/
-    float worldspace_sample_radius = 0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents[segment].z;
+    float worldspace_sample_radius = abs(0.5 * width * (shadow_coord.z - average_occluder_depth)  * box_extents[segment].z);
+
+    // Artificially harden shadows near the contact.
+    //--------------------------------------------------------------------------------
+    // float lim = 0.19;
+    // if (worldspace_sample_radius < lim) worldspace_sample_radius = worldspace_sample_radius * sqrt(worldspace_sample_radius) / sqrt(lim);
+    //--------------------------------------------------------------------------------
+    
     vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents[segment].x,
                                           worldspace_sample_radius / box_extents[segment].y);
     float shadow = 0.f;

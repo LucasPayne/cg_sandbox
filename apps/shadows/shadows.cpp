@@ -14,10 +14,12 @@ Aspect<DirectionalLight> main_light;
 struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
     float theta;
+    float height;
     LightRotate(Aspect<DirectionalLight> _light) :
         light{_light}
     {
         theta = 0;
+        height = 0.3;
     }
     void update() {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
@@ -29,7 +31,13 @@ struct LightRotate : public IBehaviour {
         if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
             theta += 1.f * dt;
         }
-        light->direction = vec3(cos(theta), -0.2, sin(theta)).normalized();
+        if (world->input.keyboard.down(KEY_UP_ARROW)) {
+            height += 0.5f * dt;
+        }
+        if (world->input.keyboard.down(KEY_DOWN_ARROW)) {
+            height -= 0.5f * dt;
+        }
+        light->direction = vec3(cos(theta), -height, sin(theta)).normalized();
     }
 };
 

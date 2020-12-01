@@ -1,3 +1,7 @@
+/*--------------------------------------------------------------------------------
+    Second pass of deferred directional light.
+    This reads the shadowing signal and blurs it before using it to compute lighting.
+--------------------------------------------------------------------------------*/
 #version 420
 // G-buffer
 uniform sampler2D position;
@@ -32,8 +36,8 @@ void main(void)
         G-buffer fetching
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, uv);
-    vec3 f_normal = texture(normal, uv).rgb;
-    vec3 f_position = texture(position, uv).rgb;
+    vec3 f_normal = texture(normal, uv).xyz;
+    vec3 f_position = texture(position, uv).xyz;
 
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps)
@@ -58,12 +62,13 @@ void main(void)
         0.0019541675407126887, 0.008757971308821473, 0.021541133478600594, 0.02907748875125932, 0.021541133478600594, 0.008757971308821473, 0.0019541675407126887,
         0.0004360337163160857, 0.0019541675407126887, 0.004806476562858854, 0.0064880647217826605, 0.004806476562858854, 0.0019541675407126887, 0.0004360337163160857
     };
-    // float weight = 1.f / ((2*size+1)*(2*size+1));
     float average_shadow = 0.f;
     for (int i = -size; i <= size; i++) {
         for (int j = -size; j <= size; j++) {
             float weight = gaussian_kernel[(2*size+1)*(i+size) + j+size];
-            average_shadow += weight * texture(shadow, uv + vec2(inv_screen_width * i, inv_screen_height * j)).r;
+            vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
+            float sample_shadow = texture(shadow, sample_uv).r;
+            average_shadow += weight * sample_shadow;
         }
     }
 

@@ -5,7 +5,8 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
     near_plane_distance{_near_plane_distance},
     far_plane_distance{_far_plane_distance},
     near_half_width{_near_half_width},
-    m_aspect_ratio{_aspect_ratio}
+    m_aspect_ratio{_aspect_ratio},
+    rendering_to_screen{true}
 {
     float n = near_plane_distance;
     float f = far_plane_distance;
@@ -25,8 +26,6 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
     layer = 0; // Default to highest-priority layer.
 
     background_color = vec4(0.9,0.9,0.9,1);
-
-    rendering_to_screen = true;
 }
 
 bool Camera::in_viewport(float screen_x, float screen_y)

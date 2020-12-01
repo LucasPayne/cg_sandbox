@@ -73,6 +73,12 @@ App::App(World &_world) : world{_world}
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,3,0);
     main_camera = cameraman.get<Camera>();
+    // cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
+    // cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
+    // cameraman = create_cameraman(world);
+    // cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
+    // cameraman.get<Camera>()->top_right = vec2(1, 0.75);
+    // cameraman.get<Transform>()->position = vec3(0,6,0);
     
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {

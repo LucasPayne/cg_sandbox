@@ -62,8 +62,8 @@ void main(void)
         G-buffer fetching
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, uv);
-    vec3 f_normal = texture(normal, uv).rgb;
-    vec3 f_position = texture(position, uv).rgb;
+    vec3 f_normal = texture(normal, uv).xyz;
+    vec3 f_position = texture(position, uv).xyz;
 
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps), and
@@ -162,18 +162,6 @@ void main(void)
     if (shadow < 0) shadow = 0;
 
     color = vec4(shadow_fading * shadow, 0,0,1);
-    return;
-
-    DEBUG_COLOR(shadow);
-
-    /*--------------------------------------------------------------------------------
-        Lighting
-    --------------------------------------------------------------------------------*/
-    color = vec4((1.f - shadow_fading*shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
-    // Ambient lighting
-    vec3 ambient = vec3(0.28);
-    color += vec4(ambient*f_albedo.rgb, 0);
-
 
     /*--------------------------------------------------------------------------------
         Uncomment to visualize frustum segments.

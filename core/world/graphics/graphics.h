@@ -87,13 +87,22 @@ public:
 
     void render();
     void render(Aspect<Camera> camera);
-
     // Draw a vertex array (in the geometric material) using a GeometricMaterial+Material+ShadingModel triple.
     void draw(GeometricMaterialInstance &gmat_instance,
               MaterialInstance &mat_instance,
               ShadingModelInstance &sm_instance);
-
     void render_drawables(ShadingModelInstance shading_model);
+    // Lighting
+    void update_lights();
+    void lighting(Aspect<Camera> camera);
+    void directional_lights(Aspect<Camera> camera);
+    Resource<GLShaderProgram> directional_light_shader_program;
+    Resource<GLShaderProgram> directional_light_filter_shader_program;
+    // Post-processing
+    void depth_of_field(Aspect<Camera> camera);
+    Resource<GLShaderProgram> depth_of_field_confusion_radius_program;
+    
+
 
     // All raw OpenGL shader objects should be stored in this cache.
     //    note: Currently shading-system shaders are not, since they are generated.
@@ -126,12 +135,6 @@ public:
     inline void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false) {};
     inline void end_camera_rendering(Aspect<Camera> &camera) {};
 
-    // Lighting
-    void update_lights();
-    void lighting(Aspect<Camera> camera);
-    void directional_lights(Aspect<Camera> camera);
-    Resource<GLShaderProgram> directional_light_shader_program;
-    Resource<GLShaderProgram> directional_light_filter_shader_program;
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;

@@ -62,6 +62,8 @@ struct Camera : public IAspectType {
         return Viewport(x, y, w, h);
     }
 
+    vec2 depth_of_field; // The range where the captured image is considered to be in-focus (depth x to y from the camera).
+
     vec4 background_color;
 
         // If cameras rendering to the screen have different layers, then the one with the lowest layer has priority for,

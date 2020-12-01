@@ -215,6 +215,7 @@ void Graphics::render(Aspect<Camera> camera)
     /*--------------------------------------------------------------------------------
         Post-processing.
     --------------------------------------------------------------------------------*/
+    depth_of_field(camera);
 }
 
 void Graphics::render()
@@ -236,12 +237,6 @@ void Graphics::render()
     for (auto camera : world.entities.aspects<Camera>()) {
         render(camera);
     }
-
-    // glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
-    // glViewport(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y);
-    // glClearColor(0,1,0,1);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // std::cout << screen_buffer << "\n";
 
     /*--------------------------------------------------------------------------------
         Place the screen buffer in the window.
@@ -450,15 +445,6 @@ void Graphics::init()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    directional_light_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
-    directional_light_shader_program->link();
-    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
-    directional_light_filter_shader_program->link();
-
     // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
     // any time for post-processing effects or deferred rendering.
     vec2 ppq_data[8] = {vec2(-1,-1),vec2(0,0),
@@ -500,6 +486,20 @@ void Graphics::init()
     create_color_framebuffer(screen_buffer);
     create_color_framebuffer(post_buffers[0]);
     create_color_framebuffer(post_buffers[1]);
+
+    directional_light_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
+    directional_light_shader_program->link();
+    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
+    directional_light_filter_shader_program->link();
+
+    depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    // depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
+    // depth_of_field_confusion_radius_program->link();
 }
 
 DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
@@ -728,8 +728,6 @@ void Graphics::update_lights()
 
 Framebuffer Graphics::post_buffer()
 {
-    // std::cout << post_buffers[0] << "\n";
-    // std::cout << post_buffers[1] << "\n";
     if (post_buffer_flag) {
         return post_buffers[1];
     }
@@ -740,3 +738,23 @@ void Graphics::swap_post()
     post_buffer_flag = !post_buffer_flag;
 }
 
+
+
+void Graphics::depth_of_field(Aspect<Camera> camera)
+{
+    return;
+    // auto &program = depth_of_field_confusion_radius_program;
+    // program->bind();
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, gbuffer_component("position").texture);
+    // glUniform1i(program->uniform_location("position"), 0);
+
+    // glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
+    // glBlendFunc(GL_ONE, GL_ZERO);
+    // glClearColor(0,0,0,0);
+    // glClear(GL_COLOR_BUFFER_BIT);
+    // glBindVertexArray(postprocessing_quad_vao);
+    // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    // program->unbind();
+}

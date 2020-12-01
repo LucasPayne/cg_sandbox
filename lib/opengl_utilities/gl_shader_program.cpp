@@ -135,56 +135,60 @@ void GLShaderProgram::link()
     // This is an identifier for use with the (< 4.3) introspection API.
     glGetProgramiv(m_gl_shader_program_id, GL_ACTIVE_UNIFORMS, &num_active_uniforms);
 
-    for (int i = 0; i < num_active_uniforms; i++) {
-        const GLsizei buf_size = 2048;
-        char name[buf_size];
-        GLsizei name_length;
-        GLint array_length;
-        glGetActiveUniformsiv(m_gl_shader_program_id, 1, (GLuint *) &i, GL_UNIFORM_SIZE, (GLint *) &array_length);
+    // commented due to causing segfault
+    // for (int i = 0; i < num_active_uniforms; i++) {
+    //     const GLsizei buf_size = 2048;
+    //     char name[buf_size];
+    //     GLsizei name_length;
+    //     GLint array_length;
+    //     glGetActiveUniformsiv(m_gl_shader_program_id, 1, (GLuint *) &i, GL_UNIFORM_SIZE, (GLint *) &array_length);
 
-        glGetActiveUniformName(m_gl_shader_program_id, i, buf_size, &name_length, name);
-        bool is_array = strchr(name, '[') != NULL;
+    //     glGetActiveUniformName(m_gl_shader_program_id, i, buf_size, &name_length, name);
+    //     bool is_array = strchr(name, '[') != NULL;
 
-        if (name_length > buf_size-1) {
-            std::cerr << "ERROR [GLShaderProgram::link]: Uniform name far too long.\n";
-            exit(EXIT_FAILURE);
-        }
-        if (is_array) {
-            char *array_index_str = strchr(name, '[');
-            for (int index = 0; index < array_length; index++) {
-                sprintf(array_index_str, "[%d]", index);
-                GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
-                if (location >= 0) {
-                    auto name_string = std::string(name, name_length);
-                    uniform_location_dictionary[name_string] = location;
-                    printf("Active uniform: %s, %d\n", name, location);
-                }
-            }
-        } else {
-            GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
-            if (location >= 0) {
-                auto name_string = std::string(name, name_length);
-                uniform_location_dictionary[name_string] = location;
-                printf("Active uniform: %s, %d\n", name, location);
-            }
-        }
-        // If location < 0, just don't add it, something went wrong.
-        //    ---When is location < 0?
-    }
+    //     if (name_length > buf_size-1) {
+    //         std::cerr << "ERROR [GLShaderProgram::link]: Uniform name far too long.\n";
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     if (is_array) {
+    //         char *array_index_str = strchr(name, '[');
+    //         for (int index = 0; index < array_length; index++) {
+    //             sprintf(array_index_str, "[%d]", index);
+    //             GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
+    //             if (location >= 0) {
+    //                 auto name_string = std::string(name, name_length);
+    //                 uniform_location_dictionary[name_string] = location;
+    //                 printf("Active uniform: %s, %d\n", name, location);
+    //             }
+    //         }
+    //     } else {
+    //         GLint location = glGetUniformLocation(m_gl_shader_program_id, name);
+    //         if (location >= 0) {
+    //             auto name_string = std::string(name, name_length);
+    //             uniform_location_dictionary[name_string] = location;
+    //             printf("Active uniform: %s, %d\n", name, location);
+    //         }
+    //     }
+    //     // If location < 0, just don't add it, something went wrong.
+    //     //    ---When is location < 0?
+    // }
 }
 
 
-GLint GLShaderProgram::uniform_location(const std::string &name)
+GLint GLShaderProgram::uniform_location(const std::string name)
 {
-    auto found = uniform_location_dictionary.find(name);
-    if (found == uniform_location_dictionary.end()) {
-        return -1; //is this fine? Just in case shader uniforms are optimized out.
-        // std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
-        // getchar();
-        // for (auto iter : uniform_location_dictionary) std::cout << iter.first << "\n";
-        // exit(EXIT_FAILURE);
-    }
-    return found->second;
+    return glGetUniformLocation(m_gl_shader_program_id, name.c_str());
+
+    // commented due to segfault
+    // auto found = uniform_location_dictionary.find(name);
+    // if (found == uniform_location_dictionary.end()) {
+    //     return -1; //is this fine? Just in case shader uniforms are optimized out.
+    //     // std::cerr << "ERROR [GLShaderProgram::uniform_location]: Uniform \"" << name << "\" not found.\n";
+    //     // getchar();
+    //     // for (auto iter : uniform_location_dictionary) std::cout << iter.first << "\n";
+    //     // exit(EXIT_FAILURE);
+    // }
+    // return found->second;
 }
 
 

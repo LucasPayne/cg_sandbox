@@ -80,6 +80,7 @@ public:
         shaders(_world),
         shading{*this, _world},
         paint{*this, _world},
+        post_buffer_flag{0},
         world{_world}
     {}
 
@@ -101,6 +102,7 @@ public:
     // Post-processing
     void depth_of_field(Aspect<Camera> camera);
     Resource<GLShaderProgram> depth_of_field_confusion_radius_program;
+    Resource<GLShaderProgram> depth_of_field_near_field_program;
     
 
 
@@ -144,7 +146,7 @@ public:
     Framebuffer post_buffer();
     // Ping-pong between post-processing buffers.
     void swap_post();
-    bool post_buffer_flag;
+    int post_buffer_flag;
     Framebuffer post_buffers[2];
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.

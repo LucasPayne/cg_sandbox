@@ -58,7 +58,7 @@ public:
     GLShaderProgram(GLuint program_id = 0);
     void add_shader(GLShader shader);
     void link();
-    GLint uniform_location(const std::string &name);
+    GLint uniform_location(const std::string name);
 
     GLuint ID() const {
         return m_gl_shader_program_id;

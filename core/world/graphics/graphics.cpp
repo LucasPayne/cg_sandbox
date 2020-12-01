@@ -357,8 +357,8 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
         upload_shared_uniforms(filter_program);
-        glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / world.screen_width);
-        glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
+        glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / post_buffer().resolution_x);
+        glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / post_buffer().resolution_y);
         int shadow_signal_slot = gbuffer_components.size();
         glActiveTexture(GL_TEXTURE0 + shadow_signal_slot);
         glBindTexture(GL_TEXTURE_2D, post_buffer().texture);
@@ -469,7 +469,6 @@ void Graphics::init()
         GLuint &tex = fb.texture;
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -498,8 +497,13 @@ void Graphics::init()
 
     depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
     depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    // depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
-    // depth_of_field_confusion_radius_program->link();
+    depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
+    depth_of_field_confusion_radius_program->link();
+
+    depth_of_field_near_field_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_near_field_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    depth_of_field_near_field_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_near_field.frag"));
+    depth_of_field_near_field_program->link();
 }
 
 DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
@@ -728,33 +732,76 @@ void Graphics::update_lights()
 
 Framebuffer Graphics::post_buffer()
 {
-    if (post_buffer_flag) {
-        return post_buffers[1];
-    }
-    return post_buffers[0];
+    return post_buffers[post_buffer_flag];
 }
 void Graphics::swap_post()
 {
-    post_buffer_flag = !post_buffer_flag;
+    post_buffer_flag = (post_buffer_flag + 1) % 2;
 }
 
 
 
 void Graphics::depth_of_field(Aspect<Camera> camera)
 {
-    return;
-    // auto &program = depth_of_field_confusion_radius_program;
-    // program->bind();
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, gbuffer_component("position").texture);
-    // glUniform1i(program->uniform_location("position"), 0);
+    auto camera_transform = camera.sibling<Transform>();
+    vec3 camera_position = camera_transform->position;
+    vec3 camera_forward = -camera_transform->forward();
 
+    /*--------------------------------------------------------------------------------
+        Near field splitting.
+    --------------------------------------------------------------------------------*/
+    auto &program = depth_of_field_confusion_radius_program;
+    program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_component("position").texture);
+    glUniform1i(program->uniform_location("position"), 0);
+    glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
+    glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+    glUniform2fv(program->uniform_location("depth_of_field"), 1, (GLfloat *) &camera->depth_of_field);
+    float focus = 0.5*camera->depth_of_field.x() + 0.5*camera->depth_of_field.y();
+    glUniform1f(program->uniform_location("focus"), focus);
+
+
+    auto confusion_buffer = post_buffer();
+    std::cout << gbuffer_component("position").texture << "\n";
+    std::cout << confusion_buffer << "\n";
+    glBindFramebuffer(GL_FRAMEBUFFER, confusion_buffer.id);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glClearColor(0,0,0,0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindVertexArray(postprocessing_quad_vao);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    program->unbind();
+
+    /*--------------------------------------------------------------------------------
+        Near field filtering.
+    --------------------------------------------------------------------------------*/
+    program = depth_of_field_near_field_program;
+    program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, confusion_buffer.texture);
+    glUniform1i(program->uniform_location("confusion"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
+    glUniform1i(program->uniform_location("image"), 1);
+    glUniform1f(program->uniform_location("inv_screen_width"), 1.f / post_buffer().resolution_x);
+    glUniform1f(program->uniform_location("inv_screen_height"), 1.f / post_buffer().resolution_y);
+
+    swap_post();
+    std::cout << post_buffer() << "\n";
     // glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
-    // glBlendFunc(GL_ONE, GL_ZERO);
-    // glClearColor(0,0,0,0);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // glBindVertexArray(postprocessing_quad_vao);
-    // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    // program->unbind();
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glClearColor(0,0,0,0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindVertexArray(postprocessing_quad_vao);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, post_buffer().id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, screen_buffer.id);
+    glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
+                      0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // destination
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    
+    program->unbind();
 }

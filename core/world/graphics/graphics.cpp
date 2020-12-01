@@ -155,10 +155,14 @@ void Graphics::refresh_framebuffers()
             glBindTexture(GL_TEXTURE_2D, post_buffers[i].texture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
             glBindTexture(GL_TEXTURE_2D, 0);
+            post_buffers[i].resolution_x = max_res_x;
+            post_buffers[i].resolution_y = max_res_y;
         }
         glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
         glBindTexture(GL_TEXTURE_2D, 0);
+        screen_buffer.resolution_x = max_res_x;
+        screen_buffer.resolution_y = max_res_y;
     }
     framebuffer_res_x = max_res_x;
     framebuffer_res_y = max_res_y;
@@ -245,7 +249,7 @@ void Graphics::render()
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0, 0, world.screen_width, world.screen_height);
-    glClearColor(1,0,0,1);
+    glClearColor(0,0,0,1); // clear window background
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
@@ -347,15 +351,14 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
         }
 
-        // glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
+        glBindFramebuffer(GL_FRAMEBUFFER, post_buffer().id);
         glBlendFunc(GL_ONE, GL_ZERO);
-        glClearColor(1,0,1,1);
+        glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(postprocessing_quad_vao);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();
 
-        continue;
         // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
         upload_shared_uniforms(filter_program);
@@ -363,7 +366,7 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / world.screen_height);
         int shadow_signal_slot = gbuffer_components.size();
         glActiveTexture(GL_TEXTURE0 + shadow_signal_slot);
-        glBindTexture(GL_TEXTURE_2D, post_buffer().id);
+        glBindTexture(GL_TEXTURE_2D, post_buffer().texture);
         glUniform1i(filter_program->uniform_location("shadow"), shadow_signal_slot);
 
         glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
@@ -707,14 +710,15 @@ void Graphics::update_lights()
                 sm.box_extents[segment] = vec3(width, height, depth);
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
 
+
+                glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glViewport(0, 0, sm.width, sm.height);
                 glDisable(GL_SCISSOR_TEST);
-                glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.texture, 0, segment);
+                glEnable(GL_DEPTH_TEST);
                 glClear(GL_DEPTH_BUFFER_BIT);
                 render_drawables(shadow_map_shading_model);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                glEnable(GL_SCISSOR_TEST);
             }
         }
     }
@@ -724,7 +728,12 @@ void Graphics::update_lights()
 
 Framebuffer Graphics::post_buffer()
 {
-    return post_buffers[(int) post_buffer_flag];
+    // std::cout << post_buffers[0] << "\n";
+    // std::cout << post_buffers[1] << "\n";
+    if (post_buffer_flag) {
+        return post_buffers[1];
+    }
+    return post_buffers[0];
 }
 void Graphics::swap_post()
 {

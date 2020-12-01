@@ -56,6 +56,8 @@ float shadowing(vec3 shadow_coord, int segment)
 
 void main(void)
 {
+    #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
+
     /*--------------------------------------------------------------------------------
         G-buffer fetching
     --------------------------------------------------------------------------------*/
@@ -105,8 +107,6 @@ void main(void)
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);
 
-    #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
-
     /*================================================================================
         Percentage-closer soft shadows
     ================================================================================*/
@@ -135,8 +135,6 @@ void main(void)
     }
     if (num_occluded_samples != 0) average_occluder_depth /= num_occluded_samples;
     else average_occluder_depth = 1;
-
-    DEBUG_COLOR(f_position.x);
 
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders

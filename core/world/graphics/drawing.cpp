@@ -1,11 +1,11 @@
 #include "world/graphics/drawing.h"
 
-std::ostream &operator<<(std::ostream &os, Viewport &viewport)
+std::ostream &operator<<(std::ostream &os, Viewport viewport)
 {
     os << "Viewport(" << viewport.x << ", " << viewport.y << ", " << viewport.w << ", " << viewport.h << ")";
     return os;
 }
-std::ostream &operator<<(std::ostream &os, Framebuffer &framebuffer)
+std::ostream &operator<<(std::ostream &os, Framebuffer framebuffer)
 {
     os << "Framebuffer(" << framebuffer.resolution_x << "x" << framebuffer.resolution_y << ", id:" << framebuffer.id << ", texid:" << framebuffer.texture << ")";
     return os;

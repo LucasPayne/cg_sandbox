@@ -26,6 +26,8 @@ out vec4 color;
 
 void main(void)
 {
+    #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
+
     /*--------------------------------------------------------------------------------
         G-buffer fetching
     --------------------------------------------------------------------------------*/

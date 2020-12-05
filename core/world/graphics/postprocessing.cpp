@@ -143,19 +143,37 @@ void Graphics::depth_of_field(Aspect<Camera> camera)
 
 void Graphics::temporal_antialiasing(Aspect<Camera> camera)
 {
-    // auto &program = temporal_aa_program;
-    // program->bind();
+    auto viewport = camera->viewport();
+    auto &program = temporal_aa_program;
+    program->bind();
 
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, gbuffer_component("velocity").texture);
-    // glUniform1i(program->uniform_location("velocity"), 0);
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, camera->framebuffer.texture);
-    // glUniform1i(program->uniform_location("image"), 1);
-    // // glActiveTexture(GL_TEXTURE2);
-    // // glBindTexture(GL_TEXTURE_2D, camera->prev_framebuffer.texture);
-    // // glUniform1i(program->uniform_location("prev_image"), 2);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_component("velocity").texture);
+    glUniform1i(program->uniform_location("velocity"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, camera->framebuffer.texture);
+    glUniform1i(program->uniform_location("image"), 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, camera->taa_buffer.texture);
+    glUniform1i(program->uniform_location("prev_image"), 2);
 
+    set_post(viewport);
+    begin_post(program);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    program->unbind();
 
-    // program->unbind();
+    // Update this camera's TAA history buffer.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, camera->framebuffer.id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, camera->taa_buffer.id);
+    glBlitFramebuffer(viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
+                      0,0, camera->taa_buffer.resolution_x, camera->taa_buffer.resolution_y,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    // Overwrite the section of the target framebuffer buffer with the anti-aliased image.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, write_post().framebuffer->id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, camera->framebuffer.id);
+    glBlitFramebuffer(0,0, viewport.w, viewport.h,
+                      viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

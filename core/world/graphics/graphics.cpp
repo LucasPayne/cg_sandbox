@@ -320,12 +320,40 @@ void Graphics::refresh_framebuffers()
     framebuffer_res_x = max_res_x;
     framebuffer_res_y = max_res_y;
 
+    //TODO
     //-----only refresh when changed
     glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindTexture(GL_TEXTURE_2D, 0);
     screen_buffer.resolution_x = window_viewport.w;
     screen_buffer.resolution_y = window_viewport.h;
+
+
+    // Update camera TAA data.
+    for (auto camera : world.entities.aspects<Camera>()) {
+        if (!camera->has_taa_buffer) {
+            auto viewport = camera->viewport();
+            GLuint &fbo = camera->taa_buffer.id;
+            GLuint &tex = camera->taa_buffer.texture;
+            glGenFramebuffers(1, &fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, viewport.w, viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+            if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                fprintf(stderr, "Framebuffer incomplete.\n");
+                exit(EXIT_FAILURE);
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+    }
+    Framebuffer taa_buffer;
+    bool has_taa_buffer;
+
 }
 
 void Graphics::render(Aspect<Camera> camera)
@@ -390,7 +418,7 @@ void Graphics::render(Aspect<Camera> camera)
     /*--------------------------------------------------------------------------------
         Temporal anti-aliasing.
     --------------------------------------------------------------------------------*/
-    // temporal_antialiasing(camera);
+    temporal_antialiasing(camera);
 
     /*--------------------------------------------------------------------------------
         Post-processing.

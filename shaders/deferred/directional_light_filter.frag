@@ -64,6 +64,8 @@ void main(void)
     //         average_shadow += weight * sample_shadow;
     //     }
     // }
+    // average_shadow = clamp(average_shadow, 0, 1); // This seems to be a required sanity check.
+    // //-Why is the average shadowing sometimes above 1?
     
     // 3x3 box filter
     #define WEIGHT (1.f / 9.f)
@@ -75,9 +77,6 @@ void main(void)
             average_shadow += WEIGHT * sample_shadow;
         }
     }
-
-    average_shadow = clamp(average_shadow, 0, 1); // This seems to be a required sanity check.
-    //-Why is the average shadowing sometimes above 1?
 
     /*--------------------------------------------------------------------------------
         Lighting

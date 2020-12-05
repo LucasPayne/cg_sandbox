@@ -6,7 +6,8 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
     far_plane_distance{_far_plane_distance},
     near_half_width{_near_half_width},
     m_aspect_ratio{_aspect_ratio},
-    rendering_to_screen{true}
+    rendering_to_screen{true},
+    has_taa_buffer{false}
 {
     float n = near_plane_distance;
     float f = far_plane_distance;

@@ -146,8 +146,10 @@ void Graphics::directional_lights(Aspect<Camera> camera)
     auto camera_transform = camera.sibling<Transform>();
     auto viewport = camera->viewport();
     set_post(viewport); // ping-pong post-processing with the camera's target viewport.
+                        // The write target starts off as the post-buffer.
     glEnable(GL_BLEND);
 
+    bool first_light_pass = true;
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         auto &shadow_map = directional_light_data(light).shadow_map(camera);
 
@@ -232,11 +234,20 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
         glUniform1i(filter_program->uniform_location("shadow"), shadow_signal_slot);
 
-        swap_post();
+        swap_post(); // Swap to write to the viewport buffer.
         begin_post(filter_program);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
-                            GL_ONE, GL_ZERO);     // Alpha
+        if (first_light_pass) {
+            // The first light replaces the background color.
+            glBlendFuncSeparate(GL_ONE, GL_ZERO, // RGB
+                                GL_ONE, GL_ZERO);     // Alpha
+            first_light_pass = false;
+        } else {
+            glBlendFuncSeparate(GL_ONE, GL_ONE, // RGB
+                                GL_ONE, GL_ZERO);     // Alpha
+        }
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         filter_program->unbind();
+        swap_post(); // Swap to write to the post-buffer.
     }
+    swap_post(); // The viewport buffer contains the image, so signify this by leaving it as the write buffer.
 }

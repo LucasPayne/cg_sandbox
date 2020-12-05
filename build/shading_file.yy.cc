@@ -1,6 +1,6 @@
-#line 2 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 2 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 
-#line 4 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 4 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 
 #define  YY_INT_ALIGNED short int
 
@@ -574,14 +574,14 @@ references:
             if (( RESULT ) == (MAX_SIZE) || c == '\n') break;\
         }\
     }
-#line 578 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 578 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 #line 72 "core/graphics_resources/shading_file.l"
     /* Exclusive states. */
 
 
 
     /* Pattern macros. */
-#line 585 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 585 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 
 #define INITIAL 0
 #define CommentOneLine 1
@@ -808,7 +808,7 @@ YY_DECL
 
     /* Pattern rules */
     /* Single-line comments. */
-#line 812 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 812 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1096,7 +1096,7 @@ YY_RULE_SETUP
 #line 197 "core/graphics_resources/shading_file.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 1100 "/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc"
+#line 1100 "/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc"
 
 	case YY_END_OF_BUFFER:
 		{

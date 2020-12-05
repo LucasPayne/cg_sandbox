@@ -32,6 +32,7 @@ uniform int shadow_map_width;
 uniform int shadow_map_height;
 
 in vec2 uv;
+in vec2 gbuffer_uv;
 out vec4 color;
 
 #define PI 3.14159
@@ -61,9 +62,9 @@ void main(void)
     /*--------------------------------------------------------------------------------
         G-buffer fetching
     --------------------------------------------------------------------------------*/
-    vec4 f_albedo = texture(albedo, uv);
-    vec3 f_normal = texture(normal, uv).xyz;
-    vec3 f_position = texture(position, uv).xyz;
+    vec4 f_albedo = texture(albedo, gbuffer_uv);
+    vec3 f_normal = texture(normal, gbuffer_uv).xyz;
+    vec3 f_position = texture(position, gbuffer_uv).xyz;
 
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps), and

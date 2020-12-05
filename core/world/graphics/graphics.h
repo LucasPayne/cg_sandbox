@@ -80,7 +80,7 @@ public:
         shaders(_world),
         shading{*this, _world},
         paint{*this, _world},
-        post_buffer_flag{0},
+        post_flag{0},
         world{_world}
     {}
 
@@ -103,7 +103,9 @@ public:
     void depth_of_field(Aspect<Camera> camera);
     Resource<GLShaderProgram> depth_of_field_confusion_radius_program;
     Resource<GLShaderProgram> depth_of_field_near_field_program;
-    
+    // Temporal anti-aliasing
+    void temporal_antialiasing(Aspect<Camera> camera);
+    Resource<GLShaderProgram> temporal_aa_program;
 
 
     // All raw OpenGL shader objects should be stored in this cache.
@@ -140,14 +142,17 @@ public:
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
-
-    // Framebuffers for post-processing effects.
-    // Both of these are 4-float color buffers.
-    Framebuffer post_buffer();
-    // Ping-pong between post-processing buffers.
+    void begin_post(Resource<GLShaderProgram> &program,
+                     Viewport read_viewport,
+                     Viewport target_viewport);
+    void begin_post(Resource<GLShaderProgram> &program);
+    Viewport read_post();
+    Viewport write_post();
+    void set_post(Viewport &viewport);
     void swap_post();
-    int post_buffer_flag;
-    Framebuffer post_buffers[2];
+    int post_flag;
+    Framebuffer post_buffer;
+    Viewport second_post_viewport;
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);

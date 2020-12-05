@@ -195,6 +195,8 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../lib/spatial_alg
 CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../tools/reflector/reflect_std_vector.h
 CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../tools/reflector/reflector.h
 CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../core/world/graphics/graphics.cpp
+CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../core/world/graphics/lighting.cpp
+CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o: ../core/world/graphics/postprocessing.cpp
 
 CMakeFiles/cg_sandbox.dir/core/world/graphics/image.cpp.o: ../core/core.h
 CMakeFiles/cg_sandbox.dir/core/world/graphics/image.cpp.o: ../core/data_structures/table.h

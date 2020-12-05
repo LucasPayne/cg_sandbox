@@ -2,7 +2,10 @@
 
 std::ostream &operator<<(std::ostream &os, Viewport viewport)
 {
-    os << "Viewport(" << viewport.x << ", " << viewport.y << ", " << viewport.w << ", " << viewport.h << ")";
+    os << "Viewport(" << viewport.x << ", " << viewport.y << ", " << viewport.w << ", " << viewport.h << ", ";
+    if (viewport.framebuffer == nullptr) std::cout << "NULL";
+    else std::cout << *viewport.framebuffer;
+    std::cout << ")";
     return os;
 }
 std::ostream &operator<<(std::ostream &os, Framebuffer framebuffer)

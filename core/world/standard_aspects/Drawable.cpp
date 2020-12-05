@@ -33,3 +33,4 @@ Sphere Drawable::bounding_sphere()
     float radius = raw_bounding_sphere.radius * entity.get<Transform>()->scale;
     return Sphere(origin, radius);
 }
+

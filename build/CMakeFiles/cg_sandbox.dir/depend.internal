@@ -3,18 +3,18 @@
 
 CMakeFiles/cg_sandbox.dir/lib/opengl_utilities/glad/glad.c.o
  ../dependencies/glad/glad.h
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glad/glad.c
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glad/glad.c
 CMakeFiles/cg_sandbox.dir/core/data_structures/table.cpp.o
  ../core/data_structures/table.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/data_structures/table.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.cpp
 CMakeFiles/cg_sandbox.dir/core/data_structures/table_collection.cpp.o
  ../core/data_structures/table.h
  ../core/data_structures/table_collection.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/data_structures/table_collection.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/data_structures/table_collection.cpp
 CMakeFiles/cg_sandbox.dir/core/graphics_resources/shading.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -29,7 +29,7 @@ CMakeFiles/cg_sandbox.dir/core/graphics_resources/shading.cpp.o
  ../lib/opengl_utilities/glsl.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/shading.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/shading.cpp
 CMakeFiles/cg_sandbox.dir/core/graphics_resources/vertex_arrays.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -42,7 +42,7 @@ CMakeFiles/cg_sandbox.dir/core/graphics_resources/vertex_arrays.cpp.o
  ../lib/opengl_utilities/glsl.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/vertex_arrays.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/vertex_arrays.cpp
 CMakeFiles/cg_sandbox.dir/core/mathematics/mathematics.cpp.o
  ../core/core.h
  ../core/mathematics/mathematics.h
@@ -53,7 +53,7 @@ CMakeFiles/cg_sandbox.dir/core/mathematics/mathematics.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/mathematics/mathematics.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/mathematics/mathematics.cpp
 CMakeFiles/cg_sandbox.dir/core/mathematics/ray.cpp.o
  ../core/core.h
  ../core/mathematics/mathematics.h
@@ -64,7 +64,7 @@ CMakeFiles/cg_sandbox.dir/core/mathematics/ray.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/mathematics/ray.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/mathematics/ray.cpp
 CMakeFiles/cg_sandbox.dir/core/world/assets/assets.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -86,7 +86,7 @@ CMakeFiles/cg_sandbox.dir/core/world/assets/assets.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/assets/assets.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/assets/assets.cpp
 CMakeFiles/cg_sandbox.dir/core/world/assets/model_assets.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -126,7 +126,7 @@ CMakeFiles/cg_sandbox.dir/core/world/assets/model_assets.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/assets/model_assets.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/assets/model_assets.cpp
 CMakeFiles/cg_sandbox.dir/core/world/entities/entities.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -134,7 +134,7 @@ CMakeFiles/cg_sandbox.dir/core/world/entities/entities.cpp.o
  ../core/world/entities/entities.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/entities/entities.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/entities/entities.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/drawing.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -156,7 +156,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/drawing.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/drawing.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/drawing.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -195,7 +195,9 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/graphics.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/graphics.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/graphics.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/lighting.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/postprocessing.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/image.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -217,7 +219,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/image.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/image.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/image.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/circles.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -256,7 +258,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/circles.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/circles.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/circles.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/curves.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -295,7 +297,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/curves.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/curves.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/curves.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/lines.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -334,7 +336,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/lines.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/lines.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/lines.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/sprites.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -373,7 +375,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/2D/sprites.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/sprites.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/sprites.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/lines.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -412,7 +414,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/lines.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/lines.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/lines.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/spheres.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -451,7 +453,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/spheres.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/spheres.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/spheres.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/wireframes.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -490,7 +492,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/3D/wireframes.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/wireframes.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/wireframes.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/painting.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -529,7 +531,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/painting/painting.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/painting.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/painting.cpp
 CMakeFiles/cg_sandbox.dir/core/world/graphics/shading_assets.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -568,7 +570,7 @@ CMakeFiles/cg_sandbox.dir/core/world/graphics/shading_assets.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/graphics/shading_assets.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/graphics/shading_assets.cpp
 CMakeFiles/cg_sandbox.dir/core/world/resources/resources.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -576,7 +578,7 @@ CMakeFiles/cg_sandbox.dir/core/world/resources/resources.cpp.o
  ../core/world/resources/resources.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/resources/resources.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/resources/resources.cpp
 CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Behaviour.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -601,7 +603,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Behaviour.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Behaviour.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Behaviour.cpp
 CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Camera.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -626,7 +628,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Camera.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Camera.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Camera.cpp
 CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/DirectionalLight.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -651,7 +653,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/DirectionalLight.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/DirectionalLight.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/DirectionalLight.cpp
 CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Drawable.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -676,7 +678,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Drawable.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Drawable.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Drawable.cpp
 CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Transform.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -701,7 +703,7 @@ CMakeFiles/cg_sandbox.dir/core/world/standard_aspects/Transform.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Transform.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Transform.cpp
 CMakeFiles/cg_sandbox.dir/core/world/world.cpp.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -740,7 +742,7 @@ CMakeFiles/cg_sandbox.dir/core/world/world.cpp.o
  ../lib/spatial_algebra/vec.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/core/world/world.cpp
+ /home/lucas/computer_graphics/cg_sandbox/core/world/world.cpp
 CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_geometry/surface_geometry.cpp.o
  ../lib/mesh_processing/core.h
  ../lib/mesh_processing/logging.h
@@ -753,7 +755,7 @@ CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_geometry/surface_geometry.
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
  ../lib/spatial_algebra/vec.h
- /home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_geometry/surface_geometry.cpp
+ /home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_geometry/surface_geometry.cpp
 CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_mesh/surface_mesh.cpp.o
  ../lib/mesh_processing/core.h
  ../lib/mesh_processing/logging.h
@@ -765,14 +767,14 @@ CMakeFiles/cg_sandbox.dir/lib/mesh_processing/surface_mesh/surface_mesh.cpp.o
  ../lib/spatial_algebra/quaternion.h
  ../lib/spatial_algebra/spatial_algebra.h
  ../lib/spatial_algebra/vec.h
- /home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_mesh/surface_mesh.cpp
+ /home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_mesh/surface_mesh.cpp
 CMakeFiles/cg_sandbox.dir/lib/opengl_utilities/gl_shader_program.cpp.o
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/gl_shader_program.cpp
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glad/glad.h
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.cpp
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glad/glad.h
 CMakeFiles/cg_sandbox.dir/lib/opengl_utilities/glsl.cpp.o
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glsl.cpp
- /home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glsl.h
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glsl.cpp
+ /home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glsl.h
 CMakeFiles/cg_sandbox.dir/shading_file.tab.cc.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -787,8 +789,8 @@ CMakeFiles/cg_sandbox.dir/shading_file.tab.cc.o
  ../lib/opengl_utilities/glsl.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc
- /home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh
+ /home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc
+ /home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh
 CMakeFiles/cg_sandbox.dir/shading_file.yy.cc.o
  ../core/core.h
  ../core/data_structures/table.h
@@ -803,9 +805,9 @@ CMakeFiles/cg_sandbox.dir/shading_file.yy.cc.o
  ../lib/opengl_utilities/glsl.h
  ../tools/reflector/reflect_std_vector.h
  ../tools/reflector/reflector.h
- /home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.hh
- /home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc
+ /home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.hh
+ /home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc
 CMakeFiles/cg_sandbox.dir/tools/reflector/reflector.cpp.o
  ../tools/reflector/reflect_std_vector.h
- /home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector.cpp
- /home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector.h
+ /home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector.cpp
+ /home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector.h

@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/cosc/student/lcp35/cg_sandbox
+CMAKE_SOURCE_DIR = /home/lucas/computer_graphics/cg_sandbox
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
+CMAKE_BINARY_DIR = /home/lucas/computer_graphics/cg_sandbox/build
 
 # Utility rule file for uninstall.
 
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/cosc/student/lcp35/cg_sandbox/build
 include dependencies/glfw/CMakeFiles/uninstall.dir/progress.make
 
 dependencies/glfw/CMakeFiles/uninstall:
-	cd /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw && /usr/bin/cmake -P /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/cmake_uninstall.cmake
+	cd /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw && /usr/bin/cmake -P /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/cmake_uninstall.cmake
 
 uninstall: dependencies/glfw/CMakeFiles/uninstall
 uninstall: dependencies/glfw/CMakeFiles/uninstall.dir/build.make
@@ -67,10 +67,10 @@ dependencies/glfw/CMakeFiles/uninstall.dir/build: uninstall
 .PHONY : dependencies/glfw/CMakeFiles/uninstall.dir/build
 
 dependencies/glfw/CMakeFiles/uninstall.dir/clean:
-	cd /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw && $(CMAKE_COMMAND) -P CMakeFiles/uninstall.dir/cmake_clean.cmake
+	cd /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw && $(CMAKE_COMMAND) -P CMakeFiles/uninstall.dir/cmake_clean.cmake
 .PHONY : dependencies/glfw/CMakeFiles/uninstall.dir/clean
 
 dependencies/glfw/CMakeFiles/uninstall.dir/depend:
-	cd /home/cosc/student/lcp35/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/cosc/student/lcp35/cg_sandbox /home/cosc/student/lcp35/cg_sandbox/dependencies/glfw /home/cosc/student/lcp35/cg_sandbox/build /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw /home/cosc/student/lcp35/cg_sandbox/build/dependencies/glfw/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/lucas/computer_graphics/cg_sandbox/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/lucas/computer_graphics/cg_sandbox /home/lucas/computer_graphics/cg_sandbox/dependencies/glfw /home/lucas/computer_graphics/cg_sandbox/build /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw /home/lucas/computer_graphics/cg_sandbox/build/dependencies/glfw/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : dependencies/glfw/CMakeFiles/uninstall.dir/depend
 

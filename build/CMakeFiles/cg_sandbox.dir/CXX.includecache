@@ -386,11 +386,11 @@ stdint.h
 reflector/reflect_std_vector.h
 ../tools/reflector/reflector/reflect_std_vector.h
 
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.cc
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.cc
 graphics_resources/graphics_resources.h
-/home/cosc/student/lcp35/cg_sandbox/build/graphics_resources/graphics_resources.h
+/home/lucas/computer_graphics/cg_sandbox/build/graphics_resources/graphics_resources.h
 shading_file.yy.hh
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh
 stddef.h
 -
 libintl.h
@@ -406,9 +406,9 @@ stdlib.h
 stdio.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.hh
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.hh
 
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.cc
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.cc
 stdio.h
 -
 string.h
@@ -420,9 +420,9 @@ stdlib.h
 inttypes.h
 -
 graphics_resources/graphics_resources.h
-/home/cosc/student/lcp35/cg_sandbox/build/graphics_resources/graphics_resources.h
+/home/lucas/computer_graphics/cg_sandbox/build/graphics_resources/graphics_resources.h
 shading_file.tab.hh
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.tab.hh
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.tab.hh
 assert.h
 -
 stdarg.h
@@ -430,7 +430,7 @@ stdarg.h
 unistd.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/build/shading_file.yy.hh
+/home/lucas/computer_graphics/cg_sandbox/build/shading_file.yy.hh
 stdio.h
 -
 string.h
@@ -444,159 +444,167 @@ inttypes.h
 unistd.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/core/data_structures/table.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table.cpp
 data_structures/table.h
-/home/cosc/student/lcp35/cg_sandbox/core/data_structures/data_structures/table.h
+/home/lucas/computer_graphics/cg_sandbox/core/data_structures/data_structures/table.h
 algorithm
 -
 assert.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/core/data_structures/table_collection.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/data_structures/table_collection.cpp
 data_structures/table_collection.h
-/home/cosc/student/lcp35/cg_sandbox/core/data_structures/data_structures/table_collection.h
+/home/lucas/computer_graphics/cg_sandbox/core/data_structures/data_structures/table_collection.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/shading.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/shading.cpp
 graphics_resources/graphics_resources.h
-/home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/graphics_resources/graphics_resources.h
+/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/graphics_resources/graphics_resources.h
 algorithm
 -
 sstream
 -
 
-/home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/vertex_arrays.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/vertex_arrays.cpp
 graphics_resources/vertex_arrays.h
-/home/cosc/student/lcp35/cg_sandbox/core/graphics_resources/graphics_resources/vertex_arrays.h
+/home/lucas/computer_graphics/cg_sandbox/core/graphics_resources/graphics_resources/vertex_arrays.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/mathematics/mathematics.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/mathematics/mathematics.cpp
 mathematics/mathematics.h
-/home/cosc/student/lcp35/cg_sandbox/core/mathematics/mathematics/mathematics.h
+/home/lucas/computer_graphics/cg_sandbox/core/mathematics/mathematics/mathematics.h
 iomanip
 -
 
-/home/cosc/student/lcp35/cg_sandbox/core/mathematics/ray.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/mathematics/ray.cpp
 mathematics/mathematics.h
-/home/cosc/student/lcp35/cg_sandbox/core/mathematics/mathematics/mathematics.h
+/home/lucas/computer_graphics/cg_sandbox/core/mathematics/mathematics/mathematics.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/assets.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/assets.cpp
 world/assets/assets.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/world/assets/assets.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/world/assets/assets.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/model_assets.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/model_assets.cpp
 limits
 -
 opengl_utilities/gl.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/opengl_utilities/gl.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/opengl_utilities/gl.h
 utils/file_utils.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/utils/file_utils.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/utils/file_utils.h
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/world/world.h
 world/assets/model_assets.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/assets/world/assets/model_assets.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/assets/world/assets/model_assets.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/entities/entities.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/entities/entities.cpp
 world/entities/entities.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/entities/world/entities/entities.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/entities/world/entities/entities.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/drawing.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/drawing.cpp
 world/graphics/drawing.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/world/graphics/drawing.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/world/graphics/drawing.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/graphics.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/graphics.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/world/world.h
+postprocessing.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/postprocessing.cpp
+lighting.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/lighting.cpp
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/image.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/image.cpp
 world/graphics/image.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/world/graphics/image.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/world/graphics/image.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/circles.cpp
-world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/lighting.cpp
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/curves.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/circles.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/lines.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/curves.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/sprites.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/lines.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/2D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/lines.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/sprites.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/2D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/spheres.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/lines.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/wireframes.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/spheres.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/3D/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/painting.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/wireframes.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/painting/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/3D/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/shading_assets.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/painting.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/graphics/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/painting/world/world.h
+
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/postprocessing.cpp
+
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/shading_assets.cpp
+world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/graphics/world/world.h
 fstream
 -
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/resources/resources.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/resources/resources.cpp
 world/resources/resources.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/resources/world/resources/resources.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/resources/world/resources/resources.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Behaviour.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Behaviour.cpp
 world/standard_aspects/standard_aspects.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Camera.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Camera.cpp
 world/standard_aspects/standard_aspects.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/DirectionalLight.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/DirectionalLight.cpp
 world/standard_aspects/standard_aspects.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Drawable.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Drawable.cpp
 world/standard_aspects/standard_aspects.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/Transform.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/Transform.cpp
 world/standard_aspects/standard_aspects.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/standard_aspects/world/standard_aspects/standard_aspects.h
 
-/home/cosc/student/lcp35/cg_sandbox/core/world/world.cpp
+/home/lucas/computer_graphics/cg_sandbox/core/world/world.cpp
 world/world.h
-/home/cosc/student/lcp35/cg_sandbox/core/world/world/world.h
+/home/lucas/computer_graphics/cg_sandbox/core/world/world/world.h
 
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_geometry/surface_geometry.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_geometry/surface_geometry.cpp
 mesh_processing/surface_geometry/surface_geometry.h
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_geometry/mesh_processing/surface_geometry/surface_geometry.h
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_geometry/mesh_processing/surface_geometry/surface_geometry.h
 mesh_processing/logging.h
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_geometry/mesh_processing/logging.h
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_geometry/mesh_processing/logging.h
 iomanip
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_mesh/surface_mesh.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_mesh/surface_mesh.cpp
 mesh_processing/surface_mesh/surface_mesh.h
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_mesh/mesh_processing/surface_mesh/surface_mesh.h
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_mesh/mesh_processing/surface_mesh/surface_mesh.h
 mesh_processing/logging.h
-/home/cosc/student/lcp35/cg_sandbox/lib/mesh_processing/surface_mesh/mesh_processing/logging.h
+/home/lucas/computer_graphics/cg_sandbox/lib/mesh_processing/surface_mesh/mesh_processing/logging.h
 algorithm
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/gl_shader_program.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.cpp
 glad/glad.h
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glad/glad.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glad/glad.h
 gl_shader_program.h
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
 stdio.h
 -
 iostream
@@ -604,7 +612,7 @@ iostream
 string.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/gl_shader_program.h
 assert.h
 -
 string
@@ -612,29 +620,29 @@ string
 unordered_map
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glad/glad.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glad/glad.h
 KHR/khrplatform.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glsl.cpp
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glsl.cpp
 glsl.h
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glsl.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glsl.h
 
-/home/cosc/student/lcp35/cg_sandbox/lib/opengl_utilities/glsl.h
+/home/lucas/computer_graphics/cg_sandbox/lib/opengl_utilities/glsl.h
 string
 -
 string.h
 -
 
-/home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector.cpp
+/home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector.cpp
 reflector.h
-/home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector.h
+/home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector.h
 iomanip
 -
 map
 -
 
-/home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector.h
+/home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector.h
 iostream
 -
 vector
@@ -646,5 +654,5 @@ functional
 stdint.h
 -
 reflector/reflect_std_vector.h
-/home/cosc/student/lcp35/cg_sandbox/tools/reflector/reflector/reflect_std_vector.h
+/home/lucas/computer_graphics/cg_sandbox/tools/reflector/reflector/reflect_std_vector.h
 

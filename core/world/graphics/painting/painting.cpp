@@ -3,12 +3,22 @@
 
 void Painting::render()
 {
+    glBindFramebuffer(GL_FRAMEBUFFER, graphics.screen_buffer.id);
+    glViewport(VIEWPORT_EXPAND(graphics.window_viewport));
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(VIEWPORT_EXPAND(graphics.window_viewport));
+
+    glEnable(GL_DEPTH_TEST);
     render_spheres();
     render_lines();
     render_wireframes();
+
+    glDisable(GL_DEPTH_TEST);
     render_circles();
     render_lines_2D();
     render_sprites();
+
+    glDisable(GL_SCISSOR_TEST);
 }
 
 

@@ -47,5 +47,6 @@ void main(void)
         accumulation += inv_num_samples * texture(confusion, sample_uv).a * texture(image, sample_uv);
     }
     // color = vec4(0.5*(texture(image, uv).rgb * texture(image,uv).a) + 0.5 * accumulation.rgb, 1);
-    color = vec4(accumulation.rgb, 1);
+    // color = vec4(accumulation.rgb, 1);
+    color = accumulation;
 }

@@ -75,10 +75,10 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
     cameraman.get<Camera>()->bottom_left = vec2(0.1, 0.1);
     cameraman.get<Camera>()->top_right = vec2(0.9, 0.9);
-    cameraman.get<Camera>()->background_color = vec4(0.9,0.86,1,1);
+    cameraman.get<Camera>()->background_color = vec4(0.83,0.82,1,1);
 
-    world.graphics.background_color = vec4(0.5, 0.5, 0.5, 1);
-    world.graphics.window_background_color = vec4(0, 0.5, 0.5, 1);
+    world.graphics.background_color = vec4(1,1,1,1);
+    world.graphics.window_background_color = vec4(0,0,0,1);
 
     cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
     cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
@@ -86,6 +86,7 @@ App::App(World &_world) : world{_world}
     cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
     cameraman.get<Camera>()->top_right = vec2(0.8, 0.66);
     cameraman.get<Transform>()->position = vec3(0,6,0);
+    cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
     
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {
@@ -182,6 +183,8 @@ void App::keyboard_handler(KeyboardEvent e)
 
     if (e.action == KEYBOARD_PRESS) {
         if (e.key.code == KEY_G) world.graphics.update_lights();
+        if (e.key.code == KEY_P) main_camera->top_right.y() += 0.025;
+        if (e.key.code == KEY_O) main_camera->top_right.y() -= 0.025;
     }
     
 }

@@ -4,6 +4,34 @@
 #include "postprocessing.cpp"
 #include "lighting.cpp"
 
+std::string gl_error_string()
+{
+    GLenum err = glGetError();
+    switch(err) {
+        case GL_NO_ERROR:
+            return "GL_NO_ERROR";
+        case GL_INVALID_ENUM:
+            return "GL_INVALID_ENUM";
+        case GL_INVALID_VALUE:
+            return "GL_INVALID_VALUE";
+        case GL_INVALID_OPERATION:
+            return "GL_INVALID_OPERATION";
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            return "GL_INVALID_FRAMEBUFFER_OPERATION";
+        case GL_OUT_OF_MEMORY:
+            return "GL_OUT_OF_MEMORY";
+        case GL_STACK_UNDERFLOW:
+            return "GL_STACK_UNDERFLOW";
+        case GL_STACK_OVERFLOW:
+            return "GL_STACK_OVERFLOW";
+    }
+    return "UNKNOWN";
+}
+
+
+
+
+
 
 void Graphics::init()
 {
@@ -303,7 +331,8 @@ void Graphics::refresh_framebuffers()
 void Graphics::render(Aspect<Camera> camera)
 {
     auto viewport = camera->viewport();
-    std::cout << viewport << "\n";
+
+
     /*--------------------------------------------------------------------------------
         Render surfaces into the G-buffer.
         The G-buffer and other general framebuffers are sized such that
@@ -331,6 +360,15 @@ void Graphics::render(Aspect<Camera> camera)
     //---Explicitly destroy shading model.
     shading_model.properties.destroy();
 
+    /*--------------------------------------------------------------------------------
+        Clear this camera's framebuffer section.
+    --------------------------------------------------------------------------------*/
+    glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
+    glEnable(GL_SCISSOR_TEST);
+    glViewport(VIEWPORT_EXPAND(viewport));
+    glScissor(VIEWPORT_EXPAND(viewport));
+    glClearColor(VEC4_EXPAND(camera->background_color));
+    glClear(GL_COLOR_BUFFER_BIT);
     /*--------------------------------------------------------------------------------
         Lighting and rendering of surfaces using the G-buffer.
         This is the first pass that fills the target framebuffer, so will
@@ -364,7 +402,6 @@ void Graphics::render(Aspect<Camera> camera)
         target.
     --------------------------------------------------------------------------------*/
     if (write_post().framebuffer->id != viewport.framebuffer->id) {
-        glDisable(GL_SCISSOR_TEST);
         Viewport write_viewport = write_post();
         glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
@@ -385,24 +422,22 @@ void Graphics::render()
     refresh_framebuffers();
 
     /*--------------------------------------------------------------------------------
-        Update lighting data, such as shadow maps.
-    --------------------------------------------------------------------------------*/
-    update_lights();
-
-    /*--------------------------------------------------------------------------------
         Clear the screen buffer.
     --------------------------------------------------------------------------------*/
-    glBindBuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0,0, window_viewport.w, window_viewport.h);
-    // std::cout << "WINDOW " << window_viewport << "\n";
-    // glClearColor(VEC4_EXPAND(background_color));
-    glClearColor(1,0,0,1);
+    glClearColor(VEC4_EXPAND(background_color));
     glClear(GL_COLOR_BUFFER_BIT);
 
-    /*--------------------------------------------------------------------------------
-        Render each camera into it's framebuffer section.
-    --------------------------------------------------------------------------------*/
+    // /*--------------------------------------------------------------------------------
+    //     Update lighting data, such as shadow maps.
+    // --------------------------------------------------------------------------------*/
+    update_lights();
+
+    // /*--------------------------------------------------------------------------------
+    //     Render each camera into it's framebuffer section.
+    // --------------------------------------------------------------------------------*/
     for (auto camera : world.entities.aspects<Camera>()) {
         render(camera);
     }
@@ -415,12 +450,13 @@ void Graphics::render()
     /*--------------------------------------------------------------------------------
         Place the screen buffer in the window.
     --------------------------------------------------------------------------------*/
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0, 0, window_width, window_height);
     glClearColor(VEC4_EXPAND(window_background_color));
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
     glBlitFramebuffer(0,0, window_viewport.w, window_viewport.h, // source: screen buffer
                       window_viewport.x, window_viewport.y, window_viewport.x+window_viewport.w, window_viewport.y+window_viewport.h, // destination: default buffer
@@ -533,33 +569,6 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
     shadow_maps[camera.ID()] = sm;
     return shadow_maps[camera.ID()];
-}
-
-
-
-
-std::string gl_error_string()
-{
-    GLenum err = glGetError();
-    switch(err) {
-        case GL_NO_ERROR:
-            return "GL_NO_ERROR";
-        case GL_INVALID_ENUM:
-            return "GL_INVALID_ENUM";
-        case GL_INVALID_VALUE:
-            return "GL_INVALID_VALUE";
-        case GL_INVALID_OPERATION:
-            return "GL_INVALID_OPERATION";
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            return "GL_INVALID_FRAMEBUFFER_OPERATION";
-        case GL_OUT_OF_MEMORY:
-            return "GL_OUT_OF_MEMORY";
-        case GL_STACK_UNDERFLOW:
-            return "GL_STACK_UNDERFLOW";
-        case GL_STACK_OVERFLOW:
-            return "GL_STACK_OVERFLOW";
-    }
-    return "UNKNOWN";
 }
 
 

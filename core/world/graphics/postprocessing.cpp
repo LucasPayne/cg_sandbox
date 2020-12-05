@@ -42,17 +42,18 @@ void Graphics::set_post(Viewport &viewport)
 Viewport Graphics::read_post()
 {
     if (post_flag == 0) {
-        return Viewport(post_buffer, 0,0, second_post_viewport.w, second_post_viewport.h);
-    }
-    return second_post_viewport;
-}
-Viewport Graphics::write_post()
-{
-    if (post_flag == 0) {
         return second_post_viewport;
     }
     return Viewport(post_buffer, 0,0, second_post_viewport.w, second_post_viewport.h);
 }
+Viewport Graphics::write_post()
+{
+    if (post_flag == 0) {
+        return Viewport(post_buffer, 0,0, second_post_viewport.w, second_post_viewport.h);
+    }
+    return second_post_viewport;
+}
+
 void Graphics::swap_post()
 {
     post_flag = (post_flag + 1) % 2;

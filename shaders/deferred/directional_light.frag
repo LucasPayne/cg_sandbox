@@ -63,6 +63,7 @@ void main(void)
         G-buffer fetching
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, gbuffer_uv);
+    if (f_albedo.a == 0) discard;
     vec3 f_normal = texture(normal, gbuffer_uv).xyz;
     vec3 f_position = texture(position, gbuffer_uv).xyz;
 

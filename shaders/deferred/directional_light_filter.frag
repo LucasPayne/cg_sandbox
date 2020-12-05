@@ -32,11 +32,11 @@ out vec4 color;
 void main(void)
 {
     #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), f_albedo.a); return;
-
     /*--------------------------------------------------------------------------------
         G-buffer fetching
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, gbuffer_uv);
+    if (f_albedo.a == 0) discard;
     vec3 f_normal = texture(normal, gbuffer_uv).xyz;
     vec3 f_position = texture(position, gbuffer_uv).xyz;
 

@@ -146,10 +146,8 @@ void Graphics::directional_lights(Aspect<Camera> camera)
     auto camera_transform = camera.sibling<Transform>();
     auto viewport = camera->viewport();
     set_post(viewport); // ping-pong post-processing with the camera's target viewport.
-    std::cout << read_post() << "\n";
-    std::cout << write_post() << "\n";
+    glEnable(GL_BLEND);
 
-    bool first_light_pass = true; // The first pass blends differently into the framebuffer.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         auto &shadow_map = directional_light_data(light).shadow_map(camera);
 
@@ -218,16 +216,11 @@ void Graphics::directional_lights(Aspect<Camera> camera)
 
         begin_post(program);
         glBlendFunc(GL_ONE, GL_ZERO);
-        if (first_light_pass) {
-            glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
-        } else {
-            glClearColor(0,0,0,0);
-        }
+        glClearColor(0,0,0,0);
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();
 
-        
         
         // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
@@ -241,14 +234,8 @@ void Graphics::directional_lights(Aspect<Camera> camera)
 
         swap_post();
         begin_post(filter_program);
-        if (first_light_pass) {
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
-                                GL_ZERO, GL_ONE);                     // Alpha
-            first_light_pass = false;
-        } else {
-            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, // RGB
-                                GL_ZERO, GL_ONE);     // Alpha
-        }
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, // RGB
+                            GL_ONE, GL_ZERO);     // Alpha
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         filter_program->unbind();
     }

@@ -72,8 +72,10 @@ void main(void)
             average_shadow += weight * sample_shadow;
         }
     }
-
     // DEBUG_COLOR(average_shadow);
+    // average_shadow = average_shadow > 0.5 ? 1 : 0; //uncoment to force hard shadows
+    average_shadow = clamp(average_shadow, 0, 1); // This seems to be a required sanity check.
+    //-Why is the average shadowing sometimes above 1?
 
     /*--------------------------------------------------------------------------------
         Lighting
@@ -82,4 +84,15 @@ void main(void)
     // Ambient lighting
     vec3 ambient = vec3(0.28);
     color += vec4(ambient*f_albedo.rgb, 0);
+
+    /*--------------------------------------------------------------------------------
+        Uncomment to visualize frustum segments.
+    --------------------------------------------------------------------------------*/
+    #if 0
+    if (segment == 0) color += vec4(0.5,0,0,0);
+    else if (segment == 1) color += vec4(0,0.5,0,0);
+    else if (segment == 2) color += vec4(0,0,0.5,0);
+    else if (segment == 3) color += vec4(0,0.5,0.5,0);
+    return;
+    #endif
 }

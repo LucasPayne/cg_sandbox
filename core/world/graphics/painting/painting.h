@@ -36,12 +36,10 @@ struct PaintingLines2D {
     std::vector<vec2> points;
     float width;
     vec4 color;
-    Aspect<Camera> camera;
-    PaintingLines2D(Aspect<Camera> _camera, std::vector<vec2> _points, float _width, vec4 _color) :
+    PaintingLines2D(std::vector<vec2> _points, float _width, vec4 _color) :
         points{_points},
         width{_width},
-        color{_color},
-        camera{_camera}
+        color{_color}
     {}
 };
 
@@ -68,14 +66,14 @@ struct WireframeRenderData {
 
 
 struct SpriteRenderData {
-    Aspect<Camera> camera;
     GLuint texture;
     vec2 bottom_left;
     float width;
     float height;
     bool is_depth;
-    SpriteRenderData(Aspect<Camera> _camera, GLuint _texture, vec2 _bottom_left, float _width, float _height, bool _is_depth) :
-        camera{_camera}, texture{_texture}, bottom_left{_bottom_left}, width{_width}, height{_height}, is_depth{_is_depth}
+    int layer; // if -1, then this is a regular GL_TEXTURE_2D. Otherwise, this is a layer of a GL_TEXTURE_2D_ARRAY.
+    SpriteRenderData(GLuint _texture, vec2 _bottom_left, float _width, float _height, bool _is_depth, int _layer) :
+        texture{_texture}, bottom_left{_bottom_left}, width{_width}, height{_height}, is_depth{_is_depth}, layer{_layer}
     {}
 };
 
@@ -101,11 +99,16 @@ public:
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void quadratic_bspline(Aspect<Camera> camera, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);
     void circles(Aspect<Camera> camera, std::vector<vec2> &positions, float radius, vec4 color, float outline_width = 0.f, vec4 outline_color = vec4::zero());
-    void chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float width, vec4 color);
-    void sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height);
-    void depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height);
-    void bordered_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
-    void bordered_depth_sprite(Aspect<Camera> camera, GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
+    void chain_2D(std::vector<vec2> &points, float width, vec4 color);
+    // Sprites.
+    void sprite(GLuint texture, vec2 bottom_left, float width, float height);
+    void sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer);
+    void depth_sprite(GLuint texture, vec2 bottom_left, float width, float height);
+    void depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer);
+    void bordered_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
+    void bordered_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer);
+    void bordered_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
+    void bordered_depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer);
 
 private:
     // 3D painting buffers.
@@ -132,6 +135,9 @@ private:
     Resource<GLShaderProgram> circles_2D_shader_program;
     Resource<GLShaderProgram> sprite_shader_program;
     Resource<GLShaderProgram> depth_sprite_shader_program;
+    // OpenGL 4.2 (being used as of this comment) does not support texture views. So, separate sprite programs render layers of texture arrays.
+    Resource<GLShaderProgram> sprite_layer_shader_program;
+    Resource<GLShaderProgram> depth_sprite_layer_shader_program;
 
     void render_spheres();
     void render_lines();

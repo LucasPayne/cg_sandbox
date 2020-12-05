@@ -3,11 +3,6 @@
 
 void Painting::render()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, graphics.screen_buffer.id);
-    glViewport(VIEWPORT_EXPAND(graphics.window_viewport));
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(VIEWPORT_EXPAND(graphics.window_viewport));
-
     glEnable(GL_DEPTH_TEST);
     render_spheres();
     render_lines();
@@ -17,8 +12,6 @@ void Painting::render()
     render_circles();
     render_lines_2D();
     render_sprites();
-
-    glDisable(GL_SCISSOR_TEST);
 }
 
 
@@ -105,4 +98,14 @@ void Painting::init()
     depth_sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
     depth_sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/depth_sprite.frag"));
     depth_sprite_shader_program->link();
+
+    sprite_layer_shader_program = world.resources.add<GLShaderProgram>();
+    sprite_layer_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
+    sprite_layer_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite_layer.frag"));
+    sprite_layer_shader_program->link();
+
+    depth_sprite_layer_shader_program = world.resources.add<GLShaderProgram>();
+    depth_sprite_layer_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
+    depth_sprite_layer_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/depth_sprite_layer.frag"));
+    depth_sprite_layer_shader_program->link();
 }

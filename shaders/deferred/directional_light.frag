@@ -82,6 +82,7 @@ void main(void)
     if (segment == num_frustum_segments - 1) {
         shadow_fading = 1 - (eye_z - frustum_segment_distances[num_frustum_segments-1])
                         /(frustum_segment_distances[num_frustum_segments-1] - frustum_segment_distances[num_frustum_segments-2]);
+        shadow_fading = clamp(shadow_fading, 0, 1); //---fix this
     }
 
     /*--------------------------------------------------------------------------------
@@ -161,18 +162,5 @@ void main(void)
         vec2 sample_uv = shadow_coord.xy + imagespace_sample_extents * rotated_poisson_sample;
         shadow += inv_num_samples * shadowing(vec3(sample_uv, shadow_coord.z), segment);
     }
-    if (shadow < 0) shadow = 0;
-
     color = vec4(shadow_fading * shadow, 0,0,1);
-
-    /*--------------------------------------------------------------------------------
-        Uncomment to visualize frustum segments.
-    --------------------------------------------------------------------------------*/
-    #if 0
-    if (segment == 0) color += vec4(0.5,0,0,0);
-    else if (segment == 1) color += vec4(0,0.5,0,0);
-    else if (segment == 2) color += vec4(0,0,0.5,0);
-    else if (segment == 3) color += vec4(0,0.5,0.5,0);
-    return;
-    #endif
 }

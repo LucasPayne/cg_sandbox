@@ -15,27 +15,31 @@ struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
     float theta;
     float height;
-    LightRotate(Aspect<DirectionalLight> _light) :
+    bool on;
+    LightRotate(Aspect<DirectionalLight> _light, float _height = 0.3, float _theta = 0, bool _on = true) :
         light{_light}
     {
-        theta = 0;
-        height = 0.3;
+        theta = _theta;
+        height = _height;
+        on = _on;
     }
     void update() {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
-        // world->graphics.paint.bordered_depth_sprite(main_camera, sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
+        // world->graphics.paint.bordered_depth_sprite(sm.texture, vec2(0,0), 0.25,0.25, 3, vec4(0,0,0,1));
 
-        if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
-            theta -= 1.f * dt;
-        }
-        if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
-            theta += 1.f * dt;
-        }
-        if (world->input.keyboard.down(KEY_UP_ARROW)) {
-            height += 0.5f * dt;
-        }
-        if (world->input.keyboard.down(KEY_DOWN_ARROW)) {
-            height -= 0.5f * dt;
+        if (on) {
+            if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
+                theta -= 1.f * dt;
+            }
+            if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
+                theta += 1.f * dt;
+            }
+            if (world->input.keyboard.down(KEY_UP_ARROW)) {
+                height += 0.5f * dt;
+            }
+            if (world->input.keyboard.down(KEY_DOWN_ARROW)) {
+                height -= 0.5f * dt;
+            }
         }
         light->direction = vec3(cos(theta), -height, sin(theta)).normalized();
     }
@@ -80,13 +84,13 @@ App::App(World &_world) : world{_world}
     world.graphics.background_color = vec4(1,1,1,1);
     world.graphics.window_background_color = vec4(0,0,0,1);
 
-    cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
-    cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
-    cameraman = create_cameraman(world);
-    cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
-    cameraman.get<Camera>()->top_right = vec2(0.8, 0.66);
-    cameraman.get<Transform>()->position = vec3(0,6,0);
-    cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
+    //cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
+    //cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
+    //cameraman = create_cameraman(world);
+    //cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
+    //cameraman.get<Camera>()->top_right = vec2(0.8, 0.66);
+    //cameraman.get<Transform>()->position = vec3(0,6,0);
+    //cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
     
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {
@@ -132,7 +136,7 @@ App::App(World &_world) : world{_world}
     floor.add_triangle(a, c, d);
     auto floor_model = floor.to_model();
     obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.5,0.5,1,1);
     // obj.get<Drawable>()->shadow_caster = false;
     obj.get<Transform>()->scale = 10;
     obj.get<Transform>()->position = vec3(0,0.15,0);
@@ -142,7 +146,7 @@ App::App(World &_world) : world{_world}
     Entity light = world.entities.add();
     // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
     float sun_w = 0.07;
-    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.7,0.7,0.7), sun_w);
+    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
     world.add<LightRotate>(light, light.get<DirectionalLight>());
     main_light = light.get<DirectionalLight>();
     }
@@ -151,7 +155,8 @@ App::App(World &_world) : world{_world}
         Entity light = world.entities.add();
         // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
         float sun_w = 0.07;
-        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.3,0.3,0.3), sun_w);
+        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
+        world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.2, M_PI/3, false);
     }
 }
 
@@ -163,15 +168,33 @@ void App::close()
 void App::loop()
 {
     // View the G-buffer.
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
-    // // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("velocity").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("normal").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("velocity").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.screen_buffer.texture, vec2(0.25,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.read_post().framebuffer->texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.write_post().framebuffer->texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.screen_buffer.texture, vec2(0.25,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("position").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,0,0,1));
+
+    auto &paint = world.graphics.paint;
+    // std::vector<vec2> ps(2);
+    // ps[0] = vec2(0,0);
+    // ps[1] = vec2(1,1);
+    // paint.chain_2D(ps, 10, vec4(0,1,0,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.read_post().framebuffer->texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    // world.graphics.paint.bordered_sprite(world.graphics.write_post().framebuffer->texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(1,1,1,1));
+
+    // int i = 0;
+    // for (auto light : world.entities.aspects<DirectionalLight>()) {
+    //     auto &shadow_map = world.graphics.directional_light_data(light).shadow_map(main_camera);
+    //     for (int j = 0; j < 2; j++) {
+    //         for (int k = 0; k < 2; k++) {
+    //             world.graphics.paint.bordered_depth_sprite_layer(shadow_map.texture, vec2(j*0.25/2,0.25*i+k*0.25/2), 0.25/2,0.25/2, 3, vec4(1,0,0,1), 2*j+k);
+    //         }
+    //     }
+    //     i++;
+    // }
+
 }
 
 void App::window_handler(WindowEvent e)

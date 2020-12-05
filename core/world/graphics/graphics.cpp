@@ -444,6 +444,10 @@ void Graphics::render()
     // /*--------------------------------------------------------------------------------
     //     Render 2D and 3D vector graphics.
     // --------------------------------------------------------------------------------*/
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    glEnable(GL_SCISSOR_TEST);
+    glViewport(0, 0, window_viewport.w, window_viewport.h);
+    glScissor(0, 0, window_viewport.w, window_viewport.h);
     paint.render();
     paint.clear();
 

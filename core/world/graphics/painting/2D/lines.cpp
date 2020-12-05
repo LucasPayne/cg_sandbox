@@ -4,9 +4,9 @@
 void Painting::render_lines_2D()
 {
     primitive_lines_2D_shader_program->bind();
+    glDisable(GL_BLEND);
 
     for (auto &line_chain : lines_2D) {
-        graphics.begin_camera_rendering(line_chain.camera);
         glUniform4fv(primitive_lines_2D_shader_program->uniform_location("color"), 1, (const GLfloat *) &line_chain.color);
     
         GLuint vao;
@@ -25,16 +25,14 @@ void Painting::render_lines_2D()
 
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vertex_buffer);
-
-        graphics.end_camera_rendering(line_chain.camera);
     }
     primitive_lines_2D_shader_program->unbind();
 }
 
 
 
-void Painting::chain_2D(Aspect<Camera> camera, std::vector<vec2> &points, float width, vec4 color)
+void Painting::chain_2D(std::vector<vec2> &points, float width, vec4 color)
 {
-    lines_2D.push_back(PaintingLines2D(camera, points, width, color));
+    lines_2D.push_back(PaintingLines2D(points, width, color));
 }
 

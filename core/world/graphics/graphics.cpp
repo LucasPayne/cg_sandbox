@@ -5,6 +5,127 @@
 #include "lighting.cpp"
 
 
+void Graphics::init()
+{
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
+    background_color = vec4(0,0,0,1);
+    window_background_color = vec4(0,0,0,1);
+
+    glEnable(GL_BLEND);
+    // The standard blending mode. Remember to reset to this if changed!
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Initialize the painting module, for 2D and 3D vector graphics.
+    paint.init();
+
+    // Set up the G-buffer.
+    glGenFramebuffers(1, &gbuffer_fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
+    gbuffer_components = {
+        GBufferComponent("position", GL_RGBA16F, GL_RGBA, GL_FLOAT),
+        GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT),
+        GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
+        GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT),
+    };
+    std::vector<GLenum> buffer_enums(gbuffer_components.size());
+    for (unsigned int i = 0; i < gbuffer_components.size(); i++) buffer_enums[i] = GL_COLOR_ATTACHMENT0 + i;
+    int i = 0;
+    for (auto &component : gbuffer_components) {
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, 256, 256, 0, component.external_format, component.type, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, buffer_enums[i], GL_TEXTURE_2D, texture, 0);
+        component.texture = texture;
+        i += 1;
+    }
+    glDrawBuffers(buffer_enums.size(), &buffer_enums[0]);
+
+    glGenRenderbuffers(1, &gbuffer_depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 256, 256);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gbuffer_depth_rbo);
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "G-buffer framebuffer incomplete.\n");
+        exit(EXIT_FAILURE);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
+    // any time for post-processing effects or deferred rendering.
+    vec2 ppq_data[8] = {vec2(-1,-1),vec2(0,0),
+                        vec2(-1,1),vec2(0,1),
+                        vec2(1,1),vec2(1,1),
+                        vec2(1,-1),vec2(1,0)}; // y is flipped since the framebuffer is flipped vertically.
+    glGenVertexArrays(1, &postprocessing_quad_vao);
+    glBindVertexArray(postprocessing_quad_vao);
+    GLuint ppq_vbo;
+    glGenBuffers(1, &ppq_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, ppq_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * 8, (const void *) &ppq_data[0], GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) sizeof(vec2));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    auto create_color_framebuffer = [](Framebuffer &fb) {
+        GLuint &fbo = fb.id;
+        GLuint &tex = fb.texture;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            fprintf(stderr, "Framebuffer incomplete.\n");
+            exit(EXIT_FAILURE);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    };
+    create_color_framebuffer(screen_buffer);
+    create_color_framebuffer(post_buffer);
+
+    directional_light_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
+    directional_light_shader_program->link();
+    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
+    directional_light_filter_shader_program->link();
+
+    depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
+    depth_of_field_confusion_radius_program->link();
+
+    depth_of_field_near_field_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_near_field_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    depth_of_field_near_field_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_near_field.frag"));
+    depth_of_field_near_field_program->link();
+
+    temporal_aa_program = world.resources.add<GLShaderProgram>();
+    temporal_aa_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    temporal_aa_program->add_shader(GLShader(FragmentShader, "shaders/antialiasing/temporal_quincunx.frag"));
+    temporal_aa_program->link();
+}
+
+
 void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
                     MaterialInstance &material_instance,
                     ShadingModelInstance &shading_model_instance)
@@ -147,8 +268,9 @@ void Graphics::refresh_framebuffers()
     int max_res_x = 0;
     int max_res_y = 0;
     for (auto camera : world.entities.aspects<Camera>()) {
-        if (camera->framebuffer.resolution_x > max_res_x) max_res_x = camera->framebuffer.resolution_x;
-        if (camera->framebuffer.resolution_y > max_res_y) max_res_y = camera->framebuffer.resolution_y;
+        auto viewport = camera->viewport();
+        if (viewport.w > max_res_x) max_res_x = viewport.w;
+        if (viewport.h > max_res_y) max_res_y = viewport.h;
     }
     if (max_res_x != framebuffer_res_x || max_res_y != framebuffer_res_y) {
         glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
@@ -208,6 +330,7 @@ void Graphics::render(Aspect<Camera> camera)
     render_drawables(shading_model);
     //---Explicitly destroy shading model.
     shading_model.properties.destroy();
+
     /*--------------------------------------------------------------------------------
         Lighting and rendering of surfaces using the G-buffer.
         This is the first pass that fills the target framebuffer, so will
@@ -240,7 +363,7 @@ void Graphics::render(Aspect<Camera> camera)
         If the final image is in the post-processing buffer, blit it over to the
         target.
     --------------------------------------------------------------------------------*/
-    if (write_post().framebuffer->id != camera->framebuffer.id) {
+    if (write_post().framebuffer->id != viewport.framebuffer->id) {
         glDisable(GL_SCISSOR_TEST);
         Viewport write_viewport = write_post();
         glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
@@ -265,15 +388,27 @@ void Graphics::render()
         Update lighting data, such as shadow maps.
     --------------------------------------------------------------------------------*/
     update_lights();
+
+    /*--------------------------------------------------------------------------------
+        Clear the screen buffer.
+    --------------------------------------------------------------------------------*/
+    glBindBuffer(GL_FRAMEBUFFER, screen_buffer.id);
+    glDisable(GL_SCISSOR_TEST);
+    glViewport(0,0, window_viewport.w, window_viewport.h);
+    // std::cout << "WINDOW " << window_viewport << "\n";
+    // glClearColor(VEC4_EXPAND(background_color));
+    glClearColor(1,0,0,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
     /*--------------------------------------------------------------------------------
         Render each camera into it's framebuffer section.
     --------------------------------------------------------------------------------*/
     for (auto camera : world.entities.aspects<Camera>()) {
         render(camera);
     }
-    /*--------------------------------------------------------------------------------
-        Render 2D and 3D vector graphics.
-    --------------------------------------------------------------------------------*/
+    // /*--------------------------------------------------------------------------------
+    //     Render 2D and 3D vector graphics.
+    // --------------------------------------------------------------------------------*/
     paint.render();
     paint.clear();
 
@@ -282,13 +417,13 @@ void Graphics::render()
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
-    glViewport(0, 0, world.screen_width, world.screen_height);
-    glClearColor(0,0,0,1); // clear window background
+    glViewport(0, 0, window_width, window_height);
+    glClearColor(VEC4_EXPAND(window_background_color));
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
-    glBlitFramebuffer(0,0, screen_buffer.resolution_x, screen_buffer.resolution_y, // source
-                      window_viewport.x, window_viewport.y, window_viewport.x+window_viewport.w, window_viewport.y+window_viewport.h, // destination
+    glBlitFramebuffer(0,0, window_viewport.w, window_viewport.h, // source: screen buffer
+                      window_viewport.x, window_viewport.y, window_viewport.x+window_viewport.w, window_viewport.y+window_viewport.h, // destination: default buffer
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
@@ -306,129 +441,6 @@ GBufferComponent &Graphics::gbuffer_component(std::string name)
     exit(EXIT_FAILURE);
 }
 
-void Graphics::init()
-{
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    glEnable(GL_BLEND);
-    // The standard blending mode. Remember to reset to this if changed!
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Initialize the painting module, for 2D and 3D vector graphics.
-    paint.init();
-
-    // Set up the G-buffer.
-    // The viewport at initialization should have the dimensions of the screen, so it is used to initialize gbuffer texture size.
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    world.screen_width = viewport[2];
-    world.screen_height = viewport[3];
-
-    glGenFramebuffers(1, &gbuffer_fb);
-    glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
-
-    gbuffer_components = {
-        GBufferComponent("position", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-        GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-        GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
-        GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-    };
-    std::vector<GLenum> buffer_enums(gbuffer_components.size());
-    for (unsigned int i = 0; i < gbuffer_components.size(); i++) buffer_enums[i] = GL_COLOR_ATTACHMENT0 + i;
-    int i = 0;
-    for (auto &component : gbuffer_components) {
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, world.screen_width, world.screen_height, 0, component.external_format, component.type, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, buffer_enums[i], GL_TEXTURE_2D, texture, 0);
-        component.texture = texture;
-        i += 1;
-    }
-    glDrawBuffers(buffer_enums.size(), &buffer_enums[0]);
-
-    glGenRenderbuffers(1, &gbuffer_depth_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, world.screen_width, world.screen_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gbuffer_depth_rbo);
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "G-buffer framebuffer incomplete.\n");
-        exit(EXIT_FAILURE);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Initialize the vertex array for the post-processing quad. This is stored on the GPU and can be used at
-    // any time for post-processing effects or deferred rendering.
-    vec2 ppq_data[8] = {vec2(-1,-1),vec2(0,0),
-                        vec2(-1,1),vec2(0,1),
-                        vec2(1,1),vec2(1,1),
-                        vec2(1,-1),vec2(1,0)}; // y is flipped since the framebuffer is flipped vertically.
-    glGenVertexArrays(1, &postprocessing_quad_vao);
-    glBindVertexArray(postprocessing_quad_vao);
-    GLuint ppq_vbo;
-    glGenBuffers(1, &ppq_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, ppq_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * 8, (const void *) &ppq_data[0], GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) sizeof(vec2));
-    glEnableVertexAttribArray(1);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    auto create_color_framebuffer = [](Framebuffer &fb) {
-        GLuint &fbo = fb.id;
-        GLuint &tex = fb.texture;
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr, "Framebuffer incomplete.\n");
-            exit(EXIT_FAILURE);
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    };
-    create_color_framebuffer(screen_buffer);
-    create_color_framebuffer(post_buffer);
-
-    directional_light_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
-    directional_light_shader_program->link();
-    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
-    directional_light_filter_shader_program->link();
-
-    depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
-    depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
-    depth_of_field_confusion_radius_program->link();
-
-    depth_of_field_near_field_program = world.resources.add<GLShaderProgram>();
-    depth_of_field_near_field_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    depth_of_field_near_field_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_near_field.frag"));
-    depth_of_field_near_field_program->link();
-
-    temporal_aa_program = world.resources.add<GLShaderProgram>();
-    temporal_aa_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    temporal_aa_program->add_shader(GLShader(FragmentShader, "shaders/antialiasing/temporal_quincunx.frag"));
-    temporal_aa_program->link();
-}
 
 DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
 {

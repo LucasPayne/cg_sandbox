@@ -73,11 +73,18 @@ App::App(World &_world) : world{_world}
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,3,0);
     main_camera = cameraman.get<Camera>();
+    cameraman.get<Camera>()->bottom_left = vec2(0.1, 0.1);
+    cameraman.get<Camera>()->top_right = vec2(0.9, 0.9);
+    cameraman.get<Camera>()->background_color = vec4(0.9,0.86,1,1);
+
+    world.graphics.background_color = vec4(0.5, 0.5, 0.5, 1);
+    world.graphics.window_background_color = vec4(0, 0.5, 0.5, 1);
+
     cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
     cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
     cameraman = create_cameraman(world);
     cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
-    cameraman.get<Camera>()->top_right = vec2(1, 0.75);
+    cameraman.get<Camera>()->top_right = vec2(0.8, 0.66);
     cameraman.get<Transform>()->position = vec3(0,6,0);
     
     for (int i = 0; i < 20; i++) {
@@ -160,10 +167,10 @@ void App::loop()
     // // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("albedo").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
     // world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("velocity").texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(0,0,0,1));
 
-    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.screen_buffer.texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.read_post().framebuffer->texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
-    world.graphics.paint.bordered_sprite(main_camera, world.graphics.write_post().framebuffer->texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.screen_buffer.texture, vec2(0.25,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    world.graphics.paint.bordered_sprite(main_camera, world.graphics.gbuffer_component("position").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.read_post().framebuffer->texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,1,1,1));
+    // world.graphics.paint.bordered_sprite(main_camera, world.graphics.write_post().framebuffer->texture, vec2(0.25*3,0), 0.25,0.25, 3, vec4(1,1,1,1));
 }
 
 void App::window_handler(WindowEvent e)

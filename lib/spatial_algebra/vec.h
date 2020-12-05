@@ -7,6 +7,12 @@
 #define frand() (rand() / (RAND_MAX * 1.0))
 
 
+// Expansion macros helpful for parameter lists.
+#define VEC2_EXPAND(VEC) ( VEC ).x(), ( VEC ).y()
+#define VEC3_EXPAND(VEC) ( VEC ).x(), ( VEC ).y(), ( VEC ).z()
+#define VEC4_EXPAND(VEC) ( VEC ).x(), ( VEC ).y(), ( VEC ).z(), ( VEC ).w()
+
+
 // vec3 and vec4 classes.
 // references:
 //    Peter Shirley, Ray Tracing in One Weekend, intro on vector classes

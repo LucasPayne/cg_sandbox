@@ -130,6 +130,8 @@ void World::window_update(int width, int height)
     graphics.screen_buffer.resolution_x = w;
     graphics.screen_buffer.resolution_y = h;
     graphics.window_viewport = Viewport(x, y, w, h);
+    graphics.window_width = width;
+    graphics.window_height = height;
 }
 
 

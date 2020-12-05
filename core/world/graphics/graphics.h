@@ -122,8 +122,19 @@ public:
     Painting paint;
 
     void refresh_framebuffers();
-    Viewport window_viewport; // The final screen buffer rendering is rendered onto the window framebuffer with this viewport.
+
+    Viewport window_viewport; // The final screen buffer is placed onto the window framebuffer with this viewport.
                               // This can be set by the application, to, for example, fix the rendering to a fixed-aspect-ratio rectangle.
+    vec4 background_color; // When there is empty space in the screen buffer, it will be this color.
+    vec4 window_background_color; // Unused window framebuffer space is this color, e.g. the space not in the fixed aspect-ratio subrectangle.
+    int window_width;
+    int window_height;
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // dummy functions until painting module is updated
+    inline void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false) {};
+    inline void end_camera_rendering(Aspect<Camera> &camera) {};
+
     Framebuffer screen_buffer;
     int framebuffer_res_x;
     int framebuffer_res_y; // minimum framebuffer size needed to account for all cameras being rendered to.
@@ -133,12 +144,6 @@ public:
     GLuint gbuffer_fb; // G-buffer framebuffer
     GLuint gbuffer_depth_rbo; // Depth renderbuffer
     std::vector<GBufferComponent> gbuffer_components;
-
-    //////////////////////////////////////////////////////////////////////////////////
-    // dummy functions until painting module is updated
-    inline void begin_camera_rendering(Aspect<Camera> &camera, bool clear = false) {};
-    inline void end_camera_rendering(Aspect<Camera> &camera) {};
-
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
@@ -156,6 +161,7 @@ public:
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
+
 private:
     World &world;
 

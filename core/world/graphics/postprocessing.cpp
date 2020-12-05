@@ -20,8 +20,8 @@ void Graphics::begin_post(Resource<GLShaderProgram> &program,
     vec4 gbuffer_uv_quad = vec4(
         0,
         0,
-        read_viewport.w / (1.f * read_viewport.framebuffer->resolution_x),
-        read_viewport.h / (1.f * read_viewport.framebuffer->resolution_y)
+        read_viewport.w / (1.f * framebuffer_res_x),
+        read_viewport.h / (1.f * framebuffer_res_y)
     );
     glUniform4fv(program->uniform_location("gbuffer_uv_quad"), 1, (GLfloat *) &gbuffer_uv_quad);
     glBindVertexArray(postprocessing_quad_vao);

@@ -44,9 +44,6 @@ public:
     //todo: move this to a picker subsystem.
     bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
 
-    int screen_width;
-    int screen_height;
-
 private:
     World(const World &); // Delete the copy constructor.
 };

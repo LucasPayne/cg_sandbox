@@ -133,15 +133,6 @@ void Graphics::update_lights()
 
 void Graphics::lighting(Aspect<Camera> camera)
 {
-    // Clear to background color.
-    glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_SCISSOR_TEST);
-    auto viewport = camera->viewport();
-    glViewport(VIEWPORT_EXPAND(viewport));
-    glScissor(VIEWPORT_EXPAND(viewport));
-    glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
-    glClear(GL_COLOR_BUFFER_BIT);
     directional_lights(camera);
 }
 
@@ -227,7 +218,11 @@ void Graphics::directional_lights(Aspect<Camera> camera)
 
         begin_post(program);
         glBlendFunc(GL_ONE, GL_ZERO);
-        glClearColor(0,0,0,0);
+        if (first_light_pass) {
+            glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), camera->background_color.w());
+        } else {
+            glClearColor(0,0,0,0);
+        }
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();

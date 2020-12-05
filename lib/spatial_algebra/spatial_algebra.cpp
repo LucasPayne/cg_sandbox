@@ -177,6 +177,16 @@ mat4x4 mat4x4::scale(float x, float y, float z)
         0,0,0,1
     );
 }
+mat4x4 mat4x4::scale(float x)
+{
+    return mat4x4::row_major(
+        x, 0, 0, 0,
+        0, x, 0, 0,
+        0, 0, x, 0,
+        0,0,0,1
+    );
+}
+
 mat4x4 Quaternion::matrix()
 {
     auto inv = inverse();

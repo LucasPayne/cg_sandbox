@@ -109,10 +109,11 @@ void Graphics::update_lights()
                 vec3 min_point = mins.x()*X + mins.y()*Y + mins.z()*Z;
                 mat4x4 shadow_matrix = mat4x4::orthogonal_projection(0, width, 0, height, 0, depth)
                                      * mat4x4::to_rigid_frame(min_point, X, Y, Z);
-                sm.shadow_matrices[segment] = shadow_matrix;
-                sm.box_extents[segment] = vec3(width, height, depth);
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
-
+                // For efficiency, the transformation to texture space is concatenated for the shadow matrix uploaded to the lighting shaders.
+                sm.shadow_matrices[segment] = mat4x4::translation(vec3(0.5,0.5,0.5)) * mat4x4::scale(0.5) * shadow_matrix;
+                // sm.shadow_matrices[segment] = shadow_matrix;
+                sm.box_extents[segment] = vec3(width, height, depth);
 
                 glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glViewport(0, 0, sm.width, sm.height);
@@ -214,6 +215,14 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
             uniform_name = std::string("box_extents[") + std::to_string(i) + std::string("]");
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
+            uniform_name = std::string("inv_box_extents[") + std::to_string(i) + std::string("]");
+            vec3 inv_box_extents = 1.f / shadow_map.box_extents[i];
+            glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &inv_box_extents);
+
+            uniform_name = std::string("_pre_1[") + std::to_string(i) + std::string("]");
+            // _pre_1[i] : 0.5*width*box_extents[i].z * inv_box_extents[i].xy
+            vec2 _pre_1 = 0.5 * light->width * shadow_map.box_extents[i].z() * vec2(1.f / shadow_map.box_extents[i].x(), 1.f / shadow_map.box_extents[i].y());
+            glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
         }
 
         begin_post(program);

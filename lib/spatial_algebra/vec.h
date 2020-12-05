@@ -148,6 +148,9 @@ inline vec3 operator*(const vec3 &v, const float &t) {
 inline vec3 operator/(const vec3 &v, const float &t) {
     return vec3(v[0]/t, v[1]/t, v[2]/t);
 }
+inline vec3 operator/(const float &t, const vec3 &v) {
+    return vec3(t/v[0], t/v[1], t/v[2]);
+}
 
 // Pairwise comparison.
 inline bool operator>(const vec3 &a, const vec3 &b)
@@ -304,6 +307,9 @@ inline vec4 operator*(const vec4 &v, const float &t) {
 inline vec4 operator/(const vec4 &v, const float &t) {
     return vec4(v[0]/t, v[1]/t, v[2]/t, v[3]/t);
 }
+inline vec4 operator/(const float &t, const vec4 &v) {
+    return vec4(t/v[0], t/v[1], t/v[2], t/v[3]);
+}
 // Pairwise comparison.
 inline bool operator>(const vec4 &a, const vec4 &b)
 {
@@ -440,6 +446,9 @@ inline vec2 operator*(const vec2 &v, const float &t) {
 }
 inline vec2 operator/(const vec2 &v, const float &t) {
     return vec2(v[0]/t, v[1]/t);
+}
+inline vec2 operator/(const float &t, const vec2 &v) {
+    return vec2(t/v[0], t/v[1]);
 }
 
 inline vec2 vec2::rotate(float theta) {

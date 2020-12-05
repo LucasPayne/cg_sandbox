@@ -171,6 +171,7 @@ struct mat4x4 {
     static mat4x4 to_rigid_frame(vec3 origin, vec3 X, vec3 Y, vec3 Z);
     static mat4x4 translation(vec3 amount);
     static mat4x4 scale(float x, float y, float z);
+    static mat4x4 scale(float x);
 
     mat4x4 inverse() const;
 

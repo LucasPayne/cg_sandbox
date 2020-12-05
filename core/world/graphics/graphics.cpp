@@ -502,8 +502,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 1024;
-    int height = 1024;
+    int width = 512;
+    int height = 512;
     int num_frustum_segments = 4;
 
     GLuint tex;

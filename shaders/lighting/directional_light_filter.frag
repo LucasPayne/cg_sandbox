@@ -46,44 +46,24 @@ void main(void)
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, gbuffer_uv);
     if (f_albedo.a == 0) discard;
-
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
+
+    DEBUG_COLOR(texture(shadow, uv));
 
     /*--------------------------------------------------------------------------------
         Shadow signal filtering
         (For denoising rotated-Poisson-disc PCF)
     --------------------------------------------------------------------------------*/
-    // // 7x7 Gaussian filter
-    // #define size 3
-    // const float gaussian_kernel[(2*size+1)*(2*size+1)] = {
-    //     0.0004360337163160857, 0.0019541675407126887, 0.004806476562858854, 0.0064880647217826605, 0.004806476562858854, 0.0019541675407126887, 0.0004360337163160857,
-    //     0.0019541675407126887, 0.008757971308821473, 0.021541133478600594, 0.02907748875125932, 0.021541133478600594, 0.008757971308821473, 0.0019541675407126887,
-    //     0.004806476562858854, 0.021541133478600594, 0.052982638921813145, 0.07151908179722863, 0.052982638921813145, 0.021541133478600594, 0.004806476562858854,
-    //     0.0064880647217826605, 0.02907748875125932, 0.07151908179722863, 0.09654066247373766, 0.07151908179722863, 0.02907748875125932, 0.0064880647217826605,
-    //     0.004806476562858854, 0.021541133478600594, 0.052982638921813145, 0.07151908179722863, 0.052982638921813145, 0.021541133478600594, 0.004806476562858854,
-    //     0.0019541675407126887, 0.008757971308821473, 0.021541133478600594, 0.02907748875125932, 0.021541133478600594, 0.008757971308821473, 0.0019541675407126887,
-    //     0.0004360337163160857, 0.0019541675407126887, 0.004806476562858854, 0.0064880647217826605, 0.004806476562858854, 0.0019541675407126887, 0.0004360337163160857
-    // };
-    // float average_shadow = 0.f;
-    // for (int i = -size; i <= size; i++) {
-    //     for (int j = -size; j <= size; j++) {
-    //         float weight = gaussian_kernel[(2*size+1)*(i+size) + j+size];
-    //         vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
-    //         float sample_shadow = texture(shadow, sample_uv).r;
-    //         average_shadow += weight * sample_shadow;
-    //     }
-    // }
-    // average_shadow = clamp(average_shadow, 0, 1); // This seems to be a required sanity check.
-    // //-Why is the average shadowing sometimes above 1?
-    
-    // 3x3 box filter
-    #define WEIGHT (1.f / 9.f)
+    // Some sort of filter...
+    #define WEIGHT (1.f / 16.f)
     float average_shadow = 0.f;
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i += 2) {
+        for (int j = -1; j <= 1; j += 2) {
             vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
-            float sample_shadow = texture(shadow, sample_uv).r;
-            average_shadow += WEIGHT * sample_shadow;
+            // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
+            // average_shadow += WEIGHT * sample_shadow;
+            vec4 sample_shadows = textureGather(shadow, sample_uv, 0);
+            average_shadow += WEIGHT * (sample_shadows.x + sample_shadows.y + sample_shadows.z + sample_shadows.w);
         }
     }
 

@@ -125,6 +125,7 @@ public:
 
     Viewport window_viewport; // The final screen buffer is placed onto the window framebuffer with this viewport.
                               // This can be set by the application, to, for example, fix the rendering to a fixed-aspect-ratio rectangle.
+    Viewport prev_window_viewport; // Changes to the window dimensions are detected so that the screen framebuffer can be resized.
     vec4 background_color; // When there is empty space in the screen buffer, it will be this color.
     vec4 window_background_color; // Unused window framebuffer space is this color, e.g. the space not in the fixed aspect-ratio subrectangle.
     int window_width;

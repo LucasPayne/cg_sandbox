@@ -79,6 +79,8 @@ void World::loop()
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->post_render_update();
     }
+
+    printf("Frame-rate: %d\n", (int) floor(1.f / dt + 0.5f));
 }
 
 void World::close()

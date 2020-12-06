@@ -49,6 +49,8 @@ void Graphics::init()
     // Initialize the painting module, for 2D and 3D vector graphics.
     paint.init();
 
+    prev_window_viewport.w = -1; // make sure to force a refresh of the screen buffer.
+
     // Set up the G-buffer.
     glGenFramebuffers(1, &gbuffer_fb);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
@@ -308,7 +310,7 @@ void Graphics::refresh_framebuffers()
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glBindTexture(GL_TEXTURE_2D, post_buffer.texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, max_res_x, max_res_y, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, max_res_x, max_res_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glBindTexture(GL_TEXTURE_2D, 0);
         post_buffer.resolution_x = max_res_x;
         post_buffer.resolution_y = max_res_y;
@@ -316,13 +318,14 @@ void Graphics::refresh_framebuffers()
     framebuffer_res_x = max_res_x;
     framebuffer_res_y = max_res_y;
 
-    //TODO
-    //-----only refresh when changed
-    glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    screen_buffer.resolution_x = window_viewport.w;
-    screen_buffer.resolution_y = window_viewport.h;
+    if (prev_window_viewport.w != window_viewport.w || prev_window_viewport.h != window_viewport.h) {
+        glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        screen_buffer.resolution_x = window_viewport.w;
+        screen_buffer.resolution_y = window_viewport.h;
+    }
+    prev_window_viewport = window_viewport;
 
 
     // Update camera TAA data.
@@ -501,101 +504,4 @@ GBufferComponent &Graphics::gbuffer_component(std::string name)
     fprintf(stderr, "\"%s\" is not the name of a G-buffer component.\n", name.c_str());
     exit(EXIT_FAILURE);
 }
-
-
-DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
-{
-    auto iter = directional_light_data_map.find(light.ID());
-    if (iter != directional_light_data_map.end()) {
-        return directional_light_data_map[light.ID()];
-    }
-    DirectionalLightData data;
-    // Initialize ...
-    //-
-    directional_light_data_map[light.ID()] = data;
-    return directional_light_data_map[light.ID()];
-}
-
-DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camera)
-{
-    auto iter = shadow_maps.find(camera.ID());
-    if (iter != shadow_maps.end()) {
-        // The shadow map already exists.
-        return shadow_maps[camera.ID()];
-    }
-    int width = 512;
-    int height = 512;
-    int num_frustum_segments = 4;
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-
-    GLuint sampler; // For use with sampler2DShadow[Array].
-    glGenSamplers(1, &sampler);
-    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
-    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    GLuint sampler_raw; // For direct access of shadow map texels.
-    glGenSamplers(1, &sampler_raw);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, tex, 0, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Incomplete framebuffer when initializing shadow maps.\n");
-        exit(EXIT_FAILURE);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    DirectionalLightShadowMap sm;
-    sm.camera = camera;
-    sm.width = width;
-    sm.height = height;
-    sm.texture = tex;
-    sm.sampler_comparison = sampler;
-    sm.sampler_raw = sampler_raw;
-    sm.fbo = fbo;
-    sm.num_frustum_segments = num_frustum_segments;
-    sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
-    sm.box_extents = std::vector<vec3>(sm.num_frustum_segments);
-    sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
-
-    sm.distance = 20; //an arbitrarily chosen default
-    if (sm.num_frustum_segments == 2) {
-        // These hard-coded frustum segment dividers are chosen to be generally good while standing at ground level.
-        sm.frustum_segment_dividers[0] = 0.31;
-    } else if (sm.num_frustum_segments == 3) {
-        sm.frustum_segment_dividers[0] = 0.2;
-        sm.frustum_segment_dividers[0] = 0.5;
-    } else if (sm.num_frustum_segments == 4) {
-        sm.frustum_segment_dividers[0] = 0.15;
-        sm.frustum_segment_dividers[1] = 0.39;
-        sm.frustum_segment_dividers[2] = 0.68;
-    } else {
-        // Evenly spaced. This is not very good.
-        for (int i = 1; i < sm.num_frustum_segments; i++) {
-            float d = i/(1.f * sm.num_frustum_segments);
-            sm.frustum_segment_dividers[i-1] = d;
-        }
-    }
-
-    shadow_maps[camera.ID()] = sm;
-    return shadow_maps[camera.ID()];
-}
-
-
-
 

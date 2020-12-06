@@ -27,8 +27,6 @@ uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform mat4x4 shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 inv_box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
-// NOTE: Is it worth the double bandwidth just to use a shadow sampler? Can a shadow sampler be accessed normally?
-// TODO: Try texelFetch.
 uniform sampler2DArrayShadow shadow_map;
 uniform sampler2DArray shadow_map_raw;
 
@@ -71,6 +69,16 @@ void main(void)
     float f_depth = texture(depth, gbuffer_uv).r;
     vec4 f_position_h = inverse_projection_matrix * vec4(screen_pos, 2*f_depth-1, 1);
     vec3 f_position = f_position_h.xyz / f_position_h.w;
+
+    vec4 depths = textureGather(depth, gbuffer_uv, 0);
+    vec4 posx_h = inverse_projection_matrix * vec4(screen_pos, 2*depths[2]-1, 1);
+    vec3 posx = posx_h.xyz / posx_h.w;
+    vec4 posy_h = inverse_projection_matrix * vec4(screen_pos, 2*depths[3]-1, 1);
+    vec3 posy = posy_h.xyz / posy_h.w;
+    vec3 f_normal = normalize(cross(posx - f_position, posy - f_position));
+
+    DEBUG_COLOR(f_normal);
+
 
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps), and
@@ -115,8 +123,8 @@ void main(void)
         vec2(-0.9313199714350133, 0.0345017666150762),
         vec2(-0.3387566044621402, -0.8496373910192114),
     };
-    // Pseudo-random noise taken off of stackoverflow.
     #if 1
+    // Pseudo-random noise taken off of stackoverflow.
     float rand_theta = 2*PI*fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);

@@ -201,9 +201,8 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glUniform1i(program->uniform_location("shadow_map"), 0);
         glUniform1i(program->uniform_location("shadow_map_raw"), 1);
         for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
-            auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
-
             // The shadow matrix transforms from camera space, so post-multiply the world-space shadow matrix with the camera's model-matrix.
+            auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
             mat4x4 shadow_matrix = shadow_map.shadow_matrices[i] * camera_matrix;
             glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_matrix);
 

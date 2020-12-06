@@ -3,13 +3,10 @@
     This reads the shadowing signal and blurs it before using it to compute lighting.
 --------------------------------------------------------------------------------*/
 #version 420
+
 // G-buffer
 uniform sampler2D normal;
 uniform sampler2D albedo;
-
-// Camera
-uniform vec3 camera_position;
-uniform vec3 camera_forward;
 
 // Light
 uniform vec3 direction;
@@ -38,7 +35,7 @@ void main(void)
     if (f_albedo.a == 0) discard;
     vec3 f_normal = texture(normal, gbuffer_uv).xyz;
 
-    // DEBUG_COLOR(texture(shadow, uv));
+    DEBUG_COLOR(texture(shadow, uv));
 
     /*--------------------------------------------------------------------------------
         Shadow signal filtering
@@ -82,15 +79,4 @@ void main(void)
         Lighting
     --------------------------------------------------------------------------------*/
     color = vec4((1.f - average_shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
-
-    /*--------------------------------------------------------------------------------
-        Uncomment to visualize frustum segments.
-    --------------------------------------------------------------------------------*/
-    #if 0
-    if (segment == 0) color += vec4(0.5,0,0,0);
-    else if (segment == 1) color += vec4(0,0.5,0,0);
-    else if (segment == 2) color += vec4(0,0,0.5,0);
-    else if (segment == 3) color += vec4(0,0.5,0.5,0);
-    return;
-    #endif
 }

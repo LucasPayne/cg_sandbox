@@ -5,6 +5,7 @@
 --------------------------------------------------------------------------------*/
 #version 420
 #define FADE_OUT 0
+#define VISUALIZE_FRUSTUM_SEGMENTS 0
 
 
 // G-buffer
@@ -71,16 +72,11 @@ void main(void)
     vec4 f_position_h = inverse_projection_matrix * vec4(screen_pos, 2*f_depth-1, 1);
     vec3 f_position = f_position_h.xyz / f_position_h.w;
 
-    // DEBUG_COLOR(vec3(0.5*screen_pos+0.5, 0));
-    // DEBUG_COLOR(vec3(f_position_h.z));
-    // DEBUG_COLOR(vec3(0.5*f_depth+0.5));
-    // DEBUG_COLOR(f_position);
-
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps), and
         transform to light space.
     --------------------------------------------------------------------------------*/
-    float eye_z = f_position.z;
+    float eye_z = -f_position.z;
     int segment = 0;
     for (int i = 0; i < num_frustum_segments-1; i++) {
         // NOTE: Unsure if avoiding brancing here is worth it.
@@ -182,5 +178,16 @@ void main(void)
     color = vec4(shadow_fading * shadow, 0,0,1);
     #else
     color = vec4(shadow, 0,0,1);
+    #endif
+
+
+    /*--------------------------------------------------------------------------------
+        Visualize frustum segments.
+    --------------------------------------------------------------------------------*/
+    #if VISUALIZE_FRUSTUM_SEGMENTS == 1
+    if (segment == 0) color.x += 0;
+    else if (segment == 1) color.x += 0.2;
+    else if (segment == 2) color.x += 0.4;
+    else if (segment == 3) color.x += 0.6;
     #endif
 }

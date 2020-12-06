@@ -116,12 +116,15 @@ void main(void)
         vec2(-0.3387566044621402, -0.8496373910192114),
     };
     // Pseudo-random noise taken off of stackoverflow.
+    #if 1
     float rand_theta = 2*PI*fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);
-    // float rand_theta = 0;
-    // float cos_rand_theta = 1;
-    // float sin_rand_theta = 0;
+    #else
+    float rand_theta = 0;
+    float cos_rand_theta = 1;
+    float sin_rand_theta = 0;
+    #endif
 
     // NOTE: Unsure if storing these in an array is more efficient than just computing them twice.
     vec2 rotated_poisson_samples[NUM_SAMPLES];

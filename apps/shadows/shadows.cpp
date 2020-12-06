@@ -40,6 +40,12 @@ struct LightRotate : public IBehaviour {
             if (world->input.keyboard.down(KEY_DOWN_ARROW)) {
                 height -= 0.5f * dt;
             }
+            if (world->input.keyboard.down(KEY_M)) {
+                light->width += 0.01;
+            }
+            if (world->input.keyboard.down(KEY_N)) {
+                light->width -= 0.01;
+            }
         }
         light->direction = vec3(cos(theta), -height, sin(theta)).normalized();
     }
@@ -92,14 +98,14 @@ App::App(World &_world) : world{_world}
     //cameraman.get<Transform>()->position = vec3(0,6,0);
     //cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
     
-    for (int i = 0; i < 20; i++) {
-        for (int j = 0; j < 20; j++) {
-            Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
-            obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
-            obj.get<Transform>()->scale = 5;
-            obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
-        }
-    }
+    // for (int i = 0; i < 20; i++) {
+    //     for (int j = 0; j < 20; j++) {
+    //         Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+    //         obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
+    //         obj.get<Transform>()->scale = 5;
+    //         obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
+    //     }
+    // }
     int n = 20;
     for (int i = 0; i < n; i++) {
         float r = 5;
@@ -157,6 +163,13 @@ App::App(World &_world) : world{_world}
         float sun_w = 0.07;
         light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.2, M_PI/3, false);
+    }
+    if (1) {
+        Entity light = world.entities.add();
+        // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
+        float sun_w = 0.07;
+        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
+        world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.3, M_PI/3+1.31451, false);
     }
 }
 

@@ -72,7 +72,7 @@ void Graphics::init()
 
         gbuffer_components.push_back(component);
     };
-    add_gbuffer_component(GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT), false);
+    add_gbuffer_component(GBufferComponent("normal", GL_RG16, GL_RG, GL_UNSIGNED_SHORT), false);
     add_gbuffer_component(GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE), false);
     add_gbuffer_component(GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT), false);
     add_gbuffer_component(GBufferComponent("depth", GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT), true);

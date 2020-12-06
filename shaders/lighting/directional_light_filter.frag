@@ -25,6 +25,19 @@ in vec2 uv;
 in vec2 gbuffer_uv;
 out vec4 color;
 
+
+vec3 decode_normal(vec4 encoded_normal)
+{
+    // reference: https://knarkowicz.wordpress.com/2014/04/16/octahedron-normal-vector-encoding/
+    vec2 f = 2*encoded_normal.xy - 1;
+    vec3 n = vec3(f.x, f.y, 1 - abs(f.x) - abs(f.y));
+    float t = clamp(-n.z, 0, 1);
+    n.x += n.x >= 0 ? -t : t;
+    n.y += n.y >= 0 ? -t : t;
+    return normalize(n);
+}
+
+
 void main(void)
 {
     #define DEBUG_COLOR(COLOR) color = vec4(vec3(COLOR), 1); return;
@@ -33,9 +46,8 @@ void main(void)
     --------------------------------------------------------------------------------*/
     vec4 f_albedo = texture(albedo, gbuffer_uv);
     if (f_albedo.a == 0) discard;
-    vec3 f_normal = texture(normal, gbuffer_uv).xyz;
 
-    DEBUG_COLOR(texture(shadow, uv));
+    vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
 
     /*--------------------------------------------------------------------------------
         Shadow signal filtering

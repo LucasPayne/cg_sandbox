@@ -52,16 +52,11 @@ void Graphics::init()
     // Set up the G-buffer.
     glGenFramebuffers(1, &gbuffer_fb);
     glBindFramebuffer(GL_FRAMEBUFFER, gbuffer_fb);
-    gbuffer_components = {
-        GBufferComponent("position", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-        GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-        GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE),
-        GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT),
-    };
-    std::vector<GLenum> buffer_enums(gbuffer_components.size());
-    for (unsigned int i = 0; i < gbuffer_components.size(); i++) buffer_enums[i] = GL_COLOR_ATTACHMENT0 + i;
-    int i = 0;
-    for (auto &component : gbuffer_components) {
+
+    gbuffer_components.clear();
+    int num_color_attachments = 0;
+    std::vector<GLenum> color_buffer_enums;
+    auto add_gbuffer_component = [&](GBufferComponent component, bool is_depth) {
         GLuint texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -70,17 +65,18 @@ void Graphics::init()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, buffer_enums[i], GL_TEXTURE_2D, texture, 0);
+        GLenum attachment = is_depth ? GL_DEPTH_ATTACHMENT : GL_COLOR_ATTACHMENT0 + (num_color_attachments++);
+        if (!is_depth) color_buffer_enums.push_back(attachment);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, texture, 0);
         component.texture = texture;
-        i += 1;
-    }
-    glDrawBuffers(buffer_enums.size(), &buffer_enums[0]);
 
-    glGenRenderbuffers(1, &gbuffer_depth_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 256, 256);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, gbuffer_depth_rbo);
+        gbuffer_components.push_back(component);
+    };
+    add_gbuffer_component(GBufferComponent("normal", GL_RGBA16F, GL_RGBA, GL_FLOAT), false);
+    add_gbuffer_component(GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE), false);
+    add_gbuffer_component(GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT), false);
+    add_gbuffer_component(GBufferComponent("depth", GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT), true);
+    glDrawBuffers(color_buffer_enums.size(), &color_buffer_enums[0]);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "G-buffer framebuffer incomplete.\n");
@@ -130,11 +126,11 @@ void Graphics::init()
 
     directional_light_shader_program = world.resources.add<GLShaderProgram>();
     directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light.frag"));
+    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light.frag"));
     directional_light_shader_program->link();
     directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
     directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/deferred/directional_light_filter.frag"));
+    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
     directional_light_filter_shader_program->link();
 
     depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
@@ -351,9 +347,6 @@ void Graphics::refresh_framebuffers()
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     }
-    Framebuffer taa_buffer;
-    bool has_taa_buffer;
-
 }
 
 void Graphics::render(Aspect<Camera> camera)
@@ -374,7 +367,7 @@ void Graphics::render(Aspect<Camera> camera)
     glScissor(0, 0, viewport.w, viewport.h);
     glClearColor(0,0,0,0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    auto sm = world.graphics.shading.shading_models.load("shaders/gbuffer/position_normal_albedo_velocity.sm");
+    auto sm = world.graphics.shading.shading_models.load("shaders/gbuffer/normal_albedo_velocity.sm");
     auto shading_model = ShadingModelInstance(sm);
     mat4x4 vp_matrix = camera->view_projection_matrix();
     shading_model.properties.set_mat4x4("vp_matrix", vp_matrix);
@@ -418,7 +411,7 @@ void Graphics::render(Aspect<Camera> camera)
     /*--------------------------------------------------------------------------------
         Temporal anti-aliasing.
     --------------------------------------------------------------------------------*/
-    temporal_antialiasing(camera);
+    // temporal_antialiasing(camera);
 
     /*--------------------------------------------------------------------------------
         Post-processing.

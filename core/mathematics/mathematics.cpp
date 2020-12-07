@@ -72,3 +72,10 @@ BoundingBox::BoundingBox(std::vector<vec3> points) : BoundingBox()
 }
 
 
+vec3 Frustum::point(float x, float y, float z)
+{
+    float px = (x * half_w)*(1 - z) + (x * half_w * f / n)*z;
+    float py = (y * half_h)*(1 - z) + (y * half_h * f / n)*z;
+    float pz = -((1 - z)*n + z*f);
+    return position + orientation * vec3(px, py, pz);
+}

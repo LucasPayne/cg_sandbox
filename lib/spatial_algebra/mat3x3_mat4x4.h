@@ -18,11 +18,11 @@ struct mat3x3 {
         memcpy(entries, _entries, sizeof(entries));
     }
     // Constructor from three column vectors.
-    mat3x3(vec3 c0, vec3 c1, vec3 c2) {
-        memcpy(entries, &c0, sizeof(vec3));
-        memcpy(entries+sizeof(vec3), &c1, sizeof(vec3));
-        memcpy(entries+2*sizeof(vec3), &c2, sizeof(vec3));
-    }
+    mat3x3(vec3 c0, vec3 c1, vec3 c2) :
+        mat3x3(c0.x(), c0.y(), c0.z(),
+               c1.x(), c1.y(), c1.z(),
+               c2.x(), c2.y(), c2.z())
+    {}
     mat3x3() {}
     // Index with i+1'th row, j+1'th column, e.g.
     //     M.entry(2,3) is the entry at the third row, fourth column.

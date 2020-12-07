@@ -81,7 +81,7 @@ float omega = 0.25;
 App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
-    cameraman.get<Transform>()->position = vec3(0,3,0);
+    // cameraman.get<Transform>()->position = vec3(0,3,0);
     main_camera = cameraman.get<Camera>();
     cameraman.get<Camera>()->bottom_left = vec2(0.02, 0.02);
     cameraman.get<Camera>()->top_right = vec2(0.98, 0.98);

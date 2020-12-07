@@ -89,7 +89,7 @@ Ray Camera::ray(float camera_x, float camera_y)
     float ys[4] = {-1, -1, 1, 1};
     vec3 near_plane[4];
     for (int i = 0; i < 4; i++) {
-        vec4 corner_h = projection_matrix.solve(vec4(xs[i],ys[i],0, 1));
+        vec4 corner_h = projection_matrix.solve(vec4(xs[i], ys[i], 0, 1));
         near_plane[i] = corner_h.xyz() / corner_h.w();
     }
     // Bilinearly interpolate the "near plane" quad.

@@ -235,15 +235,39 @@ void Graphics::for_drawables(OrientedBox box, std::function<void(Aspect<Drawable
     }
 }
 // ... (approximately) intersects the frustum.
-
-
 void Graphics::for_drawables(Frustum frustum, std::function<void(Aspect<Drawable> &)> function)
 {
+    vec3 far_quad[4];
+    far_quad[0] = frustum.point(-1,-1,1);
+    far_quad[1] = frustum.point(1,-1,1);
+    far_quad[2] = frustum.point(1,1,1);
+    far_quad[3] = frustum.point(-1,1,1);
+    vec3 points[6];
+    vec3 normals[6];
+    points[0] = frustum.point(-1,-1,0);
+    points[1] = frustum.point(1,-1,0);
+    points[2] = frustum.point(1,1,0);
+    points[3] = frustum.point(-1,1,0);
+    for (int i = 0; i < 4; i++) {
+        normals[i] = vec3::cross(far_quad[i] - points[i], points[(i+1)%4] - points[i]).normalized();
+    }
+    vec3 forward = frustum.orientation * vec3(0,0,1);
+    points[4] = points[0];
+    normals[4] = forward;
+    points[5] = far_quad[0];
+    normals[5] = -forward;
 
     // Search is currently through a flat list.
     for (auto drawable : world.entities.aspects<Drawable>()) {
         Sphere sphere = drawable->bounding_sphere();
-        if (sphere.approx_intersects(frustum)) function(drawable);
+        bool culled = false;
+        for (int i = 0; i < 6; i++) {
+            if (vec3::dot(sphere.origin - points[i], normals[i]) > sphere.radius) {
+                culled = true;
+                break;
+            }
+        }
+        if (!culled) function(drawable);
     }
 }
 void Graphics::for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function)

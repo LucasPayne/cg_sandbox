@@ -107,18 +107,14 @@ struct Frustum {
     float half_w;
     float half_h; // at the near plane
 
-    Frustum(vec3 _position, mat3x3 _orientation, float n, float f, float hw, float hh) :
-        position{_position}, orientation{_orientation}, half_w{hw}, half_h{hh}
+    Frustum() {}
+    Frustum(vec3 _position, mat3x3 _orientation, float _n, float _f, float hw, float hh) :
+        position{_position}, orientation{_orientation}, n{_n}, f{_f}, half_w{hw}, half_h{hh}
     {}
 
     // Get a point in "frustum coordinates", where z ranges from 0 at the near plane to 1 at the far plane,
     // and x,y range from -1 to 1 on the frustum quad at that depth.
-    inline vec3 point(float x, float y, float z) {
-        float pz = (1 - z)*n + z*f;
-        float px = x * pz * half_w / n;
-        float py = y * pz * half_h / n;
-        return position + orientation * vec3(px, py, pz);
-    }
+    vec3 point(float x, float y, float z);
 };
 
 
@@ -182,14 +178,12 @@ inline bool Sphere::approx_intersects(Frustum frustum)
     points[5] = far_quad[0];
     normals[5] = -forward;
 
-        bool culled = false;
-        for (int i = 0; i < 6; i++) {
-            if (vec3::dot(sphere.origin - points[i], normals[i]) > sphere.radius) {
-                culled = true;
-                break;
-            }
+    for (int i = 0; i < 6; i++) {
+        if (vec3::dot(origin - points[i], normals[i]) > radius) {
+	    return false;
         }
-        if (culled) continue;
+    }
+    return true;
 }
 
 

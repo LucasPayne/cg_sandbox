@@ -72,8 +72,8 @@ struct DirectionalLightData {
 // Essentially the same setup is used for point lights as for directional lights.
 struct PointLightShadowMap {
     Aspect<Camera> camera;
+    GLuint fbo;
     GLuint cube_map;
-    GLuint fbos[6]; // A framebuffer for each side of the cube. Each of these is backed by a cube_map texture layer.
     GLuint sampler_comparison;
     GLuint sampler_raw;
     int width;

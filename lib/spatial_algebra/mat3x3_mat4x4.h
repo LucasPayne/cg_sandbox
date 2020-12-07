@@ -106,12 +106,20 @@ struct mat4x4 {
         memcpy(entries, _entries, sizeof(entries));
     }
     // Constructor from four column vectors.
-    mat4x4(vec4 c0, vec4 c1, vec4 c2, vec4 c3) {
-        memcpy(entries, &c0, sizeof(vec4));
-        memcpy(entries+sizeof(vec4), &c1, sizeof(vec4));
-        memcpy(entries+2*sizeof(vec4), &c2, sizeof(vec4));
-        memcpy(entries+3*sizeof(vec4), &c3, sizeof(vec4));
-    }
+    mat4x4(vec4 c0, vec4 c1, vec4 c2, vec4 c3) :
+        mat4x4(c0.x(), c0.y(), c0.z(), c0.w(),
+               c1.x(), c1.y(), c1.z(), c1.w(),
+               c2.x(), c2.y(), c2.z(), c2.w(),
+               c3.x(), c3.y(), c3.z(), c3.w())
+    {}
+    // Constructor from position and orientation (giving a rigid frame-of-reference matrix).
+    mat4x4(vec3 position, mat3x3 orientation) :
+        mat4x4(orientation.entry(0,0), orientation.entry(1,0), orientation.entry(2, 0), 0,
+               orientation.entry(0,1), orientation.entry(1,1), orientation.entry(2, 1), 0,
+               orientation.entry(0,2), orientation.entry(1,2), orientation.entry(2, 2), 0,
+               position.x(), position.y(), position.z(), 1)
+    {}
+
     mat4x4() {}
     // Index with i+1'th row, j+1'th column, e.g.
     //     M.entry(2,3) is the entry at the third row, fourth column.

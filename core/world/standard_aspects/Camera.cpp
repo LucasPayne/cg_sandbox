@@ -14,10 +14,6 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
     float w = near_half_width;
     float h = m_aspect_ratio * near_half_width;
 
-    // The projection matrix maps the frustum defined by the four parameters into the canonical view volume, -1 <= x,y <= 1, 0 <= z <= 1.
-    // This was derived with matrix algebra, proven correct!
-    //---Details in projective geometry presentation.
-    // note: Matrix given in column-major order.
     projection_matrix = mat4x4((f - n)/(f*w), 0,0,0,
                                0, (f - n)/(f*h), 0,0,
                                0,0, -1/n, (-f + n)/(f*n),

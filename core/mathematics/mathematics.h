@@ -115,6 +115,12 @@ struct Frustum {
     // Get a point in "frustum coordinates", where z ranges from 0 at the near plane to 1 at the far plane,
     // and x,y range from -1 to 1 on the frustum quad at that depth.
     vec3 point(float x, float y, float z);
+
+    // The below matrices are the usual camera matrices, for a projective camera with this frustum.
+    mat4x4 view_matrix();
+    mat4x4 projection_matrix();
+    // Full view-projection matrix
+    mat4x4 matrix();
 };
 
 

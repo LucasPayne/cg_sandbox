@@ -98,14 +98,15 @@ App::App(World &_world) : world{_world}
     //cameraman.get<Transform>()->position = vec3(0,6,0);
     //cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
     
-    // for (int i = 0; i < 20; i++) {
-    //     for (int j = 0; j < 20; j++) {
-    //         Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
-    //         obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
-    //         obj.get<Transform>()->scale = 5;
-    //         obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
-    //     }
-    // }
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+            obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
+            obj.get<Transform>()->scale = 5;
+            float r = frand();
+            obj.get<Drawable>()->material.properties.set_vec4("albedo", r,r,r,1);
+        }
+    }
     int n = 0;
     for (int i = 0; i < n; i++) {
         float r = 5;
@@ -158,8 +159,8 @@ App::App(World &_world) : world{_world}
     auto floor_model = floor.to_model();
     obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.5,0.5,1,1);
-    // obj.get<Drawable>()->shadow_caster = false;
-    obj.get<Transform>()->scale = 10;
+    obj.get<Drawable>()->shadow_caster = false;
+    obj.get<Transform>()->scale = 80;
     obj.get<Transform>()->position = vec3(0,0.15,0);
     
     
@@ -186,6 +187,10 @@ App::App(World &_world) : world{_world}
         light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.3, M_PI/3+1.31451, false);
     }
+
+    Entity light = world.entities.add();
+    light.add<PointLight>(vec3(1,0,0), 0.2);
+    light.add<Transform>(0,1,-1);
 }
 
 

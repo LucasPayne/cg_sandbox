@@ -106,7 +106,7 @@ void main(void)
     vec3 shadow_coord = (shadow_matrices[segment] * vec4(f_position, 1)).xyz;
     // Get box-space normal.
     // vec3 shadow_normal = (shadow_normal_matrices[segment] * vec4(f_normal, 0)).xyz;
-    vec3 shadow_normal = transpose(inverse(mat3x3(world_shadow_matrices[segment]))) * f_normal;
+    // vec3 shadow_normal = transpose(inverse(mat3x3(world_shadow_matrices[segment]))) * f_normal;
 
 
     // vec2 dtest = vec2(0.001);
@@ -127,8 +127,7 @@ void main(void)
 
 
     /*--------------------------------------------------------------------------------
-        Random variables for sampling.
-        A Poisson-disc randomly rotated in screen space is used.
+        Random variables for sampling. A randomly rotated Poisson-disc is used.
     --------------------------------------------------------------------------------*/
     #define NUM_SAMPLES 8
     #define INV_NUM_SAMPLES (1.f / NUM_SAMPLES)

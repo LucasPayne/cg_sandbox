@@ -28,6 +28,7 @@ inline float saturate(float x, float minimum, float maximum)
 
 struct BoundingBox;
 struct OrientedBox;
+struct Frustum;
 
 struct Sphere {
     vec3 origin;
@@ -42,6 +43,8 @@ struct Sphere {
     inline bool approx_intersects(BoundingBox box);
     // Approximate OBB intersection.
     inline bool approx_intersects(OrientedBox box);
+    // Approximate frustum intersection.
+    inline bool approx_intersects(Frustum frustum);
 };
 
 struct BoundingBox {
@@ -95,6 +98,29 @@ struct OrientedBox {
 };
 
 
+struct Frustum {
+    vec3 position;
+    // The frustum extends in the local negative Z direction.
+    mat3x3 orientation; // assumed orthonormal
+    float n;
+    float f;
+    float half_w;
+    float half_h; // at the near plane
+
+    Frustum(vec3 _position, mat3x3 _orientation, float n, float f, float hw, float hh) :
+        position{_position}, orientation{_orientation}, half_w{hw}, half_h{hh}
+    {}
+
+    // Get a point in "frustum coordinates", where z ranges from 0 at the near plane to 1 at the far plane,
+    // and x,y range from -1 to 1 on the frustum quad at that depth.
+    inline vec3 point(float x, float y, float z) {
+        float pz = (1 - z)*n + z*f;
+        float px = x * pz * half_w / n;
+        float py = y * pz * half_h / n;
+        return position + orientation * vec3(px, py, pz);
+    }
+};
+
 
 struct Ray {
     vec3 origin;
@@ -133,6 +159,38 @@ inline bool Sphere::approx_intersects(OrientedBox box)
 }
 
 
+inline bool Sphere::approx_intersects(Frustum frustum)
+{
+    // Set up plane equations.
+    vec3 far_quad[4];
+    far_quad[0] = frustum.point(-1,-1,1);
+    far_quad[1] = frustum.point(1,-1,1);
+    far_quad[2] = frustum.point(1,1,1);
+    far_quad[3] = frustum.point(-1,1,1);
+    vec3 points[6];
+    vec3 normals[6];
+    points[0] = frustum.point(-1,-1,0);
+    points[1] = frustum.point(1,-1,0);
+    points[2] = frustum.point(1,1,0);
+    points[3] = frustum.point(-1,1,0);
+    for (int i = 0; i < 4; i++) {
+        normals[i] = vec3::cross(far_quad[i] - points[i], points[(i+1)%4] - points[i]).normalized();
+    }
+    vec3 forward = frustum.orientation * vec3(0,0,1);
+    points[4] = points[0];
+    normals[4] = forward;
+    points[5] = far_quad[0];
+    normals[5] = -forward;
+
+        bool culled = false;
+        for (int i = 0; i < 6; i++) {
+            if (vec3::dot(sphere.origin - points[i], normals[i]) > sphere.radius) {
+                culled = true;
+                break;
+            }
+        }
+        if (culled) continue;
+}
 
 
 #endif // MATHEMATICS_H

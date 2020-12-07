@@ -69,6 +69,22 @@ struct DirectionalLightData {
     DirectionalLightShadowMap &shadow_map(Aspect<Camera> camera);
 };
 
+// Essentially the same setup is used for point lights as for directional lights.
+struct PointLightShadowMap {
+    Aspect<Camera> camera;
+    GLuint cube_map;
+    GLuint fbos[6]; // A framebuffer for each side of the cube. Each of these is backed by a cube_map texture layer.
+    GLuint sampler_comparison;
+    GLuint sampler_raw;
+    int width;
+    int height;
+    mat4x4 shadow_matrices[6];
+};
+struct PointLightData {
+    std::map<uint64_t, PointLightShadowMap> shadow_maps;
+    PointLightShadowMap &shadow_map(Aspect<Camera> camera);
+};
+
 
 /*--------------------------------------------------------------------------------
 Graphics
@@ -96,6 +112,7 @@ public:
 
     void for_drawables(OrientedBox box, std::function<void(Aspect<Drawable> &)> function);
     void for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function);
+    void for_drawables(Frustum frustum, std::function<void(Aspect<Drawable> &)> function);
     void render_drawable(Aspect<Drawable> drawable, ShadingModelInstance shading_model);
     
 
@@ -175,11 +192,13 @@ public:
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
+    PointLightData &point_light_data(Aspect<PointLight> light);
 
 private:
     World &world;
 
     std::map<uint64_t, DirectionalLightData> directional_light_data_map;
+    std::map<uint64_t, PointLightData> point_light_data_map;
 };
 
 #endif // GRAPHICS_H

@@ -59,19 +59,20 @@ void main(void)
     --------------------------------------------------------------------------------*/
     float average_shadow = 0.f;
     // Some sort of filter...
-    // #define WEIGHT (1.f / 36.f)
-    // for (int i = -2; i <= 2; i += 2) {
-    //     for (int j = -2; j <= 2; j += 2) {
-    //         //-----------NOTE: This is incorrect, fix this. Subrectangles of textures are accessed. Should use a uniform vec2 for texel size.
-    //         vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
-    //         // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
-    //         // average_shadow += WEIGHT * sample_shadow;
-    //         vec4 sample_shadows = textureGather(shadow, sample_uv, 0);
-    //         average_shadow += WEIGHT * (sample_shadows.x + sample_shadows.y + sample_shadows.z + sample_shadows.w);
-    //     }
-    // }
+    #define WEIGHT (1.f / 36.f)
+    for (int i = -2; i <= 2; i += 2) {
+        for (int j = -2; j <= 2; j += 2) {
+            //-----------NOTE: This is incorrect, fix this. Subrectangles of textures are accessed. Should use a uniform vec2 for texel size.
+            vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
+            // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
+            // average_shadow += WEIGHT * sample_shadow;
+            vec4 sample_shadows = textureGather(shadow, sample_uv, 0);
+            average_shadow += WEIGHT * (sample_shadows.x + sample_shadows.y + sample_shadows.z + sample_shadows.w);
+        }
+    }
 
 
+    #if 0
     // bilateral box filter
     float total_weights = 0.f;
     for (int i = -5; i <= 5; i += 1) {
@@ -85,6 +86,7 @@ void main(void)
         }
     }
     average_shadow /= total_weights + 0.001;
+    #endif
 
     /*--------------------------------------------------------------------------------
         Lighting

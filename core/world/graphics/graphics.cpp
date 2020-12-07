@@ -234,43 +234,21 @@ void Graphics::for_drawables(OrientedBox box, std::function<void(Aspect<Drawable
         }
     }
 }
-// ... (approximately) intersects the camera frustum.
-void Graphics::for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function)
+// ... (approximately) intersects the frustum.
+
+
+void Graphics::for_drawables(Frustum frustum, std::function<void(Aspect<Drawable> &)> function)
 {
-    // Set up plane equations.
-    vec3 far_quad[4];
-    far_quad[0] = camera->frustum_point(-1,-1,1);
-    far_quad[1] = camera->frustum_point(1,-1,1);
-    far_quad[2] = camera->frustum_point(1,1,1);
-    far_quad[3] = camera->frustum_point(-1,1,1);
-    vec3 points[6];
-    vec3 normals[6];
-    points[0] = camera->frustum_point(-1,-1,0);
-    points[1] = camera->frustum_point(1,-1,0);
-    points[2] = camera->frustum_point(1,1,0);
-    points[3] = camera->frustum_point(-1,1,0);
-    for (int i = 0; i < 4; i++) {
-        normals[i] = vec3::cross(far_quad[i] - points[i], points[(i+1)%4] - points[i]).normalized();
-    }
-    vec3 forward = camera.sibling<Transform>()->forward();
-    points[4] = points[0];
-    normals[4] = forward;
-    points[5] = far_quad[0];
-    normals[5] = -forward;
 
     // Search is currently through a flat list.
     for (auto drawable : world.entities.aspects<Drawable>()) {
         Sphere sphere = drawable->bounding_sphere();
-        bool culled = false;
-        for (int i = 0; i < 6; i++) {
-            if (vec3::dot(sphere.origin - points[i], normals[i]) > sphere.radius) {
-                culled = true;
-                break;
-            }
-        }
-        if (culled) continue;
-        function(drawable);
+        if (sphere.approx_intersects(frustum)) function(drawable);
     }
+}
+void Graphics::for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function)
+{
+    for_drawables(camera->frustum(), function);
 }
 
 
@@ -403,6 +381,8 @@ void Graphics::refresh_framebuffers()
                 exit(EXIT_FAILURE);
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            camera->has_taa_buffer = true;
         }
     }
 }

@@ -101,6 +101,11 @@ mat4x4 Transform::inverse_matrix() const
     return M;
 }
 
+mat3x3 Transform::orientation()
+{
+    return mat3x3(right(), up(), forward());
+}
+
 
 BEGIN_ENTRIES(Transform)
     ENTRY(position)

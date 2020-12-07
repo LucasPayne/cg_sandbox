@@ -30,6 +30,9 @@ struct Transform : public IAspectType {
     void init_lookat(vec3 position, vec3 target);
     void lookat(vec3 target);
 
+    // Convert the quaternion rotation to a 3x3 matrix.
+    mat3x3 orientation();
+
     mat4x4 matrix() const;
     mat4x4 inverse_matrix() const;
 };
@@ -43,6 +46,7 @@ struct Camera : public IAspectType {
     mat4x4 projection_matrix;
 
     // Currently, cameras are all projective, and these parameters make sense.
+    // (note: Slight shears in the frustum are not allowed with this setup. These would be useful, for example, for temporal anti-aliasing.)
     float near_plane_distance;
     float far_plane_distance;
     float near_half_width;
@@ -88,6 +92,9 @@ struct Camera : public IAspectType {
     // z is 0 at the near plane, 1 at the far plane.
     // This is useful, for example, to compute the points on a section of the frustum, for cascaded shadow mapping.
     vec3 frustum_point(float x, float y, float z);
+
+    // Extract the frustum as a geometric object. This can be used for intersection tests.
+    Frustum frustum();
 
     mat4x4 view_matrix();
     mat4x4 view_projection_matrix();
@@ -220,6 +227,11 @@ struct PointLight : public IAspectType {
     PointLight(vec3 _color, float _radius) :
         color{_color}, radius{_radius}
     {}
+
+    // Compute the extent of effect of the point light.
+    // Technically this should be infinite, but the the outgoing radiance is made to go to zero after a finite distance, done so
+    // to be unnoticeable.
+    float extent();
 };
 REFLECT_STRUCT(PointLight);
 

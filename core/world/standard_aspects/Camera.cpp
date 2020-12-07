@@ -72,6 +72,11 @@ vec3 Camera::frustum_point(float x, float y, float z)
     return (transform->matrix() * vec4(local_z * vec3(x*near_half_width/near_plane_distance, y*near_half_width*m_aspect_ratio/near_plane_distance, -1), 1)).xyz();
 }
 
+Frustum Camera::frustum()
+{
+    auto transform = entity.get<Transform>();
+    return Frustum(transform->position, transform->orientation(), near_plane_distance, far_plane_distance, near_half_width, m_aspect_ratio * near_half_width);
+}
 
 
 Ray Camera::ray(float camera_x, float camera_y)

@@ -5,6 +5,7 @@
 #version 420
 
 // G-buffer
+uniform sampler2D depth;
 uniform sampler2D normal;
 uniform sampler2D albedo;
 
@@ -45,6 +46,7 @@ void main(void)
     /*--------------------------------------------------------------------------------
         G-buffer fetching
     --------------------------------------------------------------------------------*/
+    float f_depth = texture(depth, gbuffer_uv).r;
     vec4 f_albedo = texture(albedo, gbuffer_uv);
     if (f_albedo.a == 0) discard;
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
@@ -55,19 +57,34 @@ void main(void)
         Shadow signal filtering
         (For denoising rotated-Poisson-disc PCF)
     --------------------------------------------------------------------------------*/
-    // Some sort of filter...
-    #define WEIGHT (1.f / 16.f)
     float average_shadow = 0.f;
-    for (int i = -1; i <= 1; i += 2) {
-        for (int j = -1; j <= 1; j += 2) {
-            //-----------NOTE: This is incorrect, fix this. Subrectangles of textures are accessed. Should use a uniform vec2 for texel size.
+    // Some sort of filter...
+    // #define WEIGHT (1.f / 36.f)
+    // for (int i = -2; i <= 2; i += 2) {
+    //     for (int j = -2; j <= 2; j += 2) {
+    //         //-----------NOTE: This is incorrect, fix this. Subrectangles of textures are accessed. Should use a uniform vec2 for texel size.
+    //         vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
+    //         // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
+    //         // average_shadow += WEIGHT * sample_shadow;
+    //         vec4 sample_shadows = textureGather(shadow, sample_uv, 0);
+    //         average_shadow += WEIGHT * (sample_shadows.x + sample_shadows.y + sample_shadows.z + sample_shadows.w);
+    //     }
+    // }
+
+
+    // bilateral box filter
+    float total_weights = 0.f;
+    for (int i = -5; i <= 5; i += 1) {
+        for (int j = -5; j <= 5; j += 1) {
             vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
-            // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
-            // average_shadow += WEIGHT * sample_shadow;
-            vec4 sample_shadows = textureGather(shadow, sample_uv, 0);
-            average_shadow += WEIGHT * (sample_shadows.x + sample_shadows.y + sample_shadows.z + sample_shadows.w);
+            if (abs(texture(depth, gbuffer_uv + vec2(inv_screen_width * i, inv_screen_height * j)).r - f_depth) < 0.001) {
+                float sample_shadow = texture(shadow, sample_uv).r;
+                average_shadow += sample_shadow;
+                total_weights += 1;
+            }
         }
     }
+    average_shadow /= total_weights + 0.001;
 
     /*--------------------------------------------------------------------------------
         Lighting

@@ -63,17 +63,18 @@ out vec4 color;
 uniform vec2 _pre_1[MAX_NUM_FRUSTUM_SEGMENTS];
 
 
-float shadowing(vec3 shadow_coord, int segment)
+float shadowing(vec3 shadow_coord, int segment, vec3 normal)
 {
-    #define BIAS 0.005
-    float shadow = texture(shadow_map, vec4(shadow_coord.xy, segment, shadow_coord.z - BIAS)).r;
+    //-not very geometrically principled bias.
+    float bias = max(0.02 * (1 + dot(normal, direction)), 0.005);
+
+    float shadow = texture(shadow_map, vec4(shadow_coord.xy, segment, shadow_coord.z - bias)).r;
     if (shadow_coord.z > 1 ||
             shadow_coord.x < 0 || shadow_coord.x > 1 ||
             shadow_coord.y < 0 || shadow_coord.y > 1) {
         shadow = 0.f;
     }
     return shadow;
-    #undef BIAS
 }
 
 
@@ -186,7 +187,7 @@ void main(void)
         // float sample_z = shadow_coord.z - dot(d_uv, shadow_normal.xy)/shadow_normal.z;
         // float shadow = shadowing(vec3(sample_uv, sample_z), segment);
 
-        float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment, f_normal);
         vec3 p = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, texture(shadow_map_raw, vec3(sample_uv, segment)).r, 1)).xyz;
         if (dot(p - f_world_position, f_normal) < 0.1) shadow = 0;
 
@@ -222,10 +223,10 @@ void main(void)
         float lambda = dot(p - f_world_position, f_normal) / dot(direction, f_normal);
         vec3 pp = p - lambda*direction;
         float sample_z = (world_shadow_matrices[segment] * vec4(pp, 1)).z;
-        shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, sample_z), segment);
+        shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, sample_z), segment, f_normal);
         #else
         // This causes self-shadowing noise in penumbrae.
-        shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, shadow_coord.z), segment, f_normal);
         #endif
     }
     #if FADE_OUT == 1

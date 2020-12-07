@@ -40,6 +40,7 @@ World::World(IGC::Context &_context) :
     REGISTER_ASPECT_TYPE(Drawable);
     REGISTER_ASPECT_TYPE(Behaviour);
     REGISTER_ASPECT_TYPE(DirectionalLight);
+    REGISTER_ASPECT_TYPE(PointLight);
     printf("[world] Entity system initialized.\n");
 
     // Order-sensitive subsystem initialization.

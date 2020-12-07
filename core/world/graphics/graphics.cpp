@@ -2,7 +2,7 @@
 
 
 #include "postprocessing.cpp"
-#include "lighting.cpp"
+#include "lighting/lighting.cpp"
 
 std::string gl_error_string()
 {

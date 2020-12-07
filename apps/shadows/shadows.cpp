@@ -83,8 +83,8 @@ App::App(World &_world) : world{_world}
     Entity cameraman = create_cameraman(world);
     cameraman.get<Transform>()->position = vec3(0,3,0);
     main_camera = cameraman.get<Camera>();
-    cameraman.get<Camera>()->bottom_left = vec2(0.1, 0.1);
-    cameraman.get<Camera>()->top_right = vec2(0.9, 0.9);
+    cameraman.get<Camera>()->bottom_left = vec2(0.02, 0.02);
+    cameraman.get<Camera>()->top_right = vec2(0.98, 0.98);
     cameraman.get<Camera>()->background_color = vec4(0.83,0.82,1,1);
 
     world.graphics.background_color = vec4(1,1,1,1);
@@ -106,7 +106,7 @@ App::App(World &_world) : world{_world}
     //         obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.2,0.8,1);
     //     }
     // }
-    int n = 20;
+    int n = 0;
     for (int i = 0; i < n; i++) {
         float r = 5;
         float theta = 2*M_PI*i*1.f/n;
@@ -117,16 +117,31 @@ App::App(World &_world) : world{_world}
         obj.get<Transform>()->scale = 5;
         obj.get<Drawable>()->material.properties.set_vec4("albedo", frand(),frand(),frand(),1);
     }
+
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->position.y() -= 0.45;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
     world.add<Rotator>(obj);
-
     obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
-    obj.get<Transform>()->position = vec3(10,0,10);;
-    obj.get<Transform>()->position.y() -= 12 * 0.45;
-    obj.get<Transform>()->scale = 10;
-    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.4,0,1);
+    obj.get<Transform>()->position.y() -= 0.45;
+    obj.get<Transform>()->position.x() = 2.4;
+    obj.get<Transform>()->position.z() = 2.4;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.3,0.3,0.8,1);
+    world.add<Rotator>(obj);
+    obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+    obj.get<Transform>()->position.y() -= 0.45;
+    obj.get<Transform>()->position.x() = -2.4;
+    obj.get<Transform>()->position.z() = 2.4;
+    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.9,0.83,1,1);
+    world.add<Rotator>(obj);
+
+    if (0) {
+        obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
+        obj.get<Transform>()->position = vec3(10,0,10);;
+        obj.get<Transform>()->position.y() -= 12 * 0.45;
+        obj.get<Transform>()->scale = 10;
+        obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.4,0,1);
+    }
 
     // obj = create_mesh_object(world, "resources/models/20mm_cube.stl", "shaders/uniform_color.mat");
     // obj.get<Transform>()->position = vec3(0,0,0);

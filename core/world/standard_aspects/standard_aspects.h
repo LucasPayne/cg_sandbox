@@ -209,5 +209,20 @@ struct DirectionalLight : public IAspectType {
 REFLECT_STRUCT(DirectionalLight);
 
 
+/*--------------------------------------------------------------------------------
+PointLight aspect
+--------------------------------------------------------------------------------*/
+struct PointLight : public IAspectType {
+    vec3 color;
+    float radius; // Soft-shadowing approximates this light as a sphere with this radius.
+
+    PointLight() {}
+    PointLight(vec3 _color, float _radius) :
+        color{_color}, radius{_radius}
+    {}
+};
+REFLECT_STRUCT(PointLight);
+
+
 
 #endif // STANDARD_ASPECTS_H

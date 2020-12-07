@@ -94,9 +94,14 @@ public:
               ShadingModelInstance &sm_instance);
     void render_drawables(ShadingModelInstance shading_model);
     // Lighting
+    // Update lighting data such as shadow maps.
     void update_lights();
+    void update_directional_lights();
+    void update_point_lights();
+    // Deferred rendering of lights.
     void lighting(Aspect<Camera> camera);
-    void directional_lights(Aspect<Camera> camera);
+    void directional_lighting(Aspect<Camera> camera);
+    void point_lighting(Aspect<Camera> camera);
     Resource<GLShaderProgram> directional_light_shader_program;
     Resource<GLShaderProgram> directional_light_filter_shader_program;
     // Post-processing

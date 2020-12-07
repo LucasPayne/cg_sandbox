@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmodel_loader.a  CMakeFiles/model_loader.dir/model_loader.cpp.o CMakeFiles/model_loader.dir/model_file_formats/OFF.cpp.o CMakeFiles/model_loader.dir/model_file_formats/Obj.cpp.o CMakeFiles/model_loader.dir/model_file_formats/STL.cpp.o
-/usr/bin/ranlib libmodel_loader.a

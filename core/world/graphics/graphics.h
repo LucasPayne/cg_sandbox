@@ -121,12 +121,13 @@ public:
     void update_lights();
     void update_directional_lights();
     void update_point_lights();
-    // Deferred rendering of lights.
+    // Deferred lights.
     void lighting(Aspect<Camera> camera);
     void directional_lighting(Aspect<Camera> camera);
     void point_lighting(Aspect<Camera> camera);
     Resource<GLShaderProgram> directional_light_shader_program;
     Resource<GLShaderProgram> directional_light_filter_shader_program;
+    Resource<GLShaderProgram> point_light_shader_program;
     // Post-processing
     void depth_of_field(Aspect<Camera> camera);
     Resource<GLShaderProgram> depth_of_field_confusion_radius_program;

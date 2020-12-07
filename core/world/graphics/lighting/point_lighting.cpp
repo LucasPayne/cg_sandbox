@@ -51,6 +51,15 @@ void Graphics::update_point_lights()
 void Graphics::point_lighting(Aspect<Camera> camera)
 {
     auto &program = point_light_shader_program;
+    program->bind();
+    auto gbuffer_depth = gbuffer_component("depth");
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+    glUniform1i(program->uniform_location("depth"), 0);
+    auto gbuffer_normal = gbuffer_component("normal");
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+    glUniform1i(program->uniform_location("normal"), 1);
 
     auto camera_transform = camera.sibling<Transform>();
     auto camera_matrix = camera_transform->matrix();
@@ -59,8 +68,22 @@ void Graphics::point_lighting(Aspect<Camera> camera)
                         // The write target starts off as the post-buffer.
     glEnable(GL_BLEND);
 
+    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
+                        // The write target starts off as the post-buffer.
+    swap_post();
+
     for (auto light : world.entities.aspects<PointLight>()) {
+        auto light_transform = light.sibling<Transform>();
         auto &shadow_map = point_light_data(light).shadow_map(camera);
+        glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
+        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+
+        begin_post(program);
+        glBlendFuncSeparate(GL_ONE, GL_ONE, // RGB
+                            GL_ONE, GL_ZERO);     // Alpha
+        glClearColor(0,0,0,0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 }
 

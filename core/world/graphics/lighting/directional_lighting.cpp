@@ -236,14 +236,14 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
             vec2 _pre_1 = 0.5 * light->width * shadow_map.box_extents[i].z() * vec2(1.f / shadow_map.box_extents[i].x(), 1.f / shadow_map.box_extents[i].y());
             glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
         }
-	    auto gbuffer_depth = gbuffer_component("depth");
-	    glActiveTexture(GL_TEXTURE2);
-	    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-	    glUniform1i(program->uniform_location("depth"), 2);
-	    auto gbuffer_normal = gbuffer_component("normal");
-	    glActiveTexture(GL_TEXTURE3);
-	    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-	    glUniform1i(program->uniform_location("normal"), 3);
+	auto gbuffer_depth = gbuffer_component("depth");
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+	glUniform1i(program->uniform_location("depth"), 2);
+	auto gbuffer_normal = gbuffer_component("normal");
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+	glUniform1i(program->uniform_location("normal"), 3);
 
         mat4x4 inverse_projection_matrix = camera->projection_matrix.inverse();
         glUniformMatrix4fv(program->uniform_location("inverse_projection_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_projection_matrix);
@@ -255,7 +255,6 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         program->unbind();
 
-        
         // Blend the directional light pass into the image, using a filtered shadowing signal.
         filter_program->bind();
         upload_shared_uniforms(filter_program);
@@ -265,16 +264,16 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
         glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
         glUniform1i(filter_program->uniform_location("shadow"), 0);
 
-	    glActiveTexture(GL_TEXTURE1);
-	    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-	    glUniform1i(filter_program->uniform_location("normal"), 1);
-	    auto gbuffer_albedo = gbuffer_component("albedo");
-	    glActiveTexture(GL_TEXTURE2);
-	    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
-	    glUniform1i(filter_program->uniform_location("albedo"), 2);
-	    glActiveTexture(GL_TEXTURE3);
-	    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-	    glUniform1i(filter_program->uniform_location("depth"), 3);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+	glUniform1i(filter_program->uniform_location("normal"), 1);
+	auto gbuffer_albedo = gbuffer_component("albedo");
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
+	glUniform1i(filter_program->uniform_location("albedo"), 2);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+	glUniform1i(filter_program->uniform_location("depth"), 3);
 
         swap_post(); // Swap to write to the viewport buffer.
         begin_post(filter_program);

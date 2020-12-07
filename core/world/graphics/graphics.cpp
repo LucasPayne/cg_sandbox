@@ -140,6 +140,11 @@ void Graphics::compile_shaders()
     directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
     directional_light_filter_shader_program->link();
 
+    point_light_shader_program = world.resources.add<GLShaderProgram>();
+    point_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    point_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
+    point_light_shader_program->link();
+
     depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
     depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
     depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));

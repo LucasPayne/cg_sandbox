@@ -160,6 +160,8 @@ public:
     Framebuffer post_buffer;
     Viewport second_post_viewport;
 
+    void compile_shaders();
+
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
 

@@ -200,11 +200,31 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glBindSampler(1, shadow_map.sampler_raw);
         glUniform1i(program->uniform_location("shadow_map"), 0);
         glUniform1i(program->uniform_location("shadow_map_raw"), 1);
+
+        glUniformMatrix4fv(program->uniform_location("camera_matrix"), 1, GL_FALSE, (GLfloat *) &camera_matrix);
+
         for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
             // The shadow matrix transforms from camera space, so post-multiply the world-space shadow matrix with the camera's model-matrix.
             auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
             mat4x4 shadow_matrix = shadow_map.shadow_matrices[i] * camera_matrix;
             glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_matrix);
+
+            uniform_name = std::string("world_shadow_matrices[") + std::to_string(i) + std::string("]");
+            glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
+
+            // // Form the inverse transpose of the non-translating world-space shadow-box matrix.
+            // // This will be used to transform normals in the shader, for biasing.
+            // mat4x4 shadow_normal_matrix = mat4x4::identity();
+            // for (int j = 0; j < 3; j++) {
+            //     for (int k = 0; k < 3; k++) {
+            //         shadow_normal_matrix.entry(j, k) = shadow_map.shadow_matrices[i].entry(k, j);
+            //     }
+            // }
+            // std::cout << shadow_normal_matrix *  shadow_normal_matrix.inverse() << "\n";
+            // shadow_normal_matrix = shadow_normal_matrix.inverse();
+            // std::cout << shadow_normal_matrix << "\n";
+            // uniform_name = std::string("shadow_normal_matrices[") + std::to_string(i) + std::string("]");
+            // glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_normal_matrix);
 
             uniform_name = std::string("box_extents[") + std::to_string(i) + std::string("]");
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
@@ -217,10 +237,14 @@ void Graphics::directional_lights(Aspect<Camera> camera)
             vec2 _pre_1 = 0.5 * light->width * shadow_map.box_extents[i].z() * vec2(1.f / shadow_map.box_extents[i].x(), 1.f / shadow_map.box_extents[i].y());
             glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
         }
-	auto gbuffer_depth = gbuffer_component("depth");
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-	glUniform1i(program->uniform_location("depth"), 2);
+	    auto gbuffer_depth = gbuffer_component("depth");
+	    glActiveTexture(GL_TEXTURE2);
+	    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+	    glUniform1i(program->uniform_location("depth"), 2);
+	    auto gbuffer_normal = gbuffer_component("normal");
+	    glActiveTexture(GL_TEXTURE3);
+	    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+	    glUniform1i(program->uniform_location("normal"), 3);
 
         mat4x4 inverse_projection_matrix = camera->projection_matrix.inverse();
         glUniformMatrix4fv(program->uniform_location("inverse_projection_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_projection_matrix);
@@ -242,14 +266,13 @@ void Graphics::directional_lights(Aspect<Camera> camera)
         glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
         glUniform1i(filter_program->uniform_location("shadow"), 0);
 
-	auto gbuffer_normal = gbuffer_component("normal");
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-	glUniform1i(filter_program->uniform_location("normal"), 1);
-	auto gbuffer_albedo = gbuffer_component("albedo");
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
-	glUniform1i(filter_program->uniform_location("albedo"), 2);
+	    glActiveTexture(GL_TEXTURE1);
+	    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+	    glUniform1i(filter_program->uniform_location("normal"), 1);
+	    auto gbuffer_albedo = gbuffer_component("albedo");
+	    glActiveTexture(GL_TEXTURE2);
+	    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
+	    glUniform1i(filter_program->uniform_location("albedo"), 2);
 
         swap_post(); // Swap to write to the viewport buffer.
         begin_post(filter_program);

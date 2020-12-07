@@ -1,0 +1,2 @@
+/usr/bin/ar qc libinteractive_graphics_context.a  CMakeFiles/interactive_graphics_context.dir/interactive_graphics_context.cpp.o CMakeFiles/interactive_graphics_context.dir/input.cpp.o CMakeFiles/interactive_graphics_context.dir/platform/platform_glfw.cpp.o
+/usr/bin/ranlib libinteractive_graphics_context.a

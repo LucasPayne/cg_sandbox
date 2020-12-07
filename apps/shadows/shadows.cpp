@@ -138,8 +138,8 @@ App::App(World &_world) : world{_world}
     auto b = floor.add_vertex(1,0,-1);
     auto c = floor.add_vertex(1,0,1);
     auto d = floor.add_vertex(-1,0,1);
-    floor.add_triangle(a, b, c);
-    floor.add_triangle(a, c, d);
+    floor.add_triangle(c, b, a);
+    floor.add_triangle(d, c, a);
     auto floor_model = floor.to_model();
     obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.5,0.5,1,1);
@@ -218,7 +218,7 @@ void App::keyboard_handler(KeyboardEvent e)
     check_quit_key(e, KEY_Q);
 
     if (e.action == KEYBOARD_PRESS) {
-        if (e.key.code == KEY_G) world.graphics.update_lights();
+        if (e.key.code == KEY_R) world.graphics.compile_shaders();
         if (e.key.code == KEY_P) main_camera->top_right.y() += 0.025;
         if (e.key.code == KEY_O) main_camera->top_right.y() -= 0.025;
     }

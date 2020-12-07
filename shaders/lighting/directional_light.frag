@@ -7,12 +7,25 @@
 #define FADE_OUT 0
 #define VISUALIZE_FRUSTUM_SEGMENTS 0
 
+// #include "shaders/gbuffer/decode.glsl"
+vec3 decode_normal(vec4 encoded_normal)
+{
+    // reference: https://knarkowicz.wordpress.com/2014/04/16/octahedron-normal-vector-encoding/
+    vec2 f = 2*encoded_normal.xy - 1;
+    vec3 n = vec3(f.x, f.y, 1 - abs(f.x) - abs(f.y));
+    float t = clamp(-n.z, 0, 1);
+    n.x += n.x >= 0 ? -t : t;
+    n.y += n.y >= 0 ? -t : t;
+    return normalize(n);
+}
 
 // G-buffer
 uniform sampler2D depth;
+uniform sampler2D normal;
 
 // Camera
 uniform mat4x4 inverse_projection_matrix;
+uniform mat4x4 camera_matrix; //from camera space to world space
 
 // Light
 uniform vec3 direction;
@@ -25,6 +38,11 @@ uniform int num_frustum_segments;
 uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS];
 // Shadow matrices transform from camera space.
 uniform mat4x4 shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
+
+// from world space
+uniform mat4x4 world_shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
+// Shadow normal matrices transform world space normals to the shadow box.
+uniform mat4x4 shadow_normal_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 inv_box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform sampler2DArrayShadow shadow_map;
@@ -69,16 +87,9 @@ void main(void)
     float f_depth = texture(depth, gbuffer_uv).r;
     vec4 f_position_h = inverse_projection_matrix * vec4(screen_pos, 2*f_depth-1, 1);
     vec3 f_position = f_position_h.xyz / f_position_h.w;
+    vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
 
-    vec4 depths = textureGather(depth, gbuffer_uv, 0);
-    vec4 posx_h = inverse_projection_matrix * vec4(screen_pos, 2*depths[2]-1, 1);
-    vec3 posx = posx_h.xyz / posx_h.w;
-    vec4 posy_h = inverse_projection_matrix * vec4(screen_pos, 2*depths[3]-1, 1);
-    vec3 posy = posy_h.xyz / posy_h.w;
-    vec3 f_normal = normalize(cross(posx - f_position, posy - f_position));
-
-    DEBUG_COLOR(f_normal);
-
+    vec3 f_world_position = (camera_matrix * vec4(f_position,1)).xyz;
 
     /*--------------------------------------------------------------------------------
         Determine frustum segment (from cascaded shadow maps), and
@@ -90,9 +101,16 @@ void main(void)
         // NOTE: Unsure if avoiding brancing here is worth it.
         segment = max(segment, (i+1)*int(clamp(ceil(eye_z - frustum_segment_distances[i]), 0, 1)));
     }
-    // Get texture-space shadow coordinate.
+    // Get box-space position.
     vec3 shadow_coord = (shadow_matrices[segment] * vec4(f_position, 1)).xyz;
+    // Get box-space normal.
+    // vec3 shadow_normal = (shadow_normal_matrices[segment] * vec4(f_normal, 0)).xyz;
+    vec3 shadow_normal = transpose(inverse(mat3x3(world_shadow_matrices[segment]))) * f_normal;
 
+
+    // vec2 dtest = vec2(0.001);
+    // vec3 test = (inverse(world_shadow_matrices[segment]) * vec4(shadow_coord.xy+dtest, texture(shadow_map_raw, vec3(shadow_coord.xy+dtest, segment)).r, 1)).xyz;
+    // DEBUG_COLOR(test);
 
     /*--------------------------------------------------------------------------------
         Fade out shadows in the distance.
@@ -125,7 +143,7 @@ void main(void)
     };
     #if 1
     // Pseudo-random noise taken off of stackoverflow.
-    float rand_theta = 2*PI*fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    float rand_theta = 2*PI*fract(sin(dot(f_world_position.xy+f_world_position.z, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
     float sin_rand_theta = sin(rand_theta);
     #else
@@ -163,12 +181,21 @@ void main(void)
     float average_occluder_depth = 0.f;
     float num_occluded_samples = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        vec2 sample_uv = shadow_coord.xy + imagespace_searching_extents*rotated_poisson_samples[i];
+        vec2 d_uv = imagespace_searching_extents * rotated_poisson_samples[i];
+        vec2 sample_uv = shadow_coord.xy + d_uv;
+        // float sample_z = shadow_coord.z - dot(d_uv, shadow_normal.xy)/shadow_normal.z;
+        // float shadow = shadowing(vec3(sample_uv, sample_z), segment);
+
         float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        vec3 p = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, texture(shadow_map_raw, vec3(sample_uv, segment)).r, 1)).xyz;
+        if (dot(p - f_world_position, f_normal) < 0.1) shadow = 0;
+
         average_occluder_depth += shadow * texture(shadow_map_raw, vec3(sample_uv, segment)).r;
         num_occluded_samples += shadow;
     }
     average_occluder_depth /= num_occluded_samples + 0.001;
+    // If there are no occluders, set the depth such that the imagespace sample extent becomes 0.
+    if (num_occluded_samples == 0) average_occluder_depth = shadow_coord.z;
 
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
@@ -182,8 +209,24 @@ void main(void)
 
     float shadow = 0.f;
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        vec2 sample_uv = shadow_coord.xy + imagespace_sample_extents * rotated_poisson_samples[i];
+        vec2 d_uv = imagespace_sample_extents * rotated_poisson_samples[i];
+        vec2 sample_uv = shadow_coord.xy + d_uv;
+        // Compute the sample z to be on the point-normal plane of this fragment. This is what is compared to
+        // in the shadow map lookup. If the z to compare to were not modified, some samples could go under the surface.
+        // (Which is still possible at concavities. It is being assumed that the surface is sufficiently flat at this fragment.)
+        
+        #if 1
+        // Sample location (in box space) is on the plane.
+        // NOTE: This is very inefficient, just trying to get the geometry to work.
+        vec3 p = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, shadow_coord.z, 1)).xyz;
+        float lambda = dot(p - f_world_position, f_normal) / dot(direction, f_normal);
+        vec3 pp = p - lambda*direction;
+        float sample_z = (world_shadow_matrices[segment] * vec4(pp, 1)).z;
+        shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, sample_z), segment);
+        #else
+        // This causes self-shadowing noise in penumbrae.
         shadow += INV_NUM_SAMPLES * shadowing(vec3(sample_uv, shadow_coord.z), segment);
+        #endif
     }
     #if FADE_OUT == 1
     color = vec4(shadow_fading * shadow, 0,0,1);

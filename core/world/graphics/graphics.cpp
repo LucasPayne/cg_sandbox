@@ -126,6 +126,11 @@ void Graphics::init()
     create_color_framebuffer(screen_buffer);
     create_color_framebuffer(post_buffer);
 
+    compile_shaders();
+}
+
+void Graphics::compile_shaders()
+{
     directional_light_shader_program = world.resources.add<GLShaderProgram>();
     directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
     directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light.frag"));

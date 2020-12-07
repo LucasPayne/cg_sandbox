@@ -9,6 +9,7 @@ uniform sampler2D normal;
 uniform sampler2D albedo;
 
 // Light
+// note: Light direction is assumed to be normalized.
 uniform vec3 direction;
 uniform vec3 light_color;
 
@@ -48,7 +49,7 @@ void main(void)
     if (f_albedo.a == 0) discard;
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
 
-    DEBUG_COLOR(texture(shadow, uv));
+    // DEBUG_COLOR(texture(shadow, uv));
 
     /*--------------------------------------------------------------------------------
         Shadow signal filtering
@@ -59,6 +60,7 @@ void main(void)
     float average_shadow = 0.f;
     for (int i = -1; i <= 1; i += 2) {
         for (int j = -1; j <= 1; j += 2) {
+            //-----------NOTE: This is incorrect, fix this. Subrectangles of textures are accessed. Should use a uniform vec2 for texel size.
             vec2 sample_uv = uv + vec2(inv_screen_width * i, inv_screen_height * j);
             // vec4 sample_shadow = textureGather(shadow, sample_uv).r;
             // average_shadow += WEIGHT * sample_shadow;
@@ -70,5 +72,5 @@ void main(void)
     /*--------------------------------------------------------------------------------
         Lighting
     --------------------------------------------------------------------------------*/
-    color = vec4((1.f - average_shadow)*max(0, dot(f_normal, normalize(direction)))*f_albedo.rgb*light_color, f_albedo.a);
+    color = vec4((1.f - average_shadow)*max(0, dot(f_normal, -direction))*f_albedo.rgb*light_color, f_albedo.a);
 }

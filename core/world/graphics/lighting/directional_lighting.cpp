@@ -120,7 +120,13 @@ void Graphics::update_directional_lights()
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.texture, 0, segment);
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_DEPTH_BUFFER_BIT);
-                render_drawables(shadow_map_shading_model);
+
+                int num_drawn = 0;
+                for_drawables(OrientedBox(mins, maxs, mat3x3(X, Y, Z)), [&](Aspect<Drawable> &drawable) {
+                    render_drawable(drawable, shadow_map_shading_model);
+                    num_drawn ++;
+                });
+                printf("shadow map num drawn: %d\n", num_drawn);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }

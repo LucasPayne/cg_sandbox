@@ -92,7 +92,13 @@ public:
     void draw(GeometricMaterialInstance &gmat_instance,
               MaterialInstance &mat_instance,
               ShadingModelInstance &sm_instance);
-    void render_drawables(ShadingModelInstance shading_model);
+
+
+    void for_drawables(OrientedBox box, std::function<void(Aspect<Drawable> &)> function);
+    void for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function);
+    void render_drawable(Aspect<Drawable> drawable, ShadingModelInstance shading_model);
+    
+
     // Lighting
     // Update lighting data such as shadow maps.
     void update_lights();

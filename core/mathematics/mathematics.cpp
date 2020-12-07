@@ -59,13 +59,6 @@ std::ostream &operator<<(std::ostream &os, const Ray &ray)
 }
 
 
-float saturate(float x, float minimum, float maximum)
-{
-    if (x < minimum) return minimum;
-    if (x > maximum) return maximum;
-    return x;
-}
-
 
 
 BoundingBox::BoundingBox(std::vector<vec3> points) : BoundingBox()
@@ -77,3 +70,5 @@ BoundingBox::BoundingBox(std::vector<vec3> points) : BoundingBox()
         }
     }
 }
+
+

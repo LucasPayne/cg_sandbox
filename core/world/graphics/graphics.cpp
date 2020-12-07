@@ -223,21 +223,71 @@ static const bool logging_rendering = false;
 }
 
 
-void Graphics::render_drawables(ShadingModelInstance shading_model)
+
+// Apply a function to each drawable which (approximately) intersects a given oriented box.
+void Graphics::for_drawables(OrientedBox box, std::function<void(Aspect<Drawable> &)> function)
 {
+    // Search is currently through a flat list.
     for (auto drawable : world.entities.aspects<Drawable>()) {
-        mat4x4 model_matrix = drawable->model_matrix();
-        if (!drawable->has_prev_model_matrix) {
-            drawable->has_prev_model_matrix = true;
-            drawable->prev_model_matrix = model_matrix;
+        if (drawable->bounding_sphere().approx_intersects(box)) {
+            function(drawable);
         }
-        mat4x4 normal_matrix = drawable->normal_matrix();
-        drawable->geometric_material.properties.set_mat4x4("prev_model_matrix", drawable->prev_model_matrix);
-        drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
-        drawable->geometric_material.properties.set_mat4x4("normal_matrix", normal_matrix);
-        draw(drawable->geometric_material, drawable->material, shading_model);
+    }
+}
+// ... (approximately) intersects the camera frustum.
+void Graphics::for_drawables(Aspect<Camera> camera, std::function<void(Aspect<Drawable> &)> function)
+{
+    // Set up plane equations.
+    vec3 far_quad[4];
+    far_quad[0] = camera->frustum_point(-1,-1,1);
+    far_quad[1] = camera->frustum_point(1,-1,1);
+    far_quad[2] = camera->frustum_point(1,1,1);
+    far_quad[3] = camera->frustum_point(-1,1,1);
+    vec3 points[6];
+    vec3 normals[6];
+    points[0] = camera->frustum_point(-1,-1,0);
+    points[1] = camera->frustum_point(1,-1,0);
+    points[2] = camera->frustum_point(1,1,0);
+    points[3] = camera->frustum_point(-1,1,0);
+    for (int i = 0; i < 4; i++) {
+        normals[i] = vec3::cross(far_quad[i] - points[i], points[(i+1)%4] - points[i]).normalized();
+    }
+    vec3 forward = camera.sibling<Transform>()->forward();
+    points[4] = points[0];
+    normals[4] = forward;
+    points[5] = far_quad[0];
+    normals[5] = -forward;
+
+    // Search is currently through a flat list.
+    for (auto drawable : world.entities.aspects<Drawable>()) {
+        Sphere sphere = drawable->bounding_sphere();
+        bool culled = false;
+        for (int i = 0; i < 6; i++) {
+            if (vec3::dot(sphere.origin - points[i], normals[i]) > sphere.radius) {
+                culled = true;
+                break;
+            }
+        }
+        if (culled) continue;
+        function(drawable);
+    }
+}
+
+
+
+void Graphics::render_drawable(Aspect<Drawable> drawable, ShadingModelInstance shading_model)
+{
+    mat4x4 model_matrix = drawable->model_matrix();
+    if (!drawable->has_prev_model_matrix) {
+        drawable->has_prev_model_matrix = true;
         drawable->prev_model_matrix = model_matrix;
     }
+    mat4x4 normal_matrix = drawable->normal_matrix();
+    drawable->geometric_material.properties.set_mat4x4("prev_model_matrix", drawable->prev_model_matrix);
+    drawable->geometric_material.properties.set_mat4x4("model_matrix", model_matrix);
+    drawable->geometric_material.properties.set_mat4x4("normal_matrix", normal_matrix);
+    draw(drawable->geometric_material, drawable->material, shading_model);
+    drawable->prev_model_matrix = model_matrix;
 }
 
 
@@ -385,7 +435,14 @@ void Graphics::render(Aspect<Camera> camera)
     }
     shading_model.properties.set_mat4x4("prev_vp_matrix", camera->prev_view_projection_matrix);
     camera->prev_view_projection_matrix = vp_matrix;
-    render_drawables(shading_model);
+
+    int num_drawn = 0;
+    for_drawables(camera, [&](Aspect<Drawable> &drawable) {
+        render_drawable(drawable, shading_model);
+        num_drawn ++;
+    });
+    printf("camera num drawn: %d\n", num_drawn);
+
     //---Explicitly destroy shading model.
     shading_model.properties.destroy();
 

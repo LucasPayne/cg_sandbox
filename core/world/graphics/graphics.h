@@ -22,6 +22,9 @@ The Graphics component also holds render loops.
 REFLECT_STRUCT(GLShader);
 REFLECT_STRUCT(GLShaderProgram);
 
+// Debugging
+std::string gl_error_string();
+
 
 /*--------------------------------------------------------------------------------
     G-buffer

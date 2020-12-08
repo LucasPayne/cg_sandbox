@@ -496,15 +496,15 @@ void Graphics::render(Aspect<Camera> camera)
         If the final image is in the post-processing buffer, blit it over to the
         target.
     --------------------------------------------------------------------------------*/
-    if (write_post().framebuffer->id != viewport.framebuffer->id) {
-        Viewport write_viewport = write_post();
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
-        glBlitFramebuffer(write_viewport.x, write_viewport.y, write_viewport.x+write_viewport.w, write_viewport.y+write_viewport.h,
-                          viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
-                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
+    // if (write_post().framebuffer->id != viewport.framebuffer->id) {
+    //     Viewport write_viewport = write_post();
+    //     glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
+    //     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
+    //     glBlitFramebuffer(write_viewport.x, write_viewport.y, write_viewport.x+write_viewport.w, write_viewport.y+write_viewport.h,
+    //                       viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
+    //                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // }
 }
 
 void Graphics::render()

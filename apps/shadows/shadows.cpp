@@ -11,6 +11,8 @@
 Aspect<Camera> main_camera;
 Aspect<DirectionalLight> main_light;
 
+Aspect<PointLight> test_point_light;
+
 struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
     float theta;
@@ -189,8 +191,8 @@ App::App(World &_world) : world{_world}
     }
 
     Entity light = world.entities.add();
-    light.add<PointLight>(vec3(1,0,0), 0.2);
-    light.add<Transform>(0,1,-1);
+    test_point_light = light.add<PointLight>(vec3(1,0,0), 0.2);
+    light.add<Transform>(1.8,1,1.8);
 }
 
 
@@ -210,6 +212,12 @@ void App::loop()
     // world.graphics.paint.bordered_sprite(world.graphics.gbuffer_component("position").texture, vec2(0.25*2,0), 0.25,0.25, 3, vec4(1,0,0,1));
 
     auto &paint = world.graphics.paint;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 2; j++) {
+            // paint.bordered_depth_sprite_layer(world.graphics.point_light_data(test_point_light).shadow_map(main_camera).cube_map, vec2(0.25*i,0.25*j), 0.25, 0.25, 3, vec4(1,0,0,1), 2*i + j);
+        }
+    }
+
     // std::vector<vec2> ps(2);
     // ps[0] = vec2(0,0);
     // ps[1] = vec2(1,1);

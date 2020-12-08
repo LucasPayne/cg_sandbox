@@ -31,16 +31,25 @@ void Painting::render_sprites()
 
     // Different types of sprites use different shader programs. To avoid too many program rebinds,
     // multiple searches are made for the relevant sprites, for each shader program.
-    auto render_sprites = [&](Resource<GLShaderProgram> &program, std::string sprite_name, bool is_depth, bool is_layer) {
+    auto render_sprites = [&](Resource<GLShaderProgram> &program, bool is_depth, int mode) {
+        // mode: 0: sprite
+        //       1: array sprite
+        //       2: cube map sprite
         program->bind();
-        glUniform1i(program->uniform_location(sprite_name), 0);
+        glUniform1i(program->uniform_location(is_depth ? "depth_map" : "sprite"), 0);
         for (unsigned int i = 0; i < sprites.size(); i++) {
             auto &sp = sprites[i];
-            if (sp.is_depth != is_depth || (sp.layer != -1) != is_layer) continue;
-            if (is_layer) glUniform1i(program->uniform_location("layer"), sp.layer);
+            if (sp.is_depth != is_depth) continue;
+	    if (mode == 0 && sp.layer != -1) continue;
+	    if (mode == 1 && (sp.layer == -1 || sp.is_cube_map)) continue;
+	    if (mode == 2 && (sp.layer == -1 || !sp.is_cube_map)) continue;
+            if (sp.layer != -1) glUniform1i(program->uniform_location("layer"), sp.layer);
+            GLenum target = mode == 0 ? GL_TEXTURE_2D : (mode == 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_CUBE_MAP);
+
             glActiveTexture(GL_TEXTURE0);
-            GLenum target = is_layer ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
+            std::cout << gl_error_string() << "\n";
             glBindTexture(target, sp.texture);
+            std::cout << gl_error_string() << "\n";
             glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
             glBindTexture(target, 0);
         }
@@ -49,57 +58,64 @@ void Painting::render_sprites()
 
     glDisable(GL_BLEND);
 
-    render_sprites(sprite_shader_program, "sprite", false, false);
-    render_sprites(sprite_layer_shader_program, "sprite", false, true);
-    render_sprites(depth_sprite_shader_program, "depth_map", true, false);
-    render_sprites(depth_sprite_layer_shader_program, "depth_map", true, true);
+    render_sprites(sprite_program, false, 0);
+    render_sprites(depth_sprite_program, true, 0);
+    render_sprites(array_sprite_program, false, 1);
+    render_sprites(array_depth_sprite_program, true, 1);
+    render_sprites(cube_map_sprite_program, false, 2);
+    render_sprites(cube_map_depth_sprite_program, true, 2);
 
     glDeleteBuffers(1, &vertex_buffer);
     glDeleteVertexArrays(1, &vao);
 }
 
-void Painting::bordered_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color)
-{
-    bordered_sprite_layer(texture, bottom_left, width, height, border_width, border_color, -1);
-}
-void Painting::bordered_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer)
-{
-    std::vector<vec2> points = {bottom_left,
-                                vec2(bottom_left.x()+width, bottom_left.y()),
-                                vec2(bottom_left.x()+width, bottom_left.y()+height),
-                                vec2(bottom_left.x(), bottom_left.y()+height),
-                                bottom_left};
-    chain_2D(points, border_width, border_color);
-    sprite_layer(texture, bottom_left, width, height, layer);
-}
-void Painting::bordered_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color)
-{
-    bordered_depth_sprite_layer(texture, bottom_left, width, height, border_width, border_color, -1);
-}
-void Painting::bordered_depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer)
-{
-    std::vector<vec2> points = {bottom_left,
-                                vec2(bottom_left.x()+width, bottom_left.y()),
-                                vec2(bottom_left.x()+width, bottom_left.y()+height),
-                                vec2(bottom_left.x(), bottom_left.y()+height),
-                                bottom_left};
-    chain_2D(points, border_width, border_color);
-    depth_sprite_layer(texture, bottom_left, width, height, layer);
-}
 
 void Painting::sprite(GLuint texture, vec2 bottom_left, float width, float height)
 {
-    sprite_layer(texture, bottom_left, width, height, -1);
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = false;
+    s.layer = -1;
+    s.is_cube_map = false;
+    sprites.push_back(s);
 }
-void Painting::sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer)
+void Painting::array_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer)
 {
-    sprites.push_back(SpriteRenderData(texture, bottom_left, width, height, false, layer));
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = false;
+    s.layer = layer;
+    s.is_cube_map = false;
+    sprites.push_back(s);
 }
+void Painting::cube_map_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer)
+{
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = false;
+    s.layer = layer;
+    s.is_cube_map = true;
+    sprites.push_back(s);
+}
+
 void Painting::depth_sprite(GLuint texture, vec2 bottom_left, float width, float height)
 {
-    depth_sprite_layer(texture, bottom_left, width, height, -1);
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = true;
+    s.layer = -1;
+    s.is_cube_map = false;
+    sprites.push_back(s);
 }
-void Painting::depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer)
+void Painting::array_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer)
 {
-    sprites.push_back(SpriteRenderData(texture, bottom_left, width, height, true, layer));
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = true;
+    s.layer = layer;
+    s.is_cube_map = false;
+    sprites.push_back(s);
+}
+void Painting::cube_map_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer)
+{
+    auto s = SpriteRenderData(texture, bottom_left, width, height);
+    s.is_depth = true;
+    s.layer = layer;
+    s.is_cube_map = true;
+    sprites.push_back(s);
 }

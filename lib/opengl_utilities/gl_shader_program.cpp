@@ -20,7 +20,17 @@ GLShader GLShader::from_string(int shader_type, const char *source)
     GLint success;
     glGetShaderiv(shader_object.m_gl_shader_id, GL_COMPILE_STATUS, &success);
     if (success != GL_TRUE) {
-        puts(source);
+        int line_number = 1;
+        const char *start = source;
+        const char *end = strchr(source, '\n');
+        while (end != NULL) {
+            printf("%d: ", line_number);
+            fwrite(start, 1, end - start, stdout);
+            printf("\n");
+            line_number += 1;
+            start = end + 1;
+            end = strchr(start, '\n');
+        }
         std::cerr << "ERROR: Failed to compile shader.\n";
         GLint info_length;
         glGetShaderiv(shader_object.m_gl_shader_id, GL_INFO_LOG_LENGTH, &info_length);

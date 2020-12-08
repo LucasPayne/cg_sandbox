@@ -71,9 +71,13 @@ struct SpriteRenderData {
     float width;
     float height;
     bool is_depth;
-    int layer; // if -1, then this is a regular GL_TEXTURE_2D. Otherwise, this is a layer of a GL_TEXTURE_2D_ARRAY.
-    SpriteRenderData(GLuint _texture, vec2 _bottom_left, float _width, float _height, bool _is_depth, int _layer) :
-        texture{_texture}, bottom_left{_bottom_left}, width{_width}, height{_height}, is_depth{_is_depth}, layer{_layer}
+    int layer; // if -1, then this is a regular GL_TEXTURE_2D. Otherwise, this is a layer of a GL_TEXTURE_2D_ARRAY or GL_TEXTURE_CUBE_MAP.
+    bool is_cube_map;
+
+    // Convenient constructor for data shared between all kinds of sprites.
+    // The other data must be explicitly set.
+    SpriteRenderData(GLuint _texture, vec2 _bottom_left, float _width, float _height) :
+        texture{_texture}, bottom_left{_bottom_left}, width{_width}, height{_height}
     {}
 };
 
@@ -102,13 +106,11 @@ public:
     void chain_2D(std::vector<vec2> &points, float width, vec4 color);
     // Sprites.
     void sprite(GLuint texture, vec2 bottom_left, float width, float height);
-    void sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer);
+    void array_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer);
+    void cube_map_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer);
     void depth_sprite(GLuint texture, vec2 bottom_left, float width, float height);
-    void depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, int layer);
-    void bordered_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
-    void bordered_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer);
-    void bordered_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color);
-    void bordered_depth_sprite_layer(GLuint texture, vec2 bottom_left, float width, float height, float border_width, vec4 border_color, int layer);
+    void array_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer);
+    void cube_map_depth_sprite(GLuint texture, vec2 bottom_left, float width, float height, int layer);
 
 private:
     // 3D painting buffers.
@@ -133,11 +135,14 @@ private:
     std::vector<Resource<GLShaderProgram>> bspline_2D_fillets_shader_programs;
     Resource<GLShaderProgram> primitive_lines_2D_shader_program;
     Resource<GLShaderProgram> circles_2D_shader_program;
-    Resource<GLShaderProgram> sprite_shader_program;
-    Resource<GLShaderProgram> depth_sprite_shader_program;
-    // OpenGL 4.2 (being used as of this comment) does not support texture views. So, separate sprite programs render layers of texture arrays.
-    Resource<GLShaderProgram> sprite_layer_shader_program;
-    Resource<GLShaderProgram> depth_sprite_layer_shader_program;
+
+    Resource<GLShaderProgram> sprite_program;
+    Resource<GLShaderProgram> depth_sprite_program;
+    // OpenGL 4.2 (being used as of this comment) does not support texture views. So, separate sprite programs render layers of texture arrays and cube maps.
+    Resource<GLShaderProgram> array_sprite_program;
+    Resource<GLShaderProgram> array_depth_sprite_program;
+    Resource<GLShaderProgram> cube_map_sprite_program;
+    Resource<GLShaderProgram> cube_map_depth_sprite_program;
 
     void render_spheres();
     void render_lines();

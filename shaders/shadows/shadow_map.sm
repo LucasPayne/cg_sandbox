@@ -11,9 +11,9 @@ section geom_post {
     }
 }
 section frag_post {
-    out vec4 dummy(in vec3 f_position) {
+    out float frag_post() {
     GLSL
-        return vec4(f_position, 1);
+        return 0;
     END
     }
 }

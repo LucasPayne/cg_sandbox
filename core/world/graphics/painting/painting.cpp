@@ -89,23 +89,29 @@ void Painting::init()
     circles_2D_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/circles_2D.frag"));
     circles_2D_shader_program->link();
 
-    sprite_shader_program = world.resources.add<GLShaderProgram>();
-    sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
-    sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite.frag"));
-    sprite_shader_program->link();
 
-    depth_sprite_shader_program = world.resources.add<GLShaderProgram>();
-    depth_sprite_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
-    depth_sprite_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/depth_sprite.frag"));
-    depth_sprite_shader_program->link();
-
-    sprite_layer_shader_program = world.resources.add<GLShaderProgram>();
-    sprite_layer_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
-    sprite_layer_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite_layer.frag"));
-    sprite_layer_shader_program->link();
-
-    depth_sprite_layer_shader_program = world.resources.add<GLShaderProgram>();
-    depth_sprite_layer_shader_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite.vert"));
-    depth_sprite_layer_shader_program->add_shader(GLShader(FragmentShader, "shaders/painting/depth_sprite_layer.frag"));
-    depth_sprite_layer_shader_program->link();
+    sprite_program = world.resources.add<GLShaderProgram>();
+    sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/sprite.frag"));
+    sprite_program->link();
+    depth_sprite_program = world.resources.add<GLShaderProgram>();
+    depth_sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    depth_sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/depth_sprite.frag"));
+    depth_sprite_program->link();
+    array_sprite_program = world.resources.add<GLShaderProgram>();
+    array_sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    array_sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/array_sprite.frag"));
+    array_sprite_program->link();
+    array_depth_sprite_program = world.resources.add<GLShaderProgram>();
+    array_depth_sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    array_depth_sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/array_depth_sprite.frag"));
+    array_depth_sprite_program->link();
+    cube_map_sprite_program = world.resources.add<GLShaderProgram>();
+    cube_map_sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    cube_map_sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/cube_map_sprite.frag"));
+    cube_map_sprite_program->link();
+    cube_map_depth_sprite_program = world.resources.add<GLShaderProgram>();
+    cube_map_depth_sprite_program->add_shader(GLShader(VertexShader, "shaders/painting/sprite/sprite.vert"));
+    cube_map_depth_sprite_program->add_shader(GLShader(FragmentShader, "shaders/painting/sprite/cube_map_depth_sprite.frag"));
+    cube_map_depth_sprite_program->link();
 }

@@ -2,20 +2,23 @@
 
 void Graphics::update_point_lights()
 {
-    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/shadow_map.sm");
+    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_shadow_map.sm");
     auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
 
-
+    // +X,-X,  +Y,-Y,  +Z,-Z. See https://learnopengl.com/Advanced-OpenGL/Cubemaps for cubemap layout.
     const mat3x3 orientations[6] = {
-        mat3x3::identity(),
-        mat3x3(0,0,1,  0,1,0,  -1,0,0),
-        mat3x3(-1,0,0, 0,1,0,  0,0,-1),
-        mat3x3(0,0,-1, 0,1,0,  1,0,0),
-        mat3x3(0,0,1,  -1,0,0, 0,1,0),
-        mat3x3(0,0,1,  1,0,0,  0,-1,0)
+        mat3x3(0,0,1,  0,1,0,  -1,0,0), // +X
+        mat3x3(0,0,-1, 0,1,0,  1,0,0),  // -X
+
+        mat3x3(1,0,0,  0,0,1, 0,-1,0), // +Y
+        mat3x3(1,0,0,  0,0,-1, 0,1,0), // -Y
+
+        mat3x3(-1,0,0, 0,1,0,  0,0,-1), // +Z
+        mat3x3::identity(), // -Z
     };
     for (auto light : world.entities.aspects<PointLight>()) {
         auto light_transform = light.sibling<Transform>();
+        shadow_map_shading_model.properties.set_vec4("light_position", vec4(light_transform->position, 1));
         float extent = light->extent();
         for (auto camera : world.entities.aspects<Camera>()) {
             auto &sm = point_light_data(light).shadow_map(camera);
@@ -25,6 +28,8 @@ void Graphics::update_point_lights()
                 // The initial frustum extends as far as the light does.
                 auto frustum = Frustum(light_transform->position, orientations[face] * light_transform->orientation(), near, extent, near, near);
                 mat4x4 shadow_matrix = frustum.matrix();
+                shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
+                shadow_map_shading_model.properties.set_float("far_plane_distance", frustum.f);
 
 	        // For efficiency, the transformation to texture space is concatenated for the shadow matrix uploaded to the lighting shaders.
 	        sm.shadow_matrices[face] = mat4x4::translation(vec3(0.5,0.5,0.5)) * mat4x4::scale(0.5) * shadow_matrix;
@@ -45,45 +50,6 @@ void Graphics::update_point_lights()
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
-    }
-}
-
-void Graphics::point_lighting(Aspect<Camera> camera)
-{
-    auto &program = point_light_shader_program;
-    program->bind();
-    auto gbuffer_depth = gbuffer_component("depth");
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-    glUniform1i(program->uniform_location("depth"), 0);
-    auto gbuffer_normal = gbuffer_component("normal");
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-    glUniform1i(program->uniform_location("normal"), 1);
-
-    auto camera_transform = camera.sibling<Transform>();
-    auto camera_matrix = camera_transform->matrix();
-    auto viewport = camera->viewport();
-    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
-                        // The write target starts off as the post-buffer.
-    glEnable(GL_BLEND);
-
-    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
-                        // The write target starts off as the post-buffer.
-    swap_post();
-
-    for (auto light : world.entities.aspects<PointLight>()) {
-        auto light_transform = light.sibling<Transform>();
-        auto &shadow_map = point_light_data(light).shadow_map(camera);
-        glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
-        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
-
-        begin_post(program);
-        glBlendFuncSeparate(GL_ONE, GL_ONE, // RGB
-                            GL_ONE, GL_ZERO);     // Alpha
-        glClearColor(0,0,0,0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 }
 
@@ -160,5 +126,56 @@ PointLightData &Graphics::point_light_data(Aspect<PointLight> light)
     PointLightData data;
     point_light_data_map[light.ID()] = data;
     return point_light_data_map[light.ID()];
+}
+
+
+void Graphics::point_lighting(Aspect<Camera> camera)
+{
+    auto &program = point_light_shader_program;
+    program->bind();
+    auto gbuffer_depth = gbuffer_component("depth");
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+    glUniform1i(program->uniform_location("depth"), 0);
+    auto gbuffer_normal = gbuffer_component("normal");
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+    glUniform1i(program->uniform_location("normal"), 1);
+    auto gbuffer_albedo = gbuffer_component("albedo");
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
+    glUniform1i(program->uniform_location("albedo"), 2);
+
+
+    auto camera_transform = camera.sibling<Transform>();
+    auto camera_matrix = camera_transform->matrix();
+    mat4x4 inverse_vp_matrix = camera->view_projection_matrix().inverse();
+    glUniformMatrix4fv(program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
+    auto viewport = camera->viewport();
+    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
+                        // The write target starts off as the post-buffer.
+    swap_post(); // Blend straight into the target viewport.
+    glEnable(GL_BLEND);
+    // Additive blending.
+    glBlendFuncSeparate(GL_ONE, GL_ONE,   // RGB
+                        GL_ONE, GL_ZERO); // Alpha
+
+    for (auto light : world.entities.aspects<PointLight>()) {
+        auto light_transform = light.sibling<Transform>();
+        auto &shadow_map = point_light_data(light).shadow_map(camera);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindSampler(GL_TEXTURE_CUBE_MAP, shadow_map.sampler_comparison);
+        glUniform1i(program->uniform_location("shadow_map"), 3);
+        glActiveTexture(GL_TEXTURE4);
+        glBindSampler(GL_TEXTURE_CUBE_MAP, shadow_map.sampler_raw);
+        glUniform1i(program->uniform_location("shadow_map_raw"), 4);
+    
+        glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
+        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+
+        begin_post(program);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
 }
 

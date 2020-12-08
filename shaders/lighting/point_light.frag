@@ -67,7 +67,6 @@ void main(void)
     vec3 col = (1 - shadow) * light_color * f_albedo * max(0, dot(-normalize(dpos), f_normal)) / dot(dpos, dpos);
     color = vec4(col, 1);
 
-
-    color = vec4(vec3(texture(shadow_map_raw, dpos).r), 1);
+    // color = vec4(vec3(texture(shadow_map_raw, dpos).r), 1);
     // color = vec4(vec3(1.f/length(dpos)), 1);
 }

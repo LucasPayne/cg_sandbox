@@ -47,9 +47,7 @@ void Painting::render_sprites()
             GLenum target = mode == 0 ? GL_TEXTURE_2D : (mode == 1 ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_CUBE_MAP);
 
             glActiveTexture(GL_TEXTURE0);
-            std::cout << gl_error_string() << "\n";
             glBindTexture(target, sp.texture);
-            std::cout << gl_error_string() << "\n";
             glDrawArrays(GL_TRIANGLE_FAN, 4*i, 4);
             glBindTexture(target, 0);
         }

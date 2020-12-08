@@ -26,7 +26,7 @@ void Graphics::update_point_lights()
 
             for (int face = 0; face < 6; face++) {
                 // The initial frustum extends as far as the light does.
-                auto frustum = Frustum(light_transform->position, orientations[face] * light_transform->orientation(), near, extent, near, near);
+                auto frustum = Frustum(light_transform->position, orientations[face], near, extent, near, near);
                 mat4x4 shadow_matrix = frustum.matrix();
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
                 shadow_map_shading_model.properties.set_float("far_plane_distance", frustum.f);
@@ -42,10 +42,12 @@ void Graphics::update_point_lights()
                 glClear(GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
-                for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
+                // for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
+                for (auto drawable : world.entities.aspects<Drawable>()) {
                     render_drawable(drawable, shadow_map_shading_model);
                     num_drawn ++;
-                });
+                }
+                // });
                 printf("shadow map cube face num drawn: %d\n", num_drawn);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }

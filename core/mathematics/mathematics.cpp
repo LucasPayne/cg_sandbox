@@ -83,7 +83,7 @@ vec3 Frustum::point(float x, float y, float z)
 
 mat4x4 Frustum::view_matrix()
 {
-    return mat4x4(position, orientation);
+    return mat4x4(position, orientation).inverse(); //----could do this faster and more stably since it is a rigid matrix.
 }
 mat4x4 Frustum::projection_matrix()
 {

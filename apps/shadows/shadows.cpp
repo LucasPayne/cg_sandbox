@@ -16,19 +16,28 @@ Aspect<PointLight> test_point_light;
 struct Follower : public IBehaviour {
     Entity follows;
     bool following;
-    Follower(Entity e) {
+    int key;
+    Follower(Entity e, int _key) {
         follows = e;
         following = false;
+        key = _key;
     }
     void update() {
         auto ft = follows.get<Transform>();
         auto t = entity.get<Transform>();
         if (following) t->position = ft->position - ft->forward() * 4;
+
+        vec3 p = t->position;
+        world->graphics.paint.sphere(p, 0.1, vec4(1,1,1,1));
+        float r = 0.76;
+        world->graphics.paint.line(p, p + r*vec3(1,0,0), 3, vec4(1,0,0,1));
+        world->graphics.paint.line(p, p + r*vec3(0,1,0), 3, vec4(0,1,0,1));
+        world->graphics.paint.line(p, p + r*vec3(0,0,1), 3, vec4(0,0,1,1));
     }
 
     void keyboard_handler(KeyboardEvent e) {
         if (e.action == KEYBOARD_PRESS) {
-            if (e.key.code == KEY_P) following = !following;
+            if (e.key.code == key) following = !following;
         }
     }
 };
@@ -217,11 +226,20 @@ App::App(World &_world) : world{_world}
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.3, M_PI/3+1.31451, false);
     }
 
-    Entity light = world.entities.add();
-    float intensity = 20;
-    test_point_light = light.add<PointLight>(vec3(intensity), 0.2);
-    light.add<Transform>(1.8,1,1.8);
-    world.add<Follower>(light, cameraman);
+    {
+        Entity light = world.entities.add();
+        float intensity = 20;
+        test_point_light = light.add<PointLight>(vec3(intensity), 0.2);
+        light.add<Transform>(1.8,1,1.8);
+        world.add<Follower>(light, cameraman, KEY_P);
+    }
+    {
+        Entity light = world.entities.add();
+        float intensity = 10;
+        light.add<PointLight>(vec3(intensity), 0.2);
+        light.add<Transform>(3,2,3);
+        world.add<Follower>(light, cameraman, KEY_I);
+    }
 }
 
 
@@ -253,12 +271,6 @@ void App::loop()
             paint.cube_map_depth_sprite(world.graphics.point_light_data(test_point_light).shadow_map(main_camera).cube_map, vec2(0.125*i,0.125*j), 0.125, 0.125, 2*i + j);
         }
     }
-    vec3 p = test_point_light.sibling<Transform>()->position;
-    paint.sphere(p, 0.1, vec4(1,1,1,1));
-    float r = 0.76;
-    paint.line(p, p + r*vec3(1,0,0), 3, vec4(1,0,0,1));
-    paint.line(p, p + r*vec3(0,1,0), 3, vec4(0,1,0,1));
-    paint.line(p, p + r*vec3(0,0,1), 3, vec4(0,0,1,1));
 
     // std::vector<vec2> ps(2);
     // ps[0] = vec2(0,0);

@@ -3,6 +3,7 @@
 void Graphics::update_point_lights()
 {
     auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_shadow_map.sm");
+    // auto shadow_map_sm = shading.shading_models.load("shaders/shadows/shadow_map.sm");
     auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
 
     // +X,-X,  +Y,-Y,  +Z,-Z. See https://learnopengl.com/Advanced-OpenGL/Cubemaps for cubemap layout.
@@ -42,12 +43,10 @@ void Graphics::update_point_lights()
                 glClear(GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
-                // for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
-                for (auto drawable : world.entities.aspects<Drawable>()) {
+                for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
                     render_drawable(drawable, shadow_map_shading_model);
                     num_drawn ++;
-                }
-                // });
+                });
                 printf("shadow map cube face num drawn: %d\n", num_drawn);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
@@ -166,11 +165,20 @@ void Graphics::point_lighting(Aspect<Camera> camera)
         auto light_transform = light.sibling<Transform>();
         auto &shadow_map = point_light_data(light).shadow_map(camera);
 
+        glUniform1f(program->uniform_location("far_plane_distance"), light->extent());
+        for (int i = 0; i < 6; i++) {
+            auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
+            mat4x4 shadow_matrix = shadow_map.shadow_matrices[i];
+            glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_matrix);
+        }
+
         glActiveTexture(GL_TEXTURE3);
-        glBindSampler(GL_TEXTURE_CUBE_MAP, shadow_map.sampler_comparison);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_map.cube_map);
+        glBindSampler(3, shadow_map.sampler_comparison);
         glUniform1i(program->uniform_location("shadow_map"), 3);
         glActiveTexture(GL_TEXTURE4);
-        glBindSampler(GL_TEXTURE_CUBE_MAP, shadow_map.sampler_raw);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_map.cube_map);
+        glBindSampler(4, shadow_map.sampler_raw);
         glUniform1i(program->uniform_location("shadow_map_raw"), 4);
     
         glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);

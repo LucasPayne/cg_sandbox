@@ -21,13 +21,15 @@ uniform vec3 light_color;
 // Shadowing
 uniform samplerCubeShadow shadow_map;
 uniform samplerCube shadow_map_raw;
-
-
+uniform mat4x4 shadow_matrices[6];
 
 in vec2 screen_pos;
 in vec2 uv;
 in vec2 gbuffer_uv;
 out vec4 color;
+
+
+uniform float far_plane_distance;
 
 
 // #include "shaders/gbuffer/decode.glsl"
@@ -43,9 +45,10 @@ vec3 decode_normal(vec4 encoded_normal)
 }
 
 
-float shadowing(vec3 dpos, vec3 normal)
+float shadowing(vec3 dpos, float compare_depth, vec3 normal)
 {
-    return 0;
+    float bias = 0.005;
+    return texture(shadow_map, vec4(dpos, compare_depth - bias));
 }
 
 
@@ -57,12 +60,9 @@ void main(void)
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
     vec3 f_albedo = texture(albedo, gbuffer_uv).rgb;
     vec3 dpos = f_position - light_position;
+    float compare_depth = length(dpos) / far_plane_distance;
 
-
-    // float shadowing 
-    
-
-    float shadow = shadowing(dpos, f_normal);
+    float shadow = shadowing(dpos, compare_depth, f_normal);
 
     vec3 col = (1 - shadow) * light_color * f_albedo * max(0, dot(-normalize(dpos), f_normal)) / dot(dpos, dpos);
     color = vec4(col, 1);

@@ -132,36 +132,51 @@ PointLightData &Graphics::point_light_data(Aspect<PointLight> light)
 
 void Graphics::point_lighting(Aspect<Camera> camera)
 {
-    auto &program = point_light_shader_program;
-    program->bind();
+    auto viewport = camera->viewport();
+    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
+                        // The write target starts off as the post-buffer.
+
     auto gbuffer_depth = gbuffer_component("depth");
+    auto gbuffer_normal = gbuffer_component("normal");
+    auto gbuffer_albedo = gbuffer_component("albedo");
+    auto &program = point_light_program;
+    program->bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
     glUniform1i(program->uniform_location("depth"), 0);
-    auto gbuffer_normal = gbuffer_component("normal");
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
     glUniform1i(program->uniform_location("normal"), 1);
-    auto gbuffer_albedo = gbuffer_component("albedo");
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
     glUniform1i(program->uniform_location("albedo"), 2);
-
-
     auto camera_transform = camera.sibling<Transform>();
     auto camera_matrix = camera_transform->matrix();
     mat4x4 inverse_vp_matrix = camera->view_projection_matrix().inverse();
     glUniformMatrix4fv(program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
-    auto viewport = camera->viewport();
-    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
-                        // The write target starts off as the post-buffer.
-    swap_post(); // Blend straight into the target viewport.
-    glEnable(GL_BLEND);
-    // Additive blending. When the destination alpha is 0, however, this just overwrites.
-    glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
-                        GL_ONE, GL_ZERO); // Alpha
+    program->unbind();
+
+    auto &filter_program = point_light_filter_program;
+    filter_program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+    glUniform1i(filter_program->uniform_location("depth"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+    glUniform1i(filter_program->uniform_location("normal"), 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
+    glUniform1i(filter_program->uniform_location("albedo"), 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
+    glUniform1i(filter_program->uniform_location("shadow"), 3);
+    glUniformMatrix4fv(filter_program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
+    filter_program->unbind();
+
     for (auto light : world.entities.aspects<PointLight>()) {
         if (!light->active) continue;
+        program->bind();
+
         auto light_transform = light.sibling<Transform>();
         auto &shadow_map = point_light_data(light).shadow_map(camera);
 
@@ -182,11 +197,29 @@ void Graphics::point_lighting(Aspect<Camera> camera)
         glUniform1i(program->uniform_location("shadow_map_raw"), 4);
     
         glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
-        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
         glUniform1f(program->uniform_location("light_radius"), light->radius);
 
         begin_post(program);
+        glDisable(GL_BLEND);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        program->unbind();
+
+        filter_program->bind();
+        glUniform3fv(filter_program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
+        glUniform3fv(filter_program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+        glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / write_post().framebuffer->resolution_x);
+        glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / write_post().framebuffer->resolution_y);
+
+        swap_post(); // Swap to write to the viewport buffer.
+        begin_post(filter_program);
+        glEnable(GL_BLEND);
+        // Additive blending. When the destination alpha is 0, however, this just overwrites.
+        glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
+                            GL_ONE, GL_ZERO); // Alpha
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        filter_program->unbind();
+        swap_post(); // Swap to write to the post-buffer.
     }
+    swap_post(); // Swap to write to the post-buffer.
 }
 

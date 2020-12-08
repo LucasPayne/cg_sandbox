@@ -140,10 +140,14 @@ void Graphics::compile_shaders()
     directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
     directional_light_filter_shader_program->link();
 
-    point_light_shader_program = world.resources.add<GLShaderProgram>();
-    point_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    point_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
-    point_light_shader_program->link();
+    point_light_program = world.resources.add<GLShaderProgram>();
+    point_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    point_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
+    point_light_program->link();
+    point_light_filter_program = world.resources.add<GLShaderProgram>();
+    point_light_filter_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    point_light_filter_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light_filter.frag"));
+    point_light_filter_program->link();
 
     depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
     depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
@@ -498,15 +502,15 @@ void Graphics::render(Aspect<Camera> camera)
         If the final image is in the post-processing buffer, blit it over to the
         target.
     --------------------------------------------------------------------------------*/
-    // if (write_post().framebuffer->id != viewport.framebuffer->id) {
-    //     Viewport write_viewport = write_post();
-    //     glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
-    //     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
-    //     glBlitFramebuffer(write_viewport.x, write_viewport.y, write_viewport.x+write_viewport.w, write_viewport.y+write_viewport.h,
-    //                       viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
-    //                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    //     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // }
+    if (write_post().framebuffer->id != viewport.framebuffer->id) {
+        Viewport write_viewport = write_post();
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
+        glBlitFramebuffer(write_viewport.x, write_viewport.y, write_viewport.x+write_viewport.w, write_viewport.y+write_viewport.h,
+                          viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 }
 
 void Graphics::render()

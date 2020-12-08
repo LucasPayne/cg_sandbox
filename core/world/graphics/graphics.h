@@ -130,7 +130,8 @@ public:
     void point_lighting(Aspect<Camera> camera);
     Resource<GLShaderProgram> directional_light_shader_program;
     Resource<GLShaderProgram> directional_light_filter_shader_program;
-    Resource<GLShaderProgram> point_light_shader_program;
+    Resource<GLShaderProgram> point_light_program;
+    Resource<GLShaderProgram> point_light_filter_program;
     // Post-processing
     void depth_of_field(Aspect<Camera> camera);
     Resource<GLShaderProgram> depth_of_field_confusion_radius_program;

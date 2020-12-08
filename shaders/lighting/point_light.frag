@@ -16,14 +16,12 @@ uniform mat4x4 inverse_vp_matrix;
 
 // Light
 uniform vec3 light_position;
-uniform vec3 light_color;
 uniform float light_radius;
 
 
 // Shadowing
 uniform samplerCubeShadow shadow_map;
 uniform samplerCube shadow_map_raw;
-uniform mat4x4 shadow_matrices[6];
 
 in vec2 screen_pos;
 in vec2 uv;
@@ -78,7 +76,6 @@ void main(void)
     vec3 Y = cross(ray_dir, X);
 
 
-
     float search_cone_radius = 0.15f;
     float cos_search_cone_radius = cos(search_cone_radius);
     float average_occluder_depth = 0.f;
@@ -92,7 +89,9 @@ void main(void)
         float h = sqrt(1 - z);
         vec3 sample_dir = z * ray_dir + h*(cos(theta) * X + sin(theta) * Y);
 
-        float compare_depth = length(dpos) / far_plane_distance;
+        // Compared depth is computed by intersecting the sample ray with the plane of this fragment.
+        float compare_depth = dot(dpos, f_normal) / dot(sample_dir, f_normal);
+        compare_depth /= far_plane_distance;
         float shadow = shadowing(sample_dir, compare_depth, f_normal);
 
         average_occluder_depth += shadow * texture(shadow_map_raw, sample_dir).r;
@@ -112,15 +111,11 @@ void main(void)
         float h = sqrt(1 - z);
         vec3 sample_dir = z * ray_dir + h*(cos(theta) * X + sin(theta) * Y);
 
-        //---compared depth should rather be computed by intersecting the sample ray with the plane of this fragment.
-        float compare_depth = length(dpos) / far_plane_distance;
+        // Compared depth is computed by intersecting the sample ray with the plane of this fragment.
+        float compare_depth = dot(dpos, f_normal) / dot(sample_dir, f_normal);
+        compare_depth /= far_plane_distance;
         float shadow = shadowing(sample_dir, compare_depth, f_normal);
         average_shadow += INV_NUM_SAMPLES * shadow;
     }
-    vec3 col = (1 - average_shadow) * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
-    // vec3 col = (1 - average_shadow) * f_albedo.rgb;
-    color = vec4(col, 1);
-
-    // color = vec4(0.3*vec3(texture(shadow_map_raw, dpos).r), 1);
-    // color = vec4(vec3(1.f/length(dpos)), 1);
+    color = vec4(average_shadow, 0,0,1);
 }

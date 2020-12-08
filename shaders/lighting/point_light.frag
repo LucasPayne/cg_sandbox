@@ -65,55 +65,60 @@ void main(void)
     vec3 f_position = f_position_h.xyz / f_position_h.w;
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
     vec3 dpos = f_position - light_position;
-    vec3 ray_dir = normalize(dpos);
+    float dist = length(dpos);
+    vec3 ray_dir = dpos / dist;
 
 
     #define NUM_SAMPLES 8
     #define INV_NUM_SAMPLES (1.f / ( NUM_SAMPLES ))
     #define INV_NUM_SAMPLES_MINUS_ONE (1.f / (( NUM_SAMPLES ) - 1))
-    const vec2 axes[NUM_SAMPLES] = {
-        vec2(-0.08520956964103771, 0.9963630509214947),
-        vec2(-0.4505432949693625, -0.8927545795783688),
-        vec2(0.7469336787634822, -0.6648985482980475),
-        vec2(-0.9412593479393807, -0.3376845272095421),
-        vec2(-0.06524912550872923, -0.9978690052408413),
-        vec2(0.6497215417335966, 0.7601722950800813),
-        vec2(-0.7794633446208609, 0.6264478385248536),
-        vec2(0.7221049235206832, -0.6917835495494153),
-    };
-    const float angles[NUM_SAMPLES] = {
-        0.5354357084763649,
-        0.7208390096794479,
-        -0.22535678440633422,
-        0.9745844839469925,
-        0.7607677210646531,
-        -0.2319187544731745,
-        -0.41889900013082704,
-        0.4953900680275539,
-    };
-
-
-
     vec3 X = vec3(1,0,0);
     X -= ray_dir * dot(X, ray_dir);
     X = normalize(X);
     vec3 Y = cross(ray_dir, X);
 
-    float sample_cone_radius = 0.05f;
-    float cos_sample_cone_radius = cos(sample_cone_radius);
 
-    float average_shadow = 0.f;
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        float z = (1 - i*INV_NUM_SAMPLES_MINUS_ONE)*cos_sample_cone_radius + (i*INV_NUM_SAMPLES_MINUS_ONE);
-        float theta = i*INV_NUM_SAMPLES_MINUS_ONE * 2*PI;
+
+    float search_cone_radius = 0.15f;
+    float cos_search_cone_radius = cos(search_cone_radius);
+    float average_occluder_depth = 0.f;
+    float num_occluded_samples = 0.f;
+    for (int i = 0; i < 8; i++) {
+        float z = (1 - i*INV_NUM_SAMPLES_MINUS_ONE)*cos_search_cone_radius + (i*INV_NUM_SAMPLES_MINUS_ONE);
+
+        // Pseudo-random noise taken off of stackoverflow.
+        float theta = 2*PI*fract(sin(dot(f_position.xy+f_position.z, vec2(12.9898, 78.233))) * 43758.5453);
+
         float h = sqrt(1 - z);
         vec3 sample_dir = z * ray_dir + h*(cos(theta) * X + sin(theta) * Y);
 
         float compare_depth = length(dpos) / far_plane_distance;
         float shadow = shadowing(sample_dir, compare_depth, f_normal);
+
+        average_occluder_depth += shadow * texture(shadow_map_raw, sample_dir).r;
+        num_occluded_samples += shadow;
+    }
+    average_occluder_depth /= num_occluded_samples;
+
+    float sample_cone_radius = light_radius * (1 - average_occluder_depth / (dist / far_plane_distance));
+    float cos_sample_cone_radius = cos(sample_cone_radius);
+    float average_shadow = 0.f;
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        float z = (1 - i*INV_NUM_SAMPLES_MINUS_ONE)*cos_sample_cone_radius + (i*INV_NUM_SAMPLES_MINUS_ONE);
+
+        // Pseudo-random noise taken off of stackoverflow.
+        float theta = 2*PI*fract(sin(dot(f_position.xy+f_position.z, vec2(12.9898, 78.233))) * 43758.5453);
+
+        float h = sqrt(1 - z);
+        vec3 sample_dir = z * ray_dir + h*(cos(theta) * X + sin(theta) * Y);
+
+        //---compared depth should rather be computed by intersecting the sample ray with the plane of this fragment.
+        float compare_depth = length(dpos) / far_plane_distance;
+        float shadow = shadowing(sample_dir, compare_depth, f_normal);
         average_shadow += INV_NUM_SAMPLES * shadow;
     }
     vec3 col = (1 - average_shadow) * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
+    // vec3 col = (1 - average_shadow) * f_albedo.rgb;
     color = vec4(col, 1);
 
     // color = vec4(0.3*vec3(texture(shadow_map_raw, dpos).r), 1);

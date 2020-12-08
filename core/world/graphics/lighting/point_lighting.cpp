@@ -183,6 +183,7 @@ void Graphics::point_lighting(Aspect<Camera> camera)
     
         glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
         glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+        glUniform1f(program->uniform_location("light_radius"), light->radius);
 
         begin_post(program);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

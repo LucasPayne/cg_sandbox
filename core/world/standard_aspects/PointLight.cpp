@@ -11,5 +11,5 @@ END_ENTRIES()
 float PointLight::extent()
 {
     //---todo
-    return 10.f;
+    return 30.f;
 }

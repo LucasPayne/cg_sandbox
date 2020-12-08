@@ -188,6 +188,7 @@ void main(void)
 
         float shadow = shadowing(vec3(sample_uv, shadow_coord.z), segment, f_normal);
         vec3 p = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, texture(shadow_map_raw, vec3(sample_uv, segment)).r, 1)).xyz;
+        // Do not detect an occluder if this point is too close to the facet.
         if (dot(p - f_world_position, f_normal) < 0.1) shadow = 0;
 
         average_occluder_depth += shadow * texture(shadow_map_raw, vec3(sample_uv, segment)).r;

@@ -25,14 +25,25 @@ struct Follower : public IBehaviour {
     void update() {
         auto ft = follows.get<Transform>();
         auto t = entity.get<Transform>();
+        auto light = entity.get<PointLight>();
         if (following) t->position = ft->position - ft->forward() * 4;
 
         vec3 p = t->position;
-        world->graphics.paint.sphere(p, 0.1, vec4(1,1,1,1));
+        world->graphics.paint.sphere(p, light->radius, vec4(1,1,1,1));
         float r = 0.76;
         world->graphics.paint.line(p, p + r*vec3(1,0,0), 3, vec4(1,0,0,1));
         world->graphics.paint.line(p, p + r*vec3(0,1,0), 3, vec4(0,1,0,1));
         world->graphics.paint.line(p, p + r*vec3(0,0,1), 3, vec4(0,0,1,1));
+
+        if (following) {
+            float s = 0.8;
+            if (world->input.keyboard.down(KEY_M)) {
+                light->radius *= 1.f + s * dt;
+            }
+            if (world->input.keyboard.down(KEY_N)) {
+                light->radius *= 1.f - s * dt;
+            }
+        }
     }
 
     void keyboard_handler(KeyboardEvent e) {
@@ -233,10 +244,10 @@ App::App(World &_world) : world{_world}
         light.add<Transform>(1.8,1,1.8);
         world.add<Follower>(light, cameraman, KEY_P);
     }
-    {
+    if (1) {
         Entity light = world.entities.add();
         float intensity = 10;
-        light.add<PointLight>(vec3(intensity), 0.2);
+        light.add<PointLight>(vec3(intensity), 0.03);
         light.add<Transform>(3,2,3);
         world.add<Follower>(light, cameraman, KEY_I);
     }

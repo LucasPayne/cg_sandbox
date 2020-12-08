@@ -15,13 +15,21 @@ Aspect<PointLight> test_point_light;
 
 struct Follower : public IBehaviour {
     Entity follows;
+    bool following;
     Follower(Entity e) {
         follows = e;
+        following = false;
     }
     void update() {
         auto ft = follows.get<Transform>();
         auto t = entity.get<Transform>();
-        t->position = ft->position - ft->forward() * 4;
+        if (following) t->position = ft->position - ft->forward() * 4;
+    }
+
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_P) following = !following;
+        }
     }
 };
 
@@ -37,6 +45,11 @@ struct LightRotate : public IBehaviour {
         theta = _theta;
         height = _height;
         on = _on;
+    }
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_O) light->active = !light->active;
+        }
     }
     void update() {
         auto sm = world->graphics.directional_light_data(light).shadow_map(main_camera);
@@ -100,7 +113,8 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
     cameraman.get<Camera>()->bottom_left = vec2(0.02, 0.02);
     cameraman.get<Camera>()->top_right = vec2(0.98, 0.98);
-    cameraman.get<Camera>()->background_color = vec4(0.83,0.82,1,1);
+    // cameraman.get<Camera>()->background_color = vec4(0.83,0.82,1,1);
+    cameraman.get<Camera>()->background_color = vec4(0,0,0,1);
 
     world.graphics.background_color = vec4(1,1,1,1);
     world.graphics.window_background_color = vec4(0,0,0,1);
@@ -179,13 +193,13 @@ App::App(World &_world) : world{_world}
     obj.get<Transform>()->position = vec3(0,0.15,0);
     
     
-    {
-    Entity light = world.entities.add();
-    // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
-    float sun_w = 0.07;
-    light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
-    world.add<LightRotate>(light, light.get<DirectionalLight>());
-    main_light = light.get<DirectionalLight>();
+    if (1) {
+        Entity light = world.entities.add();
+        // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
+        float sun_w = 0.07;
+        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
+        world.add<LightRotate>(light, light.get<DirectionalLight>());
+        main_light = light.get<DirectionalLight>();
     }
 
     if (0) {
@@ -204,7 +218,8 @@ App::App(World &_world) : world{_world}
     }
 
     Entity light = world.entities.add();
-    test_point_light = light.add<PointLight>(vec3(1,0,0), 0.2);
+    float intensity = 20;
+    test_point_light = light.add<PointLight>(vec3(intensity), 0.2);
     light.add<Transform>(1.8,1,1.8);
     world.add<Follower>(light, cameraman);
 }
@@ -238,6 +253,12 @@ void App::loop()
             paint.cube_map_depth_sprite(world.graphics.point_light_data(test_point_light).shadow_map(main_camera).cube_map, vec2(0.125*i,0.125*j), 0.125, 0.125, 2*i + j);
         }
     }
+    vec3 p = test_point_light.sibling<Transform>()->position;
+    paint.sphere(p, 0.1, vec4(1,1,1,1));
+    float r = 0.76;
+    paint.line(p, p + r*vec3(1,0,0), 3, vec4(1,0,0,1));
+    paint.line(p, p + r*vec3(0,1,0), 3, vec4(0,1,0,1));
+    paint.line(p, p + r*vec3(0,0,1), 3, vec4(0,0,1,1));
 
     // std::vector<vec2> ps(2);
     // ps[0] = vec2(0,0);
@@ -268,8 +289,8 @@ void App::keyboard_handler(KeyboardEvent e)
 
     if (e.action == KEYBOARD_PRESS) {
         if (e.key.code == KEY_R) world.graphics.compile_shaders();
-        if (e.key.code == KEY_P) main_camera->top_right.y() += 0.025;
-        if (e.key.code == KEY_O) main_camera->top_right.y() -= 0.025;
+        // if (e.key.code == KEY_P) main_camera->top_right.y() += 0.025;
+        // if (e.key.code == KEY_O) main_camera->top_right.y() -= 0.025;
     }
     
 }

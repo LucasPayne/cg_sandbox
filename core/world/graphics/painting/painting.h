@@ -95,9 +95,9 @@ public:
 
     // 3D painting commands.
     void sphere(vec3 position, float radius, vec4 color);
-    void line(vec3 a, vec3 b, float width, vec4 color);
     void wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width);
     void chain(std::vector<vec3> &points, float width, vec4 color);
+    void line(vec3 a, vec3 b, float width, vec4 color);
 
     // 2D painting commands.
     void bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color);

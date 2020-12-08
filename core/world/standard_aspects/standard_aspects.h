@@ -207,10 +207,11 @@ struct DirectionalLight : public IAspectType {
     vec3 direction;
     vec3 color;
     float width; // Influences soft shadows.
+    bool active;
 
     DirectionalLight() {}
     DirectionalLight(vec3 _direction, vec3 _color, float _width) :
-        direction{_direction}, color{_color}, width{_width}
+        direction{_direction}, color{_color}, width{_width}, active{true}
     {}
 };
 REFLECT_STRUCT(DirectionalLight);
@@ -222,10 +223,11 @@ PointLight aspect
 struct PointLight : public IAspectType {
     vec3 color;
     float radius; // Soft-shadowing approximates this light as a sphere with this radius.
+    bool active;
 
     PointLight() {}
     PointLight(vec3 _color, float _radius) :
-        color{_color}, radius{_radius}
+        color{_color}, radius{_radius}, active{true}
     {}
 
     // Compute the extent of effect of the point light.

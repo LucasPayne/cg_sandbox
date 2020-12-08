@@ -8,14 +8,14 @@ void Graphics::update_point_lights()
 
     // +X,-X,  +Y,-Y,  +Z,-Z. See https://learnopengl.com/Advanced-OpenGL/Cubemaps for cubemap layout.
     const mat3x3 orientations[6] = {
-        mat3x3(0,0,1,  0,1,0,  -1,0,0), // +X
-        mat3x3(0,0,-1, 0,1,0,  1,0,0),  // -X
+        mat3x3(0,0,-1,  0,-1,0,  -1,0,0), // +X
+        mat3x3(0,0,1, 0,-1,0,  1,0,0),  // -X
 
         mat3x3(1,0,0,  0,0,1, 0,-1,0), // +Y
         mat3x3(1,0,0,  0,0,-1, 0,1,0), // -Y
 
-        mat3x3(-1,0,0, 0,1,0,  0,0,-1), // +Z
-        mat3x3::identity(), // -Z
+        mat3x3(1,0,0, 0,-1,0,  0,0,-1), // +Z
+        mat3x3(-1,0,0, 0,-1,0,  0,0,1), // -Z
     };
     for (auto light : world.entities.aspects<PointLight>()) {
         auto light_transform = light.sibling<Transform>();
@@ -157,11 +157,11 @@ void Graphics::point_lighting(Aspect<Camera> camera)
                         // The write target starts off as the post-buffer.
     swap_post(); // Blend straight into the target viewport.
     glEnable(GL_BLEND);
-    // Additive blending.
-    glBlendFuncSeparate(GL_ONE, GL_ONE,   // RGB
+    // Additive blending. When the destination alpha is 0, however, this just overwrites.
+    glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
                         GL_ONE, GL_ZERO); // Alpha
-
     for (auto light : world.entities.aspects<PointLight>()) {
+        if (!light->active) continue;
         auto light_transform = light.sibling<Transform>();
         auto &shadow_map = point_light_data(light).shadow_map(camera);
 

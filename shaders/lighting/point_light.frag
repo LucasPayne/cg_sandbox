@@ -54,19 +54,21 @@ float shadowing(vec3 dpos, float compare_depth, vec3 normal)
 
 void main(void)
 {
+    vec4 f_albedo = texture(albedo, gbuffer_uv);
+    if (f_albedo.a == 0.f) discard;
+
     float f_depth = texture(depth, gbuffer_uv).r;
     vec4 f_position_h = inverse_vp_matrix * vec4(screen_pos, 2*f_depth-1, 1);
     vec3 f_position = f_position_h.xyz / f_position_h.w;
     vec3 f_normal = decode_normal(texture(normal, gbuffer_uv));
-    vec3 f_albedo = texture(albedo, gbuffer_uv).rgb;
     vec3 dpos = f_position - light_position;
     float compare_depth = length(dpos) / far_plane_distance;
 
     float shadow = shadowing(dpos, compare_depth, f_normal);
 
-    vec3 col = (1 - shadow) * light_color * f_albedo * max(0, dot(-normalize(dpos), f_normal)) / dot(dpos, dpos);
+    vec3 col = (1 - shadow) * light_color * f_albedo.rgb * max(0, dot(-normalize(dpos), f_normal)) / dot(dpos, dpos);
     color = vec4(col, 1);
 
-    // color = vec4(vec3(texture(shadow_map_raw, dpos).r), 1);
+    // color = vec4(0.3*vec3(texture(shadow_map_raw, dpos).r), 1);
     // color = vec4(vec3(1.f/length(dpos)), 1);
 }

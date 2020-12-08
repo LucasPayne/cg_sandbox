@@ -248,8 +248,8 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
                         // The write target starts off as the post-buffer.
     glEnable(GL_BLEND);
 
-    bool first_light_pass = true;
     for (auto light : world.entities.aspects<DirectionalLight>()) {
+        if (!light->active) continue;
         auto &shadow_map = directional_light_data(light).shadow_map(camera);
 
         // Render the screenspace shadowing signal into a buffer.
@@ -375,15 +375,9 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
 
         swap_post(); // Swap to write to the viewport buffer.
         begin_post(filter_program);
-        if (first_light_pass) {
-            // The first light replaces the background color.
-            glBlendFuncSeparate(GL_ONE, GL_ZERO, // RGB
-                                GL_ONE, GL_ZERO);     // Alpha
-            first_light_pass = false;
-        } else {
-            glBlendFuncSeparate(GL_ONE, GL_ONE, // RGB
-                                GL_ONE, GL_ZERO);     // Alpha
-        }
+        // Additive blending. When the destination alpha is 0, however, this just overwrites.
+        glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
+                            GL_ONE, GL_ZERO); // Alpha
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         filter_program->unbind();
         swap_post(); // Swap to write to the post-buffer.

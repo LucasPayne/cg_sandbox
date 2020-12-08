@@ -3,10 +3,14 @@
 
 void Painting::render_lines()
 {
-    for (auto camera : world.entities.aspects<Camera>()) {
-        graphics.begin_camera_rendering(camera);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 
-        lines_shader_program->bind();
+    lines_shader_program->bind();
+    for (auto camera : world.entities.aspects<Camera>()) {
+        auto viewport = camera->viewport();
+        graphics.set_post(viewport);
+        graphics.swap_post();
 
         mat4x4 vp_matrix = camera->view_projection_matrix();
         glUniformMatrix4fv(lines_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
@@ -31,13 +35,20 @@ void Painting::render_lines()
             glDeleteVertexArrays(1, &vao);
             glDeleteBuffers(1, &vertex_buffer);
         }
-
-        graphics.end_camera_rendering(camera);
     }
+    lines_shader_program->unbind();
 }
 
 
 void Painting::chain(std::vector<vec3> &points, float width, vec4 color)
 {
+    lines.push_back(PaintingLines(points, width, color));
+}
+
+void Painting::line(vec3 a, vec3 b, float width, vec4 color)
+{
+    std::vector<vec3> points(2);
+    points[0] = a;
+    points[1] = b;
     lines.push_back(PaintingLines(points, width, color));
 }

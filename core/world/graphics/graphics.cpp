@@ -462,7 +462,9 @@ void Graphics::render(Aspect<Camera> camera)
     glEnable(GL_SCISSOR_TEST);
     glViewport(VIEWPORT_EXPAND(viewport));
     glScissor(VIEWPORT_EXPAND(viewport));
-    glClearColor(VEC4_EXPAND(camera->background_color));
+    // An alpha value of zero signifies that this is a background pixel.
+    // This distinction is needed so that deferred lighting can blend correctly.
+    glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), 0);
     glClear(GL_COLOR_BUFFER_BIT);
     /*--------------------------------------------------------------------------------
         Lighting and rendering of surfaces using the G-buffer.

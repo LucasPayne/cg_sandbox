@@ -77,7 +77,7 @@ void Graphics::init()
     add_gbuffer_component(GBufferComponent("normal", GL_RG16, GL_RG, GL_UNSIGNED_SHORT), false);
     add_gbuffer_component(GBufferComponent("albedo", GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE), false);
     add_gbuffer_component(GBufferComponent("velocity", GL_RGBA16F, GL_RGBA, GL_FLOAT), false);
-    add_gbuffer_component(GBufferComponent("depth", GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT), true);
+    add_gbuffer_component(GBufferComponent("depth", GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT), true);
     glDrawBuffers(color_buffer_enums.size(), &color_buffer_enums[0]);
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -105,7 +105,7 @@ void Graphics::init()
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    auto create_color_framebuffer = [](Framebuffer &fb) {
+    auto create_framebuffer = [](Framebuffer &fb) {
         GLuint &fbo = fb.id;
         GLuint &tex = fb.texture;
         glGenFramebuffers(1, &fbo);
@@ -117,54 +117,25 @@ void Graphics::init()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+        // Give these framebuffers depth buffers.
+        GLuint &depth = fb.depth_texture;
+        glGenTextures(1, &depth);
+        glBindTexture(GL_TEXTURE_2D, depth);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 256, 256, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             fprintf(stderr, "Framebuffer incomplete.\n");
             exit(EXIT_FAILURE);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     };
-    create_color_framebuffer(screen_buffer);
-    create_color_framebuffer(post_buffer);
+    create_framebuffer(screen_buffer);
+    create_framebuffer(post_buffer);
 
     compile_shaders();
 }
-
-void Graphics::compile_shaders()
-{
-    directional_light_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light.frag"));
-    directional_light_shader_program->link();
-    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
-    directional_light_filter_shader_program->link();
-
-    point_light_program = world.resources.add<GLShaderProgram>();
-    point_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    point_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
-    point_light_program->link();
-    point_light_filter_program = world.resources.add<GLShaderProgram>();
-    point_light_filter_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    point_light_filter_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light_filter.frag"));
-    point_light_filter_program->link();
-
-    depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
-    depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
-    depth_of_field_confusion_radius_program->link();
-
-    depth_of_field_near_field_program = world.resources.add<GLShaderProgram>();
-    depth_of_field_near_field_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    depth_of_field_near_field_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_near_field.frag"));
-    depth_of_field_near_field_program->link();
-
-    temporal_aa_program = world.resources.add<GLShaderProgram>();
-    temporal_aa_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    temporal_aa_program->add_shader(GLShader(FragmentShader, "shaders/antialiasing/temporal_quincunx.frag"));
-    temporal_aa_program->link();
-}
-
 
 void Graphics::draw(GeometricMaterialInstance &geometric_material_instance,
                     MaterialInstance &material_instance,
@@ -378,6 +349,9 @@ void Graphics::refresh_framebuffers()
         glBindTexture(GL_TEXTURE_2D, post_buffer.texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, max_res_x, max_res_y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, post_buffer.depth_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, max_res_x, max_res_y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
         post_buffer.resolution_x = max_res_x;
         post_buffer.resolution_y = max_res_y;
     }
@@ -387,6 +361,9 @@ void Graphics::refresh_framebuffers()
     if (prev_window_viewport.w != window_viewport.w || prev_window_viewport.h != window_viewport.h) {
         glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, screen_buffer.depth_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, window_viewport.w, window_viewport.h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         glBindTexture(GL_TEXTURE_2D, 0);
         screen_buffer.resolution_x = window_viewport.w;
         screen_buffer.resolution_y = window_viewport.h;
@@ -460,26 +437,40 @@ void Graphics::render(Aspect<Camera> camera)
     shading_model.properties.destroy();
 
     /*--------------------------------------------------------------------------------
+        Blit the G-buffer depth-buffer to the target framebuffer.
+    --------------------------------------------------------------------------------*/
+    // glDisable(GL_DEPTH_TEST);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_ZERO, GL_ONE);
+    // set_post(viewport);
+    // swap_post(); // Write depths to the target viewport of the camera.
+    
+
+
+
+    /*--------------------------------------------------------------------------------
         Clear this camera's framebuffer section.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
     glEnable(GL_SCISSOR_TEST);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     glViewport(VIEWPORT_EXPAND(viewport));
     glScissor(VIEWPORT_EXPAND(viewport));
     // An alpha value of zero signifies that this is a background pixel.
     // This distinction is needed so that deferred lighting can blend correctly.
     glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), 0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     /*--------------------------------------------------------------------------------
         Lighting and rendering of surfaces using the G-buffer.
         This is the first pass that fills the target framebuffer, so will
         clear to the camera's background color first.
         Further rendering will interleave into this rendering using a blitted depth buffer.
     --------------------------------------------------------------------------------*/
+    glDisable(GL_DEPTH_TEST);
     lighting(camera);
-    /*--------------------------------------------------------------------------------
-        Blit the G-buffer depth-buffer to the target framebuffer.
-    --------------------------------------------------------------------------------*/
+
     glDisable(GL_SCISSOR_TEST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer_fb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, camera->framebuffer.id);
@@ -487,6 +478,15 @@ void Graphics::render(Aspect<Camera> camera)
                       viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
                       GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    /*--------------------------------------------------------------------------------
+        Render 2D and 3D vector graphics.
+    --------------------------------------------------------------------------------*/
+    glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
+    glEnable(GL_SCISSOR_TEST);
+    glViewport(VIEWPORT_EXPAND(viewport));
+    glScissor(VIEWPORT_EXPAND(viewport));
+    paint.render(camera);
 
     /*--------------------------------------------------------------------------------
         Temporal anti-aliasing.
@@ -497,20 +497,6 @@ void Graphics::render(Aspect<Camera> camera)
         Post-processing.
     --------------------------------------------------------------------------------*/
     // depth_of_field(camera);
-
-    /*--------------------------------------------------------------------------------
-        If the final image is in the post-processing buffer, blit it over to the
-        target.
-    --------------------------------------------------------------------------------*/
-    if (write_post().framebuffer->id != viewport.framebuffer->id) {
-        Viewport write_viewport = write_post();
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, write_viewport.framebuffer->id);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, viewport.framebuffer->id);
-        glBlitFramebuffer(write_viewport.x, write_viewport.y, write_viewport.x+write_viewport.w, write_viewport.y+write_viewport.h,
-                          viewport.x, viewport.y, viewport.x+viewport.w, viewport.y+viewport.h,
-                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
 }
 
 void Graphics::render()
@@ -523,33 +509,31 @@ void Graphics::render()
     refresh_framebuffers();
 
     /*--------------------------------------------------------------------------------
-        Clear the screen buffer.
+        Clear the screen buffer and postprocessing buffer.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0,0, window_viewport.w, window_viewport.h);
     glClearColor(VEC4_EXPAND(background_color));
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // /*--------------------------------------------------------------------------------
-    //     Update lighting data, such as shadow maps.
-    // --------------------------------------------------------------------------------*/
+    glBindFramebuffer(GL_FRAMEBUFFER, post_buffer.id);
+    glDisable(GL_SCISSOR_TEST);
+    glViewport(0,0, window_viewport.w, window_viewport.h);
+    glClearColor(0,0,0,0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /*--------------------------------------------------------------------------------
+        Update lighting data, such as shadow maps.
+    --------------------------------------------------------------------------------*/
     update_lights();
 
-    // /*--------------------------------------------------------------------------------
-    //     Render each camera into it's framebuffer section.
-    // --------------------------------------------------------------------------------*/
+    /*--------------------------------------------------------------------------------
+        Render each camera into it's framebuffer section.
+    --------------------------------------------------------------------------------*/
     for (auto camera : world.entities.aspects<Camera>()) {
         render(camera);
     }
-    // /*--------------------------------------------------------------------------------
-    //     Render 2D and 3D vector graphics.
-    // --------------------------------------------------------------------------------*/
-    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
-    glEnable(GL_SCISSOR_TEST);
-    glViewport(0, 0, window_viewport.w, window_viewport.h);
-    glScissor(0, 0, window_viewport.w, window_viewport.h);
-    paint.render();
     paint.clear();
 
     /*--------------------------------------------------------------------------------
@@ -581,4 +565,43 @@ GBufferComponent &Graphics::gbuffer_component(std::string name)
     fprintf(stderr, "\"%s\" is not the name of a G-buffer component.\n", name.c_str());
     exit(EXIT_FAILURE);
 }
+
+
+
+void Graphics::compile_shaders()
+{
+    directional_light_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light.frag"));
+    directional_light_shader_program->link();
+    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
+    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
+    directional_light_filter_shader_program->link();
+
+    point_light_program = world.resources.add<GLShaderProgram>();
+    point_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    point_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
+    point_light_program->link();
+    point_light_filter_program = world.resources.add<GLShaderProgram>();
+    point_light_filter_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    point_light_filter_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light_filter.frag"));
+    point_light_filter_program->link();
+
+    depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    depth_of_field_confusion_radius_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_confusion_radius.frag"));
+    depth_of_field_confusion_radius_program->link();
+
+    depth_of_field_near_field_program = world.resources.add<GLShaderProgram>();
+    depth_of_field_near_field_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    depth_of_field_near_field_program->add_shader(GLShader(FragmentShader, "shaders/depth_of_field/depth_of_field_near_field.frag"));
+    depth_of_field_near_field_program->link();
+
+    temporal_aa_program = world.resources.add<GLShaderProgram>();
+    temporal_aa_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    temporal_aa_program->add_shader(GLShader(FragmentShader, "shaders/antialiasing/temporal_quincunx.frag"));
+    temporal_aa_program->link();
+}
+
 

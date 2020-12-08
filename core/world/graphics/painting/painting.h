@@ -90,7 +90,7 @@ public:
 
     void init();
 
-    void render();
+    void render(Aspect<Camera> camera);
     void clear();
 
     // 3D painting commands.
@@ -144,9 +144,9 @@ private:
     Resource<GLShaderProgram> cube_map_sprite_program;
     Resource<GLShaderProgram> cube_map_depth_sprite_program;
 
-    void render_spheres();
-    void render_lines();
-    void render_wireframes();
+    void render_spheres(Aspect<Camera> camera);
+    void render_lines(Aspect<Camera> camera);
+    void render_wireframes(Aspect<Camera> camera);
     void render_circles();
     void render_lines_2D();
     void render_sprites();

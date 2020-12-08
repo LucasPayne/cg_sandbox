@@ -10,6 +10,7 @@
 
 Aspect<Camera> main_camera;
 Aspect<DirectionalLight> main_light;
+SurfaceGeometry *model_geom;
 
 Aspect<PointLight> test_point_light;
 
@@ -123,9 +124,6 @@ public:
 };
 
 
-std::vector<vec3> points;
-float omega = 0.25;
-
 App::App(World &_world) : world{_world}
 {
     Entity cameraman = create_cameraman(world);
@@ -139,13 +137,15 @@ App::App(World &_world) : world{_world}
     world.graphics.background_color = vec4(1,1,1,1);
     world.graphics.window_background_color = vec4(0,0,0,1);
 
-    //cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
-    //cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
-    //cameraman = create_cameraman(world);
-    //cameraman.get<Camera>()->bottom_left = vec2(0.5, 0.25);
-    //cameraman.get<Camera>()->top_right = vec2(0.8, 0.66);
-    //cameraman.get<Transform>()->position = vec3(0,6,0);
-    //cameraman.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
+    if (0) {
+        cameraman.get<Camera>()->bottom_left = vec2(0, 0.25);
+        cameraman.get<Camera>()->top_right = vec2(0.5, 0.75);
+        Entity cameraman2 = create_cameraman(world);
+        cameraman2.get<Camera>()->bottom_left = vec2(0.5, 0.25);
+        cameraman2.get<Camera>()->top_right = vec2(0.8, 0.66);
+        cameraman2.get<Transform>()->position = vec3(0,6,0);
+        cameraman2.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
+    }
     
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 20; j++) {
@@ -251,6 +251,13 @@ App::App(World &_world) : world{_world}
         light.add<Transform>(3,2,3);
         world.add<Follower>(light, cameraman, KEY_I);
     }
+
+    auto model = MLModel::load("resources/models/20mm_cube.stl");
+    model_geom = new SurfaceGeometry(); //global
+    model_geom->add_model(model);
+    for (auto v : model_geom->vertices()) {
+        model_geom->vertex_positions[v] *= 0.02;
+    }
 }
 
 
@@ -271,17 +278,19 @@ void App::loop()
 
     auto &paint = world.graphics.paint;
 
-    // for (int i = 0; i < 2; i++) {
-    //     for (int j = 0; j < 2; j++) {
-    //         paint.array_depth_sprite(world.graphics.directional_light_data(main_light).shadow_map(main_camera).texture, vec2(0.25*i,0.25*j), 0.25, 0.25, 2*i + j);
-    //     }
-    // }
-    
+#if 0
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            paint.array_depth_sprite(world.graphics.directional_light_data(main_light).shadow_map(main_camera).texture, vec2(0.25*i,0.25*j), 0.25, 0.25, 2*i + j);
+        }
+    }
+#else
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 2; j++) {
             paint.cube_map_depth_sprite(world.graphics.point_light_data(test_point_light).shadow_map(main_camera).cube_map, vec2(0.125*i,0.125*j), 0.125, 0.125, 2*i + j);
         }
     }
+#endif
 
     // std::vector<vec2> ps(2);
     // ps[0] = vec2(0,0);
@@ -301,6 +310,10 @@ void App::loop()
     //     i++;
     // }
 
+    world.graphics.paint.wireframe(*model_geom, mat4x4::identity(), 0.001);
+
+    paint.depth_sprite(world.graphics.gbuffer_component("depth").texture, vec2(0.75,0.75), 0.25, 0.25);
+    paint.depth_sprite(world.graphics.screen_buffer.depth_texture, vec2(0.5,0.75), 0.25, 0.25);
 }
 
 void App::window_handler(WindowEvent e)

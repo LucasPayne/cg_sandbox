@@ -12,6 +12,7 @@ struct Framebuffer {
     int resolution_x;
     int resolution_y;
     GLuint texture;
+    GLuint depth_texture; // if applicable
 
     // // Logical framebuffer extents.
     // GLint x;

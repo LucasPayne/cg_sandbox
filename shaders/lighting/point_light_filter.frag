@@ -11,7 +11,7 @@ uniform mat4x4 inverse_vp_matrix;
 // Light
 uniform vec3 light_position;
 uniform vec3 light_color;
-
+uniform float light_radius;
 
 uniform sampler2D shadow;
 uniform float inv_screen_width;
@@ -22,6 +22,7 @@ in vec2 uv;
 in vec2 gbuffer_uv;
 out vec4 color;
 
+#define PI 3.14159
 
 vec3 decode_normal(vec4 encoded_normal)
 {
@@ -58,6 +59,6 @@ void main(void)
         }
     }
     
-    vec3 col = (1 - average_shadow) * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
-    color = vec4(5 * col, 1);
+    vec3 col = (1 - average_shadow) * PI * light_radius * light_radius * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
+    color = vec4(col, 1);
 }

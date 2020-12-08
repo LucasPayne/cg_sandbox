@@ -1,17 +1,19 @@
 #include "world/world.h"
 
 
-void Painting::render()
+void Painting::render(Aspect<Camera> camera)
 {
     glEnable(GL_DEPTH_TEST);
-    render_spheres();
-    render_lines();
-    render_wireframes();
+    render_spheres(camera);
+    render_lines(camera);
+    render_wireframes(camera);
 
+    glDepthMask(false);
     glDisable(GL_DEPTH_TEST);
     render_circles();
     render_lines_2D();
     render_sprites();
+    glDepthMask(true);
 }
 
 

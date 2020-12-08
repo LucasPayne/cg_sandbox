@@ -7,7 +7,7 @@ void Painting::sphere(vec3 position, float radius, vec4 color)
 }
 
 
-void Painting::render_spheres()
+void Painting::render_spheres(Aspect<Camera> camera)
 {
     GLuint spheres_vao;
     glCreateVertexArrays(1, &spheres_vao);
@@ -32,19 +32,15 @@ void Painting::render_spheres()
 
     // Draw spheres
     spheres_shader_program->bind();
-    for (auto camera : world.entities.aspects<Camera>()) {
-        auto viewport = camera->viewport();
-        graphics.set_post(viewport);
-        graphics.swap_post();
 
-        mat4x4 view_matrix = camera->view_matrix();
-        glUniformMatrix4fv(spheres_shader_program->uniform_location("view_matrix"), 1, GL_FALSE, (const GLfloat *) &view_matrix);
-        glUniformMatrix4fv(spheres_shader_program->uniform_location("projection_matrix"), 1, GL_FALSE, (const GLfloat *) &camera->projection_matrix);
-        glUniform1f(spheres_shader_program->uniform_location("aspect_ratio"), camera->aspect_ratio());
+    mat4x4 view_matrix = camera->view_matrix();
+    glUniformMatrix4fv(spheres_shader_program->uniform_location("view_matrix"), 1, GL_FALSE, (const GLfloat *) &view_matrix);
+    glUniformMatrix4fv(spheres_shader_program->uniform_location("projection_matrix"), 1, GL_FALSE, (const GLfloat *) &camera->projection_matrix);
+    glUniform1f(spheres_shader_program->uniform_location("aspect_ratio"), camera->aspect_ratio());
 
-        glPatchParameteri(GL_PATCH_VERTICES, 1);
-        glDrawArrays(GL_PATCHES, 0, spheres.size());
-    }
+    glPatchParameteri(GL_PATCH_VERTICES, 1);
+    glDrawArrays(GL_PATCHES, 0, spheres.size());
+
     spheres_shader_program->unbind();
 
     glDeleteVertexArrays(1, &spheres_vao);

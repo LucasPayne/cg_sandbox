@@ -151,7 +151,6 @@ void Graphics::point_lighting(Aspect<Camera> camera)
     glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
     glUniform1i(program->uniform_location("albedo"), 2);
     auto camera_transform = camera.sibling<Transform>();
-    auto camera_matrix = camera_transform->matrix();
     mat4x4 inverse_vp_matrix = camera->view_projection_matrix().inverse();
     glUniformMatrix4fv(program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
     program->unbind();
@@ -207,6 +206,7 @@ void Graphics::point_lighting(Aspect<Camera> camera)
         filter_program->bind();
         glUniform3fv(filter_program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
         glUniform3fv(filter_program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+        glUniform1f(filter_program->uniform_location("light_radius"), light->radius);
         glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / write_post().framebuffer->resolution_x);
         glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / write_post().framebuffer->resolution_y);
 

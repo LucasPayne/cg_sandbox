@@ -76,31 +76,23 @@ void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width
 }
 
 
-void Painting::render_wireframes()
+void Painting::render_wireframes(Aspect<Camera> camera)
 {
     if (wireframe_render_data.size() == 0) return;
+    auto viewport = camera->viewport();
 
     wireframe_shader_program->bind();
-    for (auto camera : world.entities.aspects<Camera>()) {
-        graphics.begin_camera_rendering(camera);
-        GLint viewport[4];
-        glGetIntegerv(GL_VIEWPORT, viewport);
-        int viewport_width = (int) viewport[2];
-        int viewport_height = (int) viewport[3];
+    mat4x4 vp_matrix = camera->view_projection_matrix();
+    glUniformMatrix4fv(wireframe_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
 
-        mat4x4 vp_matrix = camera->view_projection_matrix();
-        glUniformMatrix4fv(wireframe_shader_program->uniform_location("vp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
+    for (auto render_data : wireframe_render_data) {
+        glUniformMatrix4fv(wireframe_shader_program->uniform_location("model_matrix"), 1, GL_FALSE, (const GLfloat *) &render_data.model_matrix);
+        glUniform1f(wireframe_shader_program->uniform_location("half_width"), 0.5 * render_data.width);
+        glUniform1i(wireframe_shader_program->uniform_location("viewport_width"), viewport.w);
+        glUniform1i(wireframe_shader_program->uniform_location("viewport_height"), viewport.h);
+        glBindVertexArray(render_data.vao);
 
-        for (auto render_data : wireframe_render_data) {
-            glUniformMatrix4fv(wireframe_shader_program->uniform_location("model_matrix"), 1, GL_FALSE, (const GLfloat *) &render_data.model_matrix);
-            glUniform1f(wireframe_shader_program->uniform_location("half_width"), 0.5 * render_data.width);
-            glUniform1i(wireframe_shader_program->uniform_location("viewport_width"), viewport_width);
-            glUniform1i(wireframe_shader_program->uniform_location("viewport_height"), viewport_height);
-            glBindVertexArray(render_data.vao);
-
-            glDrawArrays(GL_TRIANGLES, 0, render_data.num_vertices);
-        }
-        graphics.end_camera_rendering(camera);
+        glDrawArrays(GL_TRIANGLES, 0, render_data.num_vertices);
     }
     wireframe_shader_program->unbind();
 

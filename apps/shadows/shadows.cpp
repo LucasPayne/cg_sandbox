@@ -211,6 +211,20 @@ App::App(World &_world) : world{_world}
     obj.get<Drawable>()->shadow_caster = false;
     obj.get<Transform>()->scale = 80;
     obj.get<Transform>()->position = vec3(0,0.15,0);
+
+    auto pillar = MLModel::load("resources/models/20mm_cube.stl");
+    for (int i = 0; i < pillar.num_vertices; i++) {
+        pillar.positions[i].x() *= 0.1;
+        pillar.positions[i].z() *= 0.1;
+    }
+    for (int i = 0; i < 20; i++) {
+        for (int j = 0; j < 20; j++) {
+            obj = create_mesh_object(world, pillar, "shaders/uniform_color.mat");
+            obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
+            obj.get<Transform>()->scale = 0.1;
+            obj.get<Transform>()->position = vec3(-3-i,1.5,-3-j);
+        }
+    }
     
     
     if (1) {
@@ -252,11 +266,12 @@ App::App(World &_world) : world{_world}
         world.add<Follower>(light, cameraman, KEY_I);
     }
 
-    auto model = MLModel::load("resources/models/20mm_cube.stl");
+    // auto model = MLModel::load("resources/models/20mm_cube.stl");
+    auto model = MLModel::load("resources/models/dragon.off");
     model_geom = new SurfaceGeometry(); //global
     model_geom->add_model(model);
     for (auto v : model_geom->vertices()) {
-        model_geom->vertex_positions[v] *= 0.02;
+        model_geom->vertex_positions[v] *= 1.3;
     }
 }
 
@@ -310,10 +325,10 @@ void App::loop()
     //     i++;
     // }
 
-    world.graphics.paint.wireframe(*model_geom, mat4x4::identity(), 0.001);
+    // paint.depth_sprite(world.graphics.gbuffer_component("depth").texture, vec2(0.75,0.75), 0.25, 0.25);
+    // paint.depth_sprite(world.graphics.screen_buffer.depth_texture, vec2(0.5,0.75), 0.25, 0.25);
 
-    paint.depth_sprite(world.graphics.gbuffer_component("depth").texture, vec2(0.75,0.75), 0.25, 0.25);
-    paint.depth_sprite(world.graphics.screen_buffer.depth_texture, vec2(0.5,0.75), 0.25, 0.25);
+    // world.graphics.paint.wireframe(*model_geom, mat4x4::translation(vec3(4,-0.7,4)), 0.001);
 }
 
 void App::window_handler(WindowEvent e)

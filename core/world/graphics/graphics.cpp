@@ -437,18 +437,6 @@ void Graphics::render(Aspect<Camera> camera)
     shading_model.properties.destroy();
 
     /*--------------------------------------------------------------------------------
-        Blit the G-buffer depth-buffer to the target framebuffer.
-    --------------------------------------------------------------------------------*/
-    // glDisable(GL_DEPTH_TEST);
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_ZERO, GL_ONE);
-    // set_post(viewport);
-    // swap_post(); // Write depths to the target viewport of the camera.
-    
-
-
-
-    /*--------------------------------------------------------------------------------
         Clear this camera's framebuffer section.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
@@ -471,6 +459,9 @@ void Graphics::render(Aspect<Camera> camera)
     glDisable(GL_DEPTH_TEST);
     lighting(camera);
 
+    /*--------------------------------------------------------------------------------
+        Blit the G-buffer depth-buffer to the target framebuffer.
+    --------------------------------------------------------------------------------*/
     glDisable(GL_SCISSOR_TEST);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, gbuffer_fb);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, camera->framebuffer.id);

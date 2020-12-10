@@ -1,0 +1,32 @@
+// This shadow map shading model renders linear depth values. This makes it easy to compute the depth value to compare to when
+// using cube-map point light shadows.
+//
+// This writes out both the depth and depth squared, for variance shadow mapping.
+#type shading_model
+
+block properties {
+    mat4x4 vp_matrix;
+    vec4 light_position;
+    float far_plane_distance;
+}
+section geom_post {
+    out vec4 gl_Position(in vec3 f_world_position) {
+    GLSL
+        return vp_matrix * vec4(f_world_position, 1);
+    END
+    }
+}
+section frag_post {
+    out vec2 moments(in vec3 f_world_position) {
+    GLSL
+        float d = length(f_world_position - light_position.xyz) / far_plane_distance;
+        return vec2(d, d*d);
+    END
+    }
+    out float frag_post(in vec3 f_world_position) {
+    GLSL
+        gl_FragDepth = length(f_world_position - light_position.xyz) / far_plane_distance;
+        return 0;
+    END
+    }
+}

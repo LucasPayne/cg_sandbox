@@ -58,7 +58,7 @@ std::ostream &operator<<(std::ostream &os, const Quaternion &q)
     return os;
 }
 
-
+// note: I do not think this is stable.
 vec4 mat4x4::solve(vec4 b) const
 {
     #define SINGULAR() {\
@@ -144,6 +144,14 @@ mat4x4 mat4x4::translation(vec3 amount)
                              0,0,1,amount.z(),
                              0,0,0,1);
 }
+mat4x4 mat4x4::translation(float x, float y, float z)
+{
+    return mat4x4::row_major(1,0,0,x,
+                             0,1,0,y,
+                             0,0,1,z,
+                             0,0,0,1);
+}
+
 
 mat4x4 mat4x4::to_rigid_frame(vec3 origin, vec3 X, vec3 Y, vec3 Z)
 {

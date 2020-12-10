@@ -77,8 +77,7 @@ struct PointLightShadowMap {
     Aspect<Camera> camera;
     GLuint fbo;
     GLuint cube_map;
-    GLuint sampler_comparison;
-    GLuint sampler_raw;
+    GLuint cube_map_depth;
     int width;
     int height;
     mat4x4 shadow_matrices[6];

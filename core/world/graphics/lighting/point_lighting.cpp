@@ -41,13 +41,13 @@ void Graphics::update_point_lights()
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.cube_map_depth, 0, face);
                 glEnable(GL_DEPTH_TEST);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
                 int num_drawn = 0;
                 for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
                     render_drawable(drawable, shadow_map_shading_model);
                     num_drawn ++;
                 });
                 printf("shadow map cube face num drawn: %d\n", num_drawn);
+
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 glBindTexture(GL_TEXTURE_CUBE_MAP, sm.cube_map);
                 glGenerateMipmap(GL_TEXTURE_CUBE_MAP);

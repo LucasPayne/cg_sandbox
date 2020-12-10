@@ -28,6 +28,11 @@ std::string gl_error_string()
     return "UNKNOWN";
 }
 
+void gl_error_check()
+{ 
+    std::cout << gl_error_string() << "\n";
+}
+
 
 
 
@@ -572,12 +577,8 @@ void Graphics::compile_shaders()
 
     point_light_program = world.resources.add<GLShaderProgram>();
     point_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    point_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light.frag"));
+    point_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/variance_point_light.frag"));
     point_light_program->link();
-    point_light_filter_program = world.resources.add<GLShaderProgram>();
-    point_light_filter_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    point_light_filter_program->add_shader(GLShader(FragmentShader, "shaders/lighting/point_light_filter.frag"));
-    point_light_filter_program->link();
 
     depth_of_field_confusion_radius_program = world.resources.add<GLShaderProgram>();
     depth_of_field_confusion_radius_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));

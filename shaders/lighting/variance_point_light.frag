@@ -57,10 +57,13 @@ void main(void)
     vec3 dpos = f_position - light_position;
     float dist = length(dpos);
     vec3 ray_dir = dpos / dist;
-
+    
+    float t = dist / far_plane_distance;
     vec2 moments = texture(shadow_map, ray_dir).xy;
     float variance = moments[1] - moments[0]*moments[0];
-    float pmax = variance / (variance + (dist - moments[0])*(dist - moments[0]));
+    float pmax = variance / (variance + (t - moments[0])*(t - moments[0]));
+    float visibility = pmax;
 
-    color = vec4(pmax, 0,0,1);
+    vec3 col = visibility * PI * light_radius * light_radius * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
+    color = vec4(col, 1);
 }

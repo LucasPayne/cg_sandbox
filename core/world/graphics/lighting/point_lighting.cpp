@@ -40,7 +40,7 @@ void Graphics::update_point_lights()
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.cube_map, 0, face);
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.cube_map_depth, 0, face);
                 glEnable(GL_DEPTH_TEST);
-                glClear(GL_DEPTH_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
                 for_drawables(frustum, [&](Aspect<Drawable> &drawable) {
@@ -49,6 +49,9 @@ void Graphics::update_point_lights()
                 });
                 printf("shadow map cube face num drawn: %d\n", num_drawn);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, sm.cube_map);
+                glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+                glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
             }
         }
     }
@@ -62,26 +65,25 @@ PointLightShadowMap &PointLightData::shadow_map(Aspect<Camera> camera)
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 512;
-    int height = 512;
+    int n = 512;
+    int width = n;
+    int height = n;
+
+    int num_mips = 0;
+    for (int c = n; c > 1; c /= 2) { num_mips ++; }
 
     GLuint cube_map;
     glGenTextures(1, &cube_map);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
-    for (int i = 0; i < 6; i++) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                     0,
-                     GL_RG16,
-                     width, height,
-                     0,
-                     GL_RG,
-                     GL_UNSIGNED_SHORT,
-                     NULL);
-    }
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexStorage2D(GL_TEXTURE_CUBE_MAP,
+                   num_mips,
+                   GL_RG16,
+                   width, height);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
     GLuint cube_map_depth;
     glGenTextures(1, &cube_map_depth);
@@ -137,10 +139,10 @@ PointLightData &Graphics::point_light_data(Aspect<PointLight> light)
 
 void Graphics::point_lighting(Aspect<Camera> camera)
 {
-    /*
     auto viewport = camera->viewport();
     set_post(viewport); // ping-pong post-processing with the camera's target viewport.
                         // The write target starts off as the post-buffer.
+    swap_post(); // Write straight to the target viewport.
 
     auto gbuffer_depth = gbuffer_component("depth");
     auto gbuffer_normal = gbuffer_component("normal");
@@ -156,77 +158,31 @@ void Graphics::point_lighting(Aspect<Camera> camera)
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
     glUniform1i(program->uniform_location("albedo"), 2);
-    auto camera_transform = camera.sibling<Transform>();
     mat4x4 inverse_vp_matrix = camera->view_projection_matrix().inverse();
     glUniformMatrix4fv(program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
-    program->unbind();
-
-    auto &filter_program = point_light_filter_program;
-    filter_program->bind();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-    glUniform1i(filter_program->uniform_location("depth"), 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-    glUniform1i(filter_program->uniform_location("normal"), 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
-    glUniform1i(filter_program->uniform_location("albedo"), 2);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
-    glUniform1i(filter_program->uniform_location("shadow"), 3);
-    glUniformMatrix4fv(filter_program->uniform_location("inverse_vp_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_vp_matrix);
-    filter_program->unbind();
 
     for (auto light : world.entities.aspects<PointLight>()) {
         if (!light->active) continue;
-        program->bind();
 
         auto light_transform = light.sibling<Transform>();
         auto &shadow_map = point_light_data(light).shadow_map(camera);
 
         glUniform1f(program->uniform_location("far_plane_distance"), light->extent());
-        for (int i = 0; i < 6; i++) {
-            auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
-            mat4x4 shadow_matrix = shadow_map.shadow_matrices[i];
-            glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_matrix);
-        }
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_map.cube_map);
-        glBindSampler(3, shadow_map.sampler_comparison);
         glUniform1i(program->uniform_location("shadow_map"), 3);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, shadow_map.cube_map);
-        glBindSampler(4, shadow_map.sampler_raw);
-        glUniform1i(program->uniform_location("shadow_map_raw"), 4);
     
         glUniform3fv(program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
+        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
         glUniform1f(program->uniform_location("light_radius"), light->radius);
 
         begin_post(program);
-        glDisable(GL_BLEND);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        program->unbind();
-
-        filter_program->bind();
-        glUniform3fv(filter_program->uniform_location("light_position"), 1, (GLfloat *) &light_transform->position);
-        glUniform3fv(filter_program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
-        glUniform1f(filter_program->uniform_location("light_radius"), light->radius);
-        glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / write_post().framebuffer->resolution_x);
-        glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / write_post().framebuffer->resolution_y);
-
-        swap_post(); // Swap to write to the viewport buffer.
-        begin_post(filter_program);
         glEnable(GL_BLEND);
         // Additive blending. When the destination alpha is 0, however, this just overwrites.
         glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
                             GL_ONE, GL_ZERO); // Alpha
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        filter_program->unbind();
-        swap_post(); // Swap to write to the post-buffer.
     }
-    swap_post(); // Swap to write to the post-buffer.
-    */
 }
 

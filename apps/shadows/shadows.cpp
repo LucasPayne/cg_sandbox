@@ -146,14 +146,15 @@ App::App(World &_world) : world{_world}
         cameraman2.get<Transform>()->position = vec3(0,6,0);
         cameraman2.get<Camera>()->background_color = vec4(0.86,0.93,0.8,1);
     }
-    
-    for (int i = 0; i < 20; i++) {
-        for (int j = 0; j < 20; j++) {
-            Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
-            obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
-            obj.get<Transform>()->scale = 5;
-            float r = frand();
-            obj.get<Drawable>()->material.properties.set_vec4("albedo", r,r,r,1);
+    if (0) {
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                Entity obj = create_mesh_object(world, "resources/models/bunny.off", "shaders/uniform_color.mat");
+                obj.get<Transform>()->position = vec3(1.8*i, 0, 1.8*j);
+                obj.get<Transform>()->scale = 5;
+                float r = frand();
+                obj.get<Drawable>()->material.properties.set_vec4("albedo", r,r,r,1);
+            }
         }
     }
     int n = 0;
@@ -212,17 +213,18 @@ App::App(World &_world) : world{_world}
     obj.get<Transform>()->scale = 80;
     obj.get<Transform>()->position = vec3(0,0.15,0);
 
-    auto pillar = MLModel::load("resources/models/20mm_cube.stl");
-    for (int i = 0; i < pillar.num_vertices; i++) {
-        pillar.positions[i].x() *= 0.1;
-        pillar.positions[i].z() *= 0.1;
-    }
-    for (int i = 0; i < 20; i++) {
-        for (int j = 0; j < 20; j++) {
-            obj = create_mesh_object(world, pillar, "shaders/uniform_color.mat");
-            obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
-            obj.get<Transform>()->scale = 0.1;
-            obj.get<Transform>()->position = vec3(-3-i,1.5,-3-j);
+    if (0) {
+        auto pillar = MLModel::load("resources/models/20mm_cube.stl");
+        for (int i = 0; i < pillar.num_vertices; i++) {
+            pillar.positions[i].x() *= 0.0003;
+            pillar.positions[i].z() *= 0.0003;
+        }
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                obj = create_mesh_object(world, pillar, "shaders/uniform_color.mat");
+                obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,1,1,1);
+                obj.get<Transform>()->position = vec3(-1-0.015*i,1.5,-1-0.015*j);
+            }
         }
     }
     

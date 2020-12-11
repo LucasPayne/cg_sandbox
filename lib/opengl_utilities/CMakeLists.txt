@@ -5,7 +5,7 @@ project(opengl_utilities)
 include_directories(../../lib)
 
 add_library(opengl_utilities
-    glad/glad.c
+    the_glad/glad.c
     gl_shader_program.cpp
     glsl.cpp
 )

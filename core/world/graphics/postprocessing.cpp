@@ -6,9 +6,9 @@ void Graphics::begin_post(Resource<GLShaderProgram> &program,
                           Viewport target_viewport)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, target_viewport.framebuffer->id);
-    glViewport(VIEWPORT_EXPAND(target_viewport));
+    glViewport(target_viewport.x, target_viewport.y, target_viewport.w, target_viewport.h);
     glEnable(GL_SCISSOR_TEST);
-    glScissor(VIEWPORT_EXPAND(target_viewport));
+    glScissor(target_viewport.x, target_viewport.y, target_viewport.w, target_viewport.h);
 
     vec4 uv_quad = vec4(
         read_viewport.x / (1.f * read_viewport.framebuffer->resolution_x),

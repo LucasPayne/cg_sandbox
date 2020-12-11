@@ -1,9 +1,114 @@
+/*--------------------------------------------------------------------------------
+    Initialize directional light.
+--------------------------------------------------------------------------------*/
+DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camera)
+{
+    auto iter = shadow_maps.find(camera.ID());
+    if (iter != shadow_maps.end()) {
+        // The shadow map already exists.
+        return shadow_maps[camera.ID()];
+    }
+    int n = 512;
+    int width = n;
+    int height = n;
+    int num_mips = 0;
+    for (int c = n; c > 1; c /= 2) { num_mips ++; }
+    int num_frustum_segments = 4;
 
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+                   num_mips,
+                   GL_RG16,
+                   width, height, num_frustum_segments);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    GLuint depth_rbo;
+    glGenRenderbuffers(1, &depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+    glReadBuffer(GL_NONE);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Incomplete framebuffer when initializing directional light shadow maps.\n");
+        exit(EXIT_FAILURE);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    DirectionalLightShadowMap sm;
+    sm.camera = camera;
+    sm.width = width;
+    sm.height = height;
+    sm.texture = tex;
+    sm.depth_buffer = depth_rbo;
+    sm.fbo = fbo;
+    sm.num_frustum_segments = num_frustum_segments;
+    sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
+    sm.box_extents = std::vector<vec3>(sm.num_frustum_segments);
+    sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
+
+    sm.distance = 20; //an arbitrarily chosen default
+    if (sm.num_frustum_segments == 2) {
+        // Hard-coded frustum segment dividers.
+        sm.frustum_segment_dividers[0] = 0.31;
+    } else if (sm.num_frustum_segments == 3) {
+        sm.frustum_segment_dividers[0] = 0.2;
+        sm.frustum_segment_dividers[0] = 0.5;
+    } else if (sm.num_frustum_segments == 4) {
+        sm.frustum_segment_dividers[0] = 0.15;
+        sm.frustum_segment_dividers[1] = 0.39;
+        sm.frustum_segment_dividers[2] = 0.68;
+    } else {
+        // Evenly spaced. This is not very good.
+        for (int i = 1; i < sm.num_frustum_segments; i++) {
+            float d = i/(1.f * sm.num_frustum_segments);
+            sm.frustum_segment_dividers[i-1] = d;
+        }
+    }
+
+    shadow_maps[camera.ID()] = sm;
+    return shadow_maps[camera.ID()];
+}
+
+
+
+/*--------------------------------------------------------------------------------
+    Get directional light's graphics data.
+--------------------------------------------------------------------------------*/
+DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
+{
+    auto iter = directional_light_data_map.find(light.ID());
+    if (iter != directional_light_data_map.end()) {
+        return directional_light_data_map[light.ID()];
+    }
+    DirectionalLightData data;
+    // Initialize ...
+    //-
+    directional_light_data_map[light.ID()] = data;
+    return directional_light_data_map[light.ID()];
+}
+
+
+
+/*--------------------------------------------------------------------------------
+    Update directional lights.
+--------------------------------------------------------------------------------*/
 void Graphics::update_directional_lights()
 {
-    /*--------------------------------------------------------------------------------
-        Directional lights
-    --------------------------------------------------------------------------------*/
     auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_to_plane_variance_shadow_map.sm");
     auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
 
@@ -112,10 +217,6 @@ void Graphics::update_directional_lights()
                 sm.shadow_matrices[segment] = mat4x4::translation(vec3(0.5,0.5,0.5)) * mat4x4::scale(0.5) * shadow_matrix;
                 sm.box_extents[segment] = vec3(width, height, depth);
 
-                // shadow_map_shading_model.properties.set_vec4("plane_point", vec4(min_point, 1));
-                // shadow_map_shading_model.properties.set_vec4("plane_normal", vec4(Z, 1));
-                // shadow_map_shading_model.properties.set_float("inv_depth_extent", 1.f / depth);
-
                 glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glViewport(0, 0, sm.width, sm.height);
                 glDisable(GL_SCISSOR_TEST);
@@ -129,11 +230,20 @@ void Graphics::update_directional_lights()
                     num_drawn ++;
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                // // Blur the moments.
+                // glReadBuffer(GL_COLOR_ATTACHMENT0);
+                // struct moments {
+                //     uint16_t vals[3];
+                // };
+                // std::vector<moments> image(sm.width * sm.height);
+                // glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_UNSIGNED_SHORT, &image[0]);
+                // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_UNSIGNED_SHORT, &image[0]);
 
                 glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
                 glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
                 glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
         }
     }
@@ -143,108 +253,9 @@ void Graphics::update_directional_lights()
 
 
 
-
-
-
-
-DirectionalLightData &Graphics::directional_light_data(Aspect<DirectionalLight> light)
-{
-    auto iter = directional_light_data_map.find(light.ID());
-    if (iter != directional_light_data_map.end()) {
-        return directional_light_data_map[light.ID()];
-    }
-    DirectionalLightData data;
-    // Initialize ...
-    //-
-    directional_light_data_map[light.ID()] = data;
-    return directional_light_data_map[light.ID()];
-}
-
-DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camera)
-{
-    auto iter = shadow_maps.find(camera.ID());
-    if (iter != shadow_maps.end()) {
-        // The shadow map already exists.
-        return shadow_maps[camera.ID()];
-    }
-    int n = 512;
-    int width = n;
-    int height = n;
-    int num_mips = 0;
-    for (int c = n; c > 1; c /= 2) { num_mips ++; }
-    int num_frustum_segments = 4;
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
-                   num_mips,
-                   GL_RG16,
-                   width, height, num_frustum_segments);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-
-    GLuint depth_rbo;
-    glGenRenderbuffers(1, &depth_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glReadBuffer(GL_NONE);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Incomplete framebuffer when initializing directional light shadow maps.\n");
-        exit(EXIT_FAILURE);
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    DirectionalLightShadowMap sm;
-    sm.camera = camera;
-    sm.width = width;
-    sm.height = height;
-    sm.texture = tex;
-    sm.depth_buffer = depth_rbo;
-    sm.fbo = fbo;
-    sm.num_frustum_segments = num_frustum_segments;
-    sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
-    sm.box_extents = std::vector<vec3>(sm.num_frustum_segments);
-    sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
-
-    sm.distance = 20; //an arbitrarily chosen default
-    if (sm.num_frustum_segments == 2) {
-        // Hard-coded frustum segment dividers.
-        sm.frustum_segment_dividers[0] = 0.31;
-    } else if (sm.num_frustum_segments == 3) {
-        sm.frustum_segment_dividers[0] = 0.2;
-        sm.frustum_segment_dividers[0] = 0.5;
-    } else if (sm.num_frustum_segments == 4) {
-        sm.frustum_segment_dividers[0] = 0.15;
-        sm.frustum_segment_dividers[1] = 0.39;
-        sm.frustum_segment_dividers[2] = 0.68;
-    } else {
-        // Evenly spaced. This is not very good.
-        for (int i = 1; i < sm.num_frustum_segments; i++) {
-            float d = i/(1.f * sm.num_frustum_segments);
-            sm.frustum_segment_dividers[i-1] = d;
-        }
-    }
-
-    shadow_maps[camera.ID()] = sm;
-    return shadow_maps[camera.ID()];
-}
-
-
-
+/*--------------------------------------------------------------------------------
+    Accumulate effect of directional lighting on surfaces.
+--------------------------------------------------------------------------------*/
 void Graphics::directional_lighting(Aspect<Camera> camera)
 {
     auto viewport = camera->viewport();

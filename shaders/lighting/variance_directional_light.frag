@@ -153,24 +153,14 @@ void main(void)
         float cone_slice_radius = max(0, projected_radius * (1 - sample_depth / shadow_coord.z));
 
 
+        // Detect occluders within the cone of incoming light directions.
+        //---Possibly the cone calculation was incorrect.
         vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, sample_depth, 1)).xyz;
-
         float dist_to_primary_line = length((sample_point - f_world_position) + light_direction * dot(sample_point - f_world_position, -light_direction));
-        if (dist_to_primary_line <= 5 * cone_slice_radius) { //---Possibly the cone calculation was incorrect.
+        if (dist_to_primary_line <= 5 * cone_slice_radius) { //---
             average_occluder_depth += sample_depth;
             num_occluded_samples += 1.f;
         }
-
-        // if (sample_depth < shadow_coord.z - 0.005) {
-        //     average_occluder_depth += sample_depth;
-        //     num_occluded_samples += 1.f;
-        // }
-
-        // // Do not detect an occluder if this point is too close to the facet.
-        // if (dot(sample_point - f_world_position, f_normal) > 0.01) {
-        //     average_occluder_depth += sample_depth;
-        //     num_occluded_samples += 1.f;
-        // }
     }
     average_occluder_depth /= num_occluded_samples + 0.001;
     // If there are no occluders, set the depth such that the imagespace sample extent becomes 0.
@@ -184,7 +174,9 @@ void main(void)
     //    float worldspace_sample_radius = 0.5 * light_width * (shadow_coord.z - average_occluder_depth)  * box_extents[segment].z;
     //    vec2 imagespace_sample_extents = vec2(worldspace_sample_radius / box_extents[segment].x,
     //                                          worldspace_sample_radius / box_extents[segment].y);
-    vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
+
+    float projected_sample_radius = light_width * (shadow_coord.z - average_occluder_depth) * box_extents[segment].z;
+    vec2 imagespace_sample_extents = projected_sample_radius * inv_box_extents[segment].xy;
 
     float visibility = 1.f;
     vec2 moments = textureLod(shadow_map, vec3(shadow_coord.xy, segment), (shadow_coord.z - average_occluder_depth) * 10).xy;

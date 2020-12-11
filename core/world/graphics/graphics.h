@@ -16,15 +16,11 @@ The Graphics component also holds render loops.
 
 #include "world/resource_cache.h"
 
-
+#include "world/graphics/image.h"
 
 // Reflect opengl_utilities classes.
 REFLECT_STRUCT(GLShader);
 REFLECT_STRUCT(GLShaderProgram);
-
-// Debugging
-std::string gl_error_string();
-void gl_error_check();
 
 
 /*--------------------------------------------------------------------------------

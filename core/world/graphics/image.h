@@ -1,3 +1,5 @@
+#ifndef GRAPHICS_IMAGE_H
+#define GRAPHICS_IMAGE_H
 #include "mathematics/mathematics.h"
 #include "graphics_resources/graphics_resources.h"
 
@@ -28,6 +30,8 @@ public:
     inline int height() const { return _height; }
 
     void clear(T clear_value);
+
+    inline void *data() { return &pixels[0]; }
 
 private:
     bool invalid;
@@ -90,3 +94,5 @@ void Image<T>::clear(T clear_value)
         }
     }
 }
+
+#endif // GRAPHICS_IMAGE_H

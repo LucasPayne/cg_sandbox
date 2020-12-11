@@ -1,6 +1,6 @@
 opengl_utilities
 
-Miscellaneous OpenGL utilities for things such as generically compiling shaders.
+Miscellaneous OpenGL utilities for things such as compiling shaders.
 
 Defines simple wrapper classes:
     GLShader

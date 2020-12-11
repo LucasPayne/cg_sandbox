@@ -47,7 +47,7 @@ add_library(cg_sandbox
     ${FLEX_shading_file_lexer_OUTPUTS}
 
     #todo: Separate this library.
-    lib/opengl_utilities/glad/glad.c
+    lib/opengl_utilities/the_glad/glad.c
     lib/opengl_utilities/gl_shader_program.cpp
     lib/opengl_utilities/glsl.cpp
 

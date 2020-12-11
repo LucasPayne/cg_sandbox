@@ -4,34 +4,7 @@
 #include "postprocessing.cpp"
 #include "lighting/lighting.cpp"
 
-std::string gl_error_string()
-{
-    GLenum err = glGetError();
-    switch(err) {
-        case GL_NO_ERROR:
-            return "GL_NO_ERROR";
-        case GL_INVALID_ENUM:
-            return "GL_INVALID_ENUM";
-        case GL_INVALID_VALUE:
-            return "GL_INVALID_VALUE";
-        case GL_INVALID_OPERATION:
-            return "GL_INVALID_OPERATION";
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            return "GL_INVALID_FRAMEBUFFER_OPERATION";
-        case GL_OUT_OF_MEMORY:
-            return "GL_OUT_OF_MEMORY";
-        case GL_STACK_UNDERFLOW:
-            return "GL_STACK_UNDERFLOW";
-        case GL_STACK_OVERFLOW:
-            return "GL_STACK_OVERFLOW";
-    }
-    return "UNKNOWN";
-}
 
-void gl_error_check()
-{ 
-    std::cout << gl_error_string() << "\n";
-}
 
 
 
@@ -448,8 +421,8 @@ void Graphics::render(Aspect<Camera> camera)
     glEnable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
-    glViewport(VIEWPORT_EXPAND(viewport));
-    glScissor(VIEWPORT_EXPAND(viewport));
+    glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
+    glScissor(viewport.x, viewport.y, viewport.w, viewport.h);
     // An alpha value of zero signifies that this is a background pixel.
     // This distinction is needed so that deferred lighting can blend correctly.
     glClearColor(camera->background_color.x(), camera->background_color.y(), camera->background_color.z(), 0);
@@ -480,8 +453,8 @@ void Graphics::render(Aspect<Camera> camera)
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, camera->framebuffer.id);
     glEnable(GL_SCISSOR_TEST);
-    glViewport(VIEWPORT_EXPAND(viewport));
-    glScissor(VIEWPORT_EXPAND(viewport));
+    glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
+    glScissor(viewport.x, viewport.y, viewport.w, viewport.h);
     paint.render(camera);
 
     /*--------------------------------------------------------------------------------
@@ -510,7 +483,7 @@ void Graphics::render()
     glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.id);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0,0, window_viewport.w, window_viewport.h);
-    glClearColor(VEC4_EXPAND(background_color));
+    glClearColor(background_color.x(), background_color.y(), background_color.z(), background_color.w());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindFramebuffer(GL_FRAMEBUFFER, post_buffer.id);
@@ -538,7 +511,7 @@ void Graphics::render()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
     glViewport(0, 0, window_width, window_height);
-    glClearColor(VEC4_EXPAND(window_background_color));
+    glClearColor(window_background_color.x(), window_background_color.y(), window_background_color.z(), window_background_color.w());
     glClear(GL_COLOR_BUFFER_BIT);
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

@@ -48,6 +48,7 @@ void Graphics::update_point_lights()
                 });
                 printf("shadow map cube face num drawn: %d\n", num_drawn);
 
+                // Generate mips.
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 glBindTexture(GL_TEXTURE_CUBE_MAP, sm.cube_map);
                 glGenerateMipmap(GL_TEXTURE_CUBE_MAP);

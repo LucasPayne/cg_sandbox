@@ -4,7 +4,7 @@
 --------------------------------------------------------------------------------*/
 #include "interactive_graphics_context.h"
 #include <iostream>
-#include <glad/glad.h>
+#include "opengl_utilities/gl.h"
 #include "glfw/include/GLFW/glfw3.h"
 namespace IGC {
 namespace Platform {
@@ -214,6 +214,14 @@ WindowReference create_window(const std::string &name)
     glfwSetCursorPosCallback(glfw_window, glfw_cursor_position_callback);
     glfwSetScrollCallback(glfw_window, glfw_scroll_callback);
     glfwSetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback);
+
+    // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    // int flags;
+    // glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+    // if (!(flags & GL_CONTEXT_FLAG_DEBUG_BIT)) {
+    //     printf("Failed to create debug context.\n");
+    //     exit(EXIT_FAILURE);
+    // }
 
     return (WindowReference) glfw_window;
 }

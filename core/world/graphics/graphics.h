@@ -127,9 +127,8 @@ public:
     void lighting(Aspect<Camera> camera);
     void directional_lighting(Aspect<Camera> camera);
     void point_lighting(Aspect<Camera> camera);
-    Resource<GLShaderProgram> directional_light_shader_program;
-    Resource<GLShaderProgram> directional_light_filter_shader_program;
 
+    Resource<GLShaderProgram> directional_light_program;
     Resource<GLShaderProgram> point_light_program;
 
     // Post-processing

@@ -253,14 +253,14 @@ App::App(World &_world) : world{_world}
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.3, M_PI/3+1.31451, false);
     }
 
-    {
+    if (0) {
         Entity light = world.entities.add();
         float intensity = 20;
         test_point_light = light.add<PointLight>(vec3(intensity), 0.2);
         light.add<Transform>(1.8,1,1.8);
         world.add<Follower>(light, cameraman, KEY_P);
     }
-    if (1) {
+    if (0) {
         Entity light = world.entities.add();
         float intensity = 10;
         light.add<PointLight>(vec3(intensity), 0.03);
@@ -295,7 +295,8 @@ void App::loop()
 
     auto &paint = world.graphics.paint;
 
-#if 0
+if (0) {
+#if 1
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             paint.array_depth_sprite(world.graphics.directional_light_data(main_light).shadow_map(main_camera).texture, vec2(0.25*i,0.25*j), 0.25, 0.25, 2*i + j);
@@ -308,6 +309,7 @@ void App::loop()
         }
     }
 #endif
+}
 
     // std::vector<vec2> ps(2);
     // ps[0] = vec2(0,0);

@@ -110,8 +110,11 @@ void Graphics::update_directional_lights()
                 shadow_map_shading_model.properties.set_mat4x4("vp_matrix", shadow_matrix);
                 // For efficiency, the transformation to texture space is concatenated for the shadow matrix uploaded to the lighting shaders.
                 sm.shadow_matrices[segment] = mat4x4::translation(vec3(0.5,0.5,0.5)) * mat4x4::scale(0.5) * shadow_matrix;
-                // sm.shadow_matrices[segment] = shadow_matrix;
                 sm.box_extents[segment] = vec3(width, height, depth);
+
+                // shadow_map_shading_model.properties.set_vec4("plane_point", vec4(min_point, 1));
+                // shadow_map_shading_model.properties.set_vec4("plane_normal", vec4(Z, 1));
+                // shadow_map_shading_model.properties.set_float("inv_depth_extent", 1.f / depth);
 
                 glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glViewport(0, 0, sm.width, sm.height);
@@ -127,6 +130,10 @@ void Graphics::update_directional_lights()
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
+                glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+                glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
             }
         }
     }
@@ -179,11 +186,13 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     GLuint depth_rbo;
     glGenRenderbuffers(1, &depth_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
@@ -194,7 +203,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glReadBuffer(GL_NONE);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr, "Incomplete framebuffer when initializing shadow maps.\n");
+        fprintf(stderr, "Incomplete framebuffer when initializing directional light shadow maps.\n");
         exit(EXIT_FAILURE);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -238,69 +247,72 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
 void Graphics::directional_lighting(Aspect<Camera> camera)
 {
-/*
-    auto &program = directional_light_shader_program;
-    auto &filter_program = directional_light_filter_shader_program;
-
-    auto camera_transform = camera.sibling<Transform>();
-    auto camera_matrix = camera_transform->matrix();
     auto viewport = camera->viewport();
-    set_post(viewport); // ping-pong post-processing with the camera's target viewport.
-                        // The write target starts off as the post-buffer.
-    glEnable(GL_BLEND);
+    auto &program = directional_light_program;
+    program->bind();
 
+    set_post(viewport);
+    swap_post(); // Write to the target camera viewport rather than the post-processing buffer.
+    begin_post(program);
+    // Additive blending. When the destination alpha is 0, however, this just overwrites.
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
+                        GL_ONE, GL_ZERO);     // Alpha
+
+    // Bind G-buffer textures.
+    auto gbuffer_depth = gbuffer_component("depth");
+    auto gbuffer_normal = gbuffer_component("normal");
+    auto gbuffer_albedo = gbuffer_component("albedo");
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
+    glUniform1i(program->uniform_location("depth"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
+    glUniform1i(program->uniform_location("normal"), 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
+    glUniform1i(program->uniform_location("albedo"), 2);
+
+    // Upload camera data.
+    auto camera_transform = camera.sibling<Transform>();
+    vec3 camera_forward = -camera_transform->forward();
+    auto camera_matrix = camera_transform->matrix();
+    glUniform3fv(program->uniform_location("camera_position"), 1, (GLfloat *) &camera_transform->position);
+    glUniform3fv(program->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
+    glUniformMatrix4fv(program->uniform_location("camera_matrix"), 1, GL_FALSE, (GLfloat *) &camera_matrix);
+    mat4x4 inverse_projection_matrix = camera->projection_matrix.inverse();
+    glUniformMatrix4fv(program->uniform_location("inverse_projection_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_projection_matrix);
+
+    // Add contributions from each light to the target viewport.
     for (auto light : world.entities.aspects<DirectionalLight>()) {
         if (!light->active) continue;
         auto &shadow_map = directional_light_data(light).shadow_map(camera);
-
-        // Render the screenspace shadowing signal into a buffer.
-        program->bind();
-
-        vec3 camera_position = camera_transform->position;
-        vec3 camera_forward = -camera_transform->forward();
         float near = camera->near_plane_distance;
         float far = fmin(shadow_map.distance, camera->far_plane_distance);
 
-        // Some uniforms are shared between both passes, so using this function avoids code duplication.
-        auto upload_shared_uniforms = [&](Resource<GLShaderProgram> prog) {
-            glUniform3fv(prog->uniform_location("camera_position"), 1, (GLfloat *) &camera_position);
-            glUniform3fv(prog->uniform_location("camera_forward"), 1, (GLfloat *) &camera_forward);
-            glUniform1i(prog->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
-            for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
-                // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
-                float t = shadow_map.frustum_segment_dividers[i];
-                float frustum_segment_distance = (1-t)*near + t*far;
-                auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
-                glUniform1f(prog->uniform_location(uniform_name), frustum_segment_distance);
-            }
-            {
-                // The last "frustum segment" distance in the shader's array is the distance to the far plane.
-                    auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
-                glUniform1f(prog->uniform_location(uniform_name), far);
-            }
-            glUniform3fv(prog->uniform_location("direction"), 1, (GLfloat *) &light->direction);
-            glUniform3fv(prog->uniform_location("light_color"), 1, (GLfloat *) &light->color);
-            glUniform1f(program->uniform_location("width"), light->width);
-            for (unsigned int i = 0; i < gbuffer_components.size(); i++) {
-                auto &component = gbuffer_components[i];
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, component.texture);
-                glUniform1i(prog->uniform_location(component.name), i);
-            }
-        };
+        // Upload light and shadow mapping data.
 
-        upload_shared_uniforms(program);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
-        glBindSampler(0, shadow_map.sampler_comparison);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
-        glBindSampler(1, shadow_map.sampler_raw);
-        glUniform1i(program->uniform_location("shadow_map"), 0);
-        glUniform1i(program->uniform_location("shadow_map_raw"), 1);
+        // Upload frustum segment divider data.
+        glUniform1i(program->uniform_location("num_frustum_segments"), shadow_map.num_frustum_segments);
+        for (int i = 0; i < shadow_map.num_frustum_segments-1; i++) {
+            // Compute the distances of the segment dividers in camera space, from the frustum dividers in the range [0,1].
+            float t = shadow_map.frustum_segment_dividers[i];
+            float frustum_segment_distance = (1-t)*near + t*far;
+            auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(i) + std::string("]");
+            glUniform1f(program->uniform_location(uniform_name), frustum_segment_distance);
+        }
+        {
+            // The last "frustum segment" distance in the shader's array is the distance to the far plane.
+	    auto uniform_name = std::string("frustum_segment_distances[") + std::to_string(shadow_map.num_frustum_segments-1) + std::string("]");
+            glUniform1f(program->uniform_location(uniform_name), far);
+        }
 
-        glUniformMatrix4fv(program->uniform_location("camera_matrix"), 1, GL_FALSE, (GLfloat *) &camera_matrix);
+        // Upload directional light properties.
+        glUniform3fv(program->uniform_location("light_direction"), 1, (GLfloat *) &light->direction);
+        glUniform3fv(program->uniform_location("light_color"), 1, (GLfloat *) &light->color);
+        glUniform1f(program->uniform_location("light_width"), light->width);
 
+        // Upload per-frustum-segment data.
         for (int i = 0; i < shadow_map.num_frustum_segments; i++) {
             // The shadow matrix transforms from camera space, so post-multiply the world-space shadow matrix with the camera's model-matrix.
             auto uniform_name = std::string("shadow_matrices[") + std::to_string(i) + std::string("]");
@@ -309,20 +321,6 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
 
             uniform_name = std::string("world_shadow_matrices[") + std::to_string(i) + std::string("]");
             glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_map.shadow_matrices[i]);
-
-            // // Form the inverse transpose of the non-translating world-space shadow-box matrix.
-            // // This will be used to transform normals in the shader, for biasing.
-            // mat4x4 shadow_normal_matrix = mat4x4::identity();
-            // for (int j = 0; j < 3; j++) {
-            //     for (int k = 0; k < 3; k++) {
-            //         shadow_normal_matrix.entry(j, k) = shadow_map.shadow_matrices[i].entry(k, j);
-            //     }
-            // }
-            // std::cout << shadow_normal_matrix *  shadow_normal_matrix.inverse() << "\n";
-            // shadow_normal_matrix = shadow_normal_matrix.inverse();
-            // std::cout << shadow_normal_matrix << "\n";
-            // uniform_name = std::string("shadow_normal_matrices[") + std::to_string(i) + std::string("]");
-            // glUniformMatrix4fv(program->uniform_location(uniform_name), 1, GL_FALSE, (GLfloat *) &shadow_normal_matrix);
 
             uniform_name = std::string("box_extents[") + std::to_string(i) + std::string("]");
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.box_extents[i]);
@@ -335,54 +333,13 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
             vec2 _pre_1 = 0.5 * light->width * shadow_map.box_extents[i].z() * vec2(1.f / shadow_map.box_extents[i].x(), 1.f / shadow_map.box_extents[i].y());
             glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
         }
-	auto gbuffer_depth = gbuffer_component("depth");
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-	glUniform1i(program->uniform_location("depth"), 2);
-	auto gbuffer_normal = gbuffer_component("normal");
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-	glUniform1i(program->uniform_location("normal"), 3);
 
-        mat4x4 inverse_projection_matrix = camera->projection_matrix.inverse();
-        glUniformMatrix4fv(program->uniform_location("inverse_projection_matrix"), 1, GL_FALSE, (GLfloat *) &inverse_projection_matrix);
+        // Bind the variance shadow map.
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
+        glUniform1i(program->uniform_location("shadow_map"), 3);
 
-        begin_post(program);
-        glBlendFunc(GL_ONE, GL_ZERO);
-        glClearColor(0,0,0,0);
-        glClear(GL_COLOR_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        program->unbind();
-
-        // Blend the directional light pass into the image, using a filtered shadowing signal.
-        filter_program->bind();
-        upload_shared_uniforms(filter_program);
-        glUniform1f(filter_program->uniform_location("inv_screen_width"), 1.f / write_post().framebuffer->resolution_x);
-        glUniform1f(filter_program->uniform_location("inv_screen_height"), 1.f / write_post().framebuffer->resolution_y);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, write_post().framebuffer->texture);
-        glUniform1i(filter_program->uniform_location("shadow"), 0);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_normal.texture);
-	glUniform1i(filter_program->uniform_location("normal"), 1);
-	auto gbuffer_albedo = gbuffer_component("albedo");
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_albedo.texture);
-	glUniform1i(filter_program->uniform_location("albedo"), 2);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, gbuffer_depth.texture);
-	glUniform1i(filter_program->uniform_location("depth"), 3);
-
-        swap_post(); // Swap to write to the viewport buffer.
-        begin_post(filter_program);
-        // Additive blending. When the destination alpha is 0, however, this just overwrites.
-        glBlendFuncSeparate(GL_ONE, GL_DST_ALPHA, // RGB
-                            GL_ONE, GL_ZERO); // Alpha
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        filter_program->unbind();
-        swap_post(); // Swap to write to the post-buffer.
     }
-    swap_post(); // The viewport buffer contains the image, so signify this by leaving it as the write buffer.
-*/
+    program->unbind();
 }

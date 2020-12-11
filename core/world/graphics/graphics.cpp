@@ -566,14 +566,10 @@ GBufferComponent &Graphics::gbuffer_component(std::string name)
 
 void Graphics::compile_shaders()
 {
-    directional_light_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light.frag"));
-    directional_light_shader_program->link();
-    directional_light_filter_shader_program = world.resources.add<GLShaderProgram>();
-    directional_light_filter_shader_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    directional_light_filter_shader_program->add_shader(GLShader(FragmentShader, "shaders/lighting/directional_light_filter.frag"));
-    directional_light_filter_shader_program->link();
+    directional_light_program = world.resources.add<GLShaderProgram>();
+    directional_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    directional_light_program->add_shader(GLShader(FragmentShader, "shaders/lighting/variance_directional_light.frag"));
+    directional_light_program->link();
 
     point_light_program = world.resources.add<GLShaderProgram>();
     point_light_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));

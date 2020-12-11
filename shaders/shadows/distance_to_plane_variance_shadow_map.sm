@@ -16,7 +16,8 @@ section geom_post {
 section frag_post {
     out vec2 moments(in vec3 f_world_position) {
     GLSL
-        float d = dot(f_world_position - plane_point.xyz, plane_normal.xyz) * inv_depth_extent;
+        float d = 0.5 * (vp_matrix * vec4(f_world_position, 1)).z + 0.5;
+        // float d = dot(f_world_position - plane_point.xyz, plane_normal.xyz) * inv_depth_extent;
         return vec2(d, d*d);
     END
     }

@@ -171,7 +171,6 @@ public:
     GBufferComponent &gbuffer_component(std::string name);
     // G-buffer data
     GLuint gbuffer_fb; // G-buffer framebuffer
-    GLuint gbuffer_depth_rbo; // Depth renderbuffer
     std::vector<GBufferComponent> gbuffer_components;
 
     // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.

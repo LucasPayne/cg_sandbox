@@ -314,10 +314,6 @@ void Graphics::refresh_framebuffers()
         if (viewport.h > max_res_y) max_res_y = viewport.h;
     }
     if (max_res_x != framebuffer_res_x || max_res_y != framebuffer_res_y) {
-        glBindRenderbuffer(GL_RENDERBUFFER, gbuffer_depth_rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, max_res_x, max_res_y);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        
         for (auto &component : gbuffer_components) {
             glBindTexture(GL_TEXTURE_2D, component.texture);
             glTexImage2D(GL_TEXTURE_2D, 0, component.internal_format, max_res_x, max_res_y, 0, component.external_format, component.type, NULL);

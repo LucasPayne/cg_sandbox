@@ -209,8 +209,8 @@ App::App(World &_world) : world{_world}
     auto floor_model = floor.to_model();
     obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.5,0.5,1,1);
-    obj.get<Drawable>()->shadow_caster = false;
-    obj.get<Transform>()->scale = 80;
+    // obj.get<Drawable>()->shadow_caster = false;
+    obj.get<Transform>()->scale = 10;
     obj.get<Transform>()->position = vec3(0,0.15,0);
 
     if (0) {

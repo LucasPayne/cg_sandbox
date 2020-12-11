@@ -4,7 +4,7 @@ void Graphics::update_directional_lights()
     /*--------------------------------------------------------------------------------
         Directional lights
     --------------------------------------------------------------------------------*/
-    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/shadow_map.sm");
+    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_to_plane_variance_shadow_map.sm");
     auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
 
     // Render shadow maps.
@@ -36,7 +36,6 @@ void Graphics::update_directional_lights()
 
                 vec3 Z = light->direction;
                 // Create a frame of reference.
-                // ---todo: This should be chosen to make the shadow maps denser.
                 vec3 X = vec3(light->direction.x() + 1, light->direction.y() - 1, light->direction.z() + 1);
                 X = (X - vec3::dot(X, Z) * Z).normalized();
                 vec3 Y = vec3::cross(X, Z);
@@ -117,9 +116,9 @@ void Graphics::update_directional_lights()
                 glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
                 glViewport(0, 0, sm.width, sm.height);
                 glDisable(GL_SCISSOR_TEST);
-                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sm.texture, 0, segment);
+                glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.texture, 0, segment);
                 glEnable(GL_DEPTH_TEST);
-                glClear(GL_DEPTH_BUFFER_BIT);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
                 for_drawables(OrientedBox(mins, maxs, mat3x3(X, Y, Z)), [&](Aspect<Drawable> &drawable) {
@@ -161,37 +160,39 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int width = 512;
-    int height = 512;
+    int n = 512;
+    int width = n;
+    int height = n;
+    int num_mips = 0;
+    for (int c = n; c > 1; c /= 2) { num_mips ++; }
     int num_frustum_segments = 4;
 
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, width, height, num_frustum_segments, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+                   num_mips,
+                   GL_RG16,
+                   width, height, num_frustum_segments);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
-    GLuint sampler; // For use with sampler2DShadow[Array].
-    glGenSamplers(1, &sampler);
-    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-    glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
-    glSamplerParameteri(sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    GLuint sampler_raw; // For direct access of shadow map texels.
-    glGenSamplers(1, &sampler_raw);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glSamplerParameteri(sampler_raw, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    GLuint depth_rbo;
+    glGenRenderbuffers(1, &depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, width, height);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, tex, 0, 0);
-    glDrawBuffer(GL_NONE);
+    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rbo);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glReadBuffer(GL_NONE);
+
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr, "Incomplete framebuffer when initializing shadow maps.\n");
         exit(EXIT_FAILURE);
@@ -203,8 +204,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
-    sm.sampler_comparison = sampler;
-    sm.sampler_raw = sampler_raw;
+    sm.depth_buffer = depth_rbo;
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
@@ -213,7 +213,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
     sm.distance = 20; //an arbitrarily chosen default
     if (sm.num_frustum_segments == 2) {
-        // These hard-coded frustum segment dividers are chosen to be generally good while standing at ground level.
+        // Hard-coded frustum segment dividers.
         sm.frustum_segment_dividers[0] = 0.31;
     } else if (sm.num_frustum_segments == 3) {
         sm.frustum_segment_dividers[0] = 0.2;
@@ -238,6 +238,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
 
 void Graphics::directional_lighting(Aspect<Camera> camera)
 {
+/*
     auto &program = directional_light_shader_program;
     auto &filter_program = directional_light_filter_shader_program;
 
@@ -383,4 +384,5 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
         swap_post(); // Swap to write to the post-buffer.
     }
     swap_post(); // The viewport buffer contains the image, so signify this by leaving it as the write buffer.
+*/
 }

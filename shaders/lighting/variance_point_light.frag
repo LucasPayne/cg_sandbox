@@ -98,9 +98,13 @@ void main(void)
     float t = dist / far_plane_distance;
     float sample_cone_radius = light_radius * (1 - average_occluder_depth / t);
     vec2 moments = texture(shadow_map, ray_dir, min(5, sample_cone_radius * 30)).xy;
-    float variance = moments[1] - moments[0]*moments[0];
-    float pmax = variance / (variance + (t - moments[0])*(t - moments[0]));
-    float visibility = pmax;
+    float visibility = 1.f;
+    if (t >= moments[0]) {
+        float variance = moments[1] - moments[0]*moments[0];
+        float pmax = variance / (variance + (t - moments[0])*(t - moments[0]));
+        visibility = pmax;
+    }
+
 
     vec3 col = visibility * PI * light_radius * light_radius * light_color * f_albedo.rgb * max(0, dot(-ray_dir, f_normal)) / dot(dpos, dpos);
     color = vec4(col, 1);

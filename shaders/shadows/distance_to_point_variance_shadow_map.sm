@@ -23,10 +23,4 @@ section frag_post {
         return vec2(d, d*d);
     END
     }
-    out float frag_post(in vec3 f_world_position) {
-    GLSL
-        gl_FragDepth = length(f_world_position - light_position.xyz) / far_plane_distance;
-        return 0;
-    END
-    }
 }

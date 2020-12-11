@@ -2,7 +2,7 @@
 
 void Graphics::update_point_lights()
 {
-    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_variance_shadow_map.sm");
+    auto shadow_map_sm = shading.shading_models.load("shaders/shadows/distance_to_point_variance_shadow_map.sm");
     auto shadow_map_shading_model = ShadingModelInstance(shadow_map_sm);
 
     // +X,-X,  +Y,-Y,  +Z,-Z. See https://learnopengl.com/Advanced-OpenGL/Cubemaps for cubemap layout.

@@ -49,6 +49,7 @@ struct DirectionalLightShadowMap {
     Aspect<Camera> camera;
     GLuint fbo;
     GLuint texture;
+    GLuint summed_area_table_texture;
     GLuint depth_buffer;
     int width;
     int height; // resolution

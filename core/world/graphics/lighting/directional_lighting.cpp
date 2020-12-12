@@ -8,7 +8,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int n = 512;
+    int n = 256;
     int width = n;
     int height = n;
     int num_mips = 0;
@@ -18,15 +18,33 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY,
-                   num_mips,
-                   GL_RG16,
-                   width, height, num_frustum_segments);
+    // glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+    //                num_mips,
+    //                GL_RG16,
+    //                width, height, num_frustum_segments);
+    int w = width;
+    int h = height;
+    for (int i = 0; i < num_mips; i++) {
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, i, GL_RG16, w, h, num_frustum_segments, 0, GL_RG, GL_UNSIGNED_SHORT, NULL);
+        w = max(1, w / 2);
+        h = max(1, h / 2);
+    }
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+    // Summed-area table texture
+    GLuint sat_tex;
+    glGenTextures(1, &sat_tex);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, sat_tex);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, w, h, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     GLuint depth_rbo;
@@ -54,6 +72,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
+    sm.summed_area_table_texture = sat_tex;
     sm.depth_buffer = depth_rbo;
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
@@ -121,6 +140,11 @@ void Graphics::update_directional_lights()
             // Since frustum coordinates range in z from 0 at the near plane to 1 at the far plane,
             // make a correction to a shorter frustum if the shadows have a shorter render distance.
             float distance_multiplier = (far - near) / (camera->far_plane_distance - camera->near_plane_distance);
+
+            std::vector<vec3> images(sm.width * sm.height * sm.num_frustum_segments);
+            std::vector<vec3> new_images(sm.width * sm.height * sm.num_frustum_segments);
+
+            std::vector<vec3> summed_area_tables(sm.width * sm.height * sm.num_frustum_segments);
 
             for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
                 // Bound the camera frustum section with a box, elongated in the direction of the light.
@@ -231,20 +255,80 @@ void Graphics::update_directional_lights()
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
 
-                // // Blur the moments.
-                // glReadBuffer(GL_COLOR_ATTACHMENT0);
-                // struct moments {
-                //     uint16_t vals[3];
-                // };
-                // std::vector<moments> image(sm.width * sm.height);
-                // glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_UNSIGNED_SHORT, &image[0]);
-                // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_UNSIGNED_SHORT, &image[0]);
-
-                glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
-                glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-                glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+                glReadBuffer(GL_COLOR_ATTACHMENT0);
+                glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_FLOAT, &images[segment * sm.width * sm.height]);
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
             }
+
+	    // int box_r = 1;
+            // float weight = 1.f / (2*box_r + 1);
+            // for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+            //     for (int i = 0; i < sm.width; i++) {
+            //         for (int j = 0; j < sm.height; j++) {
+            //             vec3 x = vec3::zero();
+            //             for (int ii = -box_r; ii <= box_r; ii++) {
+	    //     	    x += weight * images[segment * (sm.width*sm.height) + clamp(i+ii, 0, sm.width) + j*sm.width];
+            //             }
+            //             new_images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
+            //         }
+            //     }
+            //     for (int i = 0; i < sm.width; i++) {
+            //         for (int j = 0; j < sm.height; j++) {
+            //             vec3 x = vec3::zero();
+            //             for (int jj = -box_r; jj <= box_r; jj++) {
+            //                 x += weight * new_images[segment * (sm.width*sm.height) + i + clamp(j+jj, 0, sm.height)*sm.width];
+            //             }
+            //             images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
+            //         }
+            //     }
+            // }
+
+            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
+            // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+            for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+                // for (int i = 0; i < sm.height; i++) {
+                //     for (int j = 0; j < sm.width; j++) {
+                //         vec3 total = vec3::zero();
+                //         for (int ii = 0; ii <= i; ii++) {
+                //             for (int jj = 0; jj <= j; jj++) {
+                //                 total += images[segment*(sm.width*sm.height) + ii*sm.width + jj];
+                //             }
+                //         }
+                //         new_images[segment*(sm.width*sm.height) + i*sm.width + j] = total;
+                //     }
+                // }
+                
+                int n = 1;
+                while (n < sm.width) {
+                    for (int i = 0; i < sm.height; i++) {
+                        for (int j = sm.width-1; j >= n; j--) {
+                            images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + i*sm.width + j-n];
+                        }
+                    }
+                    n *= 2;
+                }
+                n = 1;
+                while (n < sm.height) {
+                    for (int j = 0; j < sm.width; j++) {
+                        for (int i = sm.height-1; i >= n; i--) {
+                            images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + (i-n)*sm.width + j];
+                        }
+                    }
+                    n *= 2;
+                }
+
+            
+                // for (int i = 0; i < sm.height*sm.width*sm.num_frustum_segments; i++) {
+                //     if ((images[i]-new_images[i]).x() > 1.f) { printf("BAD!\n"); exit(EXIT_FAILURE); }
+                // }
+            }
+            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.summed_area_table_texture);
+            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         }
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.
@@ -342,13 +426,20 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
             uniform_name = std::string("_pre_1[") + std::to_string(i) + std::string("]");
             // _pre_1[i] : 0.5*width*box_extents[i].z * inv_box_extents[i].xy
             vec2 _pre_1 = 0.5 * light->width * shadow_map.box_extents[i].z() * vec2(1.f / shadow_map.box_extents[i].x(), 1.f / shadow_map.box_extents[i].y());
-            glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
+	    glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &_pre_1);
         }
+
+        // Upload shadow map metadata.
+        glUniform2i(program->uniform_location("shadow_map_resolution"), shadow_map.width, shadow_map.height);
 
         // Bind the variance shadow map.
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.texture);
         glUniform1i(program->uniform_location("shadow_map"), 3);
+        // Bind the summed area of the variance shadow map.
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_map.summed_area_table_texture);
+        glUniform1i(program->uniform_location("shadow_map_summed_area_table"), 4);
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }

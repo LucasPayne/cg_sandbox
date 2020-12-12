@@ -11,6 +11,28 @@ REFLECT_PRIMITIVE(vec4);
 REFLECT_PRIMITIVE(mat4x4);
 REFLECT_PRIMITIVE(Quaternion);
 
+template <typename T>
+inline T max(T a, T b)
+{
+    if (a > b) return a;
+    return b;
+}
+
+template <typename T>
+inline T min(T a, T b)
+{
+    if (a < b) return a;
+    return b;
+}
+
+template <typename T>
+inline T clamp(T x, T a, T b)
+{
+    if (x < a) return a;
+    if (x > b) return b;
+    return x;
+}
+
 
 inline bool between(float x, float minimum, float maximum) {
     return x >= minimum && x <= maximum;

@@ -37,12 +37,13 @@ uniform int num_frustum_segments;
 uniform float frustum_segment_distances[MAX_NUM_FRUSTUM_SEGMENTS];
 // Shadow matrices transform from camera space.
 uniform mat4x4 shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
-
 // from world space
 uniform mat4x4 world_shadow_matrices[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform vec3 inv_box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform sampler2DArray shadow_map;
+uniform sampler2DArray shadow_map_summed_area_table;
+uniform ivec2 shadow_map_resolution;
 
 in vec2 screen_pos;
 in vec2 uv;
@@ -140,7 +141,7 @@ void main(void)
     vec2 rotated_poisson_samples[NUM_SAMPLES];
     for (int i = 0; i < NUM_SAMPLES; i++) {
         rotated_poisson_samples[i] = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
-                                           -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y);
+                                          -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y); 
     }
 
     float average_occluder_depth = 0.f;
@@ -178,8 +179,15 @@ void main(void)
     float projected_sample_radius = light_width * (shadow_coord.z - average_occluder_depth) * box_extents[segment].z;
     vec2 imagespace_sample_extents = projected_sample_radius * inv_box_extents[segment].xy;
 
+    ivec2 tr = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy + imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
+    ivec2 bl = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy - imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
+    float weight = 1.f / ((tr.y - bl.y + 1) * (tr.x - bl.x + 1));
+    vec2 moments = weight * texelFetch(shadow_map_summed_area_table, ivec3(tr, segment), 0).xy;
+    moments += weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl-1, 0), segment), 0).xy;
+    moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl.x-1, 0), bl.y, segment), 0).xy;
+    moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(bl.x, max(bl.y-1, 0), segment), 0).xy;
+
     float visibility = 1.f;
-    vec2 moments = textureLod(shadow_map, vec3(shadow_coord.xy, segment), (shadow_coord.z - average_occluder_depth) * 10).xy;
     float mean = moments[0];
     if (shadow_coord.z >= mean) {
         float variance = moments[1] - mean*mean;

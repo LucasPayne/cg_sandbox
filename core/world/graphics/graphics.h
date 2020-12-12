@@ -61,6 +61,10 @@ struct DirectionalLightShadowMap {
     std::vector<mat4x4> shadow_matrices;
     std::vector<vec3> box_extents;
     std::vector<float> frustum_segment_dividers;
+
+    GLuint summed_area_table_swap_buffer; // for GPU SAT computation.
+    GLuint summed_area_table_vertex_array; // Quads sized for the rasterizer to generate the relevant indices in each pass.
+    GLuint summed_area_table_vertex_buffer;
 };
 struct DirectionalLightData {
     // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.
@@ -127,6 +131,7 @@ public:
 
     Resource<GLShaderProgram> directional_light_program;
     Resource<GLShaderProgram> point_light_program;
+    Resource<GLShaderProgram> summed_area_table_program;
 
     // Post-processing
     void depth_of_field(Aspect<Camera> camera);

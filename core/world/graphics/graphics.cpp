@@ -559,6 +559,12 @@ void Graphics::compile_shaders()
     temporal_aa_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
     temporal_aa_program->add_shader(GLShader(FragmentShader, "shaders/antialiasing/temporal_quincunx.frag"));
     temporal_aa_program->link();
+
+    summed_area_table_program = world.resources.add<GLShaderProgram>();
+    // summed_area_table_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
+    summed_area_table_program->add_shader(GLShader(VertexShader, "shaders/summed_area_table.vert"));
+    summed_area_table_program->add_shader(GLShader(FragmentShader, "shaders/summed_area_table.frag"));
+    summed_area_table_program->link();
 }
 
 

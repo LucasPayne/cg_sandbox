@@ -8,7 +8,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int n = 256;
+    int n = 32;
     int width = n;
     int height = n;
     int num_mips = 0;
@@ -47,6 +47,16 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
+    GLuint sat_swap_tex; //note: This is only a texture array since OpenGL <=4.2 doesn't have texture views, and its easier to treat each sat texture the same...
+    glGenTextures(1, &sat_swap_tex);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, sat_swap_tex);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, w, h, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+    
     GLuint depth_rbo;
     glGenRenderbuffers(1, &depth_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
@@ -67,12 +77,59 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+    GLuint sat_vao;
+    glGenVertexArrays(1, &sat_vao);
+    glBindVertexArray(sat_vao);
+    std::vector<vec2> vertex_data;
+    int pass = 0;
+    n = 1;
+    while (n < width) {
+        vec2 vs[4] = {vec2(1, 0),
+                      vec2(1, 1),
+                      vec2((1.f*n)/width, 1),
+                      vec2((1.f*n)/width, 0)};
+        for (int i = 0; i < 4; i++) {
+            vertex_data.push_back(2*vs[i]-vec2(1,1));
+            vertex_data.push_back(vs[i]);
+        }
+        n *= 2;
+        pass += 1;
+    }
+    n = 1;
+    while (n < height) {
+        vec2 vs[4] = {vec2(0, (1.f*n)/height),
+                      vec2(1, (1.f*n)/height),
+                      vec2(1, 1),
+                      vec2(0, 1)};
+        for (int i = 0; i < 4; i++) {
+            vertex_data.push_back(2*vs[i]-vec2(1,1));
+            vertex_data.push_back(vs[i]);
+        }
+        n *= 2;
+        pass += 1;
+    }
+    GLuint sat_vbo;
+    glGenBuffers(1, &sat_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, sat_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * vertex_data.size(), (const void *) &vertex_data[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) 0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vec2)*2, (const void *) sizeof(vec2));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
     DirectionalLightShadowMap sm;
     sm.camera = camera;
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
     sm.summed_area_table_texture = sat_tex;
+    sm.summed_area_table_swap_buffer = sat_swap_tex;
+    sm.summed_area_table_vertex_array = sat_vao;
+    sm.summed_area_table_vertex_buffer = sat_vbo;
     sm.depth_buffer = depth_rbo;
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
@@ -254,86 +311,77 @@ void Graphics::update_directional_lights()
                     num_drawn ++;
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
-
-                // glReadBuffer(GL_COLOR_ATTACHMENT0);
-                // glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_FLOAT, &images[segment * sm.width * sm.height]);
-                // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-                // for 
-
             }
-
-            // if (1) {
-	    //     int box_r = 1;
-            //     float weight = 1.f / (2*box_r + 1);
-            //     for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
-            //         for (int i = 0; i < sm.width; i++) {
-            //             for (int j = 0; j < sm.height; j++) {
-            //                 vec3 x = vec3::zero();
-            //                 for (int ii = -box_r; ii <= box_r; ii++) {
-	    //         	        x += weight * images[segment * (sm.width*sm.height) + clamp(i+ii, 0, sm.width) + j*sm.width];
-            //                 }
-            //                 new_images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
-            //             }
-            //         }
-            //         for (int i = 0; i < sm.width; i++) {
-            //             for (int j = 0; j < sm.height; j++) {
-            //                 vec3 x = vec3::zero();
-            //                 for (int jj = -box_r; jj <= box_r; jj++) {
-            //                     x += weight * new_images[segment * (sm.width*sm.height) + i + clamp(j+jj, 0, sm.height)*sm.width];
-            //                 }
-            //                 images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
-            //             }
-            //         }
-            //     }
-            // }
-
             glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
-            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-            // for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
-            //     // for (int i = 0; i < sm.height; i++) {
-            //     //     for (int j = 0; j < sm.width; j++) {
-            //     //         vec3 total = vec3::zero();
-            //     //         for (int ii = 0; ii <= i; ii++) {
-            //     //             for (int jj = 0; jj <= j; jj++) {
-            //     //                 total += images[segment*(sm.width*sm.height) + ii*sm.width + jj];
-            //     //             }
-            //     //         }
-            //     //         new_images[segment*(sm.width*sm.height) + i*sm.width + j] = total;
-            //     //     }
-            //     // }
-            //     
-            //     int n = 1;
-            //     while (n < sm.width) {
-            //         for (int i = 0; i < sm.height; i++) {
-            //             for (int j = sm.width-1; j >= n; j--) {
-            //                 images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + i*sm.width + j-n];
-            //             }
-            //         }
-            //         n *= 2;
-            //     }
-            //     n = 1;
-            //     while (n < sm.height) {
-            //         for (int j = 0; j < sm.width; j++) {
-            //             for (int i = sm.height-1; i >= n; i--) {
-            //                 images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + (i-n)*sm.width + j];
-            //             }
-            //         }
-            //         n *= 2;
-            //     }
+            // auto program = summed_area_table_program;
+            // program->bind();
+            // glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+            // glViewport(0, 0, sm.width, sm.height);
+            // glDisable(GL_SCISSOR_TEST);
+	    // glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, 0);
+            // glDisable(GL_DEPTH_TEST);
+            // glClearColor(0.5,0,0,1);
+            // glClear(GL_COLOR_BUFFER_BIT);
+            // glBindVertexArray(postprocessing_quad_vao);
 
-            // 
-            //     // for (int i = 0; i < sm.height*sm.width*sm.num_frustum_segments; i++) {
-            //     //     if ((images[i]-new_images[i]).x() > 1.f) { printf("BAD!\n"); exit(EXIT_FAILURE); }
-            //     // }
-            // }
 
-            // glBindTexture(GL_TEXTURE_2D_ARRAY, sm.summed_area_table_texture);
-            // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
-            // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	    // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+
+            // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            // program->unbind();
+
+#if 1
+            auto program = summed_area_table_program;
+            program->bind();
+            GLuint textures[2] = {sm.summed_area_table_texture, sm.summed_area_table_swap_buffer};
+            int swap_bit = 0;
+            glUniform1i(program->uniform_location("image"), 0);
+            glUniform2i(program->uniform_location("image_dimensions"), sm.width, sm.height);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+            glViewport(0, 0, sm.width, sm.height);
+            glDisable(GL_SCISSOR_TEST);
+            glDisable(GL_DEPTH_TEST);
+            for (int i = 0; i < sm.num_frustum_segments; i++) {
+		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, i);
+                // glClearColor(0.001,0.001,0.001,0.001);
+                glClearColor(0.5, 0.5, 0,1);
+                glClear(GL_COLOR_BUFFER_BIT);
+            }
+            // glBindVertexArray(sm.summed_area_table_vertex_array);
+            glBindVertexArray(postprocessing_quad_vao);
+            for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+	        int pass = 0;
+                glUniform1i(program->uniform_location("image_layer"), segment);
+                for (int axis = 0; axis < 1; axis++) {
+		    glUniform1i(program->uniform_location("is_vertical"), axis);
+                    int n = 1;
+                    while (axis == 0 ? n < sm.width : n < sm.height) {
+                        glUniform1i(program->uniform_location("n"), n);
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D_ARRAY, textures[swap_bit]);
+                        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[(swap_bit + 1) % 2], 0, segment);
+                        // glDrawArrays(GL_TRIANGLE_FAN, 4*pass, 4);
+                        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                        n *= 2;
+                        pass += 1;
+                        swap_bit = (swap_bit + 1) % 2;
+                    }
+                }
+            }
+            if (swap_bit != 0) {
+                // If the last pass is into the other texture, swap these textures.
+                // note: This means that the SAT texture ID is not consistent.
+                auto tmp = sm.summed_area_table_texture;
+                sm.summed_area_table_texture = sm.summed_area_table_swap_buffer;
+                sm.summed_area_table_swap_buffer = tmp;
+            }
+            program->unbind();
+#endif
         }
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.

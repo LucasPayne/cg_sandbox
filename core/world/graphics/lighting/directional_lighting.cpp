@@ -41,8 +41,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     glGenTextures(1, &sat_tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sat_tex);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, w, h, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
@@ -255,80 +255,85 @@ void Graphics::update_directional_lights()
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
 
-                glReadBuffer(GL_COLOR_ATTACHMENT0);
-                glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_FLOAT, &images[segment * sm.width * sm.height]);
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                // glReadBuffer(GL_COLOR_ATTACHMENT0);
+                // glReadPixels(0, 0, sm.width, sm.height, GL_RGB, GL_FLOAT, &images[segment * sm.width * sm.height]);
+                // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+                // for 
+
             }
 
-	    // int box_r = 1;
-            // float weight = 1.f / (2*box_r + 1);
-            // for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
-            //     for (int i = 0; i < sm.width; i++) {
-            //         for (int j = 0; j < sm.height; j++) {
-            //             vec3 x = vec3::zero();
-            //             for (int ii = -box_r; ii <= box_r; ii++) {
-	    //     	    x += weight * images[segment * (sm.width*sm.height) + clamp(i+ii, 0, sm.width) + j*sm.width];
+            // if (1) {
+	    //     int box_r = 1;
+            //     float weight = 1.f / (2*box_r + 1);
+            //     for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+            //         for (int i = 0; i < sm.width; i++) {
+            //             for (int j = 0; j < sm.height; j++) {
+            //                 vec3 x = vec3::zero();
+            //                 for (int ii = -box_r; ii <= box_r; ii++) {
+	    //         	        x += weight * images[segment * (sm.width*sm.height) + clamp(i+ii, 0, sm.width) + j*sm.width];
+            //                 }
+            //                 new_images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
             //             }
-            //             new_images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
             //         }
-            //     }
-            //     for (int i = 0; i < sm.width; i++) {
-            //         for (int j = 0; j < sm.height; j++) {
-            //             vec3 x = vec3::zero();
-            //             for (int jj = -box_r; jj <= box_r; jj++) {
-            //                 x += weight * new_images[segment * (sm.width*sm.height) + i + clamp(j+jj, 0, sm.height)*sm.width];
+            //         for (int i = 0; i < sm.width; i++) {
+            //             for (int j = 0; j < sm.height; j++) {
+            //                 vec3 x = vec3::zero();
+            //                 for (int jj = -box_r; jj <= box_r; jj++) {
+            //                     x += weight * new_images[segment * (sm.width*sm.height) + i + clamp(j+jj, 0, sm.height)*sm.width];
+            //                 }
+            //                 images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
             //             }
-            //             images[segment * (sm.width*sm.height) + i + j*sm.width] = x;
             //         }
             //     }
             // }
 
             glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
-            // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
+            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG16, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-            for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
-                // for (int i = 0; i < sm.height; i++) {
-                //     for (int j = 0; j < sm.width; j++) {
-                //         vec3 total = vec3::zero();
-                //         for (int ii = 0; ii <= i; ii++) {
-                //             for (int jj = 0; jj <= j; jj++) {
-                //                 total += images[segment*(sm.width*sm.height) + ii*sm.width + jj];
-                //             }
-                //         }
-                //         new_images[segment*(sm.width*sm.height) + i*sm.width + j] = total;
-                //     }
-                // }
-                
-                int n = 1;
-                while (n < sm.width) {
-                    for (int i = 0; i < sm.height; i++) {
-                        for (int j = sm.width-1; j >= n; j--) {
-                            images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + i*sm.width + j-n];
-                        }
-                    }
-                    n *= 2;
-                }
-                n = 1;
-                while (n < sm.height) {
-                    for (int j = 0; j < sm.width; j++) {
-                        for (int i = sm.height-1; i >= n; i--) {
-                            images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + (i-n)*sm.width + j];
-                        }
-                    }
-                    n *= 2;
-                }
+            // for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+            //     // for (int i = 0; i < sm.height; i++) {
+            //     //     for (int j = 0; j < sm.width; j++) {
+            //     //         vec3 total = vec3::zero();
+            //     //         for (int ii = 0; ii <= i; ii++) {
+            //     //             for (int jj = 0; jj <= j; jj++) {
+            //     //                 total += images[segment*(sm.width*sm.height) + ii*sm.width + jj];
+            //     //             }
+            //     //         }
+            //     //         new_images[segment*(sm.width*sm.height) + i*sm.width + j] = total;
+            //     //     }
+            //     // }
+            //     
+            //     int n = 1;
+            //     while (n < sm.width) {
+            //         for (int i = 0; i < sm.height; i++) {
+            //             for (int j = sm.width-1; j >= n; j--) {
+            //                 images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + i*sm.width + j-n];
+            //             }
+            //         }
+            //         n *= 2;
+            //     }
+            //     n = 1;
+            //     while (n < sm.height) {
+            //         for (int j = 0; j < sm.width; j++) {
+            //             for (int i = sm.height-1; i >= n; i--) {
+            //                 images[segment * (sm.width*sm.height) + i*sm.width + j] += images[segment * (sm.width*sm.height) + (i-n)*sm.width + j];
+            //             }
+            //         }
+            //         n *= 2;
+            //     }
 
-            
-                // for (int i = 0; i < sm.height*sm.width*sm.num_frustum_segments; i++) {
-                //     if ((images[i]-new_images[i]).x() > 1.f) { printf("BAD!\n"); exit(EXIT_FAILURE); }
-                // }
-            }
-            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.summed_area_table_texture);
-            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
-            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+            // 
+            //     // for (int i = 0; i < sm.height*sm.width*sm.num_frustum_segments; i++) {
+            //     //     if ((images[i]-new_images[i]).x() > 1.f) { printf("BAD!\n"); exit(EXIT_FAILURE); }
+            //     // }
+            // }
+
+            // glBindTexture(GL_TEXTURE_2D_ARRAY, sm.summed_area_table_texture);
+            // glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, sm.width, sm.height, sm.num_frustum_segments, 0, GL_RGB, GL_FLOAT, &images[0]);
+            // glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         }
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.

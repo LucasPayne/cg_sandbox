@@ -126,7 +126,7 @@ void main(void)
         vec2(-0.9313199714350133, 0.0345017666150762),
         vec2(-0.3387566044621402, -0.8496373910192114),
     };
-    #if 0
+    #if 1
     // Pseudo-random noise taken off of stackoverflow.
     float rand_theta = 2*PI*fract(sin(dot(f_world_position.xy+f_world_position.z, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
@@ -151,21 +151,24 @@ void main(void)
         vec2 sample_uv = shadow_coord.xy + d_uv;
 
         float sample_depth = textureLod(shadow_map, vec3(sample_uv, segment), 0).x;
-        float cone_slice_radius = max(0, projected_radius * (1 - sample_depth / shadow_coord.z));
-
-
-        // Detect occluders within the cone of incoming light directions.
-        //---Possibly the cone calculation was incorrect.
-        vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, sample_depth, 1)).xyz;
-        float dist_to_primary_line = length((sample_point - f_world_position) + light_direction * dot(sample_point - f_world_position, -light_direction));
-        if (dist_to_primary_line <= 5 * cone_slice_radius) { //---
+        if (sample_depth <= shadow_coord.z - 0.005) {
             average_occluder_depth += sample_depth;
             num_occluded_samples += 1.f;
         }
+
+        // Detect occluders within the cone of incoming light directions.
+        //---Possibly the cone calculation was incorrect.
+        // float cone_slice_radius = max(0, projected_radius * (1 - sample_depth / shadow_coord.z));
+        // vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, sample_depth, 1)).xyz;
+        // float dist_to_primary_line = length((sample_point - f_world_position) + light_direction * dot(sample_point - f_world_position, -light_direction));
+        // if (dist_to_primary_line <= 5 * cone_slice_radius) { //---
+        //     average_occluder_depth += sample_depth;
+        //     num_occluded_samples += 1.f;
+        // }
     }
     average_occluder_depth /= num_occluded_samples + 0.001;
     // If there are no occluders, set the depth such that the imagespace sample extent becomes 0.
-    if (num_occluded_samples == 0.f) average_occluder_depth = shadow_coord.z;
+    // if (num_occluded_samples == 0.f) average_occluder_depth = shadow_coord.z;
 
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
@@ -178,23 +181,47 @@ void main(void)
 
     float projected_sample_radius = light_width * (shadow_coord.z - average_occluder_depth) * box_extents[segment].z;
     vec2 imagespace_sample_extents = projected_sample_radius * inv_box_extents[segment].xy;
+    imagespace_sample_extents = max(imagespace_sample_extents, 1.f / shadow_map_resolution);
 
-    ivec2 tr = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy + imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
-    ivec2 bl = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy - imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
-    float weight = 1.f / ((tr.y - bl.y + 1) * (tr.x - bl.x + 1));
-    vec2 moments = weight * texelFetch(shadow_map_summed_area_table, ivec3(tr, segment), 0).xy;
-    moments += weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl-1, 0), segment), 0).xy;
-    moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl.x-1, 0), bl.y, segment), 0).xy;
-    moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(bl.x, max(bl.y-1, 0), segment), 0).xy;
+    vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
+    vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents, vec2(0), vec2(1));
+    vec2 texel = 1.f / shadow_map_resolution;
+    float weight = 1.f / ((shadow_map_resolution.y*(tr.y - bl.y) + 1) * (shadow_map_resolution.x*(tr.x - bl.x) + 1));
+    vec2 moments = weight * texture(shadow_map_summed_area_table, vec3(tr, segment)).xy;
+    moments -= weight * texture(shadow_map_summed_area_table, vec3(max(bl.x-texel.x, 0), tr.y, segment), 0).xy;
+    moments -= weight * texture(shadow_map_summed_area_table, vec3(tr.x, max(bl.y-texel.y, 0), segment), 0).xy;
+    moments += weight * texture(shadow_map_summed_area_table, vec3(max(bl-texel, 0), segment), 0).xy;
 
+
+
+    // ivec2 tr = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy + imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
+    // ivec2 bl = ivec2(clamp(shadow_map_resolution * (shadow_coord.xy - imagespace_sample_extents) + 0.5, vec2(0), shadow_map_resolution));
+    // float weight = 1.f / ((tr.y - bl.y + 1) * (tr.x - bl.x + 1));
+    // // vec2 moments = texture(shadow_map, vec3(shadow_coord.xy, segment)).xy;
+    // vec2 moments = texelFetch(shadow_map, ivec3(tr, segment), 0).xy;
+    // vec2 moments = weight * texelFetch(shadow_map_summed_area_table, ivec3(tr, segment), 0).xy;
+    // moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(max(tr.x-1, 0), tr.y, segment), 0).xy;
+    // moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(tr.x, max(tr.y-1, 0), segment), 0).xy;
+    // moments += weight * texelFetch(shadow_map_summed_area_table, ivec3(max(tr-1, 0), segment), 0).xy;
+    // moments += weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl-1, 0), segment), 0).xy;
+    // moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(max(bl.x-1, 0), bl.y, segment), 0).xy;
+    // moments -= weight * texelFetch(shadow_map_summed_area_table, ivec3(bl.x, max(bl.y-1, 0), segment), 0).xy;
+
+    // moments = texture(shadow_map, vec3(shadow_coord.xy, segment)).xy;
     float visibility = 1.f;
     float mean = moments[0];
-    if (shadow_coord.z >= mean) {
-        float variance = moments[1] - mean*mean;
-        visibility = variance / (variance + (shadow_coord.z - mean)*(shadow_coord.z - mean));
-    }
+    float variance = moments[1] - mean*mean;
+    visibility = variance / (variance + (shadow_coord.z - mean)*(shadow_coord.z - mean));
+    // if (variance < 0) {
+    //     color = vec4(1,1,0,1);
+    // }
+    visibility = max(visibility, float(mean > shadow_coord.z));
+    visibility = clamp(visibility, 0, 1);
+    
     color = vec4(visibility * light_color * max(0, dot(f_normal, -light_direction))*f_albedo.rgb + vec3(0.25), 1);
     // color = vec4(visibility * light_color * f_albedo.rgb, 1);
-    // color = vec4(vec3(average_occluder_depth), 1);
     // color = vec4(vec3(f_world_position), 1);
+
+    // color = vec4(vec3(moments[0]), 1);
+    // color = vec4(vec3(average_occluder_depth), 1);
 }

@@ -232,7 +232,7 @@ App::App(World &_world) : world{_world}
     if (1) {
         Entity light = world.entities.add();
         // float sun_w = 0.5 * 0.008726618569493142; // computed for the 2D sun subtending 0.5 degrees.
-        float sun_w = 0.5 * 0.008726618569493142;
+        float sun_w = 4 * 0.5 * 0.008726618569493142;
         light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>());
         main_light = light.get<DirectionalLight>();

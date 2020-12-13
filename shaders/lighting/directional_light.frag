@@ -104,6 +104,27 @@ void main(void)
     }
     // Get box-space position.
     vec3 shadow_coord = (shadow_matrices[segment] * vec4(f_position, 1)).xyz;
+    // Get box-space normal.
+    // vec3 shadow_normal = (shadow_normal_matrices[segment] * vec4(f_normal, 0)).xyz;
+    // vec3 shadow_normal = transpose(inverse(mat3x3(world_shadow_matrices[segment]))) * f_normal;
+
+
+    // vec2 dtest = vec2(0.001);
+    // vec3 test = (inverse(world_shadow_matrices[segment]) * vec4(shadow_coord.xy+dtest, texture(shadow_map_raw, vec3(shadow_coord.xy+dtest, segment)).r, 1)).xyz;
+    // DEBUG_COLOR(test);
+
+    /*--------------------------------------------------------------------------------
+        Fade out shadows in the distance.
+    --------------------------------------------------------------------------------*/
+    #if FADE_OUT == 1
+    float shadow_fading = 1.f;
+    if (segment == num_frustum_segments - 1) {
+        shadow_fading = 1 - (eye_z - frustum_segment_distances[num_frustum_segments-1])
+                        /(frustum_segment_distances[num_frustum_segments-1] - frustum_segment_distances[num_frustum_segments-2]);
+        shadow_fading = clamp(shadow_fading, 0, 1); //---fix this
+    }
+    #endif
+
 
     /*--------------------------------------------------------------------------------
         Random variables for sampling. A randomly rotated Poisson-disc is used.
@@ -195,7 +216,7 @@ void main(void)
         // in the shadow map lookup. If the z to compare to were not modified, some samples could go under the surface.
         // (Which is still possible at concavities. It is being assumed that the surface is sufficiently flat at this fragment.)
         
-        #if 0
+        #if 1
         // Sample location (in box space) is on the plane.
         // NOTE: This is very inefficient, just trying to get the geometry to work.
         vec3 p = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, shadow_coord.z, 1)).xyz;

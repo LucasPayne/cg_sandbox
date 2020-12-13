@@ -90,10 +90,10 @@ struct LightRotate : public IBehaviour {
                 height -= 0.5f * dt;
             }
             if (world->input.keyboard.down(KEY_M)) {
-                light->width += 0.01;
+                light->radius += 0.01;
             }
             if (world->input.keyboard.down(KEY_N)) {
-                light->width -= 0.01;
+                light->radius -= 0.01;
             }
         }
         light->direction = vec3(cos(theta), -height, sin(theta)).normalized();
@@ -172,19 +172,18 @@ App::App(World &_world) : world{_world}
     Entity obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->position.y() -= 0.45;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.8,0.8,0.8,1);
-    world.add<Rotator>(obj);
     obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->position.y() -= 0.45;
     obj.get<Transform>()->position.x() = 2.4;
     obj.get<Transform>()->position.z() = 2.4;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.3,0.3,0.8,1);
-    world.add<Rotator>(obj);
+    // world.add<Rotator>(obj);
     obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
     obj.get<Transform>()->position.y() -= 0.45;
     obj.get<Transform>()->position.x() = -2.4;
     obj.get<Transform>()->position.z() = 2.4;
     obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.9,0.83,1,1);
-    world.add<Rotator>(obj);
+    // world.add<Rotator>(obj);
 
     if (0) {
         obj = create_mesh_object(world, "resources/models/dragon.off", "shaders/uniform_color.mat");
@@ -232,8 +231,8 @@ App::App(World &_world) : world{_world}
     if (1) {
         Entity light = world.entities.add();
         // float sun_w = 0.5 * 0.008726618569493142; // computed for the 2D sun subtending 0.5 degrees.
-        float sun_w = 4 * 0.5 * 0.008726618569493142;
-        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(1,1,1), sun_w);
+        float sun_w = 0.5 * 0.008726618569493142;
+        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(2,2,2), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>());
         main_light = light.get<DirectionalLight>();
     }
@@ -241,7 +240,7 @@ App::App(World &_world) : world{_world}
     if (0) {
         Entity light = world.entities.add();
         // float sun_w = 0.005235999718313886; // computed for the 2D sun subtending 0.3 degrees.
-        float sun_w = 0.07;
+        float sun_w = 0.5 * 0.008726618569493142;
         light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(0.8,0.8,0.8), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.2, M_PI/3, false);
     }

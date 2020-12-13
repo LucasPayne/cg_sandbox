@@ -63,8 +63,6 @@ struct DirectionalLightShadowMap {
     std::vector<float> frustum_segment_dividers;
 
     GLuint summed_area_table_swap_buffer; // for GPU SAT computation.
-    GLuint summed_area_table_vertex_array; // Quads sized for the rasterizer to generate the relevant indices in each pass.
-    GLuint summed_area_table_vertex_buffer;
 };
 struct DirectionalLightData {
     // Each light maintains shadow maps for each camera. This map is indexed by the camera's unique ID.
@@ -196,6 +194,9 @@ public:
 
     // Texture copying shaders.
     Resource<GLShaderProgram> copy_texture_layer_program;
+
+    // Filtering shaders.
+    Resource<GLShaderProgram> box_filter_texture_layer_program;
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);

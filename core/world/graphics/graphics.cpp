@@ -569,6 +569,11 @@ void Graphics::compile_shaders()
     copy_texture_layer_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
     copy_texture_layer_program->add_shader(GLShader(FragmentShader, "shaders/copy/copy_texture_layer.frag"));
     copy_texture_layer_program->link();
+
+    box_filter_texture_layer_program = world.resources.add<GLShaderProgram>();
+    box_filter_texture_layer_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
+    box_filter_texture_layer_program->add_shader(GLShader(FragmentShader, "shaders/filter/box_filter_texture_layer.frag"));
+    box_filter_texture_layer_program->link();
 }
 
 

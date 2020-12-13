@@ -4,7 +4,7 @@
 DESCRIPTOR_INSTANCE(DirectionalLight);
 BEGIN_ENTRIES(DirectionalLight)
     ENTRY(color)
-    ENTRY(width)
+    ENTRY(radius)
 END_ENTRIES()
 
 

@@ -295,7 +295,7 @@ void App::loop()
 
     auto &paint = world.graphics.paint;
 
-if (1) {
+if (0) {
 #if 1
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
@@ -334,7 +334,7 @@ if (1) {
 
     // world.graphics.paint.wireframe(*model_geom, mat4x4::translation(vec3(4,-0.7,4)), 0.001);
 
-    paint.array_depth_sprite(world.graphics.directional_light_data(main_light).shadow_map(main_camera).summed_area_table_texture, vec2(0.5,0.75), 0.25, 0.25, 0);
+    // paint.array_depth_sprite(world.graphics.directional_light_data(main_light).shadow_map(main_camera).summed_area_table_texture, vec2(0.5,0.75), 0.25, 0.25, 0);
 }
 
 void App::window_handler(WindowEvent e)

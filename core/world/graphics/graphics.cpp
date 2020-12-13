@@ -71,8 +71,7 @@ void Graphics::init()
                         vec2(1,1),vec2(1,1),
                         vec2(1,-1),vec2(1,0)}; // y is flipped since the framebuffer is flipped vertically.
     glGenVertexArrays(1, &postprocessing_quad_vao);
-    glBindVertexArray(postprocessing_quad_vao);
-    GLuint ppq_vbo;
+    glBindVertexArray(postprocessing_quad_vao); GLuint ppq_vbo;
     glGenBuffers(1, &ppq_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, ppq_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * 8, (const void *) &ppq_data[0], GL_DYNAMIC_DRAW);
@@ -562,9 +561,14 @@ void Graphics::compile_shaders()
 
     summed_area_table_program = world.resources.add<GLShaderProgram>();
     // summed_area_table_program->add_shader(GLShader(VertexShader, "shaders/postprocessing_quad.vert"));
-    summed_area_table_program->add_shader(GLShader(VertexShader, "shaders/summed_area_table.vert"));
+    summed_area_table_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
     summed_area_table_program->add_shader(GLShader(FragmentShader, "shaders/summed_area_table.frag"));
     summed_area_table_program->link();
+
+    copy_texture_layer_program = world.resources.add<GLShaderProgram>();
+    copy_texture_layer_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
+    copy_texture_layer_program->add_shader(GLShader(FragmentShader, "shaders/copy/copy_texture_layer.frag"));
+    copy_texture_layer_program->link();
 }
 
 

@@ -179,7 +179,6 @@ public:
     GLuint gbuffer_fb; // G-buffer framebuffer
     std::vector<GBufferComponent> gbuffer_components;
 
-    // The postprocessing quad can be used at any time for postprocessing effects or deferred rendering.
     GLuint postprocessing_quad_vao;
     void begin_post(Resource<GLShaderProgram> &program,
                      Viewport read_viewport,
@@ -194,6 +193,9 @@ public:
     Viewport second_post_viewport;
 
     void compile_shaders();
+
+    // Texture copying shaders.
+    Resource<GLShaderProgram> copy_texture_layer_program;
 
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);

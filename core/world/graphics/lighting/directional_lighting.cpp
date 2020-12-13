@@ -8,7 +8,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int n = 32;
+    int n = 512;
     int width = n;
     int height = n;
     int num_mips = 0;
@@ -40,7 +40,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     GLuint sat_tex;
     glGenTextures(1, &sat_tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sat_tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, w, h, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -50,7 +50,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     GLuint sat_swap_tex; //note: This is only a texture array since OpenGL <=4.2 doesn't have texture views, and its easier to treat each sat texture the same...
     glGenTextures(1, &sat_swap_tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sat_swap_tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, w, h, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -316,26 +316,31 @@ void Graphics::update_directional_lights()
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-            // auto program = summed_area_table_program;
-            // program->bind();
-            // glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
-            // glViewport(0, 0, sm.width, sm.height);
-            // glDisable(GL_SCISSOR_TEST);
-	    // glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, 0);
-            // glDisable(GL_DEPTH_TEST);
-            // glClearColor(0.5,0,0,1);
-            // glClear(GL_COLOR_BUFFER_BIT);
-            // glBindVertexArray(postprocessing_quad_vao);
 
+            // Initialize the summed area table as the unsummed moments.
+            auto program = copy_texture_layer_program;
+	    program->bind();
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
+            glUniform1i(program->uniform_location("image"), 0);
+	    glBindFramebuffer(GL_FRAMEBUFFER, sm.fbo);
+            glViewport(0, 0, sm.width, sm.height);
+            glEnable(GL_SCISSOR_TEST);
+	    glDisable(GL_DEPTH_TEST);
+            glScissor(0, 0, sm.width, sm.height);
+	    glBindVertexArray(postprocessing_quad_vao);
+            for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+	        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, segment);
+                glUniform1i(program->uniform_location("image_layer"), segment);
+	        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            }
+	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	    program->unbind();
 
-	    // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-
-            // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            // program->unbind();
-
-#if 1
-            auto program = summed_area_table_program;
+            // Create the summed area table by recursive doubling.
+            // This is done in horizontal then vertical pass, with each around log2 of the resolution of that axis.
+            // Each pass ping-pongs between two buffers. After the final pass, if the target buffer is the spare ping-pong buffer, swap it.
+            program = summed_area_table_program;
             program->bind();
             GLuint textures[2] = {sm.summed_area_table_texture, sm.summed_area_table_swap_buffer};
             int swap_bit = 0;
@@ -346,26 +351,19 @@ void Graphics::update_directional_lights()
             glViewport(0, 0, sm.width, sm.height);
             glDisable(GL_SCISSOR_TEST);
             glDisable(GL_DEPTH_TEST);
-            for (int i = 0; i < sm.num_frustum_segments; i++) {
-		glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, i);
-                // glClearColor(0.001,0.001,0.001,0.001);
-                glClearColor(0.5, 0.5, 0,1);
-                glClear(GL_COLOR_BUFFER_BIT);
-            }
-            // glBindVertexArray(sm.summed_area_table_vertex_array);
             glBindVertexArray(postprocessing_quad_vao);
             for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
 	        int pass = 0;
                 glUniform1i(program->uniform_location("image_layer"), segment);
-                for (int axis = 0; axis < 1; axis++) {
+                for (int axis = 0; axis <= 1; axis++) {
 		    glUniform1i(program->uniform_location("is_vertical"), axis);
                     int n = 1;
-                    while (axis == 0 ? n < sm.width : n < sm.height) {
+                    while (n < sm.width) {
+                        // printf("Summed area table pass %d axis %d segment %d\n", pass, axis, segment);
                         glUniform1i(program->uniform_location("n"), n);
                         glActiveTexture(GL_TEXTURE0);
                         glBindTexture(GL_TEXTURE_2D_ARRAY, textures[swap_bit]);
                         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textures[(swap_bit + 1) % 2], 0, segment);
-                        // glDrawArrays(GL_TRIANGLE_FAN, 4*pass, 4);
                         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
                         n *= 2;
                         pass += 1;
@@ -381,7 +379,6 @@ void Graphics::update_directional_lights()
                 sm.summed_area_table_swap_buffer = tmp;
             }
             program->unbind();
-#endif
         }
     }
     //---todo: Garbage collection. Clean up rendering data for removed lights and cameras.

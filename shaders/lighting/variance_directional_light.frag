@@ -128,7 +128,7 @@ void main(void)
         vec2(-0.44797571151440163, -0.7303464410200005),
         vec2(0.18498613971237865, -0.2840144420975712),
     };
-    #if 1
+    #if 0
     // Pseudo-random noise taken off of stackoverflow.
     float rand_theta = 2*PI*fract(sin(dot(f_world_position.xy+f_world_position.z, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
@@ -171,7 +171,7 @@ void main(void)
             // }
         }
     }
-    // if (num_occluded_samples != 0.f) {
+    if (num_occluded_samples != 0.f) {
     average_occluder_depth /= num_occluded_samples + 0.001;
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
@@ -180,7 +180,7 @@ void main(void)
     --------------------------------------------------------------------------------*/
     vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
     // imagespace_sample_extents = 10.f / shadow_map_resolution;
-    imagespace_sample_extents = 0.f / shadow_map_resolution;
+    // imagespace_sample_extents = 0.f / shadow_map_resolution;
 
     vec2 texel = 1.f / shadow_map_resolution;
     vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
@@ -211,7 +211,7 @@ void main(void)
 
     // color = vec4(vec3(variance * 1000), 1); return;
 
-    // } // endif shadow check
+    } // endif shadow check
     // else {
     //     color = vec4(1,1,0,0);return;
     // }

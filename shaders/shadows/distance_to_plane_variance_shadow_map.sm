@@ -14,13 +14,9 @@ section frag_post {
     out vec2 moments(in vec3 f_world_position) {
     GLSL
         float d = 0.5 * (vp_matrix * vec4(f_world_position, 1)).z + 0.5;
-        // d = int(256 * d) / 256.f;
-        return vec2(d, d*d);
-
-
-        // float dx = dFdx(d);
-        // float dy = dFdy(d);
-        // return vec2(d, d*d + 0.25*(dx*dx + dy*dy));
+        float dx = dFdx(d);
+        float dy = dFdy(d);
+        return vec2(d, d*d + 0.25*(dx*dx + dy*dy));
     END
     }
 }

@@ -45,10 +45,18 @@ struct GBufferComponent {
 /*--------------------------------------------------------------------------------
 Lighting data
 --------------------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------------
+Directional light
+    Variance shadow mapping for contact-hardening soft shadows.
+        Constant filtering with a summed-area table.
+    Cascaded shadow mapping.
+--------------------------------------------------------------------------------*/
 struct DirectionalLightShadowMap {
     Aspect<Camera> camera;
     GLuint fbo;
     GLuint texture;
+    GLuint texture_num_mips;
     GLuint summed_area_table_texture;
     GLuint depth_buffer;
     int width;
@@ -56,6 +64,7 @@ struct DirectionalLightShadowMap {
     int num_frustum_segments;
     float distance; // Shadows are computed up to this distance, or the far plane distance if that is closer.
 
+    std::vector<vec2> average_moments;
     // The shadow matrices transform points in world space into shadow coordinates (X and Y as texture coordinates, Z as the depth in the range
     // of the shadow map).
     std::vector<mat4x4> shadow_matrices;

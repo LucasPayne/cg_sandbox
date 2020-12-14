@@ -44,6 +44,7 @@ uniform vec3 inv_box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform sampler2DArray shadow_map;
 uniform sampler2DArray shadow_map_summed_area_table;
 uniform ivec2 shadow_map_resolution;
+uniform vec2 average_moments[MAX_NUM_FRUSTUM_SEGMENTS];
 
 in vec2 screen_pos;
 in vec2 uv;
@@ -59,6 +60,12 @@ out vec4 color;
 // _pre_1[i] : light_radius*box_extents[i].z * inv_box_extents[i].xy
 uniform vec2 _pre_1[MAX_NUM_FRUSTUM_SEGMENTS];
 
+
+vec2 sat(vec2 uv, int segment)
+{
+    vec2 moments = texture(shadow_map_summed_area_table, vec3(uv, segment)).xy;
+    return moments + shadow_map_resolution.x*shadow_map_resolution.y*uv.x*uv.y*average_moments[segment];
+}
 
 void main(void)
 {
@@ -164,7 +171,7 @@ void main(void)
             // }
         }
     }
-    if (num_occluded_samples != 0.f) {
+    // if (num_occluded_samples != 0.f) {
     average_occluder_depth /= num_occluded_samples + 0.001;
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
@@ -173,15 +180,16 @@ void main(void)
     --------------------------------------------------------------------------------*/
     vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
     // imagespace_sample_extents = 10.f / shadow_map_resolution;
-    // imagespace_sample_extents = 0.f / shadow_map_resolution;
+    imagespace_sample_extents = 0.f / shadow_map_resolution;
 
     vec2 texel = 1.f / shadow_map_resolution;
     vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
     vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents - texel, vec2(0), vec2(1));
-    vec2 moments = texture(shadow_map_summed_area_table, vec3(tr, segment)).xy;
-    moments -= texture(shadow_map_summed_area_table, vec3(max(bl.x, 0), tr.y, segment)).xy;
-    moments -= texture(shadow_map_summed_area_table, vec3(tr.x, max(bl.y, 0), segment)).xy;
-    moments += texture(shadow_map_summed_area_table, vec3(max(bl, 0), segment)).xy;
+
+    vec2 moments = sat(tr, segment);
+    moments -= sat(vec2(max(bl.x, 0), tr.y), segment);
+    moments -= sat(vec2(tr.x, max(bl.y, 0)), segment);
+    moments += sat(max(bl, 0), segment);
     moments /= (shadow_map_resolution.y*(tr.y - bl.y)) * (shadow_map_resolution.x*(tr.x - bl.x));
 
 
@@ -201,18 +209,16 @@ void main(void)
 
     visibility = max(visibility, float(mean > shadow_coord.z));
 
-    color = vec4(vec3(variance * 1000), 1); return;
+    // color = vec4(vec3(variance * 1000), 1); return;
 
-    } // endif shadow check
-    else {
-        color = vec4(1,1,0,0);return;
-    }
+    // } // endif shadow check
+    // else {
+    //     color = vec4(1,1,0,0);return;
+    // }
     } // endif range check
     float light_falloff = max(0, dot(f_normal, -light_direction));
     color = vec4(visibility * light_color * light_falloff*f_albedo.rgb, 1);
         
-
     // color = vec4(visibility * light_color * f_albedo.rgb, 1);
     // color = vec4(vec3(f_world_position), 1);
-
 }

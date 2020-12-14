@@ -80,11 +80,13 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     sm.width = width;
     sm.height = height;
     sm.texture = tex;
+    sm.texture_num_mips = num_mips;
     sm.summed_area_table_texture = sat_tex;
     sm.summed_area_table_swap_buffer = sat_swap_tex;
     sm.depth_buffer = depth_rbo;
     sm.fbo = fbo;
     sm.num_frustum_segments = num_frustum_segments;
+    sm.average_moments = std::vector<vec2>(sm.num_frustum_segments);
     sm.shadow_matrices = std::vector<mat4x4>(sm.num_frustum_segments);
     sm.box_extents = std::vector<vec3>(sm.num_frustum_segments);
     sm.frustum_segment_dividers = std::vector<float>(sm.num_frustum_segments-1);
@@ -261,7 +263,8 @@ void Graphics::update_directional_lights()
                 glDisable(GL_SCISSOR_TEST);
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.texture, 0, segment);
                 glEnable(GL_DEPTH_TEST);
-                glClearColor(10000,0,0,0);
+                // glClearColor(10000,0,0,0);
+                glClearColor(0,0,0,0);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
@@ -271,9 +274,29 @@ void Graphics::update_directional_lights()
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
             }
+            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+            GLint f_w, f_h, f_d;
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_WIDTH, &f_w);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_HEIGHT, &f_h);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_DEPTH, &f_d);
+            printf("%d %d %d\n", f_w, f_h, f_d);
+            if (f_w != 1 || f_h != 1 || f_d != sm.num_frustum_segments || sm.average_moments.size() != 4) {
+                fprintf(stderr, "Something went wrong with mips or parameter buffer when computing average moments.\n");
+                exit(EXIT_FAILURE);
+            }
+	    glGetTexImage(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_RG, GL_FLOAT, (void *) &sm.average_moments[0]);
+            for (int i = 0; i < sm.num_frustum_segments; i++) {
+                std::cout << sm.average_moments[i] << "\n";
+            }
+	    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
             
+            Resource<GLShaderProgram> program;
+
+            #if 0
             // Blur the moments.
-            auto program = box_filter_texture_layer_program;
+            program = box_filter_texture_layer_program;
 	    program->bind();
             glUniform1i(program->uniform_location("image"), 0);
 	    glUniform2i(program->uniform_location("image_dimensions"), sm.width, sm.height);
@@ -303,6 +326,7 @@ void Graphics::update_directional_lights()
             }
 	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	    program->unbind();
+            #endif
 
             // Initialize the summed area table as the unsummed moments.
             program = copy_texture_layer_program;
@@ -318,16 +342,13 @@ void Graphics::update_directional_lights()
             glScissor(0, 0, sm.width, sm.height);
 	    glBindVertexArray(postprocessing_quad_vao);
             for (int segment = 0; segment < sm.num_frustum_segments; segment++) {
+                glUniform2fv(program->uniform_location("average_moments"), 1, (GLfloat *) &sm.average_moments[segment]);
 	        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.summed_area_table_texture, 0, segment);
                 glUniform1i(program->uniform_location("image_layer"), segment);
 	        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
 	    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	    program->unbind();
-
-            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
-            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
             // Create the summed area table by recursive doubling.
             // This is done in horizontal then vertical pass, each having multiple passes, around log2 of the resolution of that axis.
@@ -464,6 +485,9 @@ void Graphics::directional_lighting(Aspect<Camera> camera)
             uniform_name = std::string("inv_box_extents[") + std::to_string(i) + std::string("]");
             vec3 inv_box_extents = 1.f / shadow_map.box_extents[i];
             glUniform3fv(program->uniform_location(uniform_name), 1, (GLfloat *) &inv_box_extents);
+
+            uniform_name = std::string("average_moments[") + std::to_string(i) + std::string("]");
+            glUniform2fv(program->uniform_location(uniform_name), 1, (GLfloat *) &shadow_map.average_moments[i]);
 
             uniform_name = std::string("_pre_1[") + std::to_string(i) + std::string("]");
             // _pre_1[i] : light_radius*box_extents[i].z * inv_box_extents[i].xy

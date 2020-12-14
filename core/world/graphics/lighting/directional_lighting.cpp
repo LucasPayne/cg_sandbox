@@ -36,7 +36,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     GLuint sat_tex;
     glGenTextures(1, &sat_tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sat_tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, width, height, num_frustum_segments, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -48,7 +48,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     GLuint sat_swap_tex; //note: This is only a texture array since OpenGL <=4.2 doesn't have texture views, and its easier to treat each sat texture the same...
     glGenTextures(1, &sat_swap_tex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, sat_swap_tex);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA32F, width, height, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RG32F, width, height, num_frustum_segments, 0, GL_RG, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

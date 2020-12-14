@@ -17,12 +17,6 @@ vec3 decode_normal(vec4 encoded_normal)
     return normalize(n);
 }
 
-vec2 recombine_precision(vec4 value)
-{
-    return value.zw / 256.f + value.xy;
-}
-
-
 // G-buffer
 uniform sampler2D depth;
 uniform sampler2D normal;
@@ -184,10 +178,10 @@ void main(void)
     vec2 texel = 1.f / shadow_map_resolution;
     vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
     vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents - texel, vec2(0), vec2(1));
-    vec2 moments = recombine_precision(texture(shadow_map_summed_area_table, vec3(tr, segment)));
-    moments -= recombine_precision(texture(shadow_map_summed_area_table, vec3(max(bl.x, 0), tr.y, segment)));
-    moments -= recombine_precision(texture(shadow_map_summed_area_table, vec3(tr.x, max(bl.y, 0), segment)));
-    moments += recombine_precision(texture(shadow_map_summed_area_table, vec3(max(bl, 0), segment)));
+    vec2 moments = texture(shadow_map_summed_area_table, vec3(tr, segment)).xy;
+    moments -= texture(shadow_map_summed_area_table, vec3(max(bl.x, 0), tr.y, segment)).xy;
+    moments -= texture(shadow_map_summed_area_table, vec3(tr.x, max(bl.y, 0), segment)).xy;
+    moments += texture(shadow_map_summed_area_table, vec3(max(bl, 0), segment)).xy;
     moments /= (shadow_map_resolution.y*(tr.y - bl.y)) * (shadow_map_resolution.x*(tr.x - bl.x));
 
 

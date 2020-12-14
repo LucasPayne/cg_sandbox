@@ -201,9 +201,12 @@ void main(void)
 
     visibility = max(visibility, float(mean > shadow_coord.z));
 
-    // color = vec4(vec3(variance * 1000), 1); return;
+    color = vec4(vec3(variance * 1000), 1); return;
 
     } // endif shadow check
+    else {
+        color = vec4(1,1,0,0);return;
+    }
     } // endif range check
     float light_falloff = max(0, dot(f_normal, -light_direction));
     color = vec4(visibility * light_color * light_falloff*f_albedo.rgb, 1);

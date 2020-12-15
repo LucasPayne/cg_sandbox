@@ -54,6 +54,40 @@ struct Follower : public IBehaviour {
     }
 };
 
+struct FrustumVisualizer : public IBehaviour {
+    Frustum f;
+    FrustumVisualizer()
+    {
+    }
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_F) {
+                f = main_camera->frustum();
+            }
+        }
+    }
+    void update() {
+        vec3 points[8] = {
+            f.point(-1,-1,0),
+            f.point(1,-1,0),
+            f.point(1,1,0),
+            f.point(-1,1,0),
+            f.point(-1,-1,1),
+            f.point(1,-1,1),
+            f.point(1,1,1),
+            f.point(-1,1,1)
+        };
+        float w = 3;
+        vec4 c = vec4(1,0,0,1);
+        for (int i = 0; i < 4; i++) {
+            world->graphics.paint.line(points[i], points[(i+1)%4], w, c);
+            world->graphics.paint.line(points[i+4], points[(i+1)%4 + 4], w, c);
+            world->graphics.paint.line(points[i], points[i+4], w, c);
+        }
+    }
+};
+
+
 
 struct LightRotate : public IBehaviour {
     Aspect<DirectionalLight> light;
@@ -133,6 +167,7 @@ App::App(World &_world) : world{_world}
     cameraman.get<Camera>()->top_right = vec2(0.98, 0.98);
     // cameraman.get<Camera>()->background_color = vec4(0.83,0.82,1,1);
     cameraman.get<Camera>()->background_color = vec4(0,0,0,1);
+    world.add<FrustumVisualizer>(cameraman);
 
     world.graphics.background_color = vec4(1,1,1,1);
     world.graphics.window_background_color = vec4(0,0,0,1);
@@ -206,11 +241,16 @@ App::App(World &_world) : world{_world}
     floor.add_triangle(c, b, a);
     floor.add_triangle(d, c, a);
     auto floor_model = floor.to_model();
-    obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
-    obj.get<Drawable>()->material.properties.set_vec4("albedo", 0.5,0.5,1,1);
-    // obj.get<Drawable>()->shadow_caster = false;
-    obj.get<Transform>()->scale = 10;
-    obj.get<Transform>()->position = vec3(0,0.15,0);
+
+    for (int i = -10; i <= 10; i++) {
+        for (int j = -10; j <= 10; j++) {
+            obj = create_mesh_object(world, floor_model, "shaders/uniform_color.mat");
+            obj.get<Drawable>()->material.properties.set_vec4("albedo", 1,0.5,0.5,1);
+            // obj.get<Drawable>()->shadow_caster = false;
+            obj.get<Transform>()->scale = 3;
+            obj.get<Transform>()->position = vec3(3*i,0.15,3*j);
+        }
+    }
 
     if (0) {
         auto pillar = MLModel::load("resources/models/20mm_cube.stl");

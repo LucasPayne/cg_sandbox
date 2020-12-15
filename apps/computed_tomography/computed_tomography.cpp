@@ -112,13 +112,13 @@ struct ReconstructionTest : public IBehaviour {
 
     void update() {
         vec4 border_color = vec4(1,1,1,1);
-        world->graphics.paint.bordered_depth_sprite(main_camera, image.texture(), vec2(0.1,0.1), 0.4,0.4, 3, border_color);
-        world->graphics.paint.bordered_depth_sprite(main_camera, sinogram.texture(), vec2(0.1,0.5), 0.4,0.4, 3, border_color);
-        world->graphics.paint.bordered_depth_sprite(main_camera, reconstructor->reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4, 3, border_color);
-        world->graphics.paint.bordered_depth_sprite(main_camera, reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4, 3, border_color);
+        world->graphics.paint.depth_sprite(image.texture(), vec2(0.1,0.1), 0.4,0.4);
+        world->graphics.paint.depth_sprite(sinogram.texture(), vec2(0.1,0.5), 0.4,0.4);
+        world->graphics.paint.depth_sprite(reconstructor->reconstruction.texture(), vec2(0.5,0.1), 0.4,0.4);
+        world->graphics.paint.depth_sprite(reconstruction_sinogram.texture(), vec2(0.5,0.5), 0.4,0.4);
 
-	    reconstructor->iterate();
-	    fill_sinogram(reconstructor->reconstruction, reconstruction_sinogram);
+        reconstructor->iterate();
+        fill_sinogram(reconstructor->reconstruction, reconstruction_sinogram);
     }
 };
 
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     printf("[main] Creating context...\n");
     IGC::Context context("computed_tomography");
     printf("[main] Creating world...\n");
-    World world;
+    World world(context);
     printf("[main] Adding world callbacks...\n");
     context.add_callbacks(&world);
     context.add_callbacks(&world.input);

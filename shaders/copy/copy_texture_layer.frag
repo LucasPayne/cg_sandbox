@@ -12,6 +12,7 @@ out vec4 color;
 void main(void)
 {
     vec2 moments = texelFetch(image, ivec3(ivec2(uv * image_dimensions), image_layer), 0).xy;
+    // color = vec4(moments - average_moments, 0, 1);
     color = vec4(moments - average_moments, 0, 1);
 }
 

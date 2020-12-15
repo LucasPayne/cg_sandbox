@@ -13,7 +13,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
     int height = n;
     int num_mips = 0;
     for (int c = n; c > 1; c /= 2) { num_mips ++; }
-    int num_frustum_segments = 4;
+    int num_frustum_segments = 1;
 
     GLuint tex;
     glGenTextures(1, &tex);
@@ -25,8 +25,8 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         w = max(1, w / 2);
         h = max(1, h / 2);
     }
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
@@ -196,11 +196,6 @@ void Graphics::update_directional_lights()
                     }
                 }
 
-                // Extend the box to roughly account for summed-area table filtering size.
-                // This is to attempt to prevent artifacts at the edges of this segment.
-                // mins -=  (2.f / 0.008726618569493142) * fabs(light->radius) * (X + Y + Z);
-                // maxs += (2.f / 0.008726618569493142) * fabs(light->radius) * (X + Y + Z);
-
                 // Shrink the box in X and Y, and max Z, to bound all drawables. This increases the density of the shadow map.
                 vec3 drawable_maxs = mins;
                 vec3 drawable_mins = maxs;
@@ -232,7 +227,6 @@ void Graphics::update_directional_lights()
                 }
                 // Extend the box to include all possible shadow casters.
                 for (auto drawable : world.entities.aspects<Drawable>()) {
-                    if (!drawable->shadow_caster) continue;
                     auto s = drawable->bounding_sphere();
                     vec3 p = vec3(vec3::dot(s.origin, X),
                                   vec3::dot(s.origin, Y),
@@ -263,8 +257,8 @@ void Graphics::update_directional_lights()
                 glDisable(GL_SCISSOR_TEST);
                 glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, sm.texture, 0, segment);
                 glEnable(GL_DEPTH_TEST);
-                // glClearColor(10000,0,0,0);
                 glClearColor(0,0,0,0);
+                // glClearColor(0,0,0,0);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 int num_drawn = 0;
@@ -274,26 +268,8 @@ void Graphics::update_directional_lights()
                 });
                 printf("shadow map num drawn: %d\n", num_drawn);
             }
-            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
-            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
-            GLint f_w, f_h, f_d;
-	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_WIDTH, &f_w);
-	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_HEIGHT, &f_h);
-	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_DEPTH, &f_d);
-            printf("%d %d %d\n", f_w, f_h, f_d);
-            if (f_w != 1 || f_h != 1 || f_d != sm.num_frustum_segments || sm.average_moments.size() != 4) {
-                fprintf(stderr, "Something went wrong with mips or parameter buffer when computing average moments.\n");
-                exit(EXIT_FAILURE);
-            }
-	    glGetTexImage(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_RG, GL_FLOAT, (void *) &sm.average_moments[0]);
-            for (int i = 0; i < sm.num_frustum_segments; i++) {
-                std::cout << sm.average_moments[i] << "\n";
-            }
-	    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-            
             Resource<GLShaderProgram> program;
-
             #if 0
             // Blur the moments.
             program = box_filter_texture_layer_program;
@@ -328,6 +304,23 @@ void Graphics::update_directional_lights()
 	    program->unbind();
             #endif
 
+            glBindTexture(GL_TEXTURE_2D_ARRAY, sm.texture);
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+            GLint f_w, f_h, f_d;
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_WIDTH, &f_w);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_HEIGHT, &f_h);
+	    glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_TEXTURE_DEPTH, &f_d);
+            printf("%d %d %d\n", f_w, f_h, f_d);
+            if (f_w != 1 || f_h != 1 || f_d != sm.num_frustum_segments) {
+                fprintf(stderr, "Something went wrong with mips or parameter buffer when computing average moments.\n");
+                exit(EXIT_FAILURE);
+            }
+	    glGetTexImage(GL_TEXTURE_2D_ARRAY, sm.texture_num_mips, GL_RG, GL_FLOAT, (void *) &sm.average_moments[0]);
+            for (int i = 0; i < sm.num_frustum_segments; i++) {
+                std::cout << sm.average_moments[i] << "\n";
+            }
+	    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+            
             // Initialize the summed area table as the unsummed moments.
             program = copy_texture_layer_program;
 	    program->bind();

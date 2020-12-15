@@ -67,6 +67,20 @@ vec2 sat(vec2 uv, int segment)
     return moments + shadow_map_resolution.x*shadow_map_resolution.y*uv.x*uv.y*average_moments[segment];
 }
 
+
+
+float get_average_occluder_depth(float search_width, vec3 shadow_coord, int segment)
+{
+    float mip = max(log2(search_width), 5);
+    vec2 moments = textureLod(shadow_map, vec3(shadow_coord.xy, segment), mip).xy;
+    float variance = moments[1] - moments[0]*moments[0];
+    float p = variance / (variance + (shadow_coord.z - moments[0])*(shadow_coord.z - moments[0]));
+    return (moments[0] - p*shadow_coord.z) / (1 - p);
+}
+
+
+
+
 void main(void)
 {
     /*--------------------------------------------------------------------------------
@@ -111,8 +125,23 @@ void main(void)
     // _pre_1[i] : light_radius*box_extents[i].z * inv_box_extents[i].xy
     vec2 imagespace_searching_extents = shadow_coord.z * _pre_1[segment];
 
+    float average_occluder_depth = get_average_occluder_depth(dot(imagespace_searching_extents, shadow_map_resolution),
+                                                              shadow_coord, segment);
+
+    /*--------------------------------------------------------------------------------
+        Now the sampling width is determined such that, assuming all occluders
+        are at the representative depth, and assuming the surface is faced toward the light,
+        the occlusion would be correctly computed (with sufficient samples).
+    --------------------------------------------------------------------------------*/
+    vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
+
+    vec2 texel = 1.f / shadow_map_resolution;
+    vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
+    vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents - texel, vec2(0), vec2(1));
+
     #define NUM_SAMPLES 12
     #define INV_NUM_SAMPLES (1.f / NUM_SAMPLES)
+    #define POISSON_SAMPLE_MIN_DISTANCE 0.2
     const vec2 poisson_samples[NUM_SAMPLES] = {
         // vec2(0,0)
         vec2(0.21764400125830896, 0.7329012601480431),
@@ -128,7 +157,7 @@ void main(void)
         vec2(-0.44797571151440163, -0.7303464410200005),
         vec2(0.18498613971237865, -0.2840144420975712),
     };
-    #if 0
+    #if 1
     // Pseudo-random noise taken off of stackoverflow.
     float rand_theta = 2*PI*fract(sin(dot(f_world_position.xy+f_world_position.z, vec2(12.9898, 78.233))) * 43758.5453);
     float cos_rand_theta = cos(rand_theta);
@@ -139,86 +168,26 @@ void main(void)
     float sin_rand_theta = 0;
     #endif
 
-
-    float average_occluder_depth = 0.f;
-    float num_occluded_samples = 0.f;
+    vec2 moments = vec2(0);
+    float sample_mip = log2(POISSON_SAMPLE_MIN_DISTANCE * dot(shadow_map_resolution, imagespace_sample_extents));
     for (int i = 0; i < NUM_SAMPLES; i++) {
         vec2 rotated_poisson_sample = vec2(cos_rand_theta*poisson_samples[i].x + sin_rand_theta*poisson_samples[i].y,
 				           -sin_rand_theta*poisson_samples[i].x + cos_rand_theta*poisson_samples[i].y);
-
-        vec2 d_uv = imagespace_searching_extents * rotated_poisson_sample;
-        vec2 sample_uv = shadow_coord.xy + d_uv;
-        if (sample_uv.x >= 0 && sample_uv.x <= 1 && sample_uv.y >= 0 && sample_uv.y <= 1) {
-            float sample_depth = textureLod(shadow_map, vec3(sample_uv, segment), 0).x;
-            // Account for the plane.
-            vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, 0, 1)).xyz;
-            float t = dot(f_world_position - sample_point, f_normal) / dot(light_direction, f_normal);
-            if (sample_depth != 0.f && sample_depth < t/box_extents[segment].z - max(0.005, 0.025 * dot(f_normal, -light_direction))) {
-                average_occluder_depth += sample_depth;
-                num_occluded_samples += 1.f;
-            }
-
-            // Detect occluders within the cone of incoming light directions.
-            // ---Possibly the cone calculation was incorrect.
-
-            // float projected_radius = light_radius * shadow_coord.z * box_extents[segment].z;
-            // float cone_slice_radius = max(0, projected_radius * (shadow_coord.z - sample_depth)/shadow_coord.z);
-            // vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, sample_depth, 1)).xyz;
-            // float dist_to_primary_line = length((sample_point - f_world_position) + light_direction * dot(sample_point - f_world_position, -light_direction));
-            // if (dist_to_primary_line <= 5 * cone_slice_radius) { //---
-            //     average_occluder_depth += sample_depth;
-            //     num_occluded_samples += 1.f;
-            // }
-        }
+        moments += INV_NUM_SAMPLES * textureLod(shadow_map, vec3(shadow_coord.xy + imagespace_sample_extents*rotated_poisson_sample, segment), sample_mip).xy;
     }
-    if (num_occluded_samples != 0.f) {
-    average_occluder_depth /= num_occluded_samples + 0.001;
-    /*--------------------------------------------------------------------------------
-        Now the sampling width is determined such that, assuming all occluders
-        are at the representative depth, and assuming the surface is faced toward the light,
-        the occlusion would be correctly computed (with sufficient samples).
-    --------------------------------------------------------------------------------*/
-    vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
-    // imagespace_sample_extents = 10.f / shadow_map_resolution;
-    // imagespace_sample_extents = 0.f / shadow_map_resolution;
-
-    vec2 texel = 1.f / shadow_map_resolution;
-    vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
-    vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents - texel, vec2(0), vec2(1));
-
-    vec2 moments = sat(tr, segment);
-    moments -= sat(vec2(max(bl.x, 0), tr.y), segment);
-    moments -= sat(vec2(tr.x, max(bl.y, 0)), segment);
-    moments += sat(max(bl, 0), segment);
-    moments /= (shadow_map_resolution.y*(tr.y - bl.y)) * (shadow_map_resolution.x*(tr.x - bl.x));
-
-
-    // moments = texture(shadow_map, vec3(tr, segment)).xy;
 
     float mean = moments[0];
     float variance = moments[1] - mean*mean;
-    // #define MIN_VARIANCE 0.005
-    // variance = max(MIN_VARIANCE, abs(variance));
 
     visibility = variance / (variance + (shadow_coord.z - mean)*(shadow_coord.z - mean));
     visibility = clamp(visibility, 0, 1);
 
     // Remap visibility range to ameliorate light bleeding.
-    // const float x = 0.1;
-    // visibility = max(0, (visibility - x)/(1-x));
-
+    const float x = 0.2;
+    visibility = max(0, (visibility - x)/(1-x));
     visibility = max(visibility, float(mean > shadow_coord.z));
 
-    // color = vec4(vec3(variance * 1000), 1); return;
-
-    } // endif shadow check
-    // else {
-    //     color = vec4(1,1,0,0);return;
-    // }
     } // endif range check
     float light_falloff = max(0, dot(f_normal, -light_direction));
     color = vec4(visibility * light_color * light_falloff*f_albedo.rgb, 1);
-        
-    // color = vec4(visibility * light_color * f_albedo.rgb, 1);
-    // color = vec4(vec3(f_world_position), 1);
 }

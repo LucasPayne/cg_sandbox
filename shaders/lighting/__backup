@@ -44,6 +44,7 @@ uniform vec3 inv_box_extents[MAX_NUM_FRUSTUM_SEGMENTS];
 uniform sampler2DArray shadow_map;
 uniform sampler2DArray shadow_map_summed_area_table;
 uniform ivec2 shadow_map_resolution;
+uniform vec2 average_moments[MAX_NUM_FRUSTUM_SEGMENTS];
 
 in vec2 screen_pos;
 in vec2 uv;
@@ -59,6 +60,12 @@ out vec4 color;
 // _pre_1[i] : light_radius*box_extents[i].z * inv_box_extents[i].xy
 uniform vec2 _pre_1[MAX_NUM_FRUSTUM_SEGMENTS];
 
+
+vec2 sat(vec2 uv, int segment)
+{
+    vec2 moments = texture(shadow_map_summed_area_table, vec3(uv, segment)).xy;
+    return moments + shadow_map_resolution.x*shadow_map_resolution.y*uv.x*uv.y*average_moments[segment];
+}
 
 void main(void)
 {
@@ -103,8 +110,6 @@ void main(void)
     // Average the occluder depths from the (orthogonal) perspective of the light.
     // _pre_1[i] : light_radius*box_extents[i].z * inv_box_extents[i].xy
     vec2 imagespace_searching_extents = shadow_coord.z * _pre_1[segment];
-    // imagespace_searching_extents = min(imagespace_searching_extents, 15.f / shadow_map_resolution);
-
 
     #define NUM_SAMPLES 12
     #define INV_NUM_SAMPLES (1.f / NUM_SAMPLES)
@@ -144,11 +149,11 @@ void main(void)
         vec2 d_uv = imagespace_searching_extents * rotated_poisson_sample;
         vec2 sample_uv = shadow_coord.xy + d_uv;
         if (sample_uv.x >= 0 && sample_uv.x <= 1 && sample_uv.y >= 0 && sample_uv.y <= 1) {
-            float sample_depth = textureLod(shadow_map, vec3(sample_uv, segment), 0).x;
+            float sample_depth = texelFetch(shadow_map, ivec3(ivec2(sample_uv * shadow_map_resolution), segment), 0).x;
             // Account for the plane.
             vec3 sample_point = (inverse(world_shadow_matrices[segment]) * vec4(sample_uv, 0, 1)).xyz;
             float t = dot(f_world_position - sample_point, f_normal) / dot(light_direction, f_normal);
-            if (sample_depth != 0.f && sample_depth < t/box_extents[segment].z - max(0.03, 0.05 * dot(f_normal, -light_direction))) {
+            if (sample_depth != 0.f && sample_depth < t/box_extents[segment].z - max(0.005, 0.025 * dot(f_normal, -light_direction))) {
                 average_occluder_depth += sample_depth;
                 num_occluded_samples += 1.f;
             }
@@ -168,45 +173,57 @@ void main(void)
     }
     if (num_occluded_samples != 0.f) {
     average_occluder_depth /= num_occluded_samples + 0.001;
-
     /*--------------------------------------------------------------------------------
         Now the sampling width is determined such that, assuming all occluders
         are at the representative depth, and assuming the surface is faced toward the light,
         the occlusion would be correctly computed (with sufficient samples).
     --------------------------------------------------------------------------------*/
     vec2 imagespace_sample_extents = (shadow_coord.z - average_occluder_depth) * _pre_1[segment];
-    // imagespace_sample_extents = max(imagespace_sample_extents, vec2(0.01));
     // imagespace_sample_extents = 10.f / shadow_map_resolution;
+    // imagespace_sample_extents = 0.f / shadow_map_resolution;
 
-    vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
-    vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents, vec2(0), vec2(1));
     vec2 texel = 1.f / shadow_map_resolution;
-    float weight = 1.f / ((shadow_map_resolution.y*(tr.y - bl.y) + 1) * (shadow_map_resolution.x*(tr.x - bl.x) + 1));
-    vec2 moments = weight * texture(shadow_map_summed_area_table, vec3(tr, segment)).xy;
-    moments -= weight * texture(shadow_map_summed_area_table, vec3(max(bl.x-texel.x, 0), tr.y, segment), 0).xy;
-    moments -= weight * texture(shadow_map_summed_area_table, vec3(tr.x, max(bl.y-texel.y, 0), segment), 0).xy;
-    moments += weight * texture(shadow_map_summed_area_table, vec3(max(bl-texel, 0), segment), 0).xy;
+    vec2 tr = clamp(shadow_coord.xy + imagespace_sample_extents, vec2(0), vec2(1));
+    vec2 bl = clamp(shadow_coord.xy - imagespace_sample_extents - texel, vec2(0), vec2(1));
+
+    // vec2 moments = sat(tr, segment);
+    // moments -= sat(vec2(max(bl.x, 0), tr.y), segment);
+    // moments -= sat(vec2(tr.x, max(bl.y, 0)), segment);
+    // moments += sat(max(bl, 0), segment);
+    // moments /= (shadow_map_resolution.y*(tr.y - bl.y)) * (shadow_map_resolution.x*(tr.x - bl.x));
+
+    float mip = log2(dot(shadow_map_resolution, imagespace_sample_extents));
+    vec2 moments = textureLod(shadow_map, vec3(shadow_coord.xy, segment), mip).xy;
 
     float mean = moments[0];
     float variance = moments[1] - mean*mean;
+    // #define MIN_VARIANCE 0.005
+    // variance = max(MIN_VARIANCE, abs(variance));
+
     visibility = variance / (variance + (shadow_coord.z - mean)*(shadow_coord.z - mean));
     visibility = clamp(visibility, 0, 1);
+
+    // Remap visibility range to ameliorate light bleeding.
+    const float x = 0.2;
+    visibility = max(0, (visibility - x)/(1-x));
+
     visibility = max(visibility, float(mean > shadow_coord.z));
 
-    // color = vec4(vec3(moments[0]), 1); return;
-    // color = vec4(vec3(average_occluder_depth), 1); return;
+    // float r = 0.005;
+    // color = vec4(vec3((variance + r)/(2*r)), 1); return;
+    // if (variance > 0) color = vec4(1,1,1,1);
+    // else color = vec4(0,0,0,1);
+    // return;
+    // color = vec4(vec3(imagespace_sample_extents.x * 1000), 1); return;
 
-    } // endif shadowed check
+    } // endif shadow check
     // else {
-    //     color = vec4(1,1,0,1);
-    //     return;
+    //     color = vec4(1,1,0,0);return;
     // }
     } // endif range check
     float light_falloff = max(0, dot(f_normal, -light_direction));
-    color = vec4(visibility * light_color * light_falloff*f_albedo.rgb + vec3(0.25), 1);
+    color = vec4(visibility * light_color * light_falloff*f_albedo.rgb, 1);
         
-
     // color = vec4(visibility * light_color * f_albedo.rgb, 1);
     // color = vec4(vec3(f_world_position), 1);
-
 }

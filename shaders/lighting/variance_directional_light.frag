@@ -71,7 +71,7 @@ vec2 sat(vec2 uv, int segment)
 
 float get_average_occluder_depth(float search_width, vec3 shadow_coord, int segment)
 {
-    float mip = max(log2(search_width), 5);
+    float mip = log2(search_width);
     vec2 moments = textureLod(shadow_map, vec3(shadow_coord.xy, segment), mip).xy;
     float variance = moments[1] - moments[0]*moments[0];
     float p = variance / (variance + (shadow_coord.z - moments[0])*(shadow_coord.z - moments[0]));
@@ -189,5 +189,6 @@ void main(void)
 
     } // endif range check
     float light_falloff = max(0, dot(f_normal, -light_direction));
-    color = vec4(visibility * light_color * light_falloff*f_albedo.rgb, 1);
+    vec3 col = visibility * light_color * light_falloff*f_albedo.rgb;
+    color = vec4(col, 1);
 }

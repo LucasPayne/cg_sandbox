@@ -207,6 +207,9 @@ public:
     // Filtering shaders.
     Resource<GLShaderProgram> box_filter_texture_layer_program;
 
+    // Tone mapping and gamma correction.
+    Resource<GLShaderProgram> tone_map_gamma_correction_program;
+
     // Lighting graphics data. This is maintained for each light in the scene, and cleaned up when a light is removed from the scene.
     DirectionalLightData &directional_light_data(Aspect<DirectionalLight> light);
     PointLightData &point_light_data(Aspect<PointLight> light);

@@ -8,7 +8,7 @@ DirectionalLightShadowMap &DirectionalLightData::shadow_map(Aspect<Camera> camer
         // The shadow map already exists.
         return shadow_maps[camera.ID()];
     }
-    int n = 512;
+    int n = 1024;
     int width = n;
     int height = n;
     int num_mips = 0;

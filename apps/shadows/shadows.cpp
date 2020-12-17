@@ -272,7 +272,7 @@ App::App(World &_world) : world{_world}
         Entity light = world.entities.add();
         // float sun_w = 0.5 * 0.008726618569493142; // computed for the 2D sun subtending 0.5 degrees.
         float sun_w = 0.5 * 0.008726618569493142;
-        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(2,2,2), sun_w);
+        light.add<DirectionalLight>(vec3(0,-1,0.5), vec3(5), sun_w);
         world.add<LightRotate>(light, light.get<DirectionalLight>());
         main_light = light.get<DirectionalLight>();
     }
@@ -292,14 +292,14 @@ App::App(World &_world) : world{_world}
         world.add<LightRotate>(light, light.get<DirectionalLight>(), 0.3, M_PI/3+1.31451, false);
     }
 
-    if (0) {
+    if (1) {
         Entity light = world.entities.add();
         float intensity = 20;
         test_point_light = light.add<PointLight>(vec3(intensity), 0.2);
         light.add<Transform>(1.8,1,1.8);
         world.add<Follower>(light, cameraman, KEY_P);
     }
-    if (0) {
+    if (1) {
         Entity light = world.entities.add();
         float intensity = 10;
         light.add<PointLight>(vec3(intensity), 0.03);

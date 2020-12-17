@@ -82,6 +82,8 @@ void Graphics::init()
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // Create the screen buffer and "post-processing buffer" (a convenience buffer of the same format)
+    // with 16-bit floating point RGBA. These can be used to store HDR values.
     auto create_framebuffer = [](Framebuffer &fb) {
         GLuint &fbo = fb.id;
         GLuint &tex = fb.texture;
@@ -502,18 +504,28 @@ void Graphics::render()
 
     /*--------------------------------------------------------------------------------
         Place the screen buffer in the window.
+        Tone map and gamma correct the screen buffer when copying.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_DEPTH_TEST);
     glViewport(0, 0, window_width, window_height);
     glClearColor(window_background_color.x(), window_background_color.y(), window_background_color.z(), window_background_color.w());
     glClear(GL_COLOR_BUFFER_BIT);
-
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
-    glBlitFramebuffer(0,0, window_viewport.w, window_viewport.h, // source: screen buffer
-                      window_viewport.x, window_viewport.y, window_viewport.x+window_viewport.w, window_viewport.y+window_viewport.h, // destination: default buffer
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glEnable(GL_SCISSOR_TEST);
+    glViewport(window_viewport.x, window_viewport.y, window_width, window_height);
+    glScissor(window_viewport.x, window_viewport.y, window_width, window_height);
+    auto program = tone_map_gamma_correction_program;
+    program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
+    glUniform1i(program->uniform_location("hdr_image"), 0);
+    glUniform2i(program->uniform_location("hdr_image_dimensions"), screen_buffer.resolution_x, screen_buffer.resolution_y);
+    glBindVertexArray(postprocessing_quad_vao);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    program->unbind();
 }
 
 
@@ -574,6 +586,11 @@ void Graphics::compile_shaders()
     box_filter_texture_layer_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
     box_filter_texture_layer_program->add_shader(GLShader(FragmentShader, "shaders/filter/box_filter_texture_layer.frag"));
     box_filter_texture_layer_program->link();
+
+    tone_map_gamma_correction_program = world.resources.add<GLShaderProgram>();
+    tone_map_gamma_correction_program->add_shader(GLShader(VertexShader, "shaders/screen_quad.vert"));
+    tone_map_gamma_correction_program->add_shader(GLShader(FragmentShader, "shaders/tone_mapping/tone_map_gamma_correction_reinhard.frag"));
+    tone_map_gamma_correction_program->link();
 }
 
 

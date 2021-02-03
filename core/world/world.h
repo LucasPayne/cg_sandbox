@@ -57,7 +57,9 @@ T *World::add(Entity e, Args&&... args)
 {
     auto behaviour = e.add<Behaviour>();
     behaviour->data = new T(std::forward<Args>(args)...);
-    behaviour->enabled = true;
+    behaviour->enabled = false; // Initially disabled, to prevent problems when behaviours create other instances of their own type.
+                                // Behaviours are enabled at the start of frame.
+    behaviour->waiting_to_be_initialized = true;
 
     behaviour->object()->world = this;
     behaviour->object()->entity = e;

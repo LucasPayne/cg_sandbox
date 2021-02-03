@@ -191,6 +191,7 @@ struct Behaviour : public IAspectType {
     // GenericOwned data;
     IBehaviour *data;
     bool enabled;
+    bool waiting_to_be_initialized; // New behaviours do not respond to events until they are initialized at the beginning of frame.
 
     void update();
     void post_render_update();

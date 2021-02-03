@@ -64,6 +64,15 @@ void World::loop()
     printf("[world] Frame start.\n");
     printf("--------------------------------------------------------------------------------\n");
 
+    /*--------------------------------------------------------------------------------
+        Wake up newly created entity behaviours.
+    --------------------------------------------------------------------------------*/
+    for (auto b : entities.aspects<Behaviour>()) {
+        if (b->waiting_to_be_initialized) {
+            b->waiting_to_be_initialized = false;
+            b->enabled = true;
+        }
+    }
 
     /*--------------------------------------------------------------------------------
         Update entity behaviours.

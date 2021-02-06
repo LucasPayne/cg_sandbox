@@ -67,8 +67,6 @@ int main(int argc, char *argv[])
     printf("[main] Creating world...\n");
     World world(context);
     printf("[main] Adding world callbacks...\n");
-    context.add_callbacks(&world);
-    context.add_callbacks(&world.input);
 
     printf("[main] Creating app...\n");
     App app(world);

@@ -123,6 +123,57 @@ struct TrianglePatch : public IBehaviour {
 
 
 
+struct SubdivisionCurve : public IBehaviour {
+    std::vector<std::vector<vec3>> components;
+
+    SubdivisionCurve() {}
+    SubdivisionCurve(std::vector<vec3> _points) {
+        components.push_back(_points);
+    }
+
+    void update() {
+        static vec4 colors[4] = {vec4(1,0,0,1), vec4(0,1,0,1), vec4(0,0,1,1), vec4(0,0,0,1)};
+
+        int c = 0;
+        for (auto points : components) {
+            for (int i = 0; i < points.size()-1; i++) {
+                world->graphics.paint.line(points[i], points[i+1], 10, colors[c%4]);
+            }
+            c += 1;
+        }
+    }
+
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_T) {
+                subdivide();
+            }
+        }
+    }
+
+    void subdivide() {
+        std::vector<std::vector<vec3>> new_components;
+        for (auto points : components) {
+            for (int segment = 0; segment <= 1; segment++) {
+                auto point = [&](int index) {
+                    if (segment == 0) return points[index];
+                    return points[5-1-index];
+                };
+                auto comp = std::vector<vec3>();
+                comp.push_back(point(0));
+                comp.push_back(0.5*point(0) + 0.5*point(1));
+                comp.push_back(0.25*point(0) + 0.5*point(1) + 0.25*point(2));
+                comp.push_back((1.f/8)*point(0) + (3.f/8)*point(1) + (3.f/8)*point(2) + (1.f/8)*point(3));
+                comp.push_back(1.f/16 * point(0) + 4.f/16 * point(1) + 6.f/16 * point(2) + 4.f/16 * point(3) + 1.f/16 * point(4));
+                new_components.push_back(comp);
+            }
+        }
+        components = new_components;
+    }
+};
+
+
+
 class App : public IGC::Callbacks {
 public:
     World &world;
@@ -142,25 +193,36 @@ App::App(World &_world) : world{_world}
     cameraman.get<Transform>()->position = vec3(0,0,2);
     main_camera = cameraman.get<Camera>();
 
-    Entity e = world.entities.add();
+    if (0) {
+        // Triangle subdiv testing
+        Entity e = world.entities.add();
+        vec3 a = vec3(2,0,0);
+        vec3 b = vec3(0,2,0);
+        vec3 c = vec3(0,0,2);
+        vec3 ab = 0.5*(a + b) + vec3::random(-2,2);
+        vec3 bc = 0.5*(b + c) + vec3::random(-2,2);
+        vec3 ca = 0.5*(c + a) + vec3::random(-2,2);
+        // vec3 a = vec3(-2,0,0);
+        // vec3 b = vec3(2,0,0);
+        // vec3 c = vec3(0,2,0);
+        // vec3 ab = 0.5*(a + b);
+        // vec3 bc = 0.5*(b + c);
+        // vec3 ca = 0.5*(c + a);
+        std::vector<vec3> points = {
+            a, b, c, ab, bc, ca
+        };
+        world.add<TrianglePatch>(e, points, false);
+    }
 
-
-    vec3 a = vec3(2,0,0);
-    vec3 b = vec3(0,2,0);
-    vec3 c = vec3(0,0,2);
-    vec3 ab = 0.5*(a + b) + vec3::random(-2,2);
-    vec3 bc = 0.5*(b + c) + vec3::random(-2,2);
-    vec3 ca = 0.5*(c + a) + vec3::random(-2,2);
-    // vec3 a = vec3(-2,0,0);
-    // vec3 b = vec3(2,0,0);
-    // vec3 c = vec3(0,2,0);
-    // vec3 ab = 0.5*(a + b);
-    // vec3 bc = 0.5*(b + c);
-    // vec3 ca = 0.5*(c + a);
-    std::vector<vec3> points = {
-        a, b, c, ab, bc, ca
-    };
-    world.add<TrianglePatch>(e, points, false);
+    if (1) {
+        // Curve subdiv testing
+        Entity e = world.entities.add();
+        auto points = std::vector<vec3>(5);
+        for (int i = 0; i < points.size(); i++) {
+            points[i] = vec3::random(-1,1);
+        }
+        world.add<SubdivisionCurve>(e, points);
+    }
 }
 
 
@@ -197,8 +259,6 @@ int main(int argc, char *argv[])
     printf("[main] Creating world...\n");
     World world(context);
     printf("[main] Adding world callbacks...\n");
-    context.add_callbacks(&world);
-    context.add_callbacks(&world.input);
 
     printf("[main] Creating app...\n");
     App app(world);

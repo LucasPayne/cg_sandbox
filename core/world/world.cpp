@@ -102,7 +102,9 @@ void World::close()
 void World::keyboard_handler(KeyboardEvent e)
 {
     for (auto b : entities.aspects<Behaviour>()) {
-        if (b->enabled) b->keyboard_handler(e);
+        if (b->enabled) {
+            b->keyboard_handler(e);
+        }
     }
 }
 

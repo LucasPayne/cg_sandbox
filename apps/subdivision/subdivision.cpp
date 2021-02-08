@@ -224,6 +224,7 @@ struct SplineCurve : public IBehaviour {
                 for (int k = 0; k < degree-j; k++) {
                     coeff *= t;
                 }
+                printf("%d choose %d = %d\n", degree, j, binomial_coefficient(degree, j));
                 coeff *= binomial_coefficient(degree, j);
                 p += coeff * ps[j];
             }
@@ -240,7 +241,31 @@ struct SplineCurve : public IBehaviour {
             }
         }
 
-        #define DEBOOR_WIDTH 5
+        #define DEGREE 4
+        #define DEBOOR_WIDTH (DEGREE+1)
+        #if DEGREE == 2
+        float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
+            0.5, 0.5, 0,
+            0, 1, 0,
+            0, 0.5, 0.5
+        };
+        #elif DEGREE == 3
+        float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
+            1.f/6,   2.f/3,   1.f/6,   0,
+            0,       2.f/3,   1.f/3,   0,
+            0,       1.f/3,   2.f/3,   0,
+            0,       1.f/6,   2.f/3,   1.f/6,
+        };
+        #elif DEGREE == 4
+        float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
+            1.f/24,   11.f/24,   11.f/24,   1.f/24,    0,
+            0,      1.f/3,     7.f/12,    1.f/12,    0,
+            0,      1.f/6,     2.f/3,     1.f/6,     0,
+            0,      1.f/12,    7.f/12,    1.f/3,     0,
+            0,      1.f/24,    11.f/24,   11.f/24,   1.f/24,
+        };
+        #endif
+
         for (int i = 0; i <= points.size()-DEBOOR_WIDTH; i++) {
             vec3 deboor[DEBOOR_WIDTH];
             for (int j = 0; j < DEBOOR_WIDTH; j++) deboor[j] = points[i+j];
@@ -260,22 +285,6 @@ struct SplineCurve : public IBehaviour {
             // 1/24,   11/24,   11/24,   1/24,    0
 
 
-            float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
-                // 0.5, 0.5, 0,
-                // 0, 1, 0,
-                // 0, 0.5, 0.5
-
-                // 1.f/6,   2.f/3,   1.f/6,   0,
-                // 0,       2.f/3,   1.f/3,   0,
-                // 0,       1.f/3,   2.f/3,   0,
-                // 0,       1.f/6,   2.f/3,   1.f/6,
-
-                0,      1.f/24,    11.f/24,   11.f/24,   1.f/24,
-                0,      1.f/12,    7.f/12,    1.f/3,     0,
-                0,      1.f/6,     2.f/3,     1.f/6,     0,
-                0,      1.f/3,     7.f/12,    1.f/12,    0,
-                1.f/24,   11.f/24,   11.f/24,   1.f/24,    0,
-            };
             vec3 bezier[DEBOOR_WIDTH];
             for (int j = 0; j < DEBOOR_WIDTH; j++) bezier[j] = vec3::zero();
             

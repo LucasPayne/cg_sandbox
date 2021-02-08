@@ -173,6 +173,62 @@ struct SubdivisionCurve : public IBehaviour {
 };
 
 
+struct SplineCurve : public IBehaviour {
+
+    std::vector<vec3> points;
+
+    SplineCurve() {}
+    SplineCurve(std::vector<vec3> _points) {
+        points = _points;
+    }
+
+    void render_quadratic_bezier_curve(vec3 ps[3], float width, vec4 color, int tess=10) {
+        float w = 1.f / tess;
+        std::vector<vec3> chain(tess+1);
+        for (int i = 0; i <= tess; i++) {
+            float t = i*w;
+            vec3 p = t*t * ps[0] + 2*t*(1-t)*ps[1] + (1-t)*(1-t)*ps[2];
+            chain[i] = p;
+        }
+        world->graphics.paint.chain(chain, width, color);
+    }
+
+    void update() {
+        static vec4 colors[4] = {vec4(1,0,0,1), vec4(0,1,0,1), vec4(0,0,1,1)};
+
+        for (int i = 0; i <= points.size()-2; i++) {
+	    world->graphics.paint.line(points[i], points[i+1], 3, vec4(0,0,0,1));
+        }
+
+        for (int i = 0; i <= points.size()-3; i++) {
+            vec3 deboor[3] = {points[i], points[i+1], points[i+2]};
+
+            float weights[9] = {
+                0.5, 0.5, 0,
+                0, 1, 0,
+                // 2, -1.5, 0.5,
+                0, 0.5, 0.5
+            };
+            vec3 bezier[3] = {vec3::zero(), vec3::zero(), vec3::zero()};
+            for (int b = 0; b <= 2; b++) {
+                for (int bb = 0; bb <= 2; bb++) {
+                    bezier[b] += weights[3*b + bb] * deboor[bb];
+                }
+            }
+            for (int j = 0; j <= 1; j++) {
+                world->graphics.paint.line(bezier[j], bezier[j+1], 10, colors[i%4]);
+            }
+            render_quadratic_bezier_curve(bezier, 5, colors[i%4]);
+        }
+    }
+
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_T) {
+            }
+        }
+    }
+};
 
 class App : public IGC::Callbacks {
 public:
@@ -214,7 +270,7 @@ App::App(World &_world) : world{_world}
         world.add<TrianglePatch>(e, points, false);
     }
 
-    if (1) {
+    if (0) {
         // Curve subdiv testing
         Entity e = world.entities.add();
         auto points = std::vector<vec3>(5);
@@ -222,6 +278,17 @@ App::App(World &_world) : world{_world}
             points[i] = vec3::random(-1,1);
         }
         world.add<SubdivisionCurve>(e, points);
+    }
+
+    
+    if (1) {
+        // Spline curve testing
+        Entity e = world.entities.add();
+        auto points = std::vector<vec3>(5);
+        for (int i = 0; i < points.size(); i++) {
+            points[i] = vec3::random(-1,1);
+        }
+        world.add<SplineCurve>(e, points);
     }
 }
 

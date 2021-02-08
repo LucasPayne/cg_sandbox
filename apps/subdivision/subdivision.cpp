@@ -241,7 +241,7 @@ struct SplineCurve : public IBehaviour {
             }
         }
 
-        #define DEGREE 4
+        #define DEGREE 6
         #define DEBOOR_WIDTH (DEGREE+1)
         #if DEGREE == 2
         float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
@@ -263,6 +263,25 @@ struct SplineCurve : public IBehaviour {
             0,      1.f/6,     2.f/3,     1.f/6,     0,
             0,      1.f/12,    7.f/12,    1.f/3,     0,
             0,      1.f/24,    11.f/24,   11.f/24,   1.f/24,
+        };
+        #elif DEGREE == 5
+        float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
+            1.f/120,   13.f/60,   11.f/20,   13.f/60,   1.f/120,   0,
+            0,       2.f/15,    11.f/20,   3.f/10,    1.f/60,    0,
+            0,       1.f/15,    1.f/2,     2.f/5,     1.f/30,    0,
+            0,       1.f/30,    2.f/5,     1.f/2,     1.f/15,    0,
+            0,       1.f/60,    3.f/10,    11.f/20,   2.f/15,    0,
+            0,       1.f/120,   13.f/60,   11.f/20,   13.f/60,   1.f/120,
+        };
+        #elif DEGREE == 6
+        float weights[DEBOOR_WIDTH * DEBOOR_WIDTH] = {
+            1.f/720,   19.f/240,   151.f/360,   151.f/360,   19.f/240,    1.f/720,    0,
+            0,       2.f/45,     131.f/360,   19.f/40,     41.f/360,    1.f/360,    0,
+            0,       1.f/45,     53.f/180,    31.f/60,     29.f/180,    1.f/180,    0,
+            0,       1.f/90,     2.f/9,       8.f/15,      2.f/9,       1.f/90,     0,
+            0,       1.f/180,    29.f/180,    31.f/60,     53.f/180,    1.f/45,     0,
+            0,       1.f/360,    41.f/360,    19.f/40,     131.f/360,   2.f/45,     0,
+            0,       1.f/720,    19.f/240,    151.f/360,   151.f/360,   19.f/240,   1.f/720,
         };
         #endif
 

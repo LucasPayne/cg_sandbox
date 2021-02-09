@@ -197,7 +197,7 @@ int binomial_coefficient(int n, int k)
 
 
 struct SplineCurve : public IBehaviour {
-#define DEGREE 6
+#define DEGREE 2
 #define DEBOOR_WIDTH (DEGREE+1)
     std::vector<vec3> points;
 
@@ -295,12 +295,36 @@ struct SplineCurve : public IBehaviour {
                     bezier[b] += weights[DEBOOR_WIDTH*b + bb] * deboor[bb];
                 }
             }
+            #if DEGREE == 2 // test degree evaluation 2->4
+
+	    vec3 bezier_elevated[5];
+            static float elevation_weights[5*3] = {
+                1.f,     0,     0,
+                1.f/2,   1.f/2,   0,
+                1.f/6,   2.f/3,   1.f/6,
+                0,     1.f/2,   1.f/2,
+                0,     0,     1,
+            };
+            for (int i = 0; i < 5; i++) {
+                bezier_elevated[i] = vec3::zero();
+                for (int j = 0; j < 3; j++) {
+                    bezier_elevated[i] += bezier[j]*elevation_weights[3*i + j];
+                }
+            }
+            if (show_bezier) {
+                for (int j = 0; j < 4; j++) {
+                    world->graphics.paint.line(bezier_elevated[j], bezier_elevated[j+1], 1.5, colors[i%4]);
+                }
+            }
+            render_bezier_curve(4, bezier_elevated, 5, colors[i%4]);
+            #else
             if (show_bezier) {
                 for (int j = 0; j < DEBOOR_WIDTH-1; j++) {
                     world->graphics.paint.line(bezier[j], bezier[j+1], 1.5, colors[i%4]);
                 }
             }
             render_bezier_curve(DEBOOR_WIDTH-1, bezier, 5, colors[i%4]);
+            #endif
         }
     }
 
@@ -584,7 +608,7 @@ App::App(World &_world) : world{_world}
     }
 
     
-    if (0) {
+    if (1) {
         // Spline curve testing
         Entity e = world.entities.add();
         auto points = std::vector<vec3>(20);
@@ -595,7 +619,7 @@ App::App(World &_world) : world{_world}
         world.add<SplineCurve>(e, points);
     }
 
-    if (1) {
+    if (0) {
         // Triangular spline surface testing
         Entity e = world.entities.add();
         int n = 7;

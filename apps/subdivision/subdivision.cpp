@@ -389,6 +389,7 @@ struct TriangleNetIndex {
 
 std::vector<TriangleNetIndex> triangle_net_indices(int width)
 {
+    // width here means the number of points at the bottom of the triangle.
     int n = width*(width+1)/2;
     auto indices = std::vector<TriangleNetIndex>(n);
     auto sums = ordered_sums(3, width-1);
@@ -493,58 +494,68 @@ struct TriangularSplineSurface : public IBehaviour {
         if (show_de_boor) {
             render_de_boor_net(de_boor_net_width, points, 1.5f, vec4(0,0,0,1));
         }
-
-        static const float weights[10 * 10] = {
-            -1.f/27,   13.f/36,    -1.f/12,    1.f/54,    13.f/36,    1.f/2,     -1.f/36,    -1.f/12,    -1.f/36,    1.f/54,
-            -2.f/27,   35.f/108,   1.f/108,    0,       13.f/108,   13.f/18,   -1.f/108,   -7.f/108,   -5.f/108,   1.f/54,
-            0,       1.f/108,    35.f/108,   -2.f/27,   -1.f/108,   13.f/18,   13.f/108,   -5.f/108,   -7.f/108,   1.f/54,
-            1.f/54,    -1.f/12,    13.f/36,    -1.f/27,   -1.f/36,    1.f/2,     13.f/36,    -1.f/36,    -1.f/12,    1.f/54,
-            -2.f/27,   13.f/108,   -7.f/108,   1.f/54,    35.f/108,   13.f/18,   -5.f/108,   1.f/108,    -1.f/108,   0,
-            0,       0,        0,        0,       0,        1,       0,        0,        0,        0,
-            1.f/54,    -7.f/108,   13.f/108,   -2.f/27,   -5.f/108,   13.f/18,   35.f/108,   -1.f/108,   1.f/108,    0,
-            0,       -1.f/108,   -5.f/108,   1.f/54,    1.f/108,    13.f/18,   -7.f/108,   35.f/108,   13.f/108,   -2.f/27,
-            1.f/54,    -5.f/108,   -1.f/108,   0,       -7.f/108,   13.f/18,   1.f/108,    13.f/108,   35.f/108,   -2.f/27,
-            1.f/54,    -1.f/36,    -1.f/36,    1.f/54,    -1.f/12,    1.f/2,     -1.f/12,    13.f/36,    13.f/36,    -1.f/27,
+        
+        static float weights[(5*(5+1))/2 * (5*(5+1))/2] = {
+            0, 1.f/12.f, 1.f/12.f, 0, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 0, 1.f/12.f, 1.f/12.f, 0, 0, 0, 0, 
+            0, 1.f/24.f, 1.f/8.f, 0, 0, 0, 1.f/2.f, 1.f/6.f, 0, 1.f/24.f, 1.f/8.f, 0, 0, 0, 0, 
+            0, 0, 1.f/6.f, 0, 0, 0, 1.f/3.f, 1.f/3.f, 0, 0, 1.f/6.f, 0, 0, 0, 0, 
+            0, 0, 1.f/8.f, 1.f/24.f, 0, 0, 1.f/6.f, 1.f/2.f, 0, 0, 1.f/8.f, 1.f/24.f, 0, 0, 0, 
+            0, 0, 1.f/12.f, 1.f/12.f, 0, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 0, 1.f/12.f, 1.f/12.f, 0, 0, 0, 
+            0, 0, 1.f/24.f, 0, 0, 1.f/24.f, 1.f/2.f, 1.f/8.f, 0, 1.f/8.f, 1.f/6.f, 0, 0, 0, 0, 
+            0, 0, 1.f/24.f, 0, 0, 0, 5.f/12.f, 1.f/4.f, 0, 1.f/24.f, 1.f/4.f, 0, 0, 0, 0, 
+            0, 0, 1.f/24.f, 0, 0, 0, 1.f/4.f, 5.f/12.f, 0, 0, 1.f/4.f, 1.f/24.f, 0, 0, 0, 
+            0, 0, 1.f/24.f, 0, 0, 0, 1.f/8.f, 1.f/2.f, 1.f/24.f, 0, 1.f/6.f, 1.f/8.f, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/3.f, 1.f/6.f, 0, 1.f/6.f, 1.f/3.f, 0, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/4.f, 1.f/4.f, 0, 1.f/24.f, 5.f/12.f, 1.f/24.f, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/6.f, 1.f/3.f, 0, 0, 1.f/3.f, 1.f/6.f, 0, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/6.f, 1.f/8.f, 0, 1.f/8.f, 1.f/2.f, 1.f/24.f, 1.f/24.f, 0, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/8.f, 1.f/6.f, 0, 1.f/24.f, 1.f/2.f, 1.f/8.f, 0, 1.f/24.f, 0, 
+            0, 0, 0, 0, 0, 0, 1.f/12.f, 1.f/12.f, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 1.f/12.f, 1.f/12.f, 0, 
         };
-        // 4+3+2+1 points in a de Boor window.
+
         int bezier_patch_number = 0;
+        #define window_width 4
+        #define window_size (((window_width+1)*(window_width+2))/2)
+        #define patch_degree 4
+        #define num_bezier_points (((patch_degree+1)*(patch_degree+2))/2)
+
         for (auto index : indices()) {
-            if (index[0] < 3) continue;
-            vec3 window[10];
+            if (index[0] < window_width) continue;
+            vec3 window[window_size];
             TriangleNetIndex corner_indices[3] = { index.relative( 0, 0, 0),
-                                                   index.relative(-3, 3, 0),
-                                                   index.relative(-3, 0, 3) };
+                                                   index.relative(-window_width, window_width, 0),
+                                                   index.relative(-window_width, 0, window_width) };
             vec3 corners[3];
             for (int i = 0; i < 3; i++) corners[i] = vec3(corner_indices[i].indices[0],
                                                           corner_indices[i].indices[1],
                                                           corner_indices[i].indices[2]);
             int i = 0;
-            for (auto window_index : triangle_net_indices(4)) {
-                vec3 barycentric_index = vec3(window_index.indices[0]/3.f,
-                                              window_index.indices[1]/3.f,
-                                              window_index.indices[2]/3.f);
+            for (auto window_index : triangle_net_indices(window_width+1)) {
+                vec3 barycentric_index = vec3(window_index.indices[0] * (1.f / window_width),
+                                              window_index.indices[1] * (1.f / window_width),
+                                              window_index.indices[2] * (1.f / window_width));
                 vec3 p_index_floats = corners[0]*barycentric_index[0] +
-                                    corners[1]*barycentric_index[1] +
-                                    corners[2]*barycentric_index[2];
+                                      corners[1]*barycentric_index[1] +
+                                      corners[2]*barycentric_index[2];
                 auto p_index = TriangleNetIndex(std::round(p_index_floats.x()),
                                                 std::round(p_index_floats.y()),
                                                 std::round(p_index_floats.z()));
                 window[i] = point(p_index);
                 i++;
             }
-            std::cout << "window: ";
-            for (auto w : window) std::cout << w << ", ";
-            std::cout << "\n";
+            // std::cout << "window: ";
+            // for (auto w : window) std::cout << w << ", ";
+            // std::cout << "\n";
 
-            vec3 bezier_points[10];
-            for (int i = 0; i < 10; i++) {
+            vec3 bezier_points[num_bezier_points];
+            for (int i = 0; i < num_bezier_points; i++) {
                 bezier_points[i] = vec3::zero();
-                for (int j = 0; j < 10; j++) {
-                    bezier_points[i] += weights[10*i + j]*window[j];
+                for (int j = 0; j < window_size; j++) {
+                    bezier_points[i] += weights[window_size*i + j]*window[j];
                 }
             }
 
-            render_de_boor_net(4, bezier_points, 1, colors[bezier_patch_number % 3]);
+            render_de_boor_net(window_width+1, bezier_points, 1, colors[bezier_patch_number % 3]);
             bezier_patch_number ++;
         }
     }
@@ -608,7 +619,7 @@ App::App(World &_world) : world{_world}
     }
 
     
-    if (1) {
+    if (0) {
         // Spline curve testing
         Entity e = world.entities.add();
         auto points = std::vector<vec3>(20);
@@ -619,10 +630,10 @@ App::App(World &_world) : world{_world}
         world.add<SplineCurve>(e, points);
     }
 
-    if (0) {
+    if (1) {
         // Triangular spline surface testing
         Entity e = world.entities.add();
-        int n = 7;
+        int n = 10;
         auto points = std::vector<vec3>(n*(n+1)/2);
 
         vec3 basis[3] = {vec3(0,0,0),
@@ -665,11 +676,6 @@ void App::mouse_handler(MouseEvent e)
 
 int main(int argc, char *argv[])
 {
-    // auto sums = ordered_sums(3, 5);
-    // for (auto s : sums) std::cout << s << ", ";
-    // std::cout << "\n";
-    // getchar();
-
     srand(time(0));
 
     printf("[main] Creating context...\n");

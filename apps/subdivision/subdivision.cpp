@@ -494,31 +494,34 @@ struct TriangularSplineSurface : public IBehaviour {
         if (show_de_boor) {
             render_de_boor_net(de_boor_net_width, points, 1.5f, vec4(0,0,0,1));
         }
+        for (int i = 0; i < points.size(); i++) {
+            points[i] += dt*vec3(0,5*sin(points[i].x()*3 + 3 * total_time), 0);
+        }
         
-        static float weights[(5*(5+1))/2 * (5*(5+1))/2] = {
-            0, 1.f/12.f, 1.f/12.f, 0, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 0, 1.f/12.f, 1.f/12.f, 0, 0, 0, 0, 
-            0, 1.f/24.f, 1.f/8.f, 0, 0, 0, 1.f/2.f, 1.f/6.f, 0, 1.f/24.f, 1.f/8.f, 0, 0, 0, 0, 
-            0, 0, 1.f/6.f, 0, 0, 0, 1.f/3.f, 1.f/3.f, 0, 0, 1.f/6.f, 0, 0, 0, 0, 
-            0, 0, 1.f/8.f, 1.f/24.f, 0, 0, 1.f/6.f, 1.f/2.f, 0, 0, 1.f/8.f, 1.f/24.f, 0, 0, 0, 
-            0, 0, 1.f/12.f, 1.f/12.f, 0, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 0, 1.f/12.f, 1.f/12.f, 0, 0, 0, 
-            0, 0, 1.f/24.f, 0, 0, 1.f/24.f, 1.f/2.f, 1.f/8.f, 0, 1.f/8.f, 1.f/6.f, 0, 0, 0, 0, 
-            0, 0, 1.f/24.f, 0, 0, 0, 5.f/12.f, 1.f/4.f, 0, 1.f/24.f, 1.f/4.f, 0, 0, 0, 0, 
-            0, 0, 1.f/24.f, 0, 0, 0, 1.f/4.f, 5.f/12.f, 0, 0, 1.f/4.f, 1.f/24.f, 0, 0, 0, 
-            0, 0, 1.f/24.f, 0, 0, 0, 1.f/8.f, 1.f/2.f, 1.f/24.f, 0, 1.f/6.f, 1.f/8.f, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/3.f, 1.f/6.f, 0, 1.f/6.f, 1.f/3.f, 0, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/4.f, 1.f/4.f, 0, 1.f/24.f, 5.f/12.f, 1.f/24.f, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/6.f, 1.f/3.f, 0, 0, 1.f/3.f, 1.f/6.f, 0, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/6.f, 1.f/8.f, 0, 1.f/8.f, 1.f/2.f, 1.f/24.f, 1.f/24.f, 0, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/8.f, 1.f/6.f, 0, 1.f/24.f, 1.f/2.f, 1.f/8.f, 0, 1.f/24.f, 0, 
-            0, 0, 0, 0, 0, 0, 1.f/12.f, 1.f/12.f, 0, 1.f/12.f, 1.f/2.f, 1.f/12.f, 1.f/12.f, 1.f/12.f, 0, 
-        };
-
-        int bezier_patch_number = 0;
+        #define CONTINUITY 4
+        #if CONTINUITY == 2
         #define window_width 4
-        #define window_size (((window_width+1)*(window_width+2))/2)
         #define patch_degree 4
+        static float weights[(5*(5+1))/2 * (5*(5+1))/2] = {
+            #include "weights_2.txt"
+        };
+        #elif CONTINUITY == 4
+        #define window_width 7
+        #define patch_degree 7
+        float weights[(8*(8+1))/2 * (8*(8+1))/2] = {
+            #include "weights_4.txt"
+        };
+        #elif CONTINUITY == 6
+        #define window_width 10
+        #define patch_degree 10
+        float weights[(11*(11+1))/2 * (11*(11+1))/2] = {
+            #include "weights_6.txt"
+        };
+        #endif
+        #define window_size (((window_width+1)*(window_width+2))/2)
         #define num_bezier_points (((patch_degree+1)*(patch_degree+2))/2)
 
+        int bezier_patch_number = 0;
         for (auto index : indices()) {
             if (index[0] < window_width) continue;
             vec3 window[window_size];
@@ -555,8 +558,11 @@ struct TriangularSplineSurface : public IBehaviour {
                 }
             }
 
-            render_de_boor_net(window_width+1, bezier_points, 1, colors[bezier_patch_number % 3]);
+            if (show_bezier) {
+                render_de_boor_net(window_width+1, bezier_points, 1, colors[bezier_patch_number % 3]);
+            }
             bezier_patch_number ++;
+
         }
     }
 
@@ -633,7 +639,7 @@ App::App(World &_world) : world{_world}
     if (1) {
         // Triangular spline surface testing
         Entity e = world.entities.add();
-        int n = 10;
+        int n = 12;
         auto points = std::vector<vec3>(n*(n+1)/2);
 
         vec3 basis[3] = {vec3(0,0,0),

@@ -594,7 +594,7 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     if (0) {
-        // Triangle subdiv testing
+        // Triangle subdiv testing.
         Entity e = world.entities.add();
         vec3 a = vec3(2,0,0);
         vec3 b = vec3(0,2,0);
@@ -615,7 +615,7 @@ App::App(World &_world) : world{_world}
     }
 
     if (0) {
-        // Curve subdiv testing
+        // Curve subdiv testing.
         Entity e = world.entities.add();
         auto points = std::vector<vec3>(5);
         for (int i = 0; i < points.size(); i++) {
@@ -626,7 +626,7 @@ App::App(World &_world) : world{_world}
 
     
     if (0) {
-        // Spline curve testing
+        // Spline curve testing.
         Entity e = world.entities.add();
         auto points = std::vector<vec3>(20);
         points[0] = vec3::zero();
@@ -636,8 +636,8 @@ App::App(World &_world) : world{_world}
         world.add<SplineCurve>(e, points);
     }
 
-    if (1) {
-        // Triangular spline surface testing
+    if (0) {
+        // Triangular spline surface testing.
         Entity e = world.entities.add();
         int n = 12;
         auto points = std::vector<vec3>(n*(n+1)/2);
@@ -652,6 +652,18 @@ App::App(World &_world) : world{_world}
                                    basis[2] * (index.indices[2] - (n-1)/3.f);
             spline->point(index) += vec3::random(-0.5, 0.5);
         }
+    }
+
+    if (0) {
+        // Loop subdivision surface testing.
+
+        auto geom = SurfaceGeometry();
+        auto v1 = test_geom->add_vertex(0,0,0);
+        auto v2 = test_geom->add_vertex(1,0,0);
+        auto v3 = test_geom->add_vertex(0,1,0);
+
+        Entity e = world.entities.add();
+        auto surface = world.add<LoopSubdivisionSurface>(e, geom);
     }
 }
 

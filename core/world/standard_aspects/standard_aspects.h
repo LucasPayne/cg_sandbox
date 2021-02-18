@@ -152,6 +152,9 @@ public:
         // Each Behaviour attached to an entity is given a reference to the entity.
 
 private:
+    virtual void init() {
+        //no-op
+    }
     virtual void update() {
         //no-op
     }
@@ -193,6 +196,7 @@ struct Behaviour : public IAspectType {
     bool enabled;
     bool waiting_to_be_initialized; // New behaviours do not respond to events until they are initialized at the beginning of frame.
 
+    void init(); // The world is _not_ accessible in the constructor! init() must be used for initialization depending on world state.
     void update();
     void post_render_update();
     void mouse_handler(MouseEvent e);

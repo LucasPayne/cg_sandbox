@@ -54,6 +54,10 @@ struct mat3x3 {
     static mat3x3 identity() {
         return mat3x3(1,0,0, 0,1,0, 0,0,1);
     }
+
+    inline float trace() const {
+        return entry(0,0)+entry(1,1)+entry(2,2);
+    }
 };
 // Matrix vector multiplication.
 inline vec3 operator*(mat3x3 M, vec3 v) {
@@ -167,6 +171,9 @@ struct mat4x4 {
                           -entry(1,1)*(entry(2,0)*entry(3,2) - entry(2,2)*entry(3,0))
                           +entry(1,2)*(entry(2,0)*entry(3,1) - entry(2,1)*entry(3,0)));
     }
+    inline float trace() const {
+        return entry(0,0)+entry(1,1)+entry(2,2)+entry(3,3);
+    }
 
     // Solve for x in Ax = b.
     vec4 solve(vec4 b) const;
@@ -268,6 +275,9 @@ struct mat2x2 {
 
     inline float determinant() const {
         return entry(0,0)*entry(1,1) - entry(0,1)*entry(1,0);
+    }
+    inline float trace() const {
+        return entry(0,0)+entry(1,1);
     }
 
     inline mat2x2 inverse() const {

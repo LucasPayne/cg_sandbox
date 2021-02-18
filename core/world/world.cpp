@@ -71,6 +71,7 @@ void World::loop()
         if (b->waiting_to_be_initialized) {
             b->waiting_to_be_initialized = false;
             b->enabled = true;
+            b->init(); // Initialize the behaviour.
         }
     }
 

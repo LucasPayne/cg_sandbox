@@ -35,9 +35,16 @@ struct ParametricSurface : public IBehaviour {
     std::function<vec3(float, float)> dfv; // Jacobian
     std::function<vec3(float, float)> ddfuu;
     std::function<vec3(float, float)> ddfuv;
-    std::function<vec3(float, float)> ddfvv;
+    std::function<vec3(float, float)> ddfvv; // Hessian
 
     vec2 param;
+
+    int tes_h;
+    int tes_w;
+    float step_h;
+    float step_w;
+
+    Resource<GLShaderProgram> curvature_shader;
 
     ParametricSurface(std::function<vec3(float, float)> _f,
                       std::function<vec3(float, float)> _dfu,
@@ -51,21 +58,66 @@ struct ParametricSurface : public IBehaviour {
       ddfvv{_ddfvv},
       param(0.5, 0.5)
     {}
+    
+    void init() {
+        curvature_shader = world->resources.add<GLShaderProgram>();
+        curvature_shader->add_shader(GLShader(VertexShader, "apps/surfaces/curvature.vert"));
+        curvature_shader->add_shader(GLShader(FragmentShader, "apps/surfaces/curvature.frag"));
+        curvature_shader->link();
+
+        tes_h = 20;
+        tes_w = 20;
+        step_h = 1.f / (tes_h - 1);
+        step_w = 1.f / (tes_w - 1);
+    }
 
     vec3 surface_normal(float u, float v) {
         return -vec3::cross(dfu(u, v), dfv(u, v)).normalized();
     }
 
+    mat2x2 shape_operator(float u, float v) {
+        vec3 point = f(u, v);
+        vec3 deru = dfu(u, v);
+        vec3 derv = dfv(u, v);
+        vec3 normal = surface_normal(u, v);
+        vec3 deruu = ddfuu(u, v);
+        vec3 deruv = ddfuv(u, v);
+        vec3 dervv = ddfvv(u, v);
+
+        // Calculate the first fundamental form.
+        // E,F,G
+        float E = vec3::dot(deru, deru);
+        float F = vec3::dot(deru, derv);
+        float G = vec3::dot(derv, derv);
+        mat2x2 I = mat2x2(
+            E, F,
+            F, G
+        );
+
+        // Calculate the second fundamental form.
+        float e = vec3::dot(normal, deruu);
+        float f = vec3::dot(normal, deruv);
+        float g = vec3::dot(normal, dervv);
+        mat2x2 II = mat2x2(
+            e, f,
+            f, g
+        );
+
+        // inv(I) * II was derived from minimizing/maximizing t^T II t w/r/t t such that t^T I t = 1 (min/maximizing a quadratic form over an ellipse).
+        // This appears to be in line with the definition of the shape operator. https://en.wikipedia.org/wiki/Differential_geometry_of_surfaces#Shape_operator
+        return I.inverse() * II;
+    }
+    std::pair<float, float> curvatures(float u, float v) {
+        mat2x2 P = shape_operator(u, v);
+        return std::pair<float, float>(P.determinant(), P.trace()/2);
+    }
+
     void update() {
-        const int tes_w = 20;
-        const int tes_h = 20;
-        const float step_w = 1.f / (tes_w - 1);
-        const float step_h = 1.f / (tes_h - 1);
         const vec4 color = vec4(0.2*vec3(1,1,1),1);
         const float line_width = 3;
 
-        auto t = entity.get<Transform>();
-        auto p = t->position;
+        auto transform = entity.get<Transform>();
+        auto p = transform->position;
 
         for (int i = 0; i < tes_h-1; i++) {
 	    float y = i * step_h;
@@ -81,16 +133,13 @@ struct ParametricSurface : public IBehaviour {
                 if (j == tes_w-2) world->graphics.paint.line(p + b, p + c, line_width, color);
             }
         }
-
         const vec4 sphere_color = vec4(1,0,0,1);
         const float sphere_size = 0.05;
-
         vec3 point = f(param.x(), param.y());
         vec3 normal = surface_normal(param.x(), param.y());
         world->graphics.paint.sphere(point, sphere_size, sphere_color);
         vec3 deru = dfu(param.x(), param.y());
         vec3 derv = dfv(param.x(), param.y());
-        
         world->graphics.paint.line(point, point + 0.4*deru.normalized(), line_width * 2, vec4(1,0,0,1));
         world->graphics.paint.line(point, point + 0.4*derv.normalized(), line_width * 2, vec4(0,1,0,1));
         world->graphics.paint.line(point, point + 0.4 * normal, line_width * 2, vec4(0,0,1,1));
@@ -118,9 +167,11 @@ struct ParametricSurface : public IBehaviour {
             f, g
         );
         std::cout << II << "\n";
+
+        // inv(I) * II was derived from minimizing/maximizing t^T II t w/r/t t such that t^T I t = 1 (min/maximizing a quadratic form over an ellipse).
+        // This appears to be in line with the definition of the shape operator. https://en.wikipedia.org/wiki/Differential_geometry_of_surfaces#Shape_operator
         mat2x2 M = I.inverse() * II;
         std::cout << M << "\n";
-
         mat2x2 V,D;
         std::tie(V,D) = M.diagonalize();
         std::cout << V << "\n";
@@ -128,14 +179,77 @@ struct ParametricSurface : public IBehaviour {
 
         vec2 e1 = V.column(0);
         vec2 e2 = V.column(1);
-        std::cout << vec2::dot(e1, e2) << "\n";
         vec3 e1p = deru*e1.x() + derv*e1.y();
         vec3 e2p = deru*e2.x() + derv*e2.y();
-        std::cout << vec3::dot(e1p, e2p) << "\n";
+
+        float l1 = D.entry(0,0);
+        float l2 = D.entry(1,1);
+        float gaussian_curvature = l1 * l2;
+        float mean_curvature = 0.5 * (l1 + l2);
+        printf("%.5f, %.5f\n", M.determinant(), M.trace()/2); // This should give the same values.
+        printf("curvatures:\n    Gaussian curvature: %.5f\n    Mean curvature:     %.5f\n", gaussian_curvature, mean_curvature);
 
         world->graphics.paint.line(point, point + 0.4*e1p.normalized(), line_width * 2.5, vec4(1,0,1,1));
         world->graphics.paint.line(point, point + 0.4*e2p.normalized(), line_width * 2.5, vec4(1,0,1,1));
+    }
 
+    void post_render_update() {
+        auto transform = entity.get<Transform>();
+
+        std::vector<vec3> positions(tes_h * tes_w);
+        std::vector<vec2> curvatures_array(tes_h * tes_w);
+        for (int i = 0; i < tes_h; i++) {
+	    float y = i * step_h;
+            for (int j = 0; j < tes_w; j++) {
+                float x = j * step_w;
+                float g,m;
+                std::tie(g, m) = curvatures(x, y);
+                curvatures_array[tes_w*i + j] = vec2(g, m);
+                positions[tes_w*i + j] = f(x, y);
+            }
+        }
+        mat4x4 mvp_matrix = main_camera->view_projection_matrix() * transform->matrix();
+        curvature_shader->bind();
+        glUniformMatrix4fv(curvature_shader->uniform_location("mvp_matrix"), 1, GL_FALSE, (const GLfloat *) &mvp_matrix);
+
+        GLuint vao;
+        glCreateVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
+        GLuint position_buffer;
+        glGenBuffers(1, &position_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, position_buffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * tes_h * tes_w, (const void *) &positions[0], GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
+        glEnableVertexAttribArray(0);
+        GLuint curvature_buffer;
+        glGenBuffers(1, &curvature_buffer);
+        glBindBuffer(GL_ARRAY_BUFFER, curvature_buffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * tes_h * tes_w, (const void *) &curvatures_array[0], GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (const void *) 0);
+        glEnableVertexAttribArray(1);
+
+        GLuint index_buffer;
+        glGenBuffers(1, &index_buffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+        int num_indices = 3*2*(tes_w-1)*(tes_h-1);
+        auto indices = std::vector<uint16_t>(3*2*(tes_w-1)*(tes_h-1));
+        int index_pos = 0;
+        for (int i = 0; i < tes_h-1; i++) {
+            for (int j = 0; j < tes_w-1; j++) {
+                indices[index_pos] = tes_w*i + j;
+                indices[index_pos+1] = tes_w*i + j+1;
+                indices[index_pos+2] = tes_w*(i+1) + j+1;
+
+                indices[index_pos+3] = tes_w*i + j;
+                indices[index_pos+4] = tes_w*(i+1) + j+1;
+                indices[index_pos+5] = tes_w*(i+1) + j;
+                index_pos += 6;
+            }
+        }
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * num_indices, (const void *) &indices[0], GL_DYNAMIC_DRAW);
+        glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, (const void *) 0);
+        curvature_shader->unbind();
     }
 };
 

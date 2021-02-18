@@ -3,6 +3,10 @@
 
 // Non-virtual Behaviour interface.
 // It may be useful to wrap all behaviour callbacks for debugging.
+void Behaviour::init()
+{
+    object()->init();
+}
 void Behaviour::update()
 {
     object()->update();

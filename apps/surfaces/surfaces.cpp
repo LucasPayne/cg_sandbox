@@ -132,6 +132,10 @@ struct ParametricSurface : public IBehaviour {
         vec3 e1p = deru*e1.x() + derv*e1.y();
         vec3 e2p = deru*e2.x() + derv*e2.y();
         std::cout << vec3::dot(e1p, e2p) << "\n";
+
+        world->graphics.paint.line(point, point + 0.4*e1p.normalized(), line_width * 2.5, vec4(1,0,1,1));
+        world->graphics.paint.line(point, point + 0.4*e2p.normalized(), line_width * 2.5, vec4(1,0,1,1));
+
     }
 };
 
@@ -141,7 +145,7 @@ struct Test1 : public IBehaviour {
     {}
 
     void update() {
-        surface->param = vec2(0.5 + 0.25 * cos(total_time), 0.5 + 0.25 * sin(total_time));
+        surface->param = vec2(0.5 + 0.45 * cos(total_time), 0.5 + 0.45 * sin(total_time));
     }
 };
 
@@ -158,23 +162,41 @@ App::App(World &_world) : world{_world}
     Entity e = world.entities.add();
     e.add<Transform>(0,0,0);
     world.add<Test1>(e, world.add<ParametricSurface>(e,
+        // [](float u, float v) { // f
+        //     return vec3(3*u, 4*u*u*v - 2*v*v, 4*v);
+        // },
+        // [](float u, float v) { // dfu
+        //     return vec3(3, 8*u*v, 0);
+        // },
+        // [](float u, float v) { // dfv
+        //     return vec3(0, 4*u*u - 4*v, 4);
+        // },
+        // [](float u, float v) { // ddfuu
+        //     return vec3(0, 8*v, 0);
+        // },
+        // [](float u, float v) { // ddfuv
+        //     return vec3(0, 8*u, 0);
+        // },
+        // [](float u, float v) { // ddfvv
+        //     return vec3(0, -4, 0);
+        // }
         [](float u, float v) { // f
-            return vec3(3*u, 4*u*u*v - 2*v*v, 4*v);
+            return vec3(u, u*u - 2*u*v + v*v, v);
         },
         [](float u, float v) { // dfu
-            return vec3(3, 8*u*v, 0);
+            return vec3(1, 2*u - 2*v, 0);
         },
         [](float u, float v) { // dfv
-            return vec3(0, 4*u*u - 4*v, 4);
+            return vec3(0, 2*v - 2*u, 1);
         },
         [](float u, float v) { // ddfuu
-            return vec3(0, 8*v, 0);
+            return vec3(0, 2, 0);
         },
         [](float u, float v) { // ddfuv
-            return vec3(0, 8*u, 0);
+            return vec3(0, -2, 0);
         },
         [](float u, float v) { // ddfvv
-            return vec3(0, -4, 0);
+            return vec3(0, 2, 0);
         }
     ));
 }

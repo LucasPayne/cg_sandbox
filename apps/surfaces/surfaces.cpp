@@ -1,3 +1,6 @@
+/*--------------------------------------------------------------------------------
+Some differential geometry of surfaces.
+--------------------------------------------------------------------------------*/
 #include <time.h>
 #include <functional>
 #include "cg_sandbox.h"
@@ -30,13 +33,23 @@ struct ParametricSurface : public IBehaviour {
     std::function<vec3(float, float)> f;
     std::function<vec3(float, float)> dfu;
     std::function<vec3(float, float)> dfv; // Jacobian
+    std::function<vec3(float, float)> ddfuu;
+    std::function<vec3(float, float)> ddfuv;
+    std::function<vec3(float, float)> ddfvv;
 
     vec2 param;
 
     ParametricSurface(std::function<vec3(float, float)> _f,
                       std::function<vec3(float, float)> _dfu,
-                      std::function<vec3(float, float)> _dfv)
-    : f{_f}, dfu{_dfu}, dfv{_dfv}, param(0.5, 0.5)
+                      std::function<vec3(float, float)> _dfv,
+                      std::function<vec3(float, float)> _ddfuu,
+                      std::function<vec3(float, float)> _ddfuv,
+                      std::function<vec3(float, float)> _ddfvv)
+    : f{_f}, dfu{_dfu}, dfv{_dfv},
+      ddfuu{_ddfuu},
+      ddfuv{_ddfuv},
+      ddfvv{_ddfvv},
+      param(0.5, 0.5)
     {}
 
     vec3 surface_normal(float u, float v) {
@@ -75,11 +88,50 @@ struct ParametricSurface : public IBehaviour {
         vec3 point = f(param.x(), param.y());
         vec3 normal = surface_normal(param.x(), param.y());
         world->graphics.paint.sphere(point, sphere_size, sphere_color);
-        world->graphics.paint.line(point, point + 0.4*dfu(param.x(), param.y()).normalized(), line_width * 2, vec4(1,0,0,1));
-        world->graphics.paint.line(point, point + 0.4*dfv(param.x(), param.y()).normalized(), line_width * 2, vec4(0,1,0,1));
+        vec3 deru = dfu(param.x(), param.y());
+        vec3 derv = dfv(param.x(), param.y());
+        
+        world->graphics.paint.line(point, point + 0.4*deru.normalized(), line_width * 2, vec4(1,0,0,1));
+        world->graphics.paint.line(point, point + 0.4*derv.normalized(), line_width * 2, vec4(0,1,0,1));
         world->graphics.paint.line(point, point + 0.4 * normal, line_width * 2, vec4(0,0,1,1));
 
-        mat2x2 m;
+        // Calculate the first fundamental form.
+        // E,F,G
+        float E = vec3::dot(deru, deru);
+        float F = vec3::dot(deru, derv);
+        float G = vec3::dot(derv, derv);
+        mat2x2 I = mat2x2(
+            E, F,
+            F, G
+        );
+        std::cout << I << "\n";
+
+        // Calculate the second fundamental form.
+        vec3 deruu = ddfuu(param.x(), param.y());
+        vec3 deruv = ddfuv(param.x(), param.y());
+        vec3 dervv = ddfvv(param.x(), param.y());
+        float e = vec3::dot(normal, deruu);
+        float f = vec3::dot(normal, deruv);
+        float g = vec3::dot(normal, dervv);
+        mat2x2 II = mat2x2(
+            e, f,
+            f, g
+        );
+        std::cout << II << "\n";
+        mat2x2 M = I.inverse() * II;
+        std::cout << M << "\n";
+
+        mat2x2 V,D;
+        std::tie(V,D) = M.diagonalize();
+        std::cout << V << "\n";
+        std::cout << D << "\n";
+
+        vec2 e1 = V.column(0);
+        vec2 e2 = V.column(1);
+        std::cout << vec2::dot(e1, e2) << "\n";
+        vec3 e1p = deru*e1.x() + derv*e1.y();
+        vec3 e2p = deru*e2.x() + derv*e2.y();
+        std::cout << vec3::dot(e1p, e2p) << "\n";
     }
 };
 
@@ -106,14 +158,23 @@ App::App(World &_world) : world{_world}
     Entity e = world.entities.add();
     e.add<Transform>(0,0,0);
     world.add<Test1>(e, world.add<ParametricSurface>(e,
-        [](float u, float v) {
-            return vec3(3*u, 9*(u-0.5)*(v-0.5), 3*v);
+        [](float u, float v) { // f
+            return vec3(3*u, 4*u*u*v - 2*v*v, 4*v);
         },
-        [](float u, float v) {
-            return vec3(3, 9*(v-0.5), 0);
+        [](float u, float v) { // dfu
+            return vec3(3, 8*u*v, 0);
         },
-        [](float u, float v) {
-            return vec3(0, 9*(u-0.5), 3);
+        [](float u, float v) { // dfv
+            return vec3(0, 4*u*u - 4*v, 4);
+        },
+        [](float u, float v) { // ddfuu
+            return vec3(0, 8*v, 0);
+        },
+        [](float u, float v) { // ddfuv
+            return vec3(0, 8*u, 0);
+        },
+        [](float u, float v) { // ddfvv
+            return vec3(0, -4, 0);
         }
     ));
 }

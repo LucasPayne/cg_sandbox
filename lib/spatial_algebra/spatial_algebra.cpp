@@ -1,7 +1,7 @@
 #include "spatial_algebra.h"
 #include <iostream>
-
-
+#include <math.h>
+#include <assert.h>
 
 static void _print_matrix(std::ostream &os, const float *entries, int n)
 {
@@ -214,3 +214,23 @@ mat4x4 Quaternion::matrix()
                   0,0,0,1);
 };
 
+
+
+std::pair<mat2x2,mat2x2> mat2x2::diagonalize() const
+{
+    const float A = entry(0,0);
+    const float B = entry(0,1);
+    const float C = entry(1,0);
+    const float D = entry(1,1);
+
+    float discrim = (A + D)*(A + D) - 4*(A*D - B*C);
+    assert(discrim >= 0);
+    float half_sqrt_discrim = 0.5 * sqrt(discrim);
+    float base_root = 0.5 * (A + D);
+    float l1 = base_root - half_sqrt_discrim;
+    float l2 = base_root + half_sqrt_discrim;
+    mat2x2 Vals = mat2x2(l1, 0, 0, l2);
+    mat2x2 Vecs = mat2x2(vec2(B, l1 - A).normalized(),
+                         vec2(B, l2 - A).normalized());
+    return std::pair<mat2x2,mat2x2>(Vecs, Vals);
+}

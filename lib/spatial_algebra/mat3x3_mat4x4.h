@@ -2,6 +2,7 @@
 #define SPATIAL_ALGEBRA_MAT4X4_H
 #include <string.h>
 #include <ostream>
+#include <tuple>
 
 // mat3x3 and mat4x4 are column-major, as default in OpenGL/GLSL.
 struct mat3x3 {
@@ -221,6 +222,8 @@ std::ostream &operator<<(std::ostream &os, const mat4x4 &M);
 
 
 
+struct mat2x2;
+inline mat2x2 operator*(float x, mat2x2 M);
 struct mat2x2 {
     float entries[4];
     // Constructor with column-major parameter order.
@@ -262,6 +265,16 @@ struct mat2x2 {
     static mat2x2 identity() {
         return mat2x2(1,0, 0,1);
     }
+
+    inline float determinant() const {
+        return entry(0,0)*entry(1,1) - entry(0,1)*entry(1,0);
+    }
+
+    inline mat2x2 inverse() const {
+        return (1.f / determinant()) * mat2x2(entry(1,1), -entry(0,1), -entry(1,0), entry(0,0));
+    }
+
+    std::pair<mat2x2,mat2x2> diagonalize() const;
 };
 // Matrix vector multiplication.
 inline vec2 operator*(mat2x2 M, vec2 v) {
@@ -279,6 +292,15 @@ inline mat2x2 operator*(mat2x2 A, mat2x2 B) {
         A.entry(1,0)*B.entry(0, 1) + A.entry(1,1)*B.entry(1, 1)
     );
 }
+
+inline mat2x2 operator*(float x, mat2x2 M) {
+    M.entry(0,0) *= x;
+    M.entry(0,1) *= x;
+    M.entry(1,0) *= x;
+    M.entry(1,1) *= x;
+    return M;
+}
+
 std::ostream &operator<<(std::ostream &os, const mat2x2 &M);
 
 

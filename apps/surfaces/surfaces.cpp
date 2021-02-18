@@ -12,6 +12,9 @@ Some differential geometry of surfaces.
 #include "mesh_processing/mesh_processing.h"
 #include "world/graphics/image.h"
 
+#include "automatic_differentiation.h"
+
+
 Aspect<Camera> main_camera;
 
 
@@ -46,6 +49,8 @@ struct ParametricSurface : public IBehaviour {
 
     Resource<GLShaderProgram> curvature_shader;
 
+    bool visualize_mean_or_gaussian;
+
     ParametricSurface(std::function<vec3(float, float)> _f,
                       std::function<vec3(float, float)> _dfu,
                       std::function<vec3(float, float)> _dfv,
@@ -69,6 +74,8 @@ struct ParametricSurface : public IBehaviour {
         tes_w = 20;
         step_h = 1.f / (tes_h - 1);
         step_w = 1.f / (tes_w - 1);
+
+        visualize_mean_or_gaussian = 1; // gaussian
     }
 
     vec3 surface_normal(float u, float v) {
@@ -208,9 +215,16 @@ struct ParametricSurface : public IBehaviour {
                 positions[tes_w*i + j] = f(x, y);
             }
         }
+        vec2 max_abs_curvatures = vec2(0,0);
+        for (vec2 c : curvatures_array) {
+            max_abs_curvatures = vec2::max(max_abs_curvatures, c.abs());
+        }
+
         mat4x4 mvp_matrix = main_camera->view_projection_matrix() * transform->matrix();
         curvature_shader->bind();
         glUniformMatrix4fv(curvature_shader->uniform_location("mvp_matrix"), 1, GL_FALSE, (const GLfloat *) &mvp_matrix);
+        glUniform2fv(curvature_shader->uniform_location("max_abs_curvatures"), 1, (const GLfloat *) &max_abs_curvatures);
+        glUniform1i(curvature_shader->uniform_location("mode"), visualize_mean_or_gaussian);
 
         GLuint vao;
         glCreateVertexArrays(1, &vao);
@@ -251,6 +265,12 @@ struct ParametricSurface : public IBehaviour {
         glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_SHORT, (const void *) 0);
         curvature_shader->unbind();
     }
+
+    void keyboard_handler(KeyboardEvent e) {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_G) visualize_mean_or_gaussian = (visualize_mean_or_gaussian + 1) % 2;
+        }
+    }
 };
 
 struct Test1 : public IBehaviour {
@@ -276,44 +296,45 @@ App::App(World &_world) : world{_world}
     Entity e = world.entities.add();
     e.add<Transform>(0,0,0);
     world.add<Test1>(e, world.add<ParametricSurface>(e,
-        // [](float u, float v) { // f
-        //     return vec3(3*u, 4*u*u*v - 2*v*v, 4*v);
-        // },
-        // [](float u, float v) { // dfu
-        //     return vec3(3, 8*u*v, 0);
-        // },
-        // [](float u, float v) { // dfv
-        //     return vec3(0, 4*u*u - 4*v, 4);
-        // },
-        // [](float u, float v) { // ddfuu
-        //     return vec3(0, 8*v, 0);
-        // },
-        // [](float u, float v) { // ddfuv
-        //     return vec3(0, 8*u, 0);
-        // },
-        // [](float u, float v) { // ddfvv
-        //     return vec3(0, -4, 0);
-        // }
         [](float u, float v) { // f
-            return vec3(u, u*u - 2*u*v + v*v, v);
+            return vec3(3*u, 4*u*u*v - 2*v*v, 4*v);
         },
         [](float u, float v) { // dfu
-            return vec3(1, 2*u - 2*v, 0);
+            return vec3(3, 8*u*v, 0);
         },
         [](float u, float v) { // dfv
-            return vec3(0, 2*v - 2*u, 1);
+            return vec3(0, 4*u*u - 4*v, 4);
         },
         [](float u, float v) { // ddfuu
-            return vec3(0, 2, 0);
+            return vec3(0, 8*v, 0);
         },
         [](float u, float v) { // ddfuv
-            return vec3(0, -2, 0);
+            return vec3(0, 8*u, 0);
         },
         [](float u, float v) { // ddfvv
-            return vec3(0, 2, 0);
+            return vec3(0, -4, 0);
         }
+        // [](float u, float v) { // f
+        //     return vec3(u, u*u - 2*u*v + v*v, v);
+        // },
+        // [](float u, float v) { // dfu
+        //     return vec3(1, 2*u - 2*v, 0);
+        // },
+        // [](float u, float v) { // dfv
+        //     return vec3(0, 2*v - 2*u, 1);
+        // },
+        // [](float u, float v) { // ddfuu
+        //     return vec3(0, 2, 0);
+        // },
+        // [](float u, float v) { // ddfuv
+        //     return vec3(0, -2, 0);
+        // },
+        // [](float u, float v) { // ddfvv
+        //     return vec3(0, 2, 0);
+        // }
     ));
 }
+
 
 
 void App::close()

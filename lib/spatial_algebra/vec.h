@@ -114,6 +114,22 @@ struct vec3 {
                     (1-t)*a.y() + t*b.y(),
                     (1-t)*a.z() + t*b.z());
     }
+
+    inline vec3 abs() const {
+        return vec3(fabs(x()), fabs(y()), fabs(z()));
+    }
+
+    
+    static inline vec3 max(vec3 a, vec3 b) {
+        return vec3(a.x() > b.x() ? a.x() : b.x(),
+                    a.y() > b.y() ? a.y() : b.y(),
+                    a.z() > b.z() ? a.z() : b.z());
+    }
+    static inline vec3 min(vec3 a, vec3 b) {
+        return vec3(a.x() < b.x() ? a.x() : b.x(),
+                    a.y() < b.y() ? a.y() : b.y(),
+                    a.z() < b.z() ? a.z() : b.z());
+    }
 };
 
 // vec3-vec3 operations.
@@ -273,6 +289,10 @@ struct vec4 {
         // .xyz notation after glsl.
         return vec3(x(), y(), z());
     }
+
+    inline vec4 abs() const {
+        return vec4(fabs(x()), fabs(y()), fabs(z()), fabs(w()));
+    }
 };
 
 // vec4-vec4 operations.
@@ -413,6 +433,19 @@ struct vec2 {
     static inline vec2 lerp(vec2 a, vec2 b, float t) {
         return vec2((1-t)*a.x() + t*b.x(),
                     (1-t)*a.y() + t*b.y());
+    }
+
+    inline vec2 abs() const {
+        return vec2(fabs(x()), fabs(y()));
+    }
+
+    static inline vec2 max(vec2 a, vec2 b) {
+        return vec2(a.x() > b.x() ? a.x() : b.x(),
+                    a.y() > b.y() ? a.y() : b.y());
+    }
+    static inline vec2 min(vec2 a, vec2 b) {
+        return vec2(a.x() < b.x() ? a.x() : b.x(),
+                    a.y() < b.y() ? a.y() : b.y());
     }
 };
 // vec2-vec2 operations.

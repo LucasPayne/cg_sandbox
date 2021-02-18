@@ -28,9 +28,20 @@ public:
 
 struct ParametricSurface : public IBehaviour {
     std::function<vec3(float, float)> f;
-    ParametricSurface(std::function<vec3(float, float)> _f) :
-        f{_f}
+    std::function<vec3(float, float)> dfu;
+    std::function<vec3(float, float)> dfv; // Jacobian
+
+    vec2 param;
+
+    ParametricSurface(std::function<vec3(float, float)> _f,
+                      std::function<vec3(float, float)> _dfu,
+                      std::function<vec3(float, float)> _dfv)
+    : f{_f}, dfu{_dfu}, dfv{_dfv}, param(0.5, 0.5)
     {}
+
+    vec3 surface_normal(float u, float v) {
+        return -vec3::cross(dfu(u, v), dfv(u, v)).normalized();
+    }
 
     void update() {
         const int tes_w = 20;
@@ -40,6 +51,9 @@ struct ParametricSurface : public IBehaviour {
         const vec4 color = vec4(0.2*vec3(1,1,1),1);
         const float line_width = 3;
 
+        auto t = entity.get<Transform>();
+        auto p = t->position;
+
         for (int i = 0; i < tes_h-1; i++) {
 	    float y = i * step_h;
             for (int j = 0; j < tes_w-1; j++) {
@@ -48,12 +62,34 @@ struct ParametricSurface : public IBehaviour {
                 vec3 b = f(x + step_w, y);
                 vec3 c = f(x + step_w, y + step_h);
                 vec3 d = f(x, y + step_h);
-                world->graphics.paint.line(a, b, line_width, color);
-                world->graphics.paint.line(a, d, line_width, color);
-                if (i == tes_h-2) world->graphics.paint.line(d, c, line_width, color);
-                if (j == tes_w-2) world->graphics.paint.line(b, c, line_width, color);
+                world->graphics.paint.line(p + a, p + b, line_width, color);
+                world->graphics.paint.line(p + a, p + d, line_width, color);
+                if (i == tes_h-2) world->graphics.paint.line(p + d, p + c, line_width, color);
+                if (j == tes_w-2) world->graphics.paint.line(p + b, p + c, line_width, color);
             }
         }
+
+        const vec4 sphere_color = vec4(1,0,0,1);
+        const float sphere_size = 0.05;
+
+        vec3 point = f(param.x(), param.y());
+        vec3 normal = surface_normal(param.x(), param.y());
+        world->graphics.paint.sphere(point, sphere_size, sphere_color);
+        world->graphics.paint.line(point, point + 0.4*dfu(param.x(), param.y()).normalized(), line_width * 2, vec4(1,0,0,1));
+        world->graphics.paint.line(point, point + 0.4*dfv(param.x(), param.y()).normalized(), line_width * 2, vec4(0,1,0,1));
+        world->graphics.paint.line(point, point + 0.4 * normal, line_width * 2, vec4(0,0,1,1));
+
+        mat2x2 m;
+    }
+};
+
+struct Test1 : public IBehaviour {
+    ParametricSurface *surface;
+    Test1(ParametricSurface *_surface) : surface{_surface}
+    {}
+
+    void update() {
+        surface->param = vec2(0.5 + 0.25 * cos(total_time), 0.5 + 0.25 * sin(total_time));
     }
 };
 
@@ -68,9 +104,18 @@ App::App(World &_world) : world{_world}
     main_camera = cameraman.get<Camera>();
 
     Entity e = world.entities.add();
-    world.add<ParametricSurface>(e, [&](float x, float y) {
-        return vec3(3*x, 9*(x-0.5)*(y-0.5), 3*y);
-    });
+    e.add<Transform>(0,0,0);
+    world.add<Test1>(e, world.add<ParametricSurface>(e,
+        [](float u, float v) {
+            return vec3(3*u, 9*(u-0.5)*(v-0.5), 3*v);
+        },
+        [](float u, float v) {
+            return vec3(3, 9*(v-0.5), 0);
+        },
+        [](float u, float v) {
+            return vec3(0, 9*(u-0.5), 3);
+        }
+    ));
 }
 
 

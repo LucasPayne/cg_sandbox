@@ -3,7 +3,7 @@
 
 
 
-static void _print_matrix_3x3_4x4(std::ostream &os, const float *entries, int n)
+static void _print_matrix(std::ostream &os, const float *entries, int n)
 {
     int max_entry_len = 0;
     for (int i = 0; i < n*n; i++) {
@@ -26,14 +26,20 @@ static void _print_matrix_3x3_4x4(std::ostream &os, const float *entries, int n)
 
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M)
 {
-    _print_matrix_3x3_4x4(os, M.entries, 4);
+    _print_matrix(os, M.entries, 4);
     return os;
 }
 
 
 std::ostream &operator<<(std::ostream &os, const mat3x3 &M)
 {
-    _print_matrix_3x3_4x4(os, M.entries, 3);
+    _print_matrix(os, M.entries, 3);
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const mat2x2 &M)
+{
+    _print_matrix(os, M.entries, 2);
     return os;
 }
 

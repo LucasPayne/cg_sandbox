@@ -220,4 +220,68 @@ inline mat4x4 operator*(mat4x4 A, mat4x4 B) {
 std::ostream &operator<<(std::ostream &os, const mat4x4 &M);
 
 
+
+struct mat2x2 {
+    float entries[4];
+    // Constructor with column-major parameter order.
+    mat2x2(float e00, float e10,
+           float e01, float e11)
+    : entries{e00,e10,
+              e01,e11} {}
+    // Constructor with column-major float array.
+    mat2x2(float _entries[/*4*/]) {
+        memcpy(entries, _entries, sizeof(entries));
+    }
+    // Constructor from three column vectors.
+    mat2x2(vec2 c0, vec2 c1) :
+        mat2x2(c0.x(), c0.y(),
+               c1.x(), c1.y())
+    {}
+    mat2x2() {}
+    inline float entry(int i, int j) const {
+        return entries[2*j + i];
+    }
+    inline float &entry(int i, int j) {
+        return entries[2*j + i];
+    }
+
+    // Extract columns.
+    inline vec2 column(int j) const {
+        return *((vec2 *) &entries[2*j]);
+    }
+    // Extract rows.
+    inline vec2 row(int i) const {
+        return vec2(entries[2*0 + i],
+                    entries[2*1 + i]);
+    }
+
+    inline mat2x2 transpose() const {
+        return mat2x2(entry(0,0),entry(0,1),
+                      entry(1,0),entry(1,1));
+    }
+    static mat2x2 identity() {
+        return mat2x2(1,0, 0,1);
+    }
+};
+// Matrix vector multiplication.
+inline vec2 operator*(mat2x2 M, vec2 v) {
+    return vec2(M.entry(0,0)*v[0] + M.entry(0,1)*v[1],
+                M.entry(1,0)*v[0] + M.entry(1,1)*v[1]);
+}
+// Matrix multiplication.
+inline mat2x2 operator*(mat2x2 A, mat2x2 B) {
+    return mat2x2(
+        // A acting on B's first column.
+        A.entry(0,0)*B.entry(0, 0) + A.entry(0,1)*B.entry(1, 0),
+        A.entry(1,0)*B.entry(0, 0) + A.entry(1,1)*B.entry(1, 0),
+        // A acting on B's second column.
+        A.entry(0,0)*B.entry(0, 1) + A.entry(0,1)*B.entry(1, 1),
+        A.entry(1,0)*B.entry(0, 1) + A.entry(1,1)*B.entry(1, 1)
+    );
+}
+std::ostream &operator<<(std::ostream &os, const mat2x2 &M);
+
+
+
+
 #endif // SPATIAL_ALGEBRA_MAT4X4_H

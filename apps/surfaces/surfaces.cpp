@@ -31,7 +31,6 @@ public:
 };
 
 
-
 struct ParametricSurface : public IBehaviour {
     std::function<vec3(float, float)> f;
     std::function<vec3(float, float)> dfu;
@@ -63,7 +62,7 @@ struct ParametricSurface : public IBehaviour {
       ddfvv{_ddfvv},
       param(0.5, 0.5)
     {}
-    
+
     void init() {
         curvature_shader = world->resources.add<GLShaderProgram>();
         curvature_shader->add_shader(GLShader(VertexShader, "apps/surfaces/curvature.vert"));
@@ -78,11 +77,67 @@ struct ParametricSurface : public IBehaviour {
         visualize_mean_or_gaussian = 1; // gaussian
     }
 
-    vec3 surface_normal(float u, float v) {
+
+    mat2x2 first_fundamental_form(float u, float v) const {
+        vec3 deru = dfu(u, v);
+        vec3 derv = dfv(u, v);
+        // Calculate the first fundamental form.
+        // E,F,G
+        float E = vec3::dot(deru, deru);
+        float F = vec3::dot(deru, derv);
+        float G = vec3::dot(derv, derv);
+        mat2x2 I = mat2x2(
+            E, F,
+            F, G
+        );
+        return I;
+    }
+
+    float surface_area(int tes = 40, bool gaussian_quadrature = true) const {
+        const int tes_h = tes;
+        const int tes_w = tes;
+        const float step_h = 1.f/tes_h;
+        const float step_w = 1.f/tes_w;
+
+        if (gaussian_quadrature) {
+	    float left_node_shift = 0.5f - 0.5f/sqrt(3);
+	    float right_node_shift = 0.5f + 0.5f/sqrt(3);
+            float measured = 0.f;
+	    for (int i = 0; i < tes_h; i++) {
+                for (int j = 0; j < tes_w; j++) {
+                    float u = step_h * i;
+                    float v = step_w * j;
+                    float bl = sqrt(first_fundamental_form(u + step_h*left_node_shift, v  + step_w*left_node_shift).determinant());
+                    float br = sqrt(first_fundamental_form(u + step_h*left_node_shift, v  + step_w*right_node_shift).determinant());
+                    float tl = sqrt(first_fundamental_form(u + step_h*right_node_shift, v + step_w*left_node_shift).determinant());
+                    float tr = sqrt(first_fundamental_form(u + step_h*right_node_shift, v + step_w*right_node_shift).determinant());
+                    measured += ((bl + br + tl + tr)*0.25) * step_w * step_h;
+                }
+            }
+            return measured;
+        } else {
+            float measured = 0.f;
+	    for (int i = 0; i < tes_h; i++) {
+                for (int j = 0; j < tes_w; j++) {
+                    float u = step_h * i;
+                    float v = step_w * j;
+                    float bl = sqrt(first_fundamental_form(u + step_h, v  + step_w).determinant());
+                    float br = sqrt(first_fundamental_form(u + step_h, v  + step_w).determinant());
+                    float tl = sqrt(first_fundamental_form(u + step_h, v + step_w).determinant());
+                    float tr = sqrt(first_fundamental_form(u + step_h, v + step_w).determinant());
+                    measured += ((bl + br + tl + tr)*0.25) * step_w * step_h;
+                }
+            }
+            return measured;
+        }
+    };
+    
+
+    vec3 surface_normal(float u, float v) const {
         return -vec3::cross(dfu(u, v), dfv(u, v)).normalized();
     }
 
-    mat2x2 shape_operator(float u, float v) {
+    mat2x2 shape_operator(float u, float v) const {
         vec3 point = f(u, v);
         vec3 deru = dfu(u, v);
         vec3 derv = dfv(u, v);
@@ -114,7 +169,7 @@ struct ParametricSurface : public IBehaviour {
         // This appears to be in line with the definition of the shape operator. https://en.wikipedia.org/wiki/Differential_geometry_of_surfaces#Shape_operator
         return I.inverse() * II;
     }
-    std::pair<float, float> curvatures(float u, float v) {
+    std::pair<float, float> curvatures(float u, float v) const {
         mat2x2 P = shape_operator(u, v);
         return std::pair<float, float>(P.determinant(), P.trace()/2);
     }
@@ -198,6 +253,19 @@ struct ParametricSurface : public IBehaviour {
 
         world->graphics.paint.line(point, point + 0.4*e1p.normalized(), line_width * 2.5, vec4(1,0,1,1));
         world->graphics.paint.line(point, point + 0.4*e2p.normalized(), line_width * 2.5, vec4(1,0,1,1));
+
+        // Compare quadrature rules for integrating surface area.
+        printf("surface area:\n");
+        printf("gaussian quadrature:\n");
+        for (int i = 1; i <= 10; i++) {
+            printf("    %dx%d: %.7f\n", i, i, surface_area(i, true));
+        }
+        printf("    ...x...: %.7f\n", surface_area(100, true));
+        printf("trapezium rule:\n");
+        for (int i = 1; i <= 10; i++) {
+            printf("    %dx%d: %.7f\n", i, i, surface_area(i, false));
+        }
+        printf("    ...x...: %.7f\n", surface_area(100, false));
     }
 
     void post_render_update() {
@@ -314,6 +382,7 @@ App::App(World &_world) : world{_world}
         [](float u, float v) { // ddfvv
             return vec3(0, -4, 0);
         }
+
         // [](float u, float v) { // f
         //     return vec3(u, u*u - 2*u*v + v*v, v);
         // },
@@ -331,6 +400,25 @@ App::App(World &_world) : world{_world}
         // },
         // [](float u, float v) { // ddfvv
         //     return vec3(0, 2, 0);
+        // }
+
+        // [](float u, float v) { // f
+        //     return vec3(3*u, 0, 2*v);
+        // },
+        // [](float u, float v) { // dfu
+        //     return vec3(3, 0, 0);
+        // },
+        // [](float u, float v) { // dfv
+        //     return vec3(0, 0, 2);
+        // },
+        // [](float u, float v) { // ddfuu
+        //     return vec3(0, 0, 0);
+        // },
+        // [](float u, float v) { // ddfuv
+        //     return vec3(0, 0, 0);
+        // },
+        // [](float u, float v) { // ddfvv
+        //     return vec3(0, 0, 0);
         // }
     ));
 }

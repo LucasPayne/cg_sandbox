@@ -68,13 +68,12 @@ struct ParametricSurface : public IBehaviour {
         curvature_shader->add_shader(GLShader(VertexShader, "apps/surfaces/curvature.vert"));
         curvature_shader->add_shader(GLShader(FragmentShader, "apps/surfaces/curvature.frag"));
         curvature_shader->link();
+        visualize_mean_or_gaussian = 1; // gaussian
 
         tes_h = 20;
         tes_w = 20;
         step_h = 1.f / (tes_h - 1);
         step_w = 1.f / (tes_w - 1);
-
-        visualize_mean_or_gaussian = 1; // gaussian
     }
 
 
@@ -99,18 +98,22 @@ struct ParametricSurface : public IBehaviour {
         const float step_h = 1.f/tes_h;
         const float step_w = 1.f/tes_w;
 
+        auto integrand = [this](float u, float v)->float {
+            return sqrt(first_fundamental_form(u, v).determinant());
+        };
+
         if (gaussian_quadrature) {
-	    float left_node_shift = 0.5f - 0.5f/sqrt(3);
-	    float right_node_shift = 0.5f + 0.5f/sqrt(3);
+	    const float left_node_shift = 0.5f - 0.5f/sqrt(3);
+	    const float right_node_shift = 0.5f + 0.5f/sqrt(3);
             float measured = 0.f;
 	    for (int i = 0; i < tes_h; i++) {
                 for (int j = 0; j < tes_w; j++) {
                     float u = step_h * i;
                     float v = step_w * j;
-                    float bl = sqrt(first_fundamental_form(u + step_h*left_node_shift, v  + step_w*left_node_shift).determinant());
-                    float br = sqrt(first_fundamental_form(u + step_h*left_node_shift, v  + step_w*right_node_shift).determinant());
-                    float tl = sqrt(first_fundamental_form(u + step_h*right_node_shift, v + step_w*left_node_shift).determinant());
-                    float tr = sqrt(first_fundamental_form(u + step_h*right_node_shift, v + step_w*right_node_shift).determinant());
+                    float bl = integrand(u + step_h*left_node_shift, v  + step_w*left_node_shift);
+                    float br = integrand(u + step_h*left_node_shift, v  + step_w*right_node_shift);
+                    float tl = integrand(u + step_h*right_node_shift, v + step_w*left_node_shift);
+                    float tr = integrand(u + step_h*right_node_shift, v + step_w*right_node_shift);
                     measured += ((bl + br + tl + tr)*0.25) * step_w * step_h;
                 }
             }
@@ -121,10 +124,10 @@ struct ParametricSurface : public IBehaviour {
                 for (int j = 0; j < tes_w; j++) {
                     float u = step_h * i;
                     float v = step_w * j;
-                    float bl = sqrt(first_fundamental_form(u + step_h, v  + step_w).determinant());
-                    float br = sqrt(first_fundamental_form(u + step_h, v  + step_w).determinant());
-                    float tl = sqrt(first_fundamental_form(u + step_h, v + step_w).determinant());
-                    float tr = sqrt(first_fundamental_form(u + step_h, v + step_w).determinant());
+                    float bl = integrand(u + step_h, v  + step_w);
+                    float br = integrand(u + step_h, v  + step_w);
+                    float tl = integrand(u + step_h, v + step_w);
+                    float tr = integrand(u + step_h, v + step_w);
                     measured += ((bl + br + tl + tr)*0.25) * step_w * step_h;
                 }
             }
@@ -260,12 +263,12 @@ struct ParametricSurface : public IBehaviour {
         for (int i = 1; i <= 10; i++) {
             printf("    %dx%d: %.7f\n", i, i, surface_area(i, true));
         }
-        printf("    ...x...: %.7f\n", surface_area(100, true));
+        printf("    100x100: %.7f\n", surface_area(100, true));
         printf("trapezium rule:\n");
         for (int i = 1; i <= 10; i++) {
             printf("    %dx%d: %.7f\n", i, i, surface_area(i, false));
         }
-        printf("    ...x...: %.7f\n", surface_area(100, false));
+        printf("    100x100: %.7f\n", surface_area(100, false));
     }
 
     void post_render_update() {
@@ -315,7 +318,7 @@ struct ParametricSurface : public IBehaviour {
         glGenBuffers(1, &index_buffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
         int num_indices = 3*2*(tes_w-1)*(tes_h-1);
-        auto indices = std::vector<uint16_t>(3*2*(tes_w-1)*(tes_h-1));
+        auto indices = std::vector<uint16_t>(num_indices);
         int index_pos = 0;
         for (int i = 0; i < tes_h-1; i++) {
             for (int j = 0; j < tes_w-1; j++) {

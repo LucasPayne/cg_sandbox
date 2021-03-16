@@ -12,6 +12,8 @@ project(cg_sandbox)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 include_directories(core lib tools dependencies ${CMAKE_CURRENT_BINARY_DIR})
+# External libraries
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 # flex and bison, generated lexers and parsers.
 flex_target(
@@ -126,3 +128,5 @@ target_link_libraries(cg_sandbox model_loader)
 #--------------------------------------------------------------------------------
 add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
 target_link_libraries(cg_sandbox glfw)
+
+target_link_libraries(cg_sandbox Eigen3::Eigen)

@@ -11,7 +11,7 @@ else
     app_name=$1
     shift
     g++ -Icore -Ilib -Itools -Iapps_shared -o "apps_build/$app_name" "apps/$app_name/$app_name.cpp" -Lbuild -Lbuild/lib/interactive_graphics_context -Lbuild/lib/model_loader -Lbuild/lib/spatial_algebra -Lbuild/dependencies/glfw/src/\
-        -lcg_sandbox -lmodel_loader -linteractive_graphics_context -lspatial_algebra -lm -ldl -lpthread -lglfw3 -Wno-invalid-offsetof
+        -lcg_sandbox -lmodel_loader -linteractive_graphics_context -lspatial_algebra -lm -ldl -lpthread -lglfw3 -Ieigen -Wno-invalid-offsetof
     if [ "$?" -eq 0 ] ; then
         "apps_build/$app_name" $@
     fi

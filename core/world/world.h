@@ -43,6 +43,10 @@ public:
     // Utilities.
     //todo: move this to a picker subsystem.
     bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
+    // Integer-valued vec2 for e.g. motion based on arrow keys.
+    vec2 arrow_key_vector() const;
+    vec2 wasd_key_vector() const;
+    vec2 hjkl_key_vector() const;
 
 private:
     World(const World &); // Delete the copy constructor.

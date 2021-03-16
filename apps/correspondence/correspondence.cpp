@@ -88,21 +88,8 @@ struct Correspondence : public IBehaviour {
 
 
     void update() {
-        int dx = 0;
-        int dy = 0;
-        if (world->input.keyboard.down(KEY_LEFT_ARROW)) {
-            dx --;
-        }
-        if (world->input.keyboard.down(KEY_RIGHT_ARROW)) {
-            dx ++;
-        }
-        if (world->input.keyboard.down(KEY_DOWN_ARROW)) {
-            dy --;
-        }
-        if (world->input.keyboard.down(KEY_UP_ARROW)) {
-            dy ++;
-        }
-        for (int i = 0; i < n; i++) B[i] += 0.1 * dt * vec2(dx, dy);
+        vec2 dkey = world->arrow_key_vector();
+        for (int i = 0; i < n; i++) B[i] += 0.1 * dt * dkey;
     }
     void post_render_update() {
         auto &paint = world->graphics.paint;

@@ -178,3 +178,35 @@ bool World::screen_to_ray(float screen_x, float screen_y, Ray *ray)
     // getchar();
     return true;
 }
+
+
+inline vec2 _key_vector_helper(const World &world, KeyboardKeys left, KeyboardKeys right, KeyboardKeys down, KeyboardKeys up)
+{
+    int dx = 0;
+    int dy = 0;
+    if (world.input.keyboard.down(left)) {
+        dx --;
+    }
+    if (world.input.keyboard.down(right)) {
+        dx ++;
+    }
+    if (world.input.keyboard.down(down)) {
+        dy --;
+    }
+    if (world.input.keyboard.down(up)) {
+        dy ++;
+    }
+    return vec2(dx, dy);
+}
+vec2 World::arrow_key_vector() const
+{
+    return _key_vector_helper(*this, KEY_LEFT_ARROW, KEY_RIGHT_ARROW, KEY_DOWN_ARROW, KEY_UP_ARROW);
+}
+vec2 World::wasd_key_vector() const
+{
+    return _key_vector_helper(*this, KEY_A, KEY_D, KEY_S, KEY_W);
+}
+vec2 World::hjkl_key_vector() const
+{
+    return _key_vector_helper(*this, KEY_H, KEY_L, KEY_J, KEY_K);
+}

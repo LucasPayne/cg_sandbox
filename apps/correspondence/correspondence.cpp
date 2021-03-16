@@ -8,6 +8,7 @@
 #include "mesh_processing/mesh_processing.h"
 #include "world/graphics/image.h"
 #include <Eigen/Dense>
+#include <numeric>
 
 Aspect<Camera> main_camera;
 
@@ -26,47 +27,118 @@ public:
 
 
 struct Correspondence : public IBehaviour {
+    enum Modes {
+        AFFINE,
+        TRANSLATION,
+        TRANSLATION_AND_SCALE,
+        TRANSLATION_AND_ROTATION, // requires non-linear least squares
+        NUM_MODES
+    };
+    struct ModeData {
+        size_t rows;
+        size_t cols;
+        bool linear;
+    } mode_data[NUM_MODES] = { // mode-specific data such as the size of the Jacobian
+        {2, 6, true},
+        {2, 2, true},
+        {2, 3, true},
+        {2, 3, false},
+    };
+    
     std::vector<vec2> A;
     std::vector<vec2> B;
     size_t n;
+    int mode;
     Correspondence(std::vector<vec2> &_A, std::vector<vec2> &_B) :
         A{_A}, B{_B}, n{A.size()}
     {
         assert(A.size() == B.size());
+        mode = TRANSLATION_AND_ROTATION;
     }
 
-    inline Eigen::MatrixXf J(vec2 v) {
-        Eigen::MatrixXf m = Eigen::MatrixXf::Zero(2, 6);
-        m(0,0) = 1;
-        m(1,1) = 1;
-        m(0,2) = v.x();
-        m(0,3) = v.y();
-        m(1,4) = v.x();
-        m(1,5) = v.y();
-        return m;
-    }
-
-    Eigen::MatrixXf correspondence() {
-        Eigen::MatrixXf M = Eigen::MatrixXf::Zero(6, 6);
-        Eigen::VectorXf rhs = Eigen::VectorXf::Zero(6);
-        for (int i = 0; i < n; i++) {
-            auto Ja = J(A[i]);
-            M += Ja.transpose() * Ja;
-            Eigen::Vector2f pa(A[i].x(), A[i].y());
-            Eigen::Vector2f pb(B[i].x(), B[i].y());
-            // std::cout << M << "\n";
-            // std::cout << rhs << "\n";
-            // std::cout << pb - pa << "\n";
-            rhs += Ja.transpose() * (pb - pa);
+    inline Eigen::MatrixXf J(vec2 v, Eigen::VectorXf motion_parameters) {
+        auto &p = motion_parameters;
+        Eigen::MatrixXf m = Eigen::MatrixXf::Zero(mode_data[mode].rows, mode_data[mode].cols);
+        switch (mode) {
+        case AFFINE:
+            // p = [tx, ty, a00, a01, a10, a11]
+            m(0,0) = 1;
+            m(1,1) = 1;
+            m(0,2) = v.x();
+            m(0,3) = v.y();
+            m(1,4) = v.x();
+            m(1,5) = v.y();
+            return m;
+        case TRANSLATION:
+            // p = [tx, ty]
+            m << 1,0,
+                 0,1;
+            return m;
+        case TRANSLATION_AND_SCALE:
+            // p = [tx, ty, a]
+            m << 1,0, v.x(),
+                 0,1, v.y();
+            return m;
+        case TRANSLATION_AND_ROTATION:
+            // p = [tx, ty, theta]
+            m << 1,0, -sin(p[2])*v.x() - cos(p[2])*v.y(),
+                 0,1, cos(p[2])*v.x() - sin(p[2])*v.y();
+            return m;
         }
-        Eigen::VectorXf p = M.ldlt().solve(rhs);
-        // p = [tx, ty, a00, a01, a10, a11]
-
+        assert(0);
+    }
+    std::function<vec2(vec2)> construct_transform(Eigen::VectorXf p) {
         Eigen::MatrixXf transform(2, 3);
-        transform << 1 + p[2], p[3], p[0],
-                     p[4], 1 + p[5], p[1];
-        std::cout << transform << "\n";
-        return transform;
+        switch (mode) {
+        case AFFINE:
+            transform << 1 + p[2], p[3], p[0],
+                         p[4], 1 + p[5], p[1];
+            break;
+        case TRANSLATION:
+            transform << 1, 0, p[0],
+                         0, 1, p[1];
+            break;
+        case TRANSLATION_AND_SCALE:
+            transform << 1 + p[2], 0, p[0],
+                         0, 1 + p[2], p[1];
+            break;
+        case TRANSLATION_AND_ROTATION:
+            transform << cos(p[2]), -sin(p[2]), p[0],
+                         sin(p[2]), cos(p[2]), p[1];
+            break;
+        }
+        // Return a callable which transforms points as vec2s.
+        return [transform](vec2 point)->vec2 {
+            Eigen::Vector3f point_h = Eigen::Vector3f(point.x(), point.y(), 1);
+            Eigen::Vector2f transformed = transform * point_h;
+            return vec2(transformed[0], transformed[1]);
+        };
+    }
+
+    auto correspondence() {
+        // Initialize motion parameters to zero.
+        Eigen::VectorXf motion_parameters = Eigen::VectorXf::Zero(mode_data[mode].cols);
+        
+        // Transformed points (initial transform is the identity).
+        std::vector<vec2> Ap = A;
+
+        for (int N = 0; N < 10; N++) {
+            Eigen::MatrixXf M = Eigen::MatrixXf::Zero(mode_data[mode].cols, mode_data[mode].cols);
+            Eigen::VectorXf rhs = Eigen::VectorXf::Zero(mode_data[mode].cols);
+            for (int i = 0; i < n; i++) {
+                auto Ja = J(A[i], motion_parameters);
+                M += Ja.transpose() * Ja;
+                Eigen::Vector2f target_point(B[i].x(), B[i].y());
+                Eigen::Vector2f image_point(Ap[i].x(), Ap[i].y());
+                rhs += Ja.transpose() * (target_point - image_point);
+            }
+	    motion_parameters += M.ldlt().solve(rhs);
+            if (mode_data[mode].linear) break; // No iteration if using linear least squares.
+
+            auto transform = construct_transform(motion_parameters);
+            for (int i = 0; i < n; i++) Ap[i] = transform(A[i]);
+        }
+        return construct_transform(motion_parameters);
     }
 
     void keyboard_handler(KeyboardEvent e) {
@@ -83,13 +155,32 @@ struct Correspondence : public IBehaviour {
                     }
                 }
             }
+            if (e.key.code == KEY_M) mode = (mode + 1) % NUM_MODES;
         }
     }
 
 
     void update() {
+        // shift the points with arrow keys
         vec2 dkey = world->arrow_key_vector();
         for (int i = 0; i < n; i++) B[i] += 0.1 * dt * dkey;
+
+        // Compute centroid of B points.
+        vec2 centroid = vec2::zero();
+        for (int i = 0; i < n; i++) centroid += B[i];
+        centroid /= n; 
+
+        if (world->input.keyboard.down(KEY_P)) {
+            // rotate the points
+            for (int i = 0; i < n; i++) B[i] = centroid + (B[i] - centroid).rotate(dt);
+        }
+        if (world->input.keyboard.down(KEY_I)) {
+            // shrink the points to the centroid
+            for (int i = 0; i < n; i++) B[i] = centroid + (1 - 0.25*dt) * (B[i] - centroid);
+        }
+        if (world->input.keyboard.down(KEY_O)) {
+            for (int i = 0; i < n; i++) B[i] += vec2::random(-0.05, 0.05) * dt;
+        }
     }
     void post_render_update() {
         auto &paint = world->graphics.paint;
@@ -106,11 +197,7 @@ struct Correspondence : public IBehaviour {
 
         auto transform = correspondence();
         auto Ap = std::vector<vec2>(n);
-        for (int i = 0; i < n; i++) {
-            Eigen::Vector3f av(A[i].x(), A[i].y(), 1);
-            auto p = transform * av;
-            Ap[i] = vec2(p[0], p[1]);
-        }
+        for (int i = 0; i < n; i++) Ap[i] = transform(A[i]);
         paint.circles(main_camera, Ap, 0.005, vec4(0,1,1,1));
         paint_connection(A, Ap, vec4(0,0,1,1));
     }

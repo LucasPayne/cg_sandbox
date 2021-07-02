@@ -3,9 +3,9 @@
     and implements the interface in namespace IGC::Platform.
 --------------------------------------------------------------------------------*/
 #include "interactive_graphics_context.h"
-#include <iostream>
 #include "opengl_utilities/gl.h"
-#include "glfw/include/GLFW/glfw3.h"
+#include <iostream>
+#include <GLFW/glfw3.h>
 namespace IGC {
 namespace Platform {
 

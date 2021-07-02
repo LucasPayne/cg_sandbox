@@ -1,133 +1,43 @@
-# Example CMakeLists files for reference:
-# https://github.com/mmp/pbrt-v3/blob/master/CMakeLists.txt
-# https://github.com/ArthurSonzogni/OpenGL_CMake_Skeleton/blob/master/CMakeLists.txt
-# Use of flex and bison
-# https://gist.github.com/scan/3179356
-# https://github.com/Kicer86/photobroom/blob/master/tools/enum_to_string/CMakeLists.txt
-
-cmake_minimum_required(VERSION 3.1.0)
-set(CMAKE_CXX_STANDARD 17)
-set(BUILD_SHARED_LIBS FALSE)
+cmake_minimum_required(VERSION 3.1)
+cmake_policy(SET CMP0079 NEW) # Allow linking between subdirectory libraries.
 project(cg_sandbox)
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
-include_directories(core lib tools dependencies ${CMAKE_CURRENT_BINARY_DIR})
-# External libraries
+
+# External system libraries
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-
-# flex and bison, generated lexers and parsers.
-flex_target(
-    shading_file_lexer
-    core/graphics_resources/shading_file.l
-    ${CMAKE_CURRENT_BINARY_DIR}/shading_file.yy.cc
-    COMPILE_FLAGS "--header-file=${CMAKE_CURRENT_BINARY_DIR}/shading_file.yy.hh"
-)
-bison_target(
-    shading_file_parser
-    core/graphics_resources/shading_file.y
-    ${CMAKE_CURRENT_BINARY_DIR}/shading_file.tab.cc
-)
-# The lexer needs the tokens file generated when the parser is generated. This means tokens need only be defined
-# in the bison parser file.
-add_flex_bison_dependency(shading_file_lexer shading_file_parser)
-
-# Executable
-#================================================================================
-add_library(cg_sandbox
-    tools/reflector/reflector.cpp
-
-    core/data_structures/table.cpp
-    core/data_structures/table_collection.cpp
-
-    core/mathematics/mathematics.cpp
-    core/mathematics/ray.cpp
-
-    core/graphics_resources/shading.cpp
-    core/graphics_resources/vertex_arrays.cpp
-    ${BISON_shading_file_parser_OUTPUTS}
-    ${FLEX_shading_file_lexer_OUTPUTS}
-
-    #todo: Separate this library.
-    lib/opengl_utilities/the_glad/glad.c
-    lib/opengl_utilities/gl_shader_program.cpp
-    lib/opengl_utilities/glsl.cpp
-
-    #todo: Separate this library.
-    lib/mesh_processing/surface_mesh/surface_mesh.cpp
-    lib/mesh_processing/surface_geometry/surface_geometry.cpp
-
-    # Core source files.
-    core/world/world.cpp
-    core/world/entities/entities.cpp
-    core/world/resources/resources.cpp
-
-    core/world/standard_aspects/Transform.cpp
-    core/world/standard_aspects/Camera.cpp
-    core/world/standard_aspects/Drawable.cpp
-    core/world/standard_aspects/Behaviour.cpp
-    core/world/standard_aspects/DirectionalLight.cpp
-    core/world/standard_aspects/PointLight.cpp
-
-    core/world/assets/assets.cpp
-    core/world/assets/model_assets.cpp
-
-    core/world/graphics/graphics.cpp
-    core/world/graphics/drawing.cpp
-    core/world/graphics/shading_assets.cpp
-
-    core/world/graphics/painting/painting.cpp
-    core/world/graphics/painting/2D/curves.cpp
-    core/world/graphics/painting/2D/circles.cpp
-    core/world/graphics/painting/2D/lines.cpp
-    core/world/graphics/painting/2D/sprites.cpp
-    core/world/graphics/painting/3D/wireframes.cpp
-    core/world/graphics/painting/3D/spheres.cpp
-    core/world/graphics/painting/3D/lines.cpp
-    core/world/graphics/image.cpp
-)
-target_compile_options(cg_sandbox PRIVATE -Wall -g -Wno-invalid-offsetof)
-    # no-invalid-offsetof: Ignoring this warning could break things! However, currently with the reflection system,
-    #    this warning happens due to most classes technically not being plain-old-data-types.
-
-# Internal libraries
-# These provide some functionality the core uses, but are separated from the core code.
-#======================================================================================
-# https://stackoverflow.com/questions/16991225/cmake-and-static-linking
-# set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-
-# set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_START_STATIC 1)
-# set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_END_STATIC 1)
-
-# add_subdirectory(lib/opengl_utilities)
-# target_link_libraries(cg_sandbox opengl_utilities)
-
-add_subdirectory(lib/interactive_graphics_context)
-target_link_libraries(cg_sandbox interactive_graphics_context)
-
-add_subdirectory(lib/spatial_algebra)
-target_link_libraries(cg_sandbox spatial_algebra)
-# target_link_libraries(cg_sandbox STATIC libspatial_algebra.a)
-
-# set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_START_STATIC 1)
-# set_target_properties(cg_sandbox PROPERTIES LINK_SEARCH_END_STATIC 1)
-
-add_subdirectory(lib/model_loader)
-target_link_libraries(cg_sandbox model_loader)
-# target_link_libraries(cg_sandbox STATIC libmodel_loader.a)
-
-# add_subdirectory(lib/ray_tracer)
-# target_link_libraries(cg_sandbox ray_tracer)
-
-
-# add_subdirectory(lib/mesh_processing)
-# target_link_libraries(cg_sandbox mesh_processing)
-
-
-
-
-# External dependencies
-#--------------------------------------------------------------------------------
+# External submodule libraries
 add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
-target_link_libraries(cg_sandbox glfw)
 
+# Compile completely separated libraries.
+#------------------------------------------------------------
+include_directories(lib)
+add_subdirectory(lib/opengl_utilities)
+add_subdirectory(lib/interactive_graphics_context)
+add_subdirectory(lib/reflector)
+add_subdirectory(lib/table)
+add_subdirectory(lib/mathematics)
+
+# add_executable(test test.cpp)
+# target_link_libraries(test opengl_utilities)
+# target_link_libraries(test interactive_graphics_context)
+# target_link_libraries(test reflector)
+# target_link_libraries(test table)
+# target_link_libraries(test mathematics)
+
+
+# Compile the cg_sandbox library.
+#------------------------------------------------------------
+add_subdirectory(src)
+target_link_libraries(cg_sandbox opengl_utilities)
+target_link_libraries(cg_sandbox interactive_graphics_context)
+target_link_libraries(cg_sandbox reflector)
+target_link_libraries(cg_sandbox table)
+target_link_libraries(cg_sandbox mathematics)
+target_link_libraries(cg_sandbox glfw)
 target_link_libraries(cg_sandbox Eigen3::Eigen)
+ 
+# Compile example applications
+#------------------------------------------------------------
+include_directories(include)
+add_executable(basic_application examples/basic_application/basic_application.cpp)
+target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
+target_link_libraries(basic_application cg_sandbox)

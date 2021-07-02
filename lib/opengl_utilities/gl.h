@@ -4,12 +4,11 @@
 #include <string>
 #include <iostream>
 
-#include "the_glad/glad.h"
+#include "glad/glad.h"
 // Debugging
 std::string gl_error_string(GLenum err);
 void gl_check_error(const char *file, int line);
 #include "glad_debug_wrappers.h"
-
 #include "gl_shader_program.h"
 #include "glsl.h"
 

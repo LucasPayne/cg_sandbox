@@ -1,4 +1,4 @@
-#include "world/standard_aspects/standard_aspects.h"
+#include "world/entity_system/entity_system.h"
 
 
 Transform::Transform(vec3 _position, Quaternion _rotation) :
@@ -107,10 +107,10 @@ mat3x3 Transform::orientation()
 }
 
 
-BEGIN_ENTRIES(Transform)
-    ENTRY(position)
-    ENTRY(rotation)
-    ENTRY(scale)
-END_ENTRIES()
 DESCRIPTOR_INSTANCE(Transform);
+BEGIN_ENTRIES(Transform)
+    // ENTRY(position)
+    // ENTRY(rotation)
+    // ENTRY(scale)
+END_ENTRIES()
 

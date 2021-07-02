@@ -1,10 +1,16 @@
-#include "world/entities/entities.h"
+#include "world/entity_system/entity_system.h"
 
 
 Entities::Entities() :
     entity_table{Table(TypeHandle(Reflector::get_descriptor<EntityEntry>()), 16)},
     aspect_tables{TableCollection(16)}
 {}
+
+
+DESCRIPTOR_INSTANCE(EntityEntry);
+BEGIN_ENTRIES(EntityEntry)
+    //...not reflected
+END_ENTRIES()
 
 
 

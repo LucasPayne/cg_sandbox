@@ -1,4 +1,4 @@
-#include "world/standard_aspects/standard_aspects.h"
+#include "world/entity_system/entity_system.h"
 
 
 // Non-virtual Behaviour interface.
@@ -26,13 +26,13 @@ void Behaviour::keyboard_handler(KeyboardEvent e)
 
 DESCRIPTOR_INSTANCE(IBehaviour);
 BEGIN_ENTRIES(IBehaviour)
-    ENTRY(entity)
+    //...
 END_ENTRIES()
 
 
 DESCRIPTOR_INSTANCE(Behaviour);
 BEGIN_ENTRIES(Behaviour)
-    // ENTRY(data) //removing this for now, since without automatic serialization, it is inconvenient to require serializable Behaviour data...
+    //...
 END_ENTRIES()
 
 

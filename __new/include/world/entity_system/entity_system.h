@@ -199,6 +199,7 @@ private:
 struct EntityEntry {
     GenericAspect first_aspect;
 };
+REFLECT_STRUCT(EntityEntry);
 
 
 
@@ -347,7 +348,7 @@ AspectsIterator<T> &AspectsIterator<T>::end()
 }
 
 
-#include "entity_system/standard_aspects/standard_aspects.h"
+#include "world/entity_system/standard_aspects/standard_aspects.h"
 
 
 #endif // ENTITIES_H

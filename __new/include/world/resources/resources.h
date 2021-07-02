@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <utility>//std::forward
 #include "core.h"
-#include "data_structures/table_collection.h"
+#include "table/table_collection.h"
 
 
 class Resources;

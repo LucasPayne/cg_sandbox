@@ -9,6 +9,5 @@ add_library(cg_sandbox
     world/entity_system/standard_aspects/Camera.cpp
     world/entity_system/standard_aspects/Transform.cpp
     world/resources/resources.cpp
-    mathematics/mathematics.cpp
-    mathematics/ray.cpp
+    world/graphics/graphics.cpp
 )

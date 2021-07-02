@@ -1,4 +1,4 @@
-#include "world/standard_aspects/standard_aspects.h"
+#include "world/entity_system/entity_system.h"
 
 
 Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _near_half_width, float _aspect_ratio) :
@@ -106,5 +106,5 @@ Ray Camera::ray(float camera_x, float camera_y)
 
 DESCRIPTOR_INSTANCE(Camera);
 BEGIN_ENTRIES(Camera)
-    ENTRY(projection_matrix)
+    //...
 END_ENTRIES()

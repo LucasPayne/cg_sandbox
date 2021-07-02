@@ -11,13 +11,21 @@ add_subdirectory(lib/reflector)
 add_subdirectory(lib/table)
 add_subdirectory(lib/mathematics)
 
-# # Compile the cg_sandbox library.
-# #------------------------------------------------------------
-# add_subdirectory(src)
-# target_link_libraries(cg_sandbox opengl_utilities)
-# target_link_libraries(cg_sandbox interactive_graphics_context)
-# target_link_libraries(cg_sandbox reflector)
-# target_link_libraries(cg_sandbox table)
+# add_executable(test test.cpp)
+# target_link_libraries(test opengl_utilities)
+# target_link_libraries(test interactive_graphics_context)
+# target_link_libraries(test reflector)
+# target_link_libraries(test table)
+# target_link_libraries(test mathematics)
+
+
+# Compile the cg_sandbox library.
+#------------------------------------------------------------
+add_subdirectory(src)
+target_link_libraries(cg_sandbox opengl_utilities)
+target_link_libraries(cg_sandbox interactive_graphics_context)
+target_link_libraries(cg_sandbox reflector)
+target_link_libraries(cg_sandbox table)
  
 # # Compile example applications
 # #------------------------------------------------------------

@@ -1,5 +1,6 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
+#include "world/graphics/graphics.h"
 
 /*--------------------------------------------------------------------------------
 Transform aspect

@@ -7,3 +7,6 @@
 [submodule "cnpy"]
 	path = cnpy
 	url = https://github.com/rogersce/cnpy
+[submodule "dependencies/mesh_processing"]
+	path = dependencies/mesh_processing
+	url = https://github.com/LucasPayne/mesh_processing

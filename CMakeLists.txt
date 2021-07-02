@@ -6,6 +6,9 @@ project(cg_sandbox)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 # External submodule libraries
 add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
+include_directories(dependencies/glfw/include)
+add_subdirectory(dependencies/mesh_processing EXCLUDE_FROM_ALL)
+include_directories(dependencies/mesh_processing/include)
 
 # Compile completely separated libraries.
 #------------------------------------------------------------
@@ -16,14 +19,6 @@ add_subdirectory(lib/reflector)
 add_subdirectory(lib/table)
 add_subdirectory(lib/mathematics)
 
-# add_executable(test test.cpp)
-# target_link_libraries(test opengl_utilities)
-# target_link_libraries(test interactive_graphics_context)
-# target_link_libraries(test reflector)
-# target_link_libraries(test table)
-# target_link_libraries(test mathematics)
-
-
 # Compile the cg_sandbox library.
 #------------------------------------------------------------
 add_subdirectory(src)
@@ -32,12 +27,13 @@ target_link_libraries(cg_sandbox interactive_graphics_context)
 target_link_libraries(cg_sandbox reflector)
 target_link_libraries(cg_sandbox table)
 target_link_libraries(cg_sandbox mathematics)
+target_link_libraries(cg_sandbox mesh_processing)
 target_link_libraries(cg_sandbox glfw)
 target_link_libraries(cg_sandbox Eigen3::Eigen)
  
 # Compile example applications
 #------------------------------------------------------------
-include_directories(include)
+include_directories(include lib dependencies)
 add_executable(basic_application examples/basic_application/basic_application.cpp)
 target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
 target_link_libraries(basic_application cg_sandbox)

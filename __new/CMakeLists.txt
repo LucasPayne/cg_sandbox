@@ -27,8 +27,9 @@ target_link_libraries(cg_sandbox interactive_graphics_context)
 target_link_libraries(cg_sandbox reflector)
 target_link_libraries(cg_sandbox table)
  
-# # Compile example applications
-# #------------------------------------------------------------
-# include_directories(include)
-# add_executable(basic_application examples/basic_application/basic_application.cpp)
-# target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
+# Compile example applications
+#------------------------------------------------------------
+include_directories(include)
+add_executable(basic_application examples/basic_application/basic_application.cpp)
+target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
+target_link_libraries(basic_application cg_sandbox)

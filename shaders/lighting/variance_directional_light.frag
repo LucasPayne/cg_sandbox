@@ -1,9 +1,11 @@
 /*--------------------------------------------------------------------------------
     Deferred directional light
+    - Variance shadow mapping for shadow softening
+        - Accelerated filtering with summed-area tables
+    - Percentage-closer soft shadows for penumbra estimation
+    - Cascaded shadow maps for improving shadow map texel coverage
 --------------------------------------------------------------------------------*/
 #version 420
-#define FADE_OUT 0
-#define VISUALIZE_FRUSTUM_SEGMENTS 0
 
 // #include "shaders/gbuffer/decode.glsl"
 vec3 decode_normal(vec4 encoded_normal)

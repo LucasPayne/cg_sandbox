@@ -1,0 +1,36 @@
+#version 420
+layout (vertices = 1) out;
+
+in vertex {
+    vec4 sphere_color;
+    float sphere_radius;
+
+    vec4 ndc_position;
+    float ndc_y_extent;
+    vec4 eye_position;
+} vertices[];
+
+out controlled_vertex {
+    vec4 sphere_color;
+    float sphere_radius;
+
+    vec4 ndc_position;
+    float ndc_y_extent;
+    vec4 eye_position;
+} controlled_vertices[];
+
+void main(void)
+{
+    gl_TessLevelOuter[0] = 1;
+    gl_TessLevelOuter[1] = 1;
+    gl_TessLevelOuter[2] = 1;
+    gl_TessLevelOuter[3] = 1;
+    gl_TessLevelInner[0] = 1;
+    gl_TessLevelInner[1] = 1;
+
+    controlled_vertices[gl_InvocationID].sphere_color = vertices[gl_InvocationID].sphere_color;
+    controlled_vertices[gl_InvocationID].sphere_radius = vertices[gl_InvocationID].sphere_radius;
+    controlled_vertices[gl_InvocationID].ndc_position = vertices[gl_InvocationID].ndc_position;
+    controlled_vertices[gl_InvocationID].ndc_y_extent = vertices[gl_InvocationID].ndc_y_extent;
+    controlled_vertices[gl_InvocationID].eye_position = vertices[gl_InvocationID].eye_position;
+}

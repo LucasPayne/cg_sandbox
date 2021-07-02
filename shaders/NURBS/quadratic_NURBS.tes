@@ -1,14 +1,13 @@
 #version 420
+/*
+    Evaluate a point on the quadratic NURBS and transform it to normalized device coordinates.
+    The knot positions can be irregular, and have been uploaded to a 2D samplerBuffer.
+*/
 layout(quads, equal_spacing, ccw) in;
-
 
 in TCS_OUT {
     vec3 position;
 } tes_in[];
-
-// out TES_OUT {
-//     vec3 normal;
-// } tes_out;
 
 uniform mat4x4 mvp_matrix;
 uniform int num_vertical_knots;
@@ -66,16 +65,4 @@ void main(void)
     float vc2 = (1 - v)*(v + valpha)*tmp1 + v*(1 - v*tmp2);
     float vc3 = v * v * tmp2;
     gl_Position = mvp_matrix * vec4(vc1*combined[0] + vc2*combined[1] + vc3*combined[2], 1);
-
-
-    // float duc1 = (1 - u)*(1 - (u + halpha)*tmp1);
-    // float duc2 = (1 - u)*(u + halpha)*tmp1 + u*(1 - u*tmp2);
-    // float duc3 = u * u * tmp2;
-    // for (int i = 0; i < 3; i++) {
-    //     combined[i] = 
-    // }
-
-    // float dSdu = c1*combined[0] + c2*combined[1] + c3*combined[2];
-    // float dSdv = 
-    // ts_out.normal = normalize(cross(dSdu, dSdv));
 }

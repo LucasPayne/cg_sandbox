@@ -34,7 +34,6 @@ add_flex_bison_dependency(shading_file_lexer shading_file_parser)
 # Executable
 #================================================================================
 add_library(cg_sandbox
-
     tools/reflector/reflector.cpp
 
     core/data_structures/table.cpp
@@ -122,6 +121,8 @@ target_link_libraries(cg_sandbox model_loader)
 
 # add_subdirectory(lib/mesh_processing)
 # target_link_libraries(cg_sandbox mesh_processing)
+
+
 
 
 # External dependencies

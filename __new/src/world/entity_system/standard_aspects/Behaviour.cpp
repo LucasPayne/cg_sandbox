@@ -24,4 +24,16 @@ void Behaviour::keyboard_handler(KeyboardEvent e)
     object()->keyboard_handler(e);
 }
 
+DESCRIPTOR_INSTANCE(IBehaviour);
+BEGIN_ENTRIES(IBehaviour)
+    ENTRY(entity)
+END_ENTRIES()
+
+
+DESCRIPTOR_INSTANCE(Behaviour);
+BEGIN_ENTRIES(Behaviour)
+    // ENTRY(data) //removing this for now, since without automatic serialization, it is inconvenient to require serializable Behaviour data...
+END_ENTRIES()
+
+
 

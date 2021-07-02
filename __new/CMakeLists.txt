@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+cmake_policy(SET CMP0079 NEW) # Allow linking between subdirectory libraries.
 project(cg_sandbox)
 
 # Compile completely separated libraries.
@@ -8,15 +9,16 @@ add_subdirectory(lib/opengl_utilities)
 add_subdirectory(lib/interactive_graphics_context)
 add_subdirectory(lib/reflector)
 add_subdirectory(lib/table)
+add_subdirectory(lib/mathematics)
 
 # # Compile the cg_sandbox library.
 # #------------------------------------------------------------
-# include_directories(include lib)
-# aux_source_directory(src CG_SANDBOX_SRC_LIST)
-# add_library(cg_sandbox ${CG_SANDBOX_SRC_LIST})
+# add_subdirectory(src)
+# target_link_libraries(cg_sandbox opengl_utilities)
 # target_link_libraries(cg_sandbox interactive_graphics_context)
-# 
-# 
+# target_link_libraries(cg_sandbox reflector)
+# target_link_libraries(cg_sandbox table)
+ 
 # # Compile example applications
 # #------------------------------------------------------------
 # include_directories(include)

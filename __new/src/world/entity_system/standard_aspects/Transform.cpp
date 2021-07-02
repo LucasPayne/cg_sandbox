@@ -105,3 +105,12 @@ mat3x3 Transform::orientation()
 {
     return mat3x3(right(), up(), forward());
 }
+
+
+BEGIN_ENTRIES(Transform)
+    ENTRY(position)
+    ENTRY(rotation)
+    ENTRY(scale)
+END_ENTRIES()
+DESCRIPTOR_INSTANCE(Transform);
+

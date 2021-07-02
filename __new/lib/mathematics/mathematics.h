@@ -1,8 +1,9 @@
 #ifndef MATHEMATICS_H
 #define MATHEMATICS_H
-#include "core.h"
+#include <iostream>
+#include <vector>
 // Include the spatial_algebra library for vectors, matrices, and quaternions.
-#include "spatial_algebra/spatial_algebra.h"
+#include "mathematics/spatial_algebra/spatial_algebra.h"
 
 template <typename T>
 inline T max(T a, T b)

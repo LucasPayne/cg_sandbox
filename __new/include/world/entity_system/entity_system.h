@@ -1,8 +1,13 @@
 #ifndef ENTITIES_H
 #define ENTITIES_H
 #include "core.h"
-#include "data_structures/table/table.h"
-#include "data_structures/table/table_collection.h"
+#include "reflector/reflector.h"
+#include "table/table.h"
+#include "table/table_collection.h"
+#include "interactive_graphics_context/input.h"
+#include "mathematics/mathematics.h"
+#include "world/resources/resources.h"
+class World;
 
 
 class IAspectType;

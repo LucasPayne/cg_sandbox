@@ -101,3 +101,10 @@ Ray Camera::ray(float camera_x, float camera_y)
     ray.normalize();
     return ray;
 }
+
+
+
+DESCRIPTOR_INSTANCE(Camera);
+BEGIN_ENTRIES(Camera)
+    ENTRY(projection_matrix)
+END_ENTRIES()

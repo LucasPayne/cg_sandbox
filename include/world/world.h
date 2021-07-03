@@ -4,6 +4,7 @@
 #include "opengl_utilities/gl.h"
 #include "interactive_graphics_context/interactive_graphics_context.h"
 #include "world/entity_system/entity_system.h"
+#include "world/graphics/graphics.h"
 
 
 
@@ -17,6 +18,7 @@ public:
     Resources resources;
 
     InputState input;
+    // Graphics graphics;
 
     void close();
     void loop();

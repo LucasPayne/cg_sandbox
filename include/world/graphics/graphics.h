@@ -3,7 +3,6 @@
 #include "opengl_utilities/gl.h"
 #include "reflector/reflector.h"
 
-
 REFLECT_STRUCT(GLShader);
 REFLECT_STRUCT(GLShaderProgram);
 
@@ -40,5 +39,6 @@ struct Viewport {
     Viewport() {}
 };
 std::ostream &operator<<(std::ostream &os, Viewport viewport);
+
 
 #endif // WORLD_GRAPHICS_H

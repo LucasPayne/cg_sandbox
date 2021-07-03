@@ -27,8 +27,6 @@ App::App(World &_world) : world{_world}
     auto grid = Enmesh::grid_mesh(10, 10);
 
     std::cout << grid.num_vertices() << "\n";
-
-    getchar();
 }
 
 void App::close()
@@ -57,9 +55,6 @@ int main(int argc, char *argv[])
     IGC::Context context("A world");
     printf("[main] Creating world...\n");
     World world(context);
-    printf("[main] Adding world callbacks...\n");
-    context.add_callbacks(&world);
-    context.add_callbacks(&world.input);
 
     printf("[main] Creating app...\n");
     App app(world);

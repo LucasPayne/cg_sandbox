@@ -7,8 +7,6 @@
 #include "world/graphics/graphics.h"
 
 
-
-
 class World : public IGC::Callbacks {
 public:
     World(IGC::Context &_context);
@@ -16,8 +14,14 @@ public:
     IGC::Context &context;
     Entities entities;
     Resources resources;
-
+    
     InputState input;
+    // Input utilities. TODO: Put these under input.
+    // Integer-valued vec2 for e.g. motion based on arrow keys.
+    vec2 arrow_key_vector() const;
+    vec2 wasd_key_vector() const;
+    vec2 hjkl_key_vector() const;
+    
     // Graphics graphics;
 
     void close();
@@ -26,31 +30,15 @@ public:
     void mouse_handler(MouseEvent e);
     void window_handler(WindowEvent e);
 
-    // Update information about screen size, which may have changed.
-    void window_update(int width, int height);
-
     // Behaviours.
-    // template <typename B>
-    // B *add(Entity e);
     template <typename T, typename... Args>
     T *add(Entity e, Args&&... args);
-
-    // Utilities.
-    //todo: move this to a picker subsystem.
-    bool screen_to_ray(float screen_x, float screen_y, Ray *ray);
-    // Integer-valued vec2 for e.g. motion based on arrow keys.
-    vec2 arrow_key_vector() const;
-    vec2 wasd_key_vector() const;
-    vec2 hjkl_key_vector() const;
-
 private:
     World(const World &); // Delete the copy constructor.
 };
 
 
 // Behaviours.
-// template <typename T>
-// T *World::add(Entity e)
 template <typename T, typename... Args>
 T *World::add(Entity e, Args&&... args)
 {

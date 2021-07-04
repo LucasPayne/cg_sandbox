@@ -1,10 +1,11 @@
 #include "world/world.h"
+#include "mesh_processing/mesh_processing.h"
 
 
 void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width)
 {
     struct WireframeVertexAttributes {
-        vec3 position;
+        vec_t position;
         int edge_is_boundary;
     };
     std::vector<WireframeVertexAttributes> vertex_attributes;

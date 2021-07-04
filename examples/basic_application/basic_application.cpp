@@ -1,5 +1,6 @@
 #include "cg_sandbox.h"
 #include "mesh_processing/mesh_processing.h"
+#include "CameraController.cpp"
 
 
 class App : public IGC::Callbacks {
@@ -17,16 +18,15 @@ public:
 
 App::App(World &_world) : world{_world}
 {
-    auto quad = SurfaceMesh();
-    auto v1 = quad.add_vertex();
-    auto v2 = quad.add_vertex();
-    auto v3 = quad.add_vertex();
-    auto v4 = quad.add_vertex();
-    quad.add_triangle(v1, v3, v4);
-    quad.add_triangle(v1, v4, v2);
-    auto grid = Enmesh::grid_mesh(10, 10);
+    auto mesh = SurfaceMesh();
+    auto v1 = mesh.add_vertex();
+    auto v2 = mesh.add_vertex();
+    auto v3 = mesh.add_vertex();
+    auto v4 = mesh.add_vertex();
+    mesh.add_triangle(v1, v3, v4);
+    mesh.add_triangle(v1, v4, v2);
 
-    std::cout << grid.num_vertices() << "\n";
+    mesh.lock();
 }
 
 void App::close()

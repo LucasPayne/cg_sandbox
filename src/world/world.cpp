@@ -6,6 +6,7 @@ World::World(IGC::Context &_context) :
     context{_context},
     entities(),
     resources(),
+    graphics(*this),
     input()
 {
     printf("[world] Creating world...\n");
@@ -30,6 +31,9 @@ World::World(IGC::Context &_context) :
     REGISTER_ASPECT_TYPE(Camera);
     REGISTER_ASPECT_TYPE(Behaviour);
     printf("[world] Entity system initialized.\n");
+
+    // Initialize graphics subsystem.
+    graphics.init();
     
     // Connect to the system windowing/graphics context.
     context.add_callbacks(this);
@@ -61,7 +65,7 @@ void World::loop()
         if (b->enabled) b->update();
     }
 
-    // graphics.render();
+    graphics.render();
 
     /*--------------------------------------------------------------------------------
         Post-render update entities.

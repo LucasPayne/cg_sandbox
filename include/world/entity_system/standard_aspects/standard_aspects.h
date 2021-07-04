@@ -1,6 +1,6 @@
 #ifndef STANDARD_ASPECTS_H
 #define STANDARD_ASPECTS_H
-#include "world/graphics/graphics.h"
+#include "opengl_utilities/gl.h" //todo: Shouldn't really depend on this.
 
 /*--------------------------------------------------------------------------------
 Transform aspect

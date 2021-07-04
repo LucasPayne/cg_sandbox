@@ -22,6 +22,7 @@ add_subdirectory(lib/mathematics)
 # Compile the cg_sandbox library.
 #------------------------------------------------------------
 add_subdirectory(src)
+target_compile_definitions(cg_sandbox PRIVATE RESOURCE_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/resources/\")
 target_link_libraries(cg_sandbox opengl_utilities)
 target_link_libraries(cg_sandbox interactive_graphics_context)
 target_link_libraries(cg_sandbox reflector)
@@ -35,5 +36,6 @@ target_link_libraries(cg_sandbox Eigen3::Eigen)
 #------------------------------------------------------------
 include_directories(include lib dependencies)
 add_executable(basic_application examples/basic_application/basic_application.cpp)
+target_include_directories(basic_application PRIVATE examples/basic_application)
 target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
 target_link_libraries(basic_application cg_sandbox)

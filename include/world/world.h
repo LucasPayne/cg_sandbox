@@ -7,6 +7,7 @@
 #include "world/graphics/graphics.h"
 
 
+
 class World : public IGC::Callbacks {
 public:
     World(IGC::Context &_context);
@@ -14,6 +15,7 @@ public:
     IGC::Context &context;
     Entities entities;
     Resources resources;
+    Graphics graphics;
     
     InputState input;
     // Input utilities. TODO: Put these under input.

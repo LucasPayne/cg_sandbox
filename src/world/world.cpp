@@ -103,6 +103,34 @@ void World::mouse_handler(MouseEvent e)
 
 void World::window_handler(WindowEvent e)
 {
+    if (e.type == WINDOW_EVENT_FRAMEBUFFER_SIZE) {
+        window_update(e.framebuffer.width, e.framebuffer.height);
+    }
+}
+
+void World::window_update(int width, int height)
+{
+    const float wanted_aspect_ratio = 0.566;
+    double aspect_ratio = ((double) height) / width;
+
+    int x, y, w, h;
+    if (aspect_ratio > wanted_aspect_ratio) {
+        x = 0;
+        y = (height - wanted_aspect_ratio * width)/2.0;
+        w = width;
+        h = wanted_aspect_ratio * width;
+    }
+    else {
+        x = (width - height / wanted_aspect_ratio)/2.0;
+        y = 0;
+        w = height / wanted_aspect_ratio;
+        h = height;
+    }
+    graphics.screen_buffer.resolution_x = w;
+    graphics.screen_buffer.resolution_y = h;
+    graphics.window_viewport = Viewport(x, y, w, h);
+    graphics.window_width = w;
+    graphics.window_height = h;
 }
 
 

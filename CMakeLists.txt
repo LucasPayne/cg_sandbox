@@ -5,10 +5,16 @@ project(cg_sandbox)
 # External system libraries
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 # External submodule libraries
-add_subdirectory(dependencies/glfw EXCLUDE_FROM_ALL)
+add_subdirectory(dependencies/glfw)
 include_directories(dependencies/glfw/include)
-add_subdirectory(dependencies/mesh_processing EXCLUDE_FROM_ALL)
+add_subdirectory(dependencies/mesh_processing)
 include_directories(dependencies/mesh_processing/include)
+
+# assimp ---- todo
+set(ASSIMP_SOURCE_DIR /home/lucas/computer_graphics/assimp)
+set(ASSIMP_INCLUDE_DIR ${ASSIMP_SOURCE_DIR}/include)
+set(ASSIMP_LIBRARY_PATH ${ASSIMP_SOURCE_DIR}/bin/libassimp.so)
+
 
 # Compile completely separated libraries.
 #------------------------------------------------------------
@@ -31,11 +37,18 @@ target_link_libraries(cg_sandbox mathematics)
 target_link_libraries(cg_sandbox mesh_processing)
 target_link_libraries(cg_sandbox glfw)
 target_link_libraries(cg_sandbox Eigen3::Eigen)
+add_library(assimp SHARED IMPORTED GLOBAL)
+set_target_properties(assimp PROPERTIES IMPORTED_LOCATION ${ASSIMP_LIBRARY_PATH})
+message(STATUS "assimp path: ${ASSIMP_LIBRARY_PATH}")
+target_link_libraries(cg_sandbox assimp)
  
 # Compile example applications
 #------------------------------------------------------------
 include_directories(include lib dependencies)
-add_executable(basic_application examples/basic_application/basic_application.cpp)
+add_executable(basic_application
+    examples/basic_application/basic_application.cpp
+)
 target_include_directories(basic_application PRIVATE examples/basic_application)
-target_compile_definitions(basic_application PRIVATE PATH="examples/basic_application")
+target_include_directories(basic_application PRIVATE /home/lucas/computer_graphics/assimp/include) #------
+target_compile_definitions(basic_application PRIVATE PATH="${CMAKE_CURRENT_SOURCE_DIR}/examples/basic_application/")
 target_link_libraries(basic_application cg_sandbox)

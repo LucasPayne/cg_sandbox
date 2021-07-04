@@ -102,6 +102,8 @@ void Graphics::refresh_framebuffers()
     framebuffer_res_x = max_res_x;
     framebuffer_res_y = max_res_y;
 
+    std::cout << "w:" << window_viewport.w << " h:" << window_viewport.h  << "\n";
+
     if (prev_window_viewport.w != window_viewport.w || prev_window_viewport.h != window_viewport.h) {
         glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
@@ -151,8 +153,6 @@ void Graphics::render()
     }
     // Resize framebuffers if necessary.
     refresh_framebuffers();
-
-    std::cout << window_viewport.w << " " << window_viewport.h  << "\n";
 
     /*--------------------------------------------------------------------------------
         Clear the screen buffer and postprocessing buffer.

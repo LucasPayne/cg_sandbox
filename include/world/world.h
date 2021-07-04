@@ -31,6 +31,7 @@ public:
     void keyboard_handler(KeyboardEvent e);
     void mouse_handler(MouseEvent e);
     void window_handler(WindowEvent e);
+    void window_update(int width, int height);
 
     // Behaviours.
     template <typename T, typename... Args>

@@ -9,14 +9,14 @@ void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width
         int edge_is_boundary;
     };
     std::vector<WireframeVertexAttributes> vertex_attributes;
-    for (auto face : geom.faces()) {
+    for (auto face : geom.mesh.faces()) {
         size_t n = face.num_vertices();
         if (n == 3) {
             auto start = face.halfedge();
             auto he = start;
             do {
                 auto vertex = he.vertex();
-                vertex_attributes.push_back({geom.vertex_positions[vertex], 1});
+                vertex_attributes.push_back({geom.position[vertex], 1});
                 he = he.next();
             } while (he != start);
         } else if (n > 3) {
@@ -43,9 +43,9 @@ void Painting::wireframe(SurfaceGeometry &geom, mat4x4 model_matrix, float width
                     edge_is_boundary[1] = 1;
                     edge_is_boundary[2] = 0;
                 }
-                vertex_attributes.push_back({geom.vertex_positions[origin], edge_is_boundary[0]});
-                vertex_attributes.push_back({geom.vertex_positions[a], edge_is_boundary[1]});
-                vertex_attributes.push_back({geom.vertex_positions[b], edge_is_boundary[2]});
+                vertex_attributes.push_back({geom.position[origin], edge_is_boundary[0]});
+                vertex_attributes.push_back({geom.position[a], edge_is_boundary[1]});
+                vertex_attributes.push_back({geom.position[b], edge_is_boundary[2]});
                 first = false;
                 he = he.next();
                 if (c == origin) break;

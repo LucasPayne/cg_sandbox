@@ -8,15 +8,16 @@ struct DrawableMesh : public IBehaviour {
     SurfaceGeometry *geom;
     DrawableMesh()
     {
-        // geom = assimp_to_surface_geometry(PATH "Tangram-6.stl");
-        geom = assimp_to_surface_geometry(PATH "bunny_head.stl");
-        for (int i = 0; i < 600; i++) {
-            for (auto face : geom->mesh.faces()) {
-                geom->mesh.remove_face(face);
-                break;
-            }
-        }
+        geom = assimp_to_surface_geometry(PATH "Tangram-6.stl");
+        // geom = assimp_to_surface_geometry(PATH "bunny_head.stl");
+        // for (int i = 0; i < 600; i++) {
+        //     for (auto face : geom->mesh.faces()) {
+        //         geom->mesh.remove_face(face);
+        //         break;
+        //     }
+        // }
         geom->mesh.lock();
+
        
         // geom = new SurfaceGeometry();
         // auto v1 = geom->add_vertex(0,0,0);
@@ -50,15 +51,33 @@ struct DrawableMesh : public IBehaviour {
     void post_render_update()
     {
         world->graphics.paint.wireframe(*geom, mat4x4::identity(), 0.01);
-        for (auto start : geom->mesh.boundary_loops()) {
-            auto he = start;
-            auto loop = std::vector<vec3>();
-            do {
-                vec_t pos = geom->vertex_positions[he.vertex()];
-                loop.push_back(vec3(pos.x(), pos.y(), pos.z()));
-            } while ((he = he.next()) != start);
-            loop.push_back(loop[0]);
-            world->graphics.paint.chain(loop, 4, vec4(1,0,0,1));
+        // for (auto start : geom->mesh.boundary_loops()) {
+        //     auto he = start;
+        //     auto loop = std::vector<vec3>();
+        //     do {
+        //         vec_t pos = geom->position[he.vertex()];
+        //         loop.push_back(vec3(pos.x(), pos.y(), pos.z()));
+        //     } while ((he = he.next()) != start);
+        //     loop.push_back(loop[0]);
+        //     world->graphics.paint.chain(loop, 4, vec4(1,0,0,1));
+        // }
+    }
+
+    void keyboard_handler(KeyboardEvent e)
+    {
+        if (e.action == KEYBOARD_PRESS) {
+            if (e.key.code == KEY_P) {
+                auto mesh_subdiv = new TriangularSubdivision(geom->mesh);
+                auto subdiv = new SurfaceGeometry(mesh_subdiv->mesh());
+                for (auto v : geom->mesh.vertices()) {
+                    subdiv->position[mesh_subdiv->corresponding_vertex(v)] = geom->position[v];
+                }
+                for (auto edge : geom->mesh.edges()) {
+                    vec_t pos = 0.5*geom->position[edge.a().vertex()] + 0.5*geom->position[edge.b().vertex()];
+                    subdiv->position[mesh_subdiv->edge_split_vertex(edge)] = pos;
+                }
+                geom = subdiv;
+            }
         }
     }
 };

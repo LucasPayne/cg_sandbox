@@ -78,7 +78,7 @@ struct DrawableMesh : public IBehaviour {
         if (e.action == KEYBOARD_PRESS) {
             if (e.key.code == KEY_P) {
                 // Barycentric subdivision.
-                auto mesh_subdiv = new TriangularSubdivision(geom->mesh);
+                auto mesh_subdiv = new Subdivision::Triangular(geom->mesh);
                 auto subdiv = new SurfaceGeometry(mesh_subdiv->mesh());
                 for (auto v : geom->mesh.vertices()) {
                     subdiv->position[mesh_subdiv->corresponding_vertex(v)] = geom->position[v];
@@ -91,32 +91,8 @@ struct DrawableMesh : public IBehaviour {
             }
             if (e.key.code == KEY_O) {
                 // Loop subdivision.
-                auto mesh_subdiv = new TriangularSubdivision(geom->mesh);
-                auto subdiv = new SurfaceGeometry(mesh_subdiv->mesh());
-                for (auto v : geom->mesh.vertices()) {
-                    size_t n = v.num_adjacent_vertices();
-                    float _c = 3+ 2*cos(2*M_PI/n);
-                    float beta = (5.f/8.f - (_c*_c)/64.f)/n;
-                    float original_weight = 1-n*beta;
-                    float neighbour_weight = beta;
-                    auto subdiv_vertex = mesh_subdiv->corresponding_vertex(v);
-                    vec_t pos = original_weight * geom->position[v];
-                    auto start = v.halfedge();
-                    auto he = start;
-                    do {
-                        pos += neighbour_weight * geom->position[he.twin().vertex()];
-                    } while ((he = he.twin().next()) != start);
-                    subdiv->position[subdiv_vertex] = pos;
-                }
-                for (auto edge : geom->mesh.edges()) {
-                    auto end_a = geom->position[edge.a().vertex()];
-                    auto end_b = geom->position[edge.b().vertex()];
-                    auto wing_a = geom->position[edge.a().next().next().vertex()];
-                    auto wing_b = geom->position[edge.b().next().next().vertex()];
-                    vec_t pos = (1.0/8.0)*wing_a + (1.0/8.0)*wing_b + (3.0/8.0)*end_a + (3.0/8.0)*end_b;
-                    subdiv->position[mesh_subdiv->edge_split_vertex(edge)] = pos;
-                }
-                geom = subdiv;
+                auto subdiv = new Subdivision::Triangular(geom->mesh);
+                geom = Subdivision::loop(*subdiv, *geom);
             }
         }
     }

@@ -78,16 +78,8 @@ struct DrawableMesh : public IBehaviour {
         if (e.action == KEYBOARD_PRESS) {
             if (e.key.code == KEY_P) {
                 // Barycentric subdivision.
-                auto mesh_subdiv = new Subdivision::Triangular(geom->mesh);
-                auto subdiv = new SurfaceGeometry(mesh_subdiv->mesh());
-                for (auto v : geom->mesh.vertices()) {
-                    subdiv->position[mesh_subdiv->corresponding_vertex(v)] = geom->position[v];
-                }
-                for (auto edge : geom->mesh.edges()) {
-                    vec_t pos = 0.5*geom->position[edge.a().vertex()] + 0.5*geom->position[edge.b().vertex()];
-                    subdiv->position[mesh_subdiv->edge_split_vertex(edge)] = pos;
-                }
-                geom = subdiv;
+                auto subdiv = new Subdivision::Triangular(geom->mesh);
+                geom = Subdivision::barycentric(*subdiv, *geom);
             }
             if (e.key.code == KEY_O) {
                 // Loop subdivision.
@@ -137,6 +129,11 @@ void App::window_handler(WindowEvent e)
 
 void App::keyboard_handler(KeyboardEvent e)
 {
+    if (e.action == KEYBOARD_PRESS) {
+        if (e.key.code == KEY_Q) {
+            exit(EXIT_SUCCESS);
+        }
+    }
 }
 
 void App::mouse_handler(MouseEvent e)

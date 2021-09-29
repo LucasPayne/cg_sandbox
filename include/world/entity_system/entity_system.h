@@ -7,8 +7,8 @@
 #include "interactive_graphics_context/input.h"
 #include "mathematics/mathematics.h"
 #include "world/resources/resources.h"
-class World;
 
+class World;
 
 class IAspectType;
 class Entities;
@@ -157,6 +157,9 @@ struct Entity {
 public:
 
     void destroy();
+    // Remove the aspect of the given type.
+    template <typename T>
+    void remove();
 
     // Add an aspect, forward the arguments to an aspect constructor.
     template <typename T, typename... Args>
@@ -260,7 +263,16 @@ Aspect<T> Entity::add(Args&&... args)
     return aspect;
 }
 
+// Remove the aspect of the given type.
+template <typename T>
+void Entity::remove()
+{
+    Aspect<T> asp = get<T>();
+    entities->aspect_tables.remove(asp.table_collection_element);
+    //--------------------------------------------------------------------------------?
+}
 
+// Get the aspect of the given type.
 template <typename T>
 Aspect<T> Entity::get()
 {
@@ -271,6 +283,7 @@ Aspect<T> Entity::get()
     }
     assert(0);
 }
+
 
 
 
@@ -305,7 +318,7 @@ template <typename T>
 template <typename SIBLING_TYPE>
 Aspect<SIBLING_TYPE> Aspect<T>::sibling()
 {
-    return metadata()->entity.get<SIBLING_TYPE>();
+    return metadata()->entity.template get<SIBLING_TYPE>(); //---
 }
 
 

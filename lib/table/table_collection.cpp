@@ -41,3 +41,9 @@ uint32_t TableCollection::get_type_index(TypeHandle type)
     }
     assert(0);
 }
+
+
+void TableCollection::remove(TableCollectionElement element)
+{
+    tables[element.type_index].remove(element.table_element); //---
+}

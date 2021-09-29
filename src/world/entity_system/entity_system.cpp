@@ -23,6 +23,17 @@ EntityEntry *Entities::get_entry(Entity entity)
     return reinterpret_cast<EntityEntry *>(entity_table[entity.table_element]);
 }
 
+void Entity::destroy()
+{
+    //--------------------------------------------------------------------------------
+    // TODO
+    //--------------------------------------------------------------------------------
+    // for (auto aspect : aspects()) {
+    //     aspect.destroy();
+    // }
+    entities->entity_table.remove(table_element);
+}
+
 
 
 IAspectType *GenericAspect::metadata()

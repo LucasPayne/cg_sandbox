@@ -43,12 +43,17 @@ public:
     template <typename T, typename... Args>
     TableCollectionElement add(Args&&... args);
 
+
     // Run-time generic add.
     TableCollectionElement add(TypeHandle type);
     
     // Get an object with the given type from the tables.
     template <typename T>
     T *get(TableCollectionElement element);
+    
+    // Remove an element from the table.
+    // template <typename T>
+    void remove(TableCollectionElement element);
 
     TypeHandle &type_of(TableCollectionElement element);
 
@@ -99,6 +104,12 @@ T *TableCollection::get(TableCollectionElement element)
 {
     return reinterpret_cast<T *>(tables[element.type_index][element.table_element]);
 }
+
+// template <typename T>
+// void TableCollection::remove(TableCollectionElement element)
+// {
+//     tables[element.type_index].remove(element.table_element); //---
+// }
 
 
 template <typename T>

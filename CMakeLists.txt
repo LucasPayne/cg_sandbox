@@ -7,8 +7,12 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 # External submodule libraries
 add_subdirectory(dependencies/glfw)
 include_directories(dependencies/glfw/include)
-add_subdirectory(dependencies/mesh_processing)
-include_directories(dependencies/mesh_processing/include)
+
+# mesh_processing library
+set(mesh_processing_path /home/lucas/computer_graphics/mesh_processing)
+set(mesh_processing_include_path ${mesh_processing_path}/include)
+set(mesh_processing_library_path ${mesh_processing_path}/build/libmesh_processing.a)
+include_directories(${mesh_processing_include_path})
 
 # assimp ---- todo
 set(ASSIMP_SOURCE_DIR /home/lucas/computer_graphics/assimp)
@@ -34,7 +38,7 @@ target_link_libraries(cg_sandbox interactive_graphics_context)
 target_link_libraries(cg_sandbox reflector)
 target_link_libraries(cg_sandbox table)
 target_link_libraries(cg_sandbox mathematics)
-target_link_libraries(cg_sandbox mesh_processing)
+target_link_libraries(cg_sandbox ${mesh_processing_library_path})
 target_link_libraries(cg_sandbox glfw)
 target_link_libraries(cg_sandbox Eigen3::Eigen)
 add_library(assimp SHARED IMPORTED GLOBAL)

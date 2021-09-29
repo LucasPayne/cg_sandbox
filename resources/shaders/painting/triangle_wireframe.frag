@@ -15,11 +15,12 @@ uniform int viewport_height;
 
 void main(void)
 {
-    vec3 light_dir = normalize(vec3(1,1,1));
+    vec3 light_dir = normalize(vec3(0.4,-1,0.4));
     vec3 n = fs_in.normal;
 
-    vec3 face_diffuse = vec3(0.9);
-    vec4 face_color = vec4(face_diffuse * (0.5 + 0.5*max(0, dot(light_dir, n))), 1);
+    vec3 face_diffuse = vec3(1);
+    const float lightness = 0.5;
+    vec4 face_color = vec4(face_diffuse * (lightness + (1-lightness)*max(0, dot(light_dir, n))), 1);
 
     vec4 edge_color = vec4(0,0,0,1);
 

@@ -5,16 +5,6 @@
 int KeyboardKey::to_char(KeyboardKey key)
 {
     switch (key.code) {
-        case KEY_1: return '1';
-        case KEY_2: return '2';
-        case KEY_3: return '3';
-        case KEY_4: return '4';
-        case KEY_5: return '5';
-        case KEY_6: return '6';
-        case KEY_7: return '7';
-        case KEY_8: return '8';
-        case KEY_9: return '9';
-        case KEY_0: return '0';
         case KEY_Q: return 'q';
         case KEY_W: return 'w';
         case KEY_E: return 'e';
@@ -48,16 +38,6 @@ int KeyboardKey::from_char(char c)
 {
     char lower_c = tolower(c);
     switch (lower_c) {
-        case '1': return KEY_1;
-        case '2': return KEY_2;
-        case '3': return KEY_3;
-        case '4': return KEY_4;
-        case '5': return KEY_5;
-        case '6': return KEY_6;
-        case '7': return KEY_7;
-        case '8': return KEY_8;
-        case '9': return KEY_9;
-        case '0': return KEY_0;
         case 'q': return KEY_Q;
         case 'w': return KEY_W;
         case 'e': return KEY_E;

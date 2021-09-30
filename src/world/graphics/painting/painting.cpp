@@ -5,8 +5,8 @@ void Painting::render(Aspect<Camera> camera)
 {
     glEnable(GL_DEPTH_TEST);
     render_spheres(camera);
-    render_lines(camera);
     render_wireframes(camera);
+    render_lines(camera); // needs to be rendered last because of transparency for antialiasing.
 
     glDepthMask(false);
     glDisable(GL_DEPTH_TEST);
@@ -74,15 +74,22 @@ void Painting::init()
         }
     }
 
+    primitive_lines_shader_program = world.resources.add<GLShaderProgram>();
+    primitive_lines_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/lines.vert"));
+    primitive_lines_shader_program->add_shader(GLShader(FragmentShader, RESOURCE_PATH "shaders/painting/lines.frag"));
+    primitive_lines_shader_program->link();
+
     lines_shader_program = world.resources.add<GLShaderProgram>();
-    lines_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/lines.vert"));
-    lines_shader_program->add_shader(GLShader(FragmentShader, RESOURCE_PATH "shaders/painting/lines.frag"));
+    lines_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/lines_3D/lines_3D.vert"));
+    lines_shader_program->add_shader(GLShader(GeometryShader, RESOURCE_PATH "shaders/painting/lines_3D/lines_3D.geom"));
+    lines_shader_program->add_shader(GLShader(FragmentShader, RESOURCE_PATH "shaders/painting/lines_3D/lines_3D.frag"));
     lines_shader_program->link();
 
     primitive_lines_2D_shader_program = world.resources.add<GLShaderProgram>();
     primitive_lines_2D_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/primitive_lines_2D.vert"));
     primitive_lines_2D_shader_program->add_shader(GLShader(FragmentShader, RESOURCE_PATH "shaders/painting/primitive_lines_2D.frag"));
     primitive_lines_2D_shader_program->link();
+
 
     circles_2D_shader_program = world.resources.add<GLShaderProgram>();
     circles_2D_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/circles_2D.vert"));

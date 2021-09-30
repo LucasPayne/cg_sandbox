@@ -69,16 +69,6 @@ static void glfw_framebuffer_size_callback(GLFWwindow *window, int width, int he
 static int glfw_keycode_to_keycode(int key)
 {
     switch (key) {
-        case GLFW_KEY_1: return KEY_1;
-        case GLFW_KEY_2: return KEY_2;
-        case GLFW_KEY_3: return KEY_3;
-        case GLFW_KEY_4: return KEY_4;
-        case GLFW_KEY_5: return KEY_5;
-        case GLFW_KEY_6: return KEY_6;
-        case GLFW_KEY_7: return KEY_7;
-        case GLFW_KEY_8: return KEY_8;
-        case GLFW_KEY_9: return KEY_9;
-        case GLFW_KEY_0: return KEY_0;
         case GLFW_KEY_Q: return KEY_Q;
         case GLFW_KEY_W: return KEY_W;
         case GLFW_KEY_E: return KEY_E;
@@ -112,8 +102,6 @@ static int glfw_keycode_to_keycode(int key)
         case GLFW_KEY_LEFT_SHIFT: return KEY_LEFT_SHIFT;
         case GLFW_KEY_RIGHT_SHIFT: return KEY_RIGHT_SHIFT;
         case GLFW_KEY_SPACE: return KEY_SPACE;
-        case GLFW_KEY_PAGE_UP: return KEY_PAGE_UP;
-        case GLFW_KEY_PAGE_DOWN: return KEY_PAGE_DOWN;
     }
     return EOF;
 }
@@ -209,8 +197,6 @@ WindowReference create_window(const std::string &name)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // Multisampling.
-    glfwWindowHint(GLFW_SAMPLES, 8);
 
     GLFWwindow *glfw_window = glfwCreateWindow(800, 600, name.c_str(), NULL, NULL);
     if (glfw_window == nullptr) {

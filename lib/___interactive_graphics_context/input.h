@@ -7,16 +7,6 @@ enum KeyboardAction {
     KEYBOARD_RELEASE,
 };
 enum KeyboardKeys {
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
-    KEY_0,
     KEY_Q,
     KEY_W,
     KEY_E,
@@ -50,8 +40,6 @@ enum KeyboardKeys {
     KEY_LEFT_SHIFT,
     KEY_RIGHT_SHIFT,
     KEY_SPACE,
-    KEY_PAGE_UP,
-    KEY_PAGE_DOWN,
     KEYBOARD_NUM_KEYS
 };
 typedef uint8_t KeyboardKeyCode;

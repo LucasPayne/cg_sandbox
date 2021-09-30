@@ -168,6 +168,10 @@ public:
     // Run-time generic add.
     GenericAspect add(TypeHandle type);
 
+    inline bool operator==(const Entity &other) const {
+        return table_element == other.table_element;
+    }
+
 
     template <typename T>
     Aspect<T> get();

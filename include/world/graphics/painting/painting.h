@@ -125,6 +125,7 @@ private:
 
     // 3D painting programs.
     Resource<GLShaderProgram> spheres_shader_program;
+    Resource<GLShaderProgram> primitive_lines_shader_program;
     Resource<GLShaderProgram> lines_shader_program;
     Resource<GLShaderProgram> wireframe_shader_program;
 

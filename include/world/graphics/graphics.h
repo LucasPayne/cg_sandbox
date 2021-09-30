@@ -55,6 +55,9 @@ private:
     Resource<GLShaderProgram> tone_map_gamma_correction_program;
 
     World &world;
+
+    // Multisampling.
+    int num_samples;
 };
 
 #endif // WORLD_GRAPHICS_H

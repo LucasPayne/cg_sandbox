@@ -15,6 +15,13 @@ END_ENTRIES()
 
 void Graphics::init()
 {
+    // Multisample initialization.
+    // https://learnopengl.com/Advanced-OpenGL/Anti-Aliasing
+    GLint max_framebuffer_samples;
+    glGetIntegerv(GL_MAX_FRAMEBUFFER_SAMPLES, &max_framebuffer_samples);
+    num_samples = 8;
+    if (num_samples > max_framebuffer_samples) num_samples = max_framebuffer_samples;
+
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -32,27 +39,46 @@ void Graphics::init()
     prev_window_viewport.w = -1; // make sure to force a refresh of the screen buffer.
 
     // Create the screen buffer.
-    auto create_framebuffer = [](Framebuffer &fb) {
+    auto create_framebuffer = [&](Framebuffer &fb) {
         GLuint &fbo = fb.id;
         GLuint &tex = fb.texture;
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
+        // multisampling
+        // https://learnopengl.com/Advanced-OpenGL/Anti-Aliasing
+
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, tex);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_RGBA16F, 256, 256, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, tex, 0);
+        
+        // glBindTexture(GL_TEXTURE_2D, tex);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 256, 256, 0, GL_RGBA, GL_FLOAT, NULL);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        // glBindTexture(GL_TEXTURE_2D, 0);
+        // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+
         // Give these framebuffers depth buffers.
         GLuint &depth = fb.depth_texture;
+        // glGenTextures(1, &depth);
+        // glBindTexture(GL_TEXTURE_2D, depth);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 256, 256, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        // glBindTexture(GL_TEXTURE_2D, 0);
+        // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
         glGenTextures(1, &depth);
-        glBindTexture(GL_TEXTURE_2D, depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 256, 256, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depth);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_DEPTH_COMPONENT32F, 256, 256, GL_TRUE);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth, 0);
 
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (framebuffer_status == GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE) {
+            fprintf(stderr, "Framebuffer incomplete: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE.\n");
+            exit(EXIT_FAILURE);
+        } else if(framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
             fprintf(stderr, "Framebuffer incomplete.\n");
             exit(EXIT_FAILURE);
         }
@@ -105,12 +131,21 @@ void Graphics::refresh_framebuffers()
     std::cout << "w:" << window_viewport.w << " h:" << window_viewport.h  << "\n";
 
     if (prev_window_viewport.w != window_viewport.w || prev_window_viewport.h != window_viewport.h) {
-        glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindTexture(GL_TEXTURE_2D, screen_buffer.depth_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, window_viewport.w, window_viewport.h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        // glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
+        // glBindTexture(GL_TEXTURE_2D, 0);
+        // glBindTexture(GL_TEXTURE_2D, screen_buffer.depth_texture);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, window_viewport.w, window_viewport.h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        // glBindTexture(GL_TEXTURE_2D, 0);
+        // screen_buffer.resolution_x = window_viewport.w;
+        // screen_buffer.resolution_y = window_viewport.h;
+        
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, screen_buffer.texture);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_RGBA16F, window_viewport.w, window_viewport.h, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, screen_buffer.depth_texture);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_DEPTH_COMPONENT32F, window_viewport.w, window_viewport.h, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
         screen_buffer.resolution_x = window_viewport.w;
         screen_buffer.resolution_y = window_viewport.h;
     }
@@ -184,17 +219,30 @@ void Graphics::render()
     glEnable(GL_SCISSOR_TEST);
     glViewport(window_viewport.x, window_viewport.y, window_width, window_height);
     glScissor(window_viewport.x, window_viewport.y, window_width, window_height);
-    auto program = tone_map_gamma_correction_program;
-    program->bind();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, screen_buffer.texture);
-    glUniform1i(program->uniform_location("hdr_image"), 0);
-    glUniform2i(program->uniform_location("hdr_image_dimensions"), screen_buffer.resolution_x, screen_buffer.resolution_y);
-    glBindVertexArray(postprocessing_quad_vao);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glBindVertexArray(0);
+
+    // Blit the multisampled screen buffer to the default framebuffer.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    // glBlitFramebuffer(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y,
+    //                   window_viewport.x, window_viewport.y, window_width, window_height,
+    //                   GL_COLOR_BUFFER_BIT, GL_NEAREST); 
+    glBlitFramebuffer(0, 0, window_width, window_height,
+                      0, 0, window_width, window_height,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);  //------------------------------------------------------------fix this!!!!!
+                      // When blitting the framebuffer size needs to be the same as that set up in the context...
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    program->unbind();
+
+    // auto program = tone_map_gamma_correction_program;
+    // program->bind();
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, screen_buffer.texture);
+    // glUniform1i(program->uniform_location("hdr_image"), 0);
+    // glUniform2i(program->uniform_location("hdr_image_dimensions"), screen_buffer.resolution_x, screen_buffer.resolution_y);
+    // glBindVertexArray(postprocessing_quad_vao);
+    // glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    // glBindVertexArray(0);
+    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // program->unbind();
 }
 
 

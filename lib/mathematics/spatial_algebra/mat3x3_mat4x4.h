@@ -82,6 +82,37 @@ inline mat3x3 operator*(mat3x3 A, mat3x3 B) {
         A.entry(2,0)*B.entry(0, 2) + A.entry(2,1)*B.entry(1, 2) + A.entry(2,2)*B.entry(2, 2)
     );
 }
+inline mat3x3 operator+(mat3x3 A, mat3x3 B) {
+    mat3x3 M;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            M.entry(i, j) = A.entry(i, j) + B.entry(i, j);
+        }
+    }
+    return M;
+}
+inline mat3x3 operator-(mat3x3 A, mat3x3 B) {
+    mat3x3 M;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            M.entry(i, j) = A.entry(i, j) - B.entry(i, j);
+        }
+    }
+    return M;
+}
+inline mat3x3 operator*(float r, mat3x3 M) {
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            M.entry(i, j) *= r;
+        }
+    }
+    return M;
+}
+inline mat3x3 operator*(mat3x3 M, float r) {
+    return r*M;
+}
+
+
 std::ostream &operator<<(std::ostream &os, const mat3x3 &M);
 
 

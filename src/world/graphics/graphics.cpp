@@ -110,6 +110,81 @@ void Graphics::init()
     compile_shaders();
 }
 
+void Graphics::screenshot(std::string filename)
+{
+    // Take a full screen screenshot.
+    screenshot(filename, 0,0, window_viewport.w, window_viewport.h);
+}
+void Graphics::screenshot(std::string filename, int x0, int y0, int w, int h)
+{
+    // Take a screenshot of the given rectangle of the screen buffer (x0,y0 is the bottom left, w,h are the extents).
+    if (w <= 0 || h <= 0) {
+        fprintf(stderr, "ERROR: Graphics::screenshot(): Rectangle width and height must be positive.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (x0 < 0) x0 = 0;
+    if (w > window_viewport.w - x0) w = window_viewport.w - x0;
+    if (y0 < 0) y0 = 0;
+    if (h > window_viewport.h - y0) h = window_viewport.h - y0;
+    // if (x0 < 0 || x0 + w > window_viewport.w || y0 < 0 || y0 + h > window_viewport.h) {
+    //     fprintf(stderr, "ERROR: Graphics::screenshot(): Screenshot dimensions must be restricted to the window viewport.\n");
+    //     exit(EXIT_FAILURE);
+    // }
+
+    FILE *file = fopen(filename.c_str(), "w+");
+
+    // The multisampled framebuffer needs to be blitted into a regular framebuffer,
+    // then the regular framebuffer can be read from.
+    GLuint temp_fb;
+    glGenFramebuffers(1, &temp_fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, temp_fb);
+
+    GLuint temp_tex;
+    glGenTextures(1, &temp_tex);
+    glBindTexture(GL_TEXTURE_2D, temp_tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, window_viewport.w, window_viewport.h, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, temp_tex, 0);
+
+    GLenum framebuffer_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(framebuffer_status != GL_FRAMEBUFFER_COMPLETE) {
+        fprintf(stderr, "Framebuffer incomplete.\n");
+        exit(EXIT_FAILURE);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Blit the screen buffer to the temporary non-multisampled framebuffer.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, temp_fb);
+    glBlitFramebuffer(0, 0, window_viewport.w, window_viewport.h, 0, 0, window_viewport.w, window_viewport.h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    // Read the (x0,y0, w,h)-rectangle pixels from the temporary framebuffer.
+    glBindFramebuffer(GL_FRAMEBUFFER, temp_fb);
+    auto pixel_data = std::vector<uint8_t>(w * h * 4);
+    glReadPixels(x0,y0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, &pixel_data[0]);
+
+    fprintf(file, "P3\n");
+    fprintf(file, "# cg_sandbox screenshot: %s\n", filename.c_str());
+    fprintf(file, "%d %d\n", w, h);
+    fprintf(file, "255\n");
+    for (int i = h-1; i >= 0; --i) {
+        for (int j = 0; j < w; j++) {
+            uint8_t r = pixel_data[4*(i*w + j)+0];
+            uint8_t g = pixel_data[4*(i*w + j)+1];
+            uint8_t b = pixel_data[4*(i*w + j)+2];
+            fprintf(file, "%d %d %d ", r,g,b);
+        }
+	fprintf(file, "\n");
+    }
+
+    // Clean up.
+    glDeleteFramebuffers(1, &temp_fb);
+    glDeleteTextures(1, &temp_tex);
+    fclose(file);
+}
+
 
 
 void Graphics::refresh_framebuffers()
@@ -177,7 +252,21 @@ void Graphics::render(Aspect<Camera> camera)
     glEnable(GL_SCISSOR_TEST);
     glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
     glScissor(viewport.x, viewport.y, viewport.w, viewport.h);
+
+    #if 1
+    /*--------------------------------------------------------------------------------
+        Post-render update entities.
+        NOTE: Moved here, see World.cpp.
+        NOTE: This calls post_render_update for each camera!
+        NOTE: This isn't reall "post render", but it has been changed quickly in order to get some mathematical rendering working...
+    --------------------------------------------------------------------------------*/
+    for (auto b : world.entities.aspects<Behaviour>()) {
+        if (b->enabled) b->post_render_update();
+    }
+    #endif
+
     paint.render(camera);
+
 }
 
 void Graphics::render()
@@ -208,7 +297,6 @@ void Graphics::render()
 
     /*--------------------------------------------------------------------------------
         Place the screen buffer in the window.
-        Tone map and gamma correct the screen buffer when copying.
     --------------------------------------------------------------------------------*/
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_SCISSOR_TEST);
@@ -222,6 +310,7 @@ void Graphics::render()
 
     // Blit the multisampled screen buffer to the default framebuffer.
     glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_buffer.id);
+
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     // glBlitFramebuffer(0, 0, screen_buffer.resolution_x, screen_buffer.resolution_y,
     //                   window_viewport.x, window_viewport.y, window_width, window_height,

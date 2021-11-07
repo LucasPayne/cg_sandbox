@@ -49,6 +49,12 @@ public:
     int framebuffer_res_y; // minimum framebuffer size needed to account for all cameras being rendered to.
 
     void compile_shaders();
+
+    // Take a full screen screenshot.
+    void screenshot(std::string filename);
+    // Take a screenshot of the given rectangle of the screen buffer (x0,y0 is the bottom left, w,h are the extents).
+    void screenshot(std::string filename, int x0, int y0, int w, int h);
+
 private:
     // Shaders
     GLuint postprocessing_quad_vao;

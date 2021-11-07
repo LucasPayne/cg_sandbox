@@ -67,12 +67,17 @@ void World::loop()
 
     graphics.render();
 
+    #if 0
+    // NOTE: Need to think of a better way to organize rendering (to get built-in stuff like the paint module
+    //         to work well with arbitrary custom rendering.
+    // The post-render stuff has been moved to Graphics to place the calls before the screen-buffer blit.
     /*--------------------------------------------------------------------------------
         Post-render update entities.
     --------------------------------------------------------------------------------*/
     for (auto b : entities.aspects<Behaviour>()) {
         if (b->enabled) b->post_render_update();
     }
+    #endif
 
     // printf("Frame-rate: %d\n", (int) floor(1.f / dt + 0.5f));
 }

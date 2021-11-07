@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <assert.h>
+#include <iomanip>
 
 static void _print_matrix(std::ostream &os, const float *entries, int n)
 {
@@ -45,22 +46,22 @@ std::ostream &operator<<(std::ostream &os, const mat2x2 &M)
 
 std::ostream &operator<<(std::ostream &os, const vec2 &v)
 {
-    os << "(" << v.x() << ", " << v.y() << ")";
+    os << std::setprecision(4) << "(" << v.x() << ", " << v.y() << ")";
     return os;
 }
 std::ostream &operator<<(std::ostream &os, const vec3 &v)
 {
-    os << "(" << v.x() << ", " << v.y() << ", " << v.z() << ")";
+    os << std::setprecision(4) << "(" << v.x() << ", " << v.y() << ", " << v.z() << ")";
     return os;
 }
 std::ostream &operator<<(std::ostream &os, const vec4 &v)
 {
-    os << "(" << v.x() << ", " << v.y() << ", " << v.z() << ", " << v.w() << ")";
+    os << std::setprecision(4) << "(" << v.x() << ", " << v.y() << ", " << v.z() << ", " << v.w() << ")";
     return os;
 }
 std::ostream &operator<<(std::ostream &os, const Quaternion &q)
 {
-    os << "Quaternion(" << q.scalar() << ", " << q.i() << ", " << q.j() << ", " << q.k() << ")";
+    os << std::setprecision(4) << "Quaternion(" << q.scalar() << ", " << q.i() << ", " << q.j() << ", " << q.k() << ")";
     return os;
 }
 
@@ -234,3 +235,14 @@ std::pair<mat2x2,mat2x2> mat2x2::diagonalize() const
                          vec2(B, l2 - A).normalized());
     return std::pair<mat2x2,mat2x2>(Vecs, Vals);
 }
+
+
+mat3x3 vec3::outer(vec3 a, vec3 b)
+{
+    return mat3x3(
+        a.x()*b.x(), a.y()*b.x(), a.z()*b.x(),
+        a.x()*b.y(), a.y()*b.y(), a.z()*b.y(),
+        a.x()*b.z(), a.y()*b.z(), a.z()*b.z()
+    );
+}
+

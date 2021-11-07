@@ -72,7 +72,8 @@ struct CursorState {
     float x;
     float y;
     float dx;
-    float dy; // x,y,dx,dy are always available no matter the event.
+    float dy;
+    // The cursor state is always valid, no matter the mouse event.
 };
 enum MouseAction {
     MOUSE_BUTTON_PRESS,

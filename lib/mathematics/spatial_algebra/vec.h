@@ -11,6 +11,7 @@
 #define VEC3_EXPAND(VEC) ( VEC ).x(), ( VEC ).y(), ( VEC ).z()
 #define VEC4_EXPAND(VEC) ( VEC ).x(), ( VEC ).y(), ( VEC ).z(), ( VEC ).w()
 
+struct mat3x3;
 
 // vec3 and vec4 classes.
 // references:
@@ -90,6 +91,8 @@ struct vec3 {
     static inline float dot(vec3 a, vec3 b) {
         return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     }
+    static mat3x3 outer(vec3 a, vec3 b);
+
     static inline vec3 cross(vec3 a, vec3 b) {
         return vec3(a[1]*b[2] - a[2]*b[1],
                     a[2]*b[0] - a[0]*b[2],
@@ -347,7 +350,6 @@ inline bool operator<=(const vec4 &a, const vec4 &b)
     return a.x() <= b.x() && a.y() <= b.y() && a.z() <= b.z() && a.w() <= b.w();
 }
 
-
 /*--------------------------------------------------------------------------------
     vec2
 --------------------------------------------------------------------------------*/
@@ -446,6 +448,15 @@ struct vec2 {
         return vec2(a.x() < b.x() ? a.x() : b.x(),
                     a.y() < b.y() ? a.y() : b.y());
     }
+
+    // Scalar cross product (2D right-hand rule: x is right, y is up.)
+    static inline float cross(vec2 a, vec2 b) {
+        return a.x()*b.y() - b.x()*a.y();
+    }
+    // Anticlockwise 90 degree rotation w/r/t the 2D right-hand rule.
+    inline vec2 perp() const {
+        return vec2(-y(), x());
+    }
 };
 // vec2-vec2 operations.
 // u + v
@@ -456,9 +467,9 @@ inline vec2 operator+(const vec2 &a, const vec2 &b) {
 inline vec2 operator-(const vec2 &a, const vec2 &b) {
     return vec2(a[0]-b[0],a[1]-b[1]);
 }
-// u * v
-inline vec2 operator*(const vec2 &a, const vec2 &b) {
-    return vec2(a[0]*b[0],a[1]*b[1]);
+// u * v is the dot product
+inline float operator*(const vec2 &a, const vec2 &b) {
+    return vec2::dot(a,b);
 }
 // u / v
 inline vec2 operator/(const vec2 &a, const vec2 &b) {

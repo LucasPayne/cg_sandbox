@@ -42,7 +42,7 @@ void main(void)
     color = vec4(sphere_color.rgb, alpha);
     #else
     // Basic lighting test.
-    vec3 light_dir = vec3(1,1,1);
+    vec3 light_dir = vec3(0.25,0.25,1);
     vec3 n = normalize(vec3(x,y,z));
     color = vec4(max(0, dot(n, -light_dir)) * sphere_color.rgb, alpha);
     #endif

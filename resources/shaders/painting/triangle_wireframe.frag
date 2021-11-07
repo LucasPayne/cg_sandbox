@@ -15,10 +15,12 @@ uniform int viewport_height;
 
 void main(void)
 {
-    vec3 light_dir = normalize(vec3(0.4,-1,0.4));
+    // vec3 light_dir = normalize(vec3(0.4,-1,0.4));
+    // vec3 light_dir = normalize(vec3(0,-2,1));
+    vec3 light_dir = normalize(vec3(0,-1,0));
     vec3 n = fs_in.normal;
 
-    vec3 face_diffuse = vec3(1);
+    vec3 face_diffuse = vec3(0.93);
     const float lightness = 0.5;
     vec4 face_color = vec4(face_diffuse * (lightness + (1-lightness)*max(0, dot(light_dir, n))), 1);
 
@@ -36,5 +38,7 @@ void main(void)
     //     color = face_color;
     // }
     // Rough heuristic to reduce aliasing.
+
     color = mix(edge_color, face_color, smoothstep(-0.002, 0.002, distance));
+    // color = face_color;
 }

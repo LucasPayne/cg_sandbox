@@ -223,6 +223,13 @@ struct mat4x4 {
 
     mat4x4 inverse() const;
 
+    // Extract the top left 3x3 matrix.
+    inline mat3x3 top_left() const {
+        return mat3x3(entry(0,0), entry(1,0), entry(2,0),
+                      entry(0,1), entry(1,1), entry(2,1), 
+                      entry(0,2), entry(1,2), entry(2,2));
+    }
+
 };
 // Matrix vector multiplication.
 inline vec4 operator*(mat4x4 M, vec4 v) {

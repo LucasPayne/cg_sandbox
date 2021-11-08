@@ -17,15 +17,12 @@ struct DrawableMesh : public IBehaviour {
         //     }
         // }
         //
-        #if 0
-        geom = assimp_to_surface_geometry(PATH "bunny_head.stl");
-        #else
-        geom = assimp_to_surface_geometry(PATH "Tangram-6.stl");
-        for (auto v : geom->mesh.vertices()) {
-            geom->position[v] *= 3;
-            geom->position[v] += vec_t(1, 0, 0);
-        }
-        #endif
+        // geom = assimp_to_surface_geometry(PATH "Tangram-6.stl");
+        // for (auto v : geom->mesh.vertices()) {
+        //     geom->position[v] *= 3;
+        //     geom->position[v] += vec_t(1, 0, 0);
+        // }
+        geom = assimp_to_surface_geometry(PATH "icosahedron.stl");
         geom->mesh.lock();
 
        
@@ -85,6 +82,9 @@ struct DrawableMesh : public IBehaviour {
                 // Loop subdivision.
                 auto subdiv = new Subdivision::Triangular(geom->mesh);
                 geom = Subdivision::loop(*subdiv, *geom);
+            }
+            if (e.key.code == KEY_9) {
+                Enmesh::save_geometry(*geom, std::string(PATH) + "model.off");
             }
         }
     }

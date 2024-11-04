@@ -22,6 +22,8 @@ void Painting::render_bspline(Aspect<Camera> camera, PaintingBSpline _bspline)
     int degree = _bspline.degree;
     vec4 color = _bspline.color;
 
+    //mat4x4 vp_matrix = camera->view_projection_matrix();
+
     // The B-spline is immediately rendered.
     int m = knots.size()-1; // The knot vector is U = { u_0,...,u_m }
     int n = positions.size(); // Number of control points.
@@ -137,6 +139,7 @@ void Painting::render_bspline(Aspect<Camera> camera, PaintingBSpline _bspline)
         glUniform1f(program->uniform_location("viewport_width"), viewport_width);
         glUniform1f(program->uniform_location("viewport_height"), viewport_height);
         glUniform1i(program->uniform_location("tessellation_level"), 25);
+        //glUniformMatrix4fv(program->uniform_location("mvp_matrix"), 1, GL_FALSE, (const GLfloat *) &vp_matrix);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, knot_texture);

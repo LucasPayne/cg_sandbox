@@ -516,7 +516,7 @@ App::App(World &_world, IGC::Context &_context) : world{_world}, context{_contex
         }
         sheets.push_back(sheet);
     }
-    for (int n = 0; n < 30; n++)
+    for (int n = 0; n < 160; n++)
     {
         FloaterSheet sheet;
         sheet.impulse_multiplier = 1;

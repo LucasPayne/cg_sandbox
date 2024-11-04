@@ -23,6 +23,11 @@ void main()
 
     color = vec4(texture(images[f_face], vec2(f_uv.x, 1-f_uv.y)).rgb, 1);
     //color *= 1.3+0.05*sin(0.2*time);
+
     color.rgb *= brightness;
-    
+
+    color.rgb *= 1.25;
+    color.r = clamp(color.r, 0, 1);
+    color.g = clamp(color.g, 0, 1);
+    color.b = clamp(color.b, 0, 1);
 }

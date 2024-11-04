@@ -15,4 +15,6 @@ void main(void)
     //todo: antialiasing that matches the line segments.
     if (dot(fs_in.quad_position, fs_in.quad_position) > 1) discard;
     fb_color = color;
+
+    //fb_color = vec4(0,1,0,1);
 }

@@ -807,7 +807,7 @@ void App::loop()
             world.graphics.paint.chain_2D(points, 1, vec4(0,1,0,1));
         }
     }
-    //if (!camera->enabled) camera->enabled = true;
+    if (!camera->enabled) camera->enabled = true;
 
 
     // Sheets
@@ -980,7 +980,7 @@ void App::mouse_handler(MouseEvent e)
         lookat( new_eyes_forward );
         saccadic_motion(eyes_forward, new_eyes_forward);
         eyes_forward = new_eyes_forward;
-        //camera->enabled = false;
+        camera->enabled = false;
 
         if (skybox->measuring)
         {

@@ -3,6 +3,25 @@
 
 void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> positions, std::vector<float> knots, float width, vec4 color)
 {
+    if (positions.size() < degree + 1) return;
+    bsplines.push_back(PaintingBSpline(positions, knots, width, degree, color));
+}
+
+void Painting::render_bsplines(Aspect<Camera> camera)
+{
+    for (auto &_bspline : bsplines)
+    {
+        render_bspline(camera, _bspline);
+    }
+}
+void Painting::render_bspline(Aspect<Camera> camera, PaintingBSpline _bspline)
+{
+    std::vector<vec2> &positions = _bspline.points;
+    std::vector<float> &knots = _bspline.knots;
+    float width = _bspline.width;
+    int degree = _bspline.degree;
+    vec4 color = _bspline.color;
+
     // The B-spline is immediately rendered.
     int m = knots.size()-1; // The knot vector is U = { u_0,...,u_m }
     int n = positions.size(); // Number of control points.
@@ -76,39 +95,53 @@ void Painting::bspline(Aspect<Camera> camera, int degree, std::vector<vec2> posi
     //------------------------------------------------------------
     graphics.begin_camera_rendering(camera);
     glDisable(GL_DEPTH_TEST);
-    const bool test_primitive_lines = false;
-    if (test_primitive_lines) {
-        primitive_lines_2D_shader_program->bind();
-        glLineWidth(4);
-        glDrawArrays(GL_LINE_STRIP, 0, positions.size());
-        glUniform4f(primitive_lines_2D_shader_program->uniform_location("color"), 0.5,0.5,0.5,0.45);
-        primitive_lines_2D_shader_program->unbind();
-    }
 
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     int viewport_width = (int) viewport[2];
     int viewport_height = (int) viewport[3];
 
-    Resource<GLShaderProgram> programs[2] = {bspline_2D_fillets_shader_programs[degree], bspline_2D_shader_programs[degree]};
-    for (int i = 0; i < 2; i++) {
+    const bool test_primitive_lines = false;
+    if (test_primitive_lines) {
+        primitive_lines_2D_shader_program->bind();
+        glLineWidth(10);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDrawArrays(GL_LINE_STRIP, 0, positions.size());
+        glUniform4f(primitive_lines_2D_shader_program->uniform_location("color"), 0,0,0,0);
+        primitive_lines_2D_shader_program->unbind();
+    }
+
+#if 1
+    //Resource<GLShaderProgram> programs[2] = {bspline_2D_fillets_shader_programs[degree], bspline_2D_shader_programs[degree]};
+    Resource<GLShaderProgram> programs[2] = {bspline_2D_shader_programs[degree]};
+    //for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 1; i++) {
         auto &program = programs[i];
+        //auto &program = primitive_lines_2D_shader_program;
         program->bind();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //
+        //
         glUniform4fv(program->uniform_location("color"), 1, (const GLfloat *) &color);
         glUniform1i(program->uniform_location("knots"), 0);
         glUniform1f(program->uniform_location("half_width"), 0.5*width);
         glUniform1f(program->uniform_location("viewport_height_over_width"), camera->aspect_ratio()); //note: Currently aspect ratios are height/width.
         glUniform1f(program->uniform_location("inv_viewport_width_squared"), 1.0 / (viewport_width * viewport_width));
         glUniform1f(program->uniform_location("inv_viewport_height_squared"), 1.0 / (viewport_height * viewport_height));
+        glUniform1f(program->uniform_location("viewport_width"), viewport_width);
+        glUniform1f(program->uniform_location("viewport_height"), viewport_height);
+        glUniform1i(program->uniform_location("tessellation_level"), 25);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_BUFFER, knot_texture);
-
         glPatchParameteri(GL_PATCH_VERTICES, 3);
-        glLineWidth(10);
         glDrawElements(GL_PATCHES, 3*num_patches, index_type, (const void *) 0);
+        //glDrawElements(GL_TRIANGLES, 3*num_patches, index_type, (const void *) 0);
         program->unbind();
     }
+#endif
 
     glEnable(GL_DEPTH_TEST); // note: Assuming this was on before.
     graphics.end_camera_rendering(camera);

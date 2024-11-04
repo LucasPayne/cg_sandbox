@@ -30,5 +30,8 @@ void main(void)
                       smoothstep(-fs_in.extend_factor, 0, fs_in.quad_position));
     fb_color = vec4(color.rgb, color.a * alpha * coverage_multiplier);
 
+
     #endif
+    
+    fb_color = vec4(1,0,0,1);
 }

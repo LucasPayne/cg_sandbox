@@ -25,6 +25,7 @@ Camera::Camera(float _near_plane_distance, float _far_plane_distance, float _nea
     background_color = vec4(0.9,0.9,0.9,1);
 
     depth_of_field = vec2(3.4, 10);
+    enabled = true;
 }
 
 bool Camera::in_viewport(float screen_x, float screen_y)

@@ -34,6 +34,8 @@ World::World(IGC::Context &_context) :
 
     // Initialize graphics subsystem.
     graphics.init();
+
+    window_update(800, 600);
     
     // Connect to the system windowing/graphics context.
     context.add_callbacks(this);

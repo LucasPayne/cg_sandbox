@@ -238,6 +238,7 @@ void Graphics::render(Aspect<Camera> camera)
     glEnable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
+    printf("%d %d %d %d\n", viewport.x, viewport.y, viewport.w, viewport.h);
     glViewport(viewport.x, viewport.y, viewport.w, viewport.h);
     glScissor(viewport.x, viewport.y, viewport.w, viewport.h);
     // An alpha value of zero signifies that this is a background pixel.

@@ -42,6 +42,22 @@ struct PaintingLines2D {
     {}
 };
 
+struct PaintingBSpline {
+    std::vector<vec2> points;
+    std::vector<float> knots;
+    float width;
+    int degree;
+    vec4 color;
+    PaintingBSpline(std::vector<vec2> _points, std::vector<float> _knots, float _width, int _degree, vec4 _color) :
+        points{_points},
+        knots{_knots},
+        width{_width},
+        degree{_degree},
+        color{_color}
+    {}
+};
+
+
 
 struct PaintingCircles {
     // Header struct.
@@ -122,6 +138,7 @@ private:
     std::vector<vec2> circle_positions;
     std::vector<PaintingLines2D> lines_2D;
     std::vector<SpriteRenderData> sprites;
+    std::vector<PaintingBSpline> bsplines;
 
     // 3D painting programs.
     Resource<GLShaderProgram> spheres_shader_program;
@@ -150,6 +167,8 @@ private:
     void render_circles();
     void render_lines_2D();
     void render_sprites();
+    void render_bsplines(Aspect<Camera> camera);
+    void render_bspline(Aspect<Camera> camera, PaintingBSpline _bspline);
 
     Graphics &graphics;
     World &world;

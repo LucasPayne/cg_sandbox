@@ -98,6 +98,8 @@ struct Camera : public IAspectType {
     // Initialize this to a projective camera rendering to the full screen.
     Camera(float near_plane_distance, float far_plane_distance, float near_half_width, float aspect_ratio);
     Camera() {}
+
+    bool enabled;
 };
 REFLECT_STRUCT(Camera);
 

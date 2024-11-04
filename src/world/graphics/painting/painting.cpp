@@ -13,6 +13,7 @@ void Painting::render(Aspect<Camera> camera)
     render_circles();
     render_lines_2D();
     render_sprites();
+    render_bsplines(camera);
     glDepthMask(true);
 }
 
@@ -32,12 +33,18 @@ void Painting::clear()
     circle_positions.clear();
     lines_2D.clear();
     sprites.clear();
+    bsplines.clear();
 }
 
 
 const int Painting::max_bspline_degree = 3;
-void Painting::init()
+void Painting::reload_shaders()
 {
+    printf("Reloading shaders\n");
+
+    bspline_2D_shader_programs.clear();
+    bspline_2D_fillets_shader_programs.clear();
+
     spheres_shader_program = world.resources.add<GLShaderProgram>();
     spheres_shader_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/spheres.vert"));
     spheres_shader_program->add_shader(GLShader(TessControlShader, RESOURCE_PATH "shaders/painting/spheres.tcs"));
@@ -123,4 +130,8 @@ void Painting::init()
     cube_map_depth_sprite_program->add_shader(GLShader(VertexShader, RESOURCE_PATH "shaders/painting/sprite/sprite.vert"));
     cube_map_depth_sprite_program->add_shader(GLShader(FragmentShader, RESOURCE_PATH "shaders/painting/sprite/cube_map_depth_sprite.frag"));
     cube_map_depth_sprite_program->link();
+}
+void Painting::init()
+{
+    reload_shaders();
 }

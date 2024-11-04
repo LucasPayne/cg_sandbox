@@ -172,6 +172,8 @@ private:
 
     Graphics &graphics;
     World &world;
+
+    void reload_shaders();
 };
 
 

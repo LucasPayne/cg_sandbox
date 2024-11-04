@@ -1,0 +1,58 @@
+#version 420
+uniform sampler2D tex;
+uniform sampler2D normal_tex;
+uniform sampler2D water_tex;
+uniform sampler2D grassy_rock_tex;
+uniform sampler2D snow_tex;
+
+uniform vec3 light_direction;
+uniform vec3 view_position;
+
+uniform float average_height;
+uniform float minimum_height;
+uniform float base_height;
+uniform float elevation_multiplier;
+
+in vec2 f_coord;
+in vec3 f_normal;
+in vec3 f_position;
+flat in int f_underwater;
+
+out vec4 color;
+
+
+void main(void)
+{
+    vec3 view_direction = normalize(view_position - f_position);
+
+    float reef_start_height = average_height - 10;
+    float reef_end_height = average_height - 20;
+    float height = base_height + elevation_multiplier*texture(tex, f_coord).r;
+
+    if (f_underwater == 1) {
+        // vec3 base_color = vec3(0.45,0.689,0.9532);
+        vec3 base_color = texture(water_tex, f_coord * 10).rgb;
+        base_color *= mix(0.25,1, clamp((height - reef_start_height)/(reef_start_height - reef_end_height), 0,1));
+
+        vec3 normal = vec3(0,1,0);
+        float d = max(0, dot(-normal, light_direction));
+
+        float s = max(0, pow(dot(reflect(light_direction, normal), view_direction), 10));
+        color = vec4(d * base_color + s * vec3(2,1,1), 1);
+    } else {
+        vec3 normal = texture(normal_tex, f_coord).rgb;
+        float snowiness = 0.f;
+        snowiness = 1 - clamp((normal.y - 0.6)/0.2, 0,1);
+
+        vec3 rock_color = texture(grassy_rock_tex, f_coord * 40).rgb;
+        float s_rock = max(0, pow(dot(reflect(light_direction, normal), view_direction), 1));
+        vec3 snow_color = 2*texture(snow_tex, f_coord * 40).rgb;
+        float s_snow = max(0, pow(dot(reflect(light_direction, normal), view_direction), 6));
+
+        float d = max(0, dot(-normal, light_direction));
+        color = vec4(
+            d*mix(rock_color, snow_color, snowiness)
+	    + mix(s_rock*0.1*vec3(1,1,1), s_snow*vec3(1,1,1.5), snowiness), 1
+        );
+    }
+}

@@ -1,0 +1,35 @@
+#version 420
+
+layout (vertices = 6) out; 
+
+in VS_OUT {
+    vec2 position;
+    vec2 velocity;
+    float pressure;
+    float divergence;
+    float divergence_linear;
+} tcs_in[];
+
+out TCS_OUT {
+    vec2 position;
+    vec2 velocity;
+    float pressure;
+    float divergence;
+    float divergence_linear;
+} tcs_out[];
+
+
+void main(void)
+{
+    gl_TessLevelOuter[0] = 1;
+    gl_TessLevelOuter[1] = 1;
+    gl_TessLevelOuter[2] = 1;
+    gl_TessLevelInner[0] = 1;
+
+    tcs_out[gl_InvocationID].position = tcs_in[gl_InvocationID].position;
+    tcs_out[gl_InvocationID].velocity = tcs_in[gl_InvocationID].velocity;
+    tcs_out[gl_InvocationID].pressure = tcs_in[gl_InvocationID].pressure;
+    tcs_out[gl_InvocationID].divergence = tcs_in[gl_InvocationID].divergence;
+    tcs_out[gl_InvocationID].divergence_linear = tcs_in[gl_InvocationID].divergence_linear;
+}
+

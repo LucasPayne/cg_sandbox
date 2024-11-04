@@ -1,0 +1,31 @@
+#version 420
+layout(quads, fractional_even_spacing, ccw) in;
+
+uniform sampler2D tex;
+uniform mat4x4 mvp_matrix;
+uniform vec2 bottom_left;
+uniform vec2 top_right;
+uniform float base_height;
+uniform float elevation_multiplier;
+uniform float average_height;
+
+in TCS_OUT {
+    vec2 coord;
+} tes_in[];
+
+out TES_OUT {
+    vec2 coord;
+    vec4 pos;
+} tes_out;
+
+void main(void)
+{
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    tes_out.coord = tes_in[0].coord + vec2(u,v)*(tes_in[2].coord-tes_in[0].coord);
+    vec2 xz = bottom_left + (top_right - bottom_left)*tes_out.coord;
+
+    float height = base_height + elevation_multiplier * texture(tex, tes_out.coord).r;
+    tes_out.pos = vec4(xz[0], height, xz[1], 1);
+}

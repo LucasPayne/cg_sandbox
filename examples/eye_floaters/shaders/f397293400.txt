@@ -1,0 +1,42 @@
+#version 420
+layout (triangles) in;
+layout (triangle_strip, max_vertices = 3) out;
+
+uniform float average_height;
+uniform mat4x4 mvp_matrix;
+
+in TES_OUT {
+    vec2 coord;
+    vec4 pos;
+} gs_in[];
+
+out vec2 f_coord;
+out vec3 f_position;
+flat out int f_underwater;
+
+void main(void)
+{
+    int underwater = 1;
+    for (int i = 0; i < 3; i++) {
+        if (gs_in[i].pos.y > average_height) underwater = 0;
+    }
+    vec4 positions[3] = {gs_in[0].pos, gs_in[1].pos, gs_in[2].pos};
+    vec2 coords[3] = {gs_in[0].coord, gs_in[1].coord, gs_in[2].coord};
+    if (underwater == 1) {
+        for (int i = 0; i < 3; i++) {
+            positions[i].y = average_height;
+            float pushaway = 1;
+            positions[i].xz = (1+2*pushaway)*gs_in[i].pos.xz - pushaway*gs_in[(i+1)%3].pos.xz - pushaway*gs_in[(i+2)%3].pos.xz;
+            coords[i] = (1+2*pushaway)*gs_in[i].coord - pushaway*gs_in[(i+1)%3].coord - pushaway*gs_in[(i+2)%3].coord;
+        }
+    }
+
+    for (int i = 0; i < 3; i++) {
+        gl_Position = mvp_matrix * positions[i];
+        f_coord = coords[i];
+        f_underwater = underwater;
+        f_position = positions[i].xyz;
+        EmitVertex();
+    }
+    EndPrimitive();
+}

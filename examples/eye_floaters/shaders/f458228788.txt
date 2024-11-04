@@ -1,0 +1,5 @@
+#version 150
+#define VARYING in
+#define TEX texture
+#define FRAGCOLOR frag_color
+out vec4 FRAGCOLOR;

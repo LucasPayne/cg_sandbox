@@ -807,7 +807,7 @@ void App::loop()
             world.graphics.paint.chain_2D(points, 1, vec4(0,1,0,1));
         }
     }
-    if (!camera->enabled) camera->enabled = true;
+    //if (!camera->enabled) camera->enabled = true;
 
 
     // Sheets
@@ -966,7 +966,7 @@ void App::mouse_handler(MouseEvent e)
         else
         {
             new_eyes_forward = camera->ray(e.cursor.x, e.cursor.y).direction;
-            context.set_cursor_position(0.5, 0.5);
+            //context.set_cursor_position(0.5, 0.5);
         }
         float angle = std::acos( vec3::dot(head_forward, new_eyes_forward) );
         #if 1

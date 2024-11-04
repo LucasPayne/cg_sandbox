@@ -9,13 +9,13 @@ add_subdirectory(dependencies/glfw)
 include_directories(dependencies/glfw/include)
 
 # mesh_processing library
-set(mesh_processing_path /home/lucas/computer_graphics/mesh_processing)
+set(mesh_processing_path /home/lucas/code/mesh_processing)
 set(mesh_processing_include_path ${mesh_processing_path}/include)
 set(mesh_processing_library_path ${mesh_processing_path}/build/libmesh_processing.a)
 include_directories(${mesh_processing_include_path})
 
 # assimp ---- todo
-set(ASSIMP_SOURCE_DIR /home/lucas/computer_graphics/assimp)
+set(ASSIMP_SOURCE_DIR /home/lucas/code/assimp)
 set(ASSIMP_INCLUDE_DIR ${ASSIMP_SOURCE_DIR}/include)
 set(ASSIMP_LIBRARY_PATH ${ASSIMP_SOURCE_DIR}/bin/libassimp.so)
 
@@ -45,6 +45,10 @@ add_library(assimp SHARED IMPORTED GLOBAL)
 set_target_properties(assimp PROPERTIES IMPORTED_LOCATION ${ASSIMP_LIBRARY_PATH})
 message(STATUS "assimp path: ${ASSIMP_LIBRARY_PATH}")
 target_link_libraries(cg_sandbox assimp)
+
+add_library(IL SHARED IMPORTED GLOBAL)
+set_target_properties(IL PROPERTIES IMPORTED_LOCATION /usr/lib/x86_64-linux-gnu/libIL.so)
+target_link_libraries(cg_sandbox IL)
  
 # Compile example applications
 #------------------------------------------------------------
@@ -56,3 +60,10 @@ target_include_directories(basic_application PRIVATE examples/basic_application)
 target_include_directories(basic_application PRIVATE /home/lucas/computer_graphics/assimp/include) #------
 target_compile_definitions(basic_application PRIVATE PATH="${CMAKE_CURRENT_SOURCE_DIR}/examples/basic_application/")
 target_link_libraries(basic_application cg_sandbox)
+
+add_executable(eye_floaters
+    examples/eye_floaters/eye_floaters.cpp
+)
+target_include_directories(eye_floaters PRIVATE examples/eye_floaters)
+target_compile_definitions(eye_floaters PRIVATE PATH="${CMAKE_CURRENT_SOURCE_DIR}/examples/eye_floaters/")
+target_link_libraries(eye_floaters cg_sandbox)

@@ -855,7 +855,7 @@ void App::loop()
 
             // brightness
             alpha *= std::pow(std::min(brightness + 0.6f, 1.f), 8);
-           
+            //printf("bspline alpha: %.6f\n", segment.opacity*alpha);
             world.graphics.paint.bspline(camera, 2, positions, knots, segment.radius, vec4(0,0,0,segment.opacity*alpha));
         }
     }

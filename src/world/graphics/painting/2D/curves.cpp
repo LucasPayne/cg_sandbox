@@ -113,10 +113,14 @@ void Painting::render_bspline(Aspect<Camera> camera, PaintingBSpline _bspline)
     }
 
 #if 1
-    //Resource<GLShaderProgram> programs[2] = {bspline_2D_fillets_shader_programs[degree], bspline_2D_shader_programs[degree]};
+
+#if 0
+    Resource<GLShaderProgram> programs[2] = {bspline_2D_fillets_shader_programs[degree], bspline_2D_shader_programs[degree]};
+    for (int i = 0; i < 2; i++) {
+#else
     Resource<GLShaderProgram> programs[2] = {bspline_2D_shader_programs[degree]};
-    //for (int i = 0; i < 2; i++) {
     for (int i = 0; i < 1; i++) {
+#endif
         auto &program = programs[i];
         //auto &program = primitive_lines_2D_shader_program;
         program->bind();

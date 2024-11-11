@@ -11,4 +11,6 @@ void main()
 {
     color = texture(image, vec2(1-f_uv.x, 1-f_uv.y));
     color.rgb *= brightness;
+
+    color.rgb *= 1.25;
 }
